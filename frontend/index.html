@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamNote</title>
+    <link rel="stylesheet" href="../frontend/styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>StreamNote</h1>
+            <p>Real-time classroom transcription</p>
+        </header>
+
+        <div class="control-panel">
+            <button id="startBtn" class="btn btn-primary">Start Recording</button>
+            <button id="stopBtn" class="btn btn-danger" disabled>Stop Recording</button>
+            <button id="clearBtn" class="btn btn-secondary">Clear</button>
+        </div>
+
+        <div class="transcript-container">
+            <div id="transcript" class="transcript">
+                <p class="placeholder">Press "Start Recording" to begin...</p>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span id="status">Ready</span>
+            <span id="duration">Duration: 0:00</span>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="../frontend/app.js"></script>
+</body>
+
+</html>
