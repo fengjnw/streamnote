@@ -1,40 +1,15 @@
 class StreamNote {
     constructor() {
-        this.socket = io("http://localhost:5001");
-        this.audioContext = null;
         this.mediaRecorder = null;
         this.isRecording = false;
+        this.preciseResults = {};
         this.chunkIndex = 0;
         this.startTime = null;
-        this.fastResults = {};
-        this.preciseResults = {};
+        this.audioChunks = [];
+        this.sendInterval = null;
+        this.durationInterval = null;
 
-        this.setupSocketListeners();
         this.setupUIListeners();
-    }
-
-    setupSocketListeners() {
-        this.socket.on("connect", () => {
-            console.log("[CONNECT] Connected to server");
-            this.updateStatus("Connected");
-        });
-
-        this.socket.on("disconnect", () => {
-            console.log("[DISCONNECT] Disconnected from server");
-            this.updateStatus("Disconnected");
-        });
-
-        this.socket.on("fast_result", (data) => {
-            console.log("[FAST]", data.text);
-            this.fastResults[data.chunk_index] = data.text;
-            this.updateDisplay();
-        });
-
-        this.socket.on("precise_result", (data) => {
-            console.log("[PRECISE]", data.text);
-            this.preciseResults[data.chunk_index] = data.text;
-            this.updateDisplay();
-        });
     }
 
     setupUIListeners() {
@@ -45,32 +20,42 @@ class StreamNote {
 
     async start() {
         try {
-            // 清理之前的 AudioContext
-            if (this.audioContext && this.audioContext.state !== "closed") {
-                this.audioContext.close();
-            }
-
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-            this.mediaRecorder = new MediaRecorder(stream);
+            this.mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
             this.startTime = Date.now();
             this.chunkIndex = 0;
             this.isRecording = true;
-
-            const audioChunks = [];
+            this.audioChunks = [];
 
             this.mediaRecorder.ondataavailable = (event) => {
-                audioChunks.push(event.data);
+                if (event.data.size > 0) {
+                    this.audioChunks.push(event.data);
+                    // 立即发送这个完整的音频块
+                    this.sendToWhisper();
+                    this.audioChunks = [];
+                }
             };
 
             this.mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
-                this.sendAudioChunk(audioBlob, this.chunkIndex, true, true);
-                audioChunks.length = 0;
+                // 如果是真正的停止（不是间隔停止），处理剩余音频
+                if (!this.isRecording && this.audioChunks.length > 0) {
+                    this.sendToWhisper();
+                    this.audioChunks = [];
+                }
             };
 
-            this.mediaRecorder.start(2000);
+            // 每 3 秒停止并重新开始录制，确保每个块都是完整的音频文件
+            this.mediaRecorder.start();
+
+            this.sendInterval = setInterval(() => {
+                if (this.isRecording) {
+                    // 停止当前录制，触发 ondataavailable
+                    this.mediaRecorder.stop();
+                    // 立即重新开始新的录制
+                    this.mediaRecorder.start();
+                }
+            }, 3000);
 
             document.getElementById("startBtn").disabled = true;
             document.getElementById("stopBtn").disabled = false;
@@ -85,25 +70,23 @@ class StreamNote {
 
     stop() {
         if (this.mediaRecorder && this.isRecording) {
-            this.mediaRecorder.stop();
             this.isRecording = false;
 
-            // 停止所有音频轨道
-            if (this.mediaRecorder.stream) {
-                this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            if (this.sendInterval) {
+                clearInterval(this.sendInterval);
+                this.sendInterval = null;
             }
 
-            // 关闭 AudioContext
-            if (this.audioContext) {
-                this.audioContext.close();
-                this.audioContext = null;
+            this.mediaRecorder.stop();
+
+            if (this.mediaRecorder.stream) {
+                this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
             }
 
             document.getElementById("startBtn").disabled = false;
             document.getElementById("stopBtn").disabled = true;
             this.updateStatus("Stopped");
 
-            // 清理定时器
             if (this.durationInterval) {
                 clearInterval(this.durationInterval);
             }
@@ -111,37 +94,53 @@ class StreamNote {
     }
 
     clear() {
-        this.fastResults = {};
         this.preciseResults = {};
         this.chunkIndex = 0;
         this.updateDisplay();
         this.updateStatus("Cleared");
     }
 
-    sendAudioChunk(blob, index, isCheckpoint, isFinal) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const audioData = new Uint8Array(event.target.result);
-            this.socket.emit("audio_chunk", {
-                audio: Array.from(audioData),
-                chunk_index: index,
-                is_checkpoint: isCheckpoint,
-                is_final: isFinal,
+    async sendToWhisper() {
+        if (this.audioChunks.length === 0) {
+            return;
+        }
+
+        const audioBlob = new Blob(this.audioChunks, { type: "audio/webm" });
+        const formData = new FormData();
+        formData.append("file", audioBlob, "audio.webm");
+
+        try {
+            const response = await fetch("http://localhost:5001/api/transcribe", {
+                method: "POST",
+                body: formData,
             });
-            console.log(`[SEND] Chunk ${index}`);
-        };
-        reader.readAsArrayBuffer(blob);
+
+            if (!response.ok) {
+                console.error(`[ERROR] API error: ${response.status}`);
+                return;
+            }
+
+            const result = await response.json();
+            const text = result.text.trim();
+
+            if (text) {
+                console.log("[WHISPER]", text);
+                this.preciseResults[this.chunkIndex] = text;
+                this.chunkIndex += 1;
+                this.updateDisplay();
+            }
+
+        } catch (error) {
+            console.error("[ERROR] Whisper request failed:", error);
+        }
     }
 
     updateDisplay() {
-        const precise = Object.values(this.preciseResults).join(" ");
-        const fast = Object.values(this.fastResults).join(" ");
+        const allText = Object.values(this.preciseResults).join(" ").trim();
 
         const transcriptDiv = document.getElementById("transcript");
-        if (precise) {
-            transcriptDiv.innerHTML = `<p>${precise}</p><p class="temporary">${fast}</p>`;
-        } else if (fast) {
-            transcriptDiv.innerHTML = `<p class="temporary">${fast}</p>`;
+        if (allText) {
+            transcriptDiv.innerHTML = `<p>${allText}</p>`;
         } else {
             transcriptDiv.innerHTML = '<p class="placeholder">Press "Start Recording" to begin...</p>';
         }
