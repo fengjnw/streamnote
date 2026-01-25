@@ -35,9 +35,8 @@ def transcribe():
         audio_buffer.name = "audio.webm"
 
         result = client.audio.transcriptions.create(
-            model="whisper-1",
+            model="gpt-4o-mini-transcribe",  # 更快、更准确的新模型
             file=audio_buffer,
-            language="en",
         )
 
         text = result.text.strip()
