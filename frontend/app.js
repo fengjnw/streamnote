@@ -6,17 +6,16 @@ class StreamNote {
         this.chunkIndex = 0;
         this.startTime = null;
         this.audioChunks = [];
-        this.sendInterval = null;
         this.durationInterval = null;
 
         // 停顿检测
         this.audioContext = null;
         this.analyser = null;
         this.silenceStart = null;
-        this.voiceStart = null;  // 声音开始时间
+        this.voiceStart = null;
         this.lastSendTime = null;
-        this.recordingStartTime = null;  // 当前录制开始时间
-        this.hasVoice = false;  // 当前录制是否检测到声音
+        this.recordingStartTime = null;
+        this.hasVoice = false;
         this.checkInterval = null;
 
         this.setupUIListeners();
@@ -42,10 +41,13 @@ class StreamNote {
             this.mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
             this.startTime = Date.now();
             this.lastSendTime = Date.now();
+            this.recordingStartTime = Date.now();
             this.chunkIndex = 0;
             this.isRecording = true;
             this.audioChunks = [];
             this.silenceStart = null;
+            this.voiceStart = null;
+            this.hasVoice = false;
 
             this.mediaRecorder.ondataavailable = (event) => {
                 if (event.data.size > 0) {
@@ -58,7 +60,7 @@ class StreamNote {
 
             this.mediaRecorder.onstop = () => {
                 // 停止时直接丢弃最后一段（通常是静音）
-                if (!this.isRecording && this.audioChunks.length > 0) {
+                if (!this.isRecording) {
                     console.log('[STOP] Discarding final chunk');
                     this.audioChunks = [];
                 }
@@ -66,11 +68,8 @@ class StreamNote {
 
             // 开始录制
             this.mediaRecorder.start();
-            this.recordingStartTime = Date.now();
-            this.hasVoice = false;
-            this.voiceStart = null;
 
-            // 每 100ms 检测音量，停顿 800ms 或超过 10 秒就发送
+            // 每 100ms 检测音量，停顿 600ms 或超过 10秒 就发送
             this.checkInterval = setInterval(() => {
                 if (!this.isRecording) return;
 
@@ -81,14 +80,14 @@ class StreamNote {
 
                 console.log(`[VOLUME] ${volume.toFixed(3)} | Duration: ${(recordingDuration / 1000).toFixed(1)}s | HasVoice: ${this.hasVoice}`);
 
-                if (volume < 0.025) {  // 检测到沉默（降低阈值以便更好断句）
-                    this.voiceStart = null;  // 重置声音开始时间
+                if (volume < 0.025) {  // 沉默
+                    this.voiceStart = null;
 
                     if (!this.silenceStart) {
                         this.silenceStart = now;
                         console.log('[SILENCE] Started');
                     } else if (now - this.silenceStart > 600 && recordingDuration > 1000 && this.hasVoice) {
-                        // 沉默超过 600ms 且 录制超过 1秒 且 检测到过声音，才发送音频
+                        // 沉默 >600ms + 录制 >1s + 有真实语音 → 发送
                         console.log('[SILENCE] 600ms detected with voice, sending...');
                         this.mediaRecorder.stop();
                         this.mediaRecorder.start();
@@ -97,20 +96,20 @@ class StreamNote {
                         this.voiceStart = null;
                         this.silenceStart = null;
                     }
-                } else {  // 检测到音量
+                } else {  // 有声音
                     this.silenceStart = null;
 
                     if (!this.voiceStart) {
                         this.voiceStart = now;
                         console.log('[VOICE] Start detecting...');
                     } else if (!this.hasVoice && now - this.voiceStart > 600) {
-                        // 持续声音超过600ms，才认为是真正在说话
+                        // 持续声音 >600ms → 确认为真实语音
                         this.hasVoice = true;
                         console.log('[VOICE] Confirmed! (>600ms)');
                     }
                 }
 
-                // 超过 10 秒强制发送（前提是有声音）
+                // 超过 10秒 + 有真实语音 → 强制发送
                 if (timeSinceLastSend > 10000 && this.hasVoice) {
                     console.log('[TIMEOUT] 10s reached with voice, force sending...');
                     this.mediaRecorder.stop();

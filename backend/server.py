@@ -26,13 +26,12 @@ def transcribe():
         audio_data = audio_file.read()
         print(f"[TRANSCRIBE] Received {len(audio_data)} bytes")
 
-        # 提高最小音频大小要求（约2秒的音频）
+        # 过滤过短音频（<60KB 约2秒），避免 Whisper 幻觉
         if len(audio_data) < 60000:
-            print(f"[WARNING] Audio too short ({len(audio_data)} bytes), skipping")
+            print(f"[WARNING] Audio too short, skipping")
             return {"text": ""}, 200
 
         audio_buffer = io.BytesIO(audio_data)
-        audio_buffer.seek(0)  # 确保从开头读
         audio_buffer.name = "audio.webm"
 
         result = client.audio.transcriptions.create(
