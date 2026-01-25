@@ -80,7 +80,7 @@ class StreamNote {
 
                 console.log(`[VOLUME] ${volume.toFixed(3)} | Duration: ${(recordingDuration / 1000).toFixed(1)}s | HasVoice: ${this.hasVoice}`);
 
-                if (volume < 0.025) {  // 沉默
+                if (volume < 0.015) {  // 沉默（降低阈值，避免噪音干扰）
                     this.voiceStart = null;
 
                     if (!this.silenceStart) {
