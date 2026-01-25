@@ -26,7 +26,8 @@ def transcribe():
         audio_data = audio_file.read()
         print(f"[TRANSCRIBE] Received {len(audio_data)} bytes")
 
-        if len(audio_data) < 1000:
+        # 提高最小音频大小要求（约2秒的音频）
+        if len(audio_data) < 60000:
             print(f"[WARNING] Audio too short ({len(audio_data)} bytes), skipping")
             return {"text": ""}, 200
 

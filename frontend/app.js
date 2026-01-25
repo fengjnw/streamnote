@@ -9,6 +9,16 @@ class StreamNote {
         this.sendInterval = null;
         this.durationInterval = null;
 
+        // 停顿检测
+        this.audioContext = null;
+        this.analyser = null;
+        this.silenceStart = null;
+        this.voiceStart = null;  // 声音开始时间
+        this.lastSendTime = null;
+        this.recordingStartTime = null;  // 当前录制开始时间
+        this.hasVoice = false;  // 当前录制是否检测到声音
+        this.checkInterval = null;
+
         this.setupUIListeners();
     }
 
@@ -22,11 +32,20 @@ class StreamNote {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
+            // 设置音量检测
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.analyser = this.audioContext.createAnalyser();
+            const source = this.audioContext.createMediaStreamSource(stream);
+            source.connect(this.analyser);
+            this.analyser.fftSize = 2048;
+
             this.mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
             this.startTime = Date.now();
+            this.lastSendTime = Date.now();
             this.chunkIndex = 0;
             this.isRecording = true;
             this.audioChunks = [];
+            this.silenceStart = null;
 
             this.mediaRecorder.ondataavailable = (event) => {
                 if (event.data.size > 0) {
@@ -38,24 +57,69 @@ class StreamNote {
             };
 
             this.mediaRecorder.onstop = () => {
-                // 如果是真正的停止（不是间隔停止），处理剩余音频
+                // 停止时直接丢弃最后一段（通常是静音）
                 if (!this.isRecording && this.audioChunks.length > 0) {
-                    this.sendToWhisper();
+                    console.log('[STOP] Discarding final chunk');
                     this.audioChunks = [];
                 }
             };
 
-            // 每 3 秒停止并重新开始录制，确保每个块都是完整的音频文件
+            // 开始录制
             this.mediaRecorder.start();
+            this.recordingStartTime = Date.now();
+            this.hasVoice = false;
+            this.voiceStart = null;
 
-            this.sendInterval = setInterval(() => {
-                if (this.isRecording) {
-                    // 停止当前录制，触发 ondataavailable
-                    this.mediaRecorder.stop();
-                    // 立即重新开始新的录制
-                    this.mediaRecorder.start();
+            // 每 100ms 检测音量，停顿 800ms 或超过 10 秒就发送
+            this.checkInterval = setInterval(() => {
+                if (!this.isRecording) return;
+
+                const volume = this.getVolume();
+                const now = Date.now();
+                const timeSinceLastSend = now - this.lastSendTime;
+                const recordingDuration = now - this.recordingStartTime;
+
+                console.log(`[VOLUME] ${volume.toFixed(3)} | Duration: ${(recordingDuration / 1000).toFixed(1)}s | HasVoice: ${this.hasVoice}`);
+
+                if (volume < 0.025) {  // 检测到沉默（降低阈值以便更好断句）
+                    this.voiceStart = null;  // 重置声音开始时间
+
+                    if (!this.silenceStart) {
+                        this.silenceStart = now;
+                        console.log('[SILENCE] Started');
+                    } else if (now - this.silenceStart > 600 && recordingDuration > 1000 && this.hasVoice) {
+                        // 沉默超过 600ms 且 录制超过 1秒 且 检测到过声音，才发送音频
+                        console.log('[SILENCE] 600ms detected with voice, sending...');
+                        this.mediaRecorder.stop();
+                        this.mediaRecorder.start();
+                        this.recordingStartTime = Date.now();
+                        this.hasVoice = false;
+                        this.voiceStart = null;
+                        this.silenceStart = null;
+                    }
+                } else {  // 检测到音量
+                    this.silenceStart = null;
+
+                    if (!this.voiceStart) {
+                        this.voiceStart = now;
+                        console.log('[VOICE] Start detecting...');
+                    } else if (!this.hasVoice && now - this.voiceStart > 600) {
+                        // 持续声音超过600ms，才认为是真正在说话
+                        this.hasVoice = true;
+                        console.log('[VOICE] Confirmed! (>600ms)');
+                    }
                 }
-            }, 3000);
+
+                // 超过 10 秒强制发送（前提是有声音）
+                if (timeSinceLastSend > 10000 && this.hasVoice) {
+                    console.log('[TIMEOUT] 10s reached with voice, force sending...');
+                    this.mediaRecorder.stop();
+                    this.mediaRecorder.start();
+                    this.recordingStartTime = Date.now();
+                    this.hasVoice = false;
+                    this.voiceStart = null;
+                }
+            }, 100);
 
             document.getElementById("startBtn").disabled = true;
             document.getElementById("stopBtn").disabled = false;
@@ -72,9 +136,13 @@ class StreamNote {
         if (this.mediaRecorder && this.isRecording) {
             this.isRecording = false;
 
-            if (this.sendInterval) {
-                clearInterval(this.sendInterval);
-                this.sendInterval = null;
+            if (this.checkInterval) {
+                clearInterval(this.checkInterval);
+                this.checkInterval = null;
+            }
+
+            if (this.audioContext) {
+                this.audioContext.close();
             }
 
             this.mediaRecorder.stop();
@@ -100,11 +168,24 @@ class StreamNote {
         this.updateStatus("Cleared");
     }
 
+    getVolume() {
+        if (!this.analyser) return 0;
+        const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+        this.analyser.getByteTimeDomainData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+            const normalized = (dataArray[i] - 128) / 128;
+            sum += normalized * normalized;
+        }
+        return Math.sqrt(sum / dataArray.length);
+    }
+
     async sendToWhisper() {
         if (this.audioChunks.length === 0) {
             return;
         }
 
+        this.lastSendTime = Date.now();
         const audioBlob = new Blob(this.audioChunks, { type: "audio/webm" });
         const formData = new FormData();
         formData.append("file", audioBlob, "audio.webm");
