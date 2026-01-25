@@ -26,8 +26,8 @@ def transcribe():
         audio_data = audio_file.read()
         print(f"[TRANSCRIBE] Received {len(audio_data)} bytes")
 
-        # 过滤过短音频（<60KB 约2秒），避免 Whisper 幻觉
-        if len(audio_data) < 60000:
+        # 后端兜底：只过滤明显异常的音频
+        if len(audio_data) < 10000:
             print(f"[WARNING] Audio too short, skipping")
             return {"text": ""}, 200
 
