@@ -45,6 +45,11 @@ class StreamNote {
 
     async start() {
         try {
+            // 清理之前的 AudioContext
+            if (this.audioContext && this.audioContext.state !== "closed") {
+                this.audioContext.close();
+            }
+
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -83,9 +88,25 @@ class StreamNote {
             this.mediaRecorder.stop();
             this.isRecording = false;
 
+            // 停止所有音频轨道
+            if (this.mediaRecorder.stream) {
+                this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+
+            // 关闭 AudioContext
+            if (this.audioContext) {
+                this.audioContext.close();
+                this.audioContext = null;
+            }
+
             document.getElementById("startBtn").disabled = false;
             document.getElementById("stopBtn").disabled = true;
             this.updateStatus("Stopped");
+
+            // 清理定时器
+            if (this.durationInterval) {
+                clearInterval(this.durationInterval);
+            }
         }
     }
 
