@@ -92,6 +92,7 @@ class StreamNote {
                         this.mediaRecorder.stop();
                         this.mediaRecorder.start();
                         this.recordingStartTime = Date.now();
+                        this.lastSendTime = Date.now();
                         this.hasVoice = false;
                         this.voiceStart = null;
                         this.silenceStart = null;
@@ -115,8 +116,10 @@ class StreamNote {
                     this.mediaRecorder.stop();
                     this.mediaRecorder.start();
                     this.recordingStartTime = Date.now();
+                    this.lastSendTime = Date.now();
                     this.hasVoice = false;
                     this.voiceStart = null;
+                    this.silenceStart = null;
                 }
             }, 100);
 
