@@ -208,11 +208,11 @@ class StreamNote {
 
             if (text) {
                 console.log("[WHISPER]", text);
-                const timestamp = new Date().toLocaleTimeString('zh-CN', { 
-                    hour12: false, 
-                    hour: '2-digit', 
-                    minute: '2-digit', 
-                    second: '2-digit' 
+                const timestamp = new Date().toLocaleTimeString('zh-CN', {
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
                 });
                 this.preciseResults[this.chunkIndex] = { text, timestamp };
                 this.chunkIndex += 1;
@@ -226,36 +226,23 @@ class StreamNote {
 
     updateDisplay() {
         const transcriptDiv = document.getElementById("transcript");
-        
-        // 收集所有句子和对应的时间戳
-        const sentencesWithTimestamp = [];
-        
-        Object.values(this.preciseResults).forEach(item => {
-            if (!item || !item.text) return;
-            
+
+        const formattedLines = Object.values(this.preciseResults).map(item => {
+            if (!item || !item.text) return null;
+
             const text = item.text.trim();
-            const timestamp = item.timestamp || new Date().toLocaleTimeString('zh-CN', { 
-                hour12: false, 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit' 
+            const timestamp = item.timestamp || new Date().toLocaleTimeString('zh-CN', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
             });
-            
-            // 按标点分句
-            const sentences = text.match(/[^.!?\n]+[.!?]?/g) || [];
-            sentences.forEach(sentence => {
-                const trimmed = sentence.trim();
-                if (trimmed) {
-                    sentencesWithTimestamp.push({ text: trimmed, timestamp });
-                }
-            });
-        });
-        
-        if (sentencesWithTimestamp.length > 0) {
-            const html = sentencesWithTimestamp
-                .map(item => `<p>[${item.timestamp}] ${item.text}</p>`)
-                .join('');
-            transcriptDiv.innerHTML = html;
+
+            return `<p>[${timestamp}] ${text}</p>`;
+        }).filter(line => line !== null);
+
+        if (formattedLines.length > 0) {
+            transcriptDiv.innerHTML = formattedLines.join('');
         } else {
             transcriptDiv.innerHTML = '<p class="placeholder">Press "Start Recording" to begin...</p>';
         }
