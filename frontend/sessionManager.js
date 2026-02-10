@@ -59,6 +59,7 @@ class SessionManager {
             id: id,
             name: defaultName,
             transcripts: {},
+            translations: {},
             keywords: [],
             createdAt: Date.now(),
             lastModified: Date.now()
@@ -122,6 +123,18 @@ class SessionManager {
         const session = this.getCurrentSession();
         if (session) {
             session.keywords = [...keywords];
+            session.lastModified = Date.now();
+            this.saveSessions();
+        }
+    }
+
+    /**
+     * 更新当前 session 的翻译内容
+     */
+    updateCurrentTranslations(translations) {
+        const session = this.getCurrentSession();
+        if (session) {
+            session.translations = { ...translations };
             session.lastModified = Date.now();
             this.saveSessions();
         }
