@@ -36,10 +36,10 @@ class KeywordExtractor:
             return []
 
         try:
-            prompt = f"从以下文本中提取最多{top_k}个最重要的关键词或关键概念，用英文逗号分隔。只返回关键词，不要有其他内容。\n\n{text}"
+            prompt = f"Extract at most {top_k} most important keywords or key concepts from the following text, separated by English commas. Return only keywords without any other content.\n\n{text}"
             
             if context:
-                prompt = f"背景：{context}\n\n" + prompt
+                prompt = f"Context: {context}\n\n" + prompt
 
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o-mini",

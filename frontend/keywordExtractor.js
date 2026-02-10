@@ -253,6 +253,9 @@ class KeywordExtractor {
         }
 
         try {
+            // 按长度排序关键词（长的在前），确保多词短语优先匹配
+            const sortedKeywords = [...keywords].sort((a, b) => b.length - a.length);
+
             // 创建关键词正则表达式
             // 为了处理多词短语，我们分别处理单词和多词短语：
             // 1. 单词关键词：使用 \b 词边界确保完整单词匹配
@@ -260,7 +263,7 @@ class KeywordExtractor {
             const singleWordPatterns = [];
             const multiWordPatterns = [];
 
-            keywords.forEach(kw => {
+            sortedKeywords.forEach(kw => {
                 const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                 if (kw.split(/\s+/).length === 1) {
                     // 单词：使用词边界确保完整单词匹配
@@ -271,7 +274,8 @@ class KeywordExtractor {
                 }
             });
 
-            const allPatterns = [...singleWordPatterns, ...multiWordPatterns];
+            // 重要：多词短语应该优先匹配（在单词之前）
+            const allPatterns = [...multiWordPatterns, ...singleWordPatterns];
 
             console.log("[KeywordExtractor] Patterns to match:", allPatterns.slice(0, 5), allPatterns.length > 5 ? `... (${allPatterns.length} total)` : '');
 
@@ -286,8 +290,7 @@ class KeywordExtractor {
             const nodesToProcess = [];
             let node;
             while (node = walker.nextNode()) {
-                // 不要使用 regex.test()，因为有 g 标志会改变状态
-                // 而是检查至少有一个 pattern 能匹配
+                // 检查至少有一个 pattern 能匹配
                 for (const pattern of allPatterns) {
                     const patternRegex = new RegExp(`(${pattern})`, 'i');
                     if (patternRegex.test(node.textContent)) {
@@ -307,6 +310,7 @@ class KeywordExtractor {
 
                 // 使用一个合并的正则表达式，一次性替换所有关键词（避免重复）
                 // 重要：必须一次性替换，不能循环替换，否则会重复高亮
+                // 关键词已按长度排序，多词短语优先匹配
                 const regex = new RegExp(`(${allPatterns.join('|')})`, 'gi');
                 html = html.replace(regex, '<span class="keyword" data-keyword="$1">$1</span>');
 
