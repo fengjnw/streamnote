@@ -19,11 +19,51 @@
             <button id="startBtn" class="btn btn-primary">Start Recording</button>
             <button id="stopBtn" class="btn btn-danger" disabled>Stop Recording</button>
             <button id="clearBtn" class="btn btn-secondary">Clear</button>
+
+            <div class="keyword-controls">
+                <label>
+                    <input type="checkbox" id="keyword-toggle" checked>
+                    Enable Keywords
+                </label>
+
+                <button id="keywords-panel-toggle" class="toggle-panel-btn" title="Toggle Keywords Panel">☰</button>
+
+                <label for="keyword-intensity">Intensity:</label>
+                <input type="range" id="keyword-intensity" min="1" max="10" value="5" class="intensity-slider">
+                <span id="intensity-value">5</span>
+
+                <label for="keyword-method">Method:</label>
+                <select id="keyword-method">
+                    <option value="combined">Combined</option>
+                    <option value="fast">Fast (TF-IDF)</option>
+                    <option value="smart">Smart (OpenAI)</option>
+                    <option value="domain">Domain</option>
+                </select>
+
+                <label for="keyword-domain">Domain:</label>
+                <select id="keyword-domain">
+                    <option value="">None</option>
+                    <option value="mathematics">Mathematics</option>
+                    <option value="biology">Biology</option>
+                    <option value="history">History</option>
+                    <option value="chemistry">Chemistry</option>
+                </select>
+            </div>
         </div>
 
-        <div class="transcript-container">
-            <div id="transcript" class="transcript">
-                <p class="placeholder">Press "Start Recording" to begin...</p>
+        <div class="main-content">
+            <div class="transcript-container">
+                <h2>Transcription</h2>
+                <div id="transcript" class="transcript">
+                    <p class="placeholder">Press "Start Recording" to begin...</p>
+                </div>
+            </div>
+
+            <div class="keywords-container-main">
+                <h2>Keywords</h2>
+                <div id="keywords-display" class="keywords-display">
+                    <p class="placeholder">Keywords will appear here...</p>
+                </div>
             </div>
         </div>
 
@@ -34,6 +74,7 @@
     </div>
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="../frontend/keywordExtractor.js"></script>
     <script src="../frontend/app.js"></script>
 </body>
 

@@ -18,13 +18,101 @@ class StreamNote {
         this.hasVoice = false;
         this.checkInterval = null;
 
+        // 关键词提取器
+        this.keywordExtractor = null;
+        this.currentTranscriptText = "";
+
         this.setupUIListeners();
+        this.initKeywordExtractor();
+    }
+
+    /**
+     * 初始化关键词提取器
+     */
+    initKeywordExtractor() {
+        this.keywordExtractor = new KeywordExtractor({
+            apiUrl: "http://localhost:5001/api/extract-keywords",
+            transcriptElement: document.getElementById("transcript"),
+            keywordElement: document.getElementById("keywords-display"),
+            method: "combined",
+            topK: 5
+        });
+
+        // 绑定开关
+        const toggleCheckbox = document.getElementById("keyword-toggle");
+        if (toggleCheckbox) {
+            toggleCheckbox.addEventListener("change", (e) => {
+                this.keywordExtractor.setEnabled(e.target.checked);
+                if (e.target.checked) {
+                    // 重新高亮
+                    this.keywordExtractor.reHighlightElement();
+                }
+            });
+        }
+
+        // 绑定强度滑块
+        const intensitySlider = document.getElementById("keyword-intensity");
+        const intensityValue = document.getElementById("intensity-value");
+        if (intensitySlider) {
+            intensitySlider.addEventListener("input", async (e) => {
+                const intensity = parseInt(e.target.value);
+                this.keywordExtractor.setIntensity(intensity);
+                if (intensityValue) {
+                    intensityValue.textContent = intensity;
+                }
+                // 强度改变时，清除已有的关键词并重新识别（确保一致性）
+                this.keywordExtractor.allCollectedKeywords = [];
+                this.keywordExtractor.clearHighlights(document.getElementById("transcript"));
+                await this.processKeywords();
+            });
+        }
+
+        // 绑定方法选择器
+        const methodSelect = document.getElementById("keyword-method");
+        const domainSelect = document.getElementById("keyword-domain");
+
+        if (methodSelect) {
+            methodSelect.addEventListener("change", async (e) => {
+                this.keywordExtractor.setMethod(e.target.value);
+                // 重新提取时清除旧结果，确保一致性
+                this.keywordExtractor.allCollectedKeywords = [];
+                this.keywordExtractor.clearHighlights(document.getElementById("transcript"));
+                await this.processKeywords();
+            });
+        }
+
+        if (domainSelect) {
+            domainSelect.addEventListener("change", async (e) => {
+                const domain = e.target.value || null;
+                this.keywordExtractor.setDomain(domain);
+                // 重新提取时清除旧结果，确保一致性
+                this.keywordExtractor.allCollectedKeywords = [];
+                this.keywordExtractor.clearHighlights(document.getElementById("transcript"));
+                await this.processKeywords();
+            });
+        }
+
+        console.log("[StreamNote] KeywordExtractor initialized");
     }
 
     setupUIListeners() {
         document.getElementById("startBtn").addEventListener("click", () => this.start());
         document.getElementById("stopBtn").addEventListener("click", () => this.stop());
         document.getElementById("clearBtn").addEventListener("click", () => this.clear());
+
+        // 添加keywords面板toggle
+        const toggleBtn = document.getElementById("keywords-panel-toggle");
+        const mainContent = document.querySelector(".main-content");
+        const keywordsContainer = document.querySelector(".keywords-container-main");
+
+        if (toggleBtn && mainContent && keywordsContainer) {
+            toggleBtn.addEventListener("click", () => {
+                mainContent.classList.toggle("keywords-hidden");
+                keywordsContainer.classList.toggle("hidden");
+                // 切换按钮文字
+                toggleBtn.textContent = mainContent.classList.contains("keywords-hidden") ? "☷" : "☰";
+            });
+        }
     }
 
     async start() {
@@ -42,7 +130,13 @@ class StreamNote {
             this.startTime = Date.now();
             this.lastSendTime = Date.now();
             this.recordingStartTime = Date.now();
-            this.chunkIndex = 0;
+            // 只在第一次或清空后重置 chunkIndex，继续录制时保留
+            if (Object.keys(this.preciseResults).length === 0) {
+                this.chunkIndex = 0;
+            } else {
+                // 继续录制：chunkIndex 继续从上次结束的地方开始
+                this.chunkIndex = Math.max(...Object.keys(this.preciseResults).map(Number)) + 1;
+            }
             this.isRecording = true;
             this.audioChunks = [];
             this.silenceStart = null;
@@ -166,7 +260,11 @@ class StreamNote {
     clear() {
         this.preciseResults = {};
         this.chunkIndex = 0;
+        this.currentTranscriptText = "";
         this.updateDisplay();
+        if (this.keywordExtractor) {
+            this.keywordExtractor.reset();
+        }
         this.updateStatus("Cleared");
     }
 
@@ -217,6 +315,9 @@ class StreamNote {
                 this.preciseResults[this.chunkIndex] = { text, timestamp };
                 this.chunkIndex += 1;
                 this.updateDisplay();
+
+                // 处理关键词提取
+                this.processKeywords();
             }
 
         } catch (error) {
@@ -247,10 +348,38 @@ class StreamNote {
             transcriptDiv.innerHTML = '<p class="placeholder">Press "Start Recording" to begin...</p>';
         }
         transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
+
+        // 在更新HTML后，立即重新应用所有已收集的关键词高亮
+        if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
+            setTimeout(() => {
+                this.keywordExtractor.reHighlightElement(transcriptDiv);
+            }, 0);
+        }
     }
 
     updateStatus(text) {
         document.getElementById("status").textContent = text;
+    }
+
+    /**
+     * 处理关键词提取 - 基于整个转录文本
+     */
+    async processKeywords() {
+        if (!this.keywordExtractor) return;
+
+        // 收集所有转录文本（保证准确率）
+        this.currentTranscriptText = Object.values(this.preciseResults)
+            .map(item => item && item.text ? item.text : "")
+            .join(" ");
+
+        if (this.currentTranscriptText.length > 10) {
+            console.log(`[StreamNote] Processing full text for keywords: "${this.currentTranscriptText.substring(0, 50)}..."`);
+
+            // 获取转录div元素
+            const transcriptDiv = document.getElementById("transcript");
+            // 基于整个文本提取关键词，应用到当前div
+            await this.keywordExtractor.processText(this.currentTranscriptText, transcriptDiv);
+        }
     }
 
     startDurationUpdate() {
