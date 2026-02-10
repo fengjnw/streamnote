@@ -22,8 +22,75 @@ class StreamNote {
         this.keywordExtractor = null;
         this.currentTranscriptText = "";
 
+        // Session 管理器
+        this.sessionManager = null;
+
+        this.initSessionManager();
         this.setupUIListeners();
         this.initKeywordExtractor();
+        this.loadCurrentSession();
+    }
+
+    /**
+     * 初始化 Session 管理器
+     */
+    initSessionManager() {
+        this.sessionManager = new SessionManager();
+
+        // 监听 session 切换事件
+        window.addEventListener('sessionChanged', (e) => {
+            console.log('[StreamNote] Session changed:', e.detail.sessionId);
+            this.loadCurrentSession();
+        });
+
+        console.log('[StreamNote] SessionManager initialized');
+    }
+
+    /**
+     * 加载当前 session 的数据
+     */
+    loadCurrentSession() {
+        const session = this.sessionManager.getCurrentSession();
+        if (!session) return;
+
+        // 停止当前录制
+        if (this.isRecording) {
+            this.stop();
+        }
+
+        // 加载转录内容
+        this.preciseResults = { ...session.transcripts };
+        this.chunkIndex = Object.keys(this.preciseResults).length;
+
+        // 更新显示
+        this.updateDisplay();
+
+        // 重置关键词
+        if (this.keywordExtractor) {
+            this.keywordExtractor.reset();
+            // 如果有保存的关键词，恢复它们
+            if (session.keywords && session.keywords.length > 0) {
+                this.keywordExtractor.allCollectedKeywords = [...session.keywords];
+            }
+            this.processKeywords();
+        }
+
+        console.log(`[StreamNote] Loaded session: ${session.name}`);
+        this.updateStatus(`Loaded: ${session.name}`);
+    }
+
+    /**
+     * 保存当前数据到 session
+     */
+    saveToSession() {
+        if (!this.sessionManager) return;
+
+        this.sessionManager.updateCurrentTranscripts(this.preciseResults);
+
+        // 保存关键词
+        if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords) {
+            this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
+        }
     }
 
     /**
@@ -240,6 +307,9 @@ class StreamNote {
             this.keywordExtractor.reset();
         }
         this.updateStatus("Cleared");
+
+        // 保存到当前 session
+        this.saveToSession();
     }
 
     getVolume() {
@@ -289,6 +359,9 @@ class StreamNote {
                 this.preciseResults[this.chunkIndex] = { text, timestamp };
                 this.chunkIndex += 1;
                 this.updateDisplay();
+
+                // 自动保存到当前 session
+                this.saveToSession();
 
                 // 处理关键词提取
                 this.processKeywords();

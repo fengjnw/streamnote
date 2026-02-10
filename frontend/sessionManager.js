@@ -1,0 +1,458 @@
+/**
+ * SessionManager - 管理转录会话
+ * 功能：创建、保存、加载、删除、切换会话
+ */
+class SessionManager {
+    constructor() {
+        this.sessions = {};
+        this.currentSessionId = null;
+        this.STORAGE_KEY = 'streamnote_sessions';
+        this.CURRENT_SESSION_KEY = 'streamnote_current_session';
+
+        this.loadSessions();
+        this.setupUI();
+    }
+
+    /**
+     * 从 localStorage 加载所有 session
+     */
+    loadSessions() {
+        try {
+            const saved = localStorage.getItem(this.STORAGE_KEY);
+            if (saved) {
+                this.sessions = JSON.parse(saved);
+            }
+
+            const currentId = localStorage.getItem(this.CURRENT_SESSION_KEY);
+            if (currentId && this.sessions[currentId]) {
+                this.currentSessionId = currentId;
+            } else {
+                // 创建默认 session
+                this.createNewSession("Default Session");
+            }
+        } catch (error) {
+            console.error('[SessionManager] Load error:', error);
+            this.createNewSession("Default Session");
+        }
+    }
+
+    /**
+     * 保存所有 session 到 localStorage
+     */
+    saveSessions() {
+        try {
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.sessions));
+            localStorage.setItem(this.CURRENT_SESSION_KEY, this.currentSessionId);
+        } catch (error) {
+            console.error('[SessionManager] Save error:', error);
+        }
+    }
+
+    /**
+     * 创建新 session
+     */
+    createNewSession(name = null) {
+        const id = Date.now().toString();
+        const defaultName = name || `Session ${Object.keys(this.sessions).length + 1}`;
+
+        this.sessions[id] = {
+            id: id,
+            name: defaultName,
+            transcripts: {},
+            keywords: [],
+            createdAt: Date.now(),
+            lastModified: Date.now()
+        };
+
+        this.currentSessionId = id;
+        this.saveSessions();
+        this.renderSessionList();
+        this.updateSessionNameInput();
+
+        console.log(`[SessionManager] Created session: ${defaultName}`);
+        return id;
+    }
+
+    /**
+     * 获取当前 session
+     */
+    getCurrentSession() {
+        return this.sessions[this.currentSessionId];
+    }
+
+    /**
+     * 切换到指定 session
+     */
+    switchSession(sessionId) {
+        if (!this.sessions[sessionId]) {
+            console.error('[SessionManager] Session not found:', sessionId);
+            return false;
+        }
+
+        this.currentSessionId = sessionId;
+        this.saveSessions();
+        this.renderSessionList();
+        this.updateSessionNameInput();
+
+        // 触发自定义事件通知 StreamNote
+        window.dispatchEvent(new CustomEvent('sessionChanged', {
+            detail: { sessionId: sessionId }
+        }));
+
+        console.log(`[SessionManager] Switched to: ${this.sessions[sessionId].name}`);
+        return true;
+    }
+
+    /**
+     * 更新当前 session 的转录内容
+     */
+    updateCurrentTranscripts(transcripts) {
+        const session = this.getCurrentSession();
+        if (session) {
+            session.transcripts = { ...transcripts };
+            session.lastModified = Date.now();
+            this.saveSessions();
+        }
+    }
+
+    /**
+     * 更新当前 session 的关键词
+     */
+    updateCurrentKeywords(keywords) {
+        const session = this.getCurrentSession();
+        if (session) {
+            session.keywords = [...keywords];
+            session.lastModified = Date.now();
+            this.saveSessions();
+        }
+    }
+
+    /**
+     * 重命名当前 session
+     */
+    renameCurrentSession(newName) {
+        const session = this.getCurrentSession();
+        if (session && newName.trim()) {
+            session.name = newName.trim();
+            session.lastModified = Date.now();
+            this.saveSessions();
+            this.renderSessionList();
+            console.log(`[SessionManager] Renamed to: ${newName}`);
+        }
+    }
+
+    /**
+     * 导出当前 session 为 JSON 文件
+     */
+    exportCurrentSession() {
+        const session = this.getCurrentSession();
+        if (!session) return;
+
+        const data = {
+            version: '1.0',
+            exportDate: new Date().toISOString(),
+            session: session
+        };
+
+        this.downloadJSON(data, `StreamNote_${session.name}_${this.formatDate()}.json`);
+        console.log('[SessionManager] Exported current session');
+    }
+
+    /**
+     * 导出所有 sessions 为 JSON 文件
+     */
+    exportAllSessions() {
+        const data = {
+            version: '1.0',
+            exportDate: new Date().toISOString(),
+            sessions: this.sessions
+        };
+
+        this.downloadJSON(data, `StreamNote_All_Sessions_${this.formatDate()}.json`);
+        console.log('[SessionManager] Exported all sessions');
+    }
+
+    /**
+     * 导入 sessions 数据
+     */
+    importSessions(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+
+                if (data.session) {
+                    // Import single session
+                    const newId = Date.now().toString();
+                    const imported = { ...data.session, id: newId };
+                    this.sessions[newId] = imported;
+                    this.switchSession(newId);
+                    alert(`Successfully imported session: ${imported.name}`);
+                } else if (data.sessions) {
+                    // Import multiple sessions
+                    const confirmMsg = `Import ${Object.keys(data.sessions).length} sessions?\nThis will merge with existing data.`;
+                    if (confirm(confirmMsg)) {
+                        Object.values(data.sessions).forEach(session => {
+                            const newId = Date.now().toString() + Math.random();
+                            this.sessions[newId] = { ...session, id: newId };
+                        });
+                        this.saveSessions();
+                        this.renderSessionList();
+                        alert('Import successful!');
+                    }
+                }
+            } catch (error) {
+                console.error('[SessionManager] Import error:', error);
+                alert('Import failed: Invalid file format');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    /**
+     * 清空所有 session 数据
+     */
+    clearAllSessions() {
+        const confirmMsg = '⚠️ Clear all session data?\nThis action cannot be undone!';
+        if (confirm(confirmMsg)) {
+            const doubleConfirm = 'Final confirmation: Really delete all data?';
+            if (confirm(doubleConfirm)) {
+                this.sessions = {};
+                localStorage.removeItem(this.STORAGE_KEY);
+                localStorage.removeItem(this.CURRENT_SESSION_KEY);
+                this.createNewSession('Default Session');
+                alert('All data cleared');
+                console.log('[SessionManager] All sessions cleared');
+            }
+        }
+    }
+
+    /**
+     * 下载 JSON 数据
+     */
+    downloadJSON(data, filename) {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    /**
+     * 格式化日期用于文件名
+     */
+    formatDate() {
+        const now = new Date();
+        return now.toISOString().slice(0, 19).replace(/[T:]/g, '-');
+    }
+
+    /**
+     * 删除指定 session
+     */
+    deleteSession(sessionId) {
+        if (!this.sessions[sessionId]) return;
+
+        const sessionName = this.sessions[sessionId].name;
+        delete this.sessions[sessionId];
+
+        // 如果删除的是当前 session，切换到其他 session
+        if (this.currentSessionId === sessionId) {
+            const sessionIds = Object.keys(this.sessions);
+            if (sessionIds.length > 0) {
+                this.switchSession(sessionIds[0]);
+            } else {
+                // 没有 session 了，创建新的
+                this.createNewSession("Default Session");
+            }
+        } else {
+            this.saveSessions();
+            this.renderSessionList();
+        }
+
+        console.log(`[SessionManager] Deleted session: ${sessionName}`);
+    }
+
+    /**
+     * 设置 UI 事件监听
+     */
+    setupUI() {
+        // 新建 session 按钮
+        const newSessionBtn = document.getElementById('newSessionBtn');
+        if (newSessionBtn) {
+            newSessionBtn.addEventListener('click', () => {
+                this.createNewSession();
+            });
+        }
+
+        // Toggle session 面板
+        const toggleBtn = document.getElementById('toggleSessionPanel');
+        const openBtn = document.getElementById('openSessionPanel');
+        const sessionPanel = document.querySelector('.session-panel');
+        const mainWrapper = document.querySelector('.main-wrapper');
+
+        const togglePanel = () => {
+            const isCollapsed = sessionPanel.classList.toggle('collapsed');
+            mainWrapper.classList.toggle('session-panel-collapsed');
+
+            if (toggleBtn) {
+                toggleBtn.textContent = isCollapsed ? '▶' : '◀';
+            }
+            if (openBtn) {
+                openBtn.style.display = isCollapsed ? 'flex' : 'none';
+            }
+        };
+
+        if (toggleBtn && sessionPanel) {
+            toggleBtn.addEventListener('click', togglePanel);
+        }
+
+        if (openBtn && sessionPanel) {
+            openBtn.addEventListener('click', togglePanel);
+        }
+
+        // Session 名称输入框
+        const nameInput = document.getElementById('sessionNameInput');
+        if (nameInput) {
+            // 实时保存（防抖）
+            let timeout;
+            nameInput.addEventListener('input', (e) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    this.renameCurrentSession(e.target.value);
+                }, 500);
+            });
+        }
+
+        // 管理按钮
+        const manageBtn = document.getElementById('manageSessionBtn');
+        const manageMenu = document.getElementById('manageMenu');
+
+        if (manageBtn && manageMenu) {
+            manageBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                manageMenu.style.display = manageMenu.style.display === 'none' ? 'block' : 'none';
+            });
+
+            // 点击外部关闭菜单
+            document.addEventListener('click', () => {
+                manageMenu.style.display = 'none';
+            });
+
+            manageMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+
+        // 导出当前 session
+        document.getElementById('exportCurrentBtn')?.addEventListener('click', () => {
+            this.exportCurrentSession();
+            manageMenu.style.display = 'none';
+        });
+
+        // 导出所有 sessions
+        document.getElementById('exportAllBtn')?.addEventListener('click', () => {
+            this.exportAllSessions();
+            manageMenu.style.display = 'none';
+        });
+
+        // 导入
+        const importBtn = document.getElementById('importBtn');
+        const importInput = document.getElementById('importFileInput');
+
+        importBtn?.addEventListener('click', () => {
+            importInput.click();
+            manageMenu.style.display = 'none';
+        });
+
+        importInput?.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                this.importSessions(file);
+                e.target.value = ''; // 重置以便可以重复导入同一文件
+            }
+        });
+
+        // 清空所有数据
+        document.getElementById('clearAllBtn')?.addEventListener('click', () => {
+            this.clearAllSessions();
+            manageMenu.style.display = 'none';
+        });
+
+        this.renderSessionList();
+        this.updateSessionNameInput();
+    }
+
+    /**
+     * 渲染 session 列表
+     */
+    renderSessionList() {
+        const listContainer = document.getElementById('sessionList');
+        if (!listContainer) return;
+
+        const sessionIds = Object.keys(this.sessions).sort((a, b) => {
+            return this.sessions[b].lastModified - this.sessions[a].lastModified;
+        });
+
+        if (sessionIds.length === 0) {
+            listContainer.innerHTML = '<p class="empty-message">No sessions</p>';
+            return;
+        }
+
+        listContainer.innerHTML = sessionIds.map(id => {
+            const session = this.sessions[id];
+            const isActive = id === this.currentSessionId;
+            const transcriptCount = Object.keys(session.transcripts || {}).length;
+            const date = new Date(session.lastModified).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            return `
+                <div class="session-item ${isActive ? 'active' : ''}" data-session-id="${id}">
+                    <div class="session-info">
+                        <div class="session-name">${session.name}</div>
+                        <div class="session-meta">${date} · ${transcriptCount} items</div>
+                    </div>
+                    <button class="delete-session-btn" data-session-id="${id}" title="Delete">×</button>
+                </div>
+            `;
+        }).join('');
+
+        // 绑定点击事件
+        listContainer.querySelectorAll('.session-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-session-btn')) return;
+                const sessionId = item.dataset.sessionId;
+                this.switchSession(sessionId);
+            });
+        });
+
+        // 绑定删除按钮
+        listContainer.querySelectorAll('.delete-session-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const sessionId = btn.dataset.sessionId;
+                const session = this.sessions[sessionId];
+
+                if (confirm(`Delete session "${session.name}"?`)) {
+                    this.deleteSession(sessionId);
+                }
+            });
+        });
+    }
+
+    /**
+     * 更新 session 名称输入框
+     */
+    updateSessionNameInput() {
+        const nameInput = document.getElementById('sessionNameInput');
+        const session = this.getCurrentSession();
+        if (nameInput && session) {
+            nameInput.value = session.name;
+        }
+    }
+}

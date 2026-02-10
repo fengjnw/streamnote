@@ -9,54 +9,85 @@
 </head>
 
 <body>
+    <header>
+        <h1>StreamNote</h1>
+        <p>Real-time classroom transcription</p>
+    </header>
+
     <div class="container">
-        <header>
-            <h1>StreamNote</h1>
-            <p>Real-time classroom transcription</p>
-        </header>
 
-        <div class="control-panel">
-            <button id="startBtn" class="btn btn-primary">Start Recording</button>
-            <button id="stopBtn" class="btn btn-danger" disabled>Stop Recording</button>
-            <button id="clearBtn" class="btn btn-secondary">Clear</button>
-
-            <div class="keyword-controls">
-                <label>
-                    <input type="checkbox" id="keyword-toggle" checked>
-                    Enable Keywords
-                </label>
-
-                <button id="keywords-panel-toggle" class="toggle-panel-btn" title="Toggle Keywords Panel">☰</button>
-
-                <label for="keyword-intensity">Intensity:</label>
-                <input type="range" id="keyword-intensity" min="1" max="10" value="5" class="intensity-slider">
-                <span id="intensity-value">5</span>
+        <!-- Session Management Panel -->
+        <div class="session-panel">
+            <div class="session-header">
+                <h3>Sessions</h3>
+                <button id="newSessionBtn" class="btn-icon" title="New Session">+</button>
+                <button id="manageSessionBtn" class="btn-icon" title="Manage Sessions">⚙</button>
+                <button id="toggleSessionPanel" class="btn-icon toggle-btn" title="Toggle Panel">◀</button>
             </div>
+            <div class="session-list" id="sessionList">
+                <!-- Sessions will be rendered here -->
+            </div>
+            <div class="current-session-info">
+                <input type="text" id="sessionNameInput" placeholder="Session name..." />
+            </div>
+
+            <!-- Manage Menu -->
+            <div id="manageMenu" class="manage-menu" style="display: none;">
+                <button id="exportCurrentBtn" class="manage-menu-item">📄 Export Current Session</button>
+                <button id="exportAllBtn" class="manage-menu-item">📦 Export All Sessions</button>
+                <button id="importBtn" class="manage-menu-item">📥 Import Sessions</button>
+                <button id="clearAllBtn" class="manage-menu-item danger">🗑️ Clear All Data</button>
+            </div>
+            <input type="file" id="importFileInput" accept=".json" style="display: none;" />
         </div>
 
-        <div class="main-content">
-            <div class="transcript-container">
-                <h2>Transcription</h2>
-                <div id="transcript" class="transcript">
-                    <p class="placeholder">Press "Start Recording" to begin...</p>
+        <div class="main-wrapper">
+            <div class="control-panel">
+                <button id="openSessionPanel" class="btn-icon open-session-btn" title="Open Sessions"
+                    style="display: none;">▶</button>
+                <button id="startBtn" class="btn btn-primary">Start Recording</button>
+                <button id="stopBtn" class="btn btn-danger" disabled>Stop Recording</button>
+                <button id="clearBtn" class="btn btn-secondary">Clear</button>
+
+                <div class="keyword-controls">
+                    <label>
+                        <input type="checkbox" id="keyword-toggle" checked>
+                        Enable Keywords
+                    </label>
+
+                    <button id="keywords-panel-toggle" class="toggle-panel-btn" title="Toggle Keywords Panel">☰</button>
+
+                    <label for="keyword-intensity">Intensity:</label>
+                    <input type="range" id="keyword-intensity" min="1" max="10" value="5" class="intensity-slider">
+                    <span id="intensity-value">5</span>
                 </div>
             </div>
 
-            <div class="keywords-container-main">
-                <h2>Keywords</h2>
-                <div id="keywords-display" class="keywords-display">
-                    <p class="placeholder">Keywords will appear here...</p>
+            <div class="main-content">
+                <div class="transcript-container">
+                    <h2>Transcription</h2>
+                    <div id="transcript" class="transcript">
+                        <p class="placeholder">Press "Start Recording" to begin...</p>
+                    </div>
+                </div>
+
+                <div class="keywords-container-main">
+                    <h2>Keywords</h2>
+                    <div id="keywords-display" class="keywords-display">
+                        <p class="placeholder">Keywords will appear here...</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="status-bar">
-            <span id="status">Ready</span>
-            <span id="duration">Duration: 0:00</span>
+            <div class="status-bar">
+                <span id="status">Ready</span>
+                <span id="duration">Duration: 0:00</span>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="../frontend/sessionManager.js"></script>
     <script src="../frontend/keywordExtractor.js"></script>
     <script src="../frontend/app.js"></script>
 </body>
