@@ -25,6 +25,11 @@ class StreamNote {
         // Session 管理器
         this.sessionManager = null;
 
+        // 翻译功能
+        this.translationResults = {};
+        this.translationEnabled = true;
+        this.targetLanguage = "Chinese";
+
         this.initSessionManager();
         this.setupUIListeners();
         this.initKeywordExtractor();
@@ -62,6 +67,9 @@ class StreamNote {
         this.preciseResults = { ...session.transcripts };
         this.chunkIndex = Object.keys(this.preciseResults).length;
 
+        // 加载翻译内容
+        this.translationResults = session.translations ? { ...session.translations } : {};
+
         // 更新显示
         this.updateDisplay();
 
@@ -90,6 +98,11 @@ class StreamNote {
         // 保存关键词
         if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords) {
             this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
+        }
+
+        // 保存翻译
+        if (this.translationResults) {
+            this.sessionManager.updateCurrentTranslations(this.translationResults);
         }
     }
 
@@ -152,6 +165,30 @@ class StreamNote {
                 keywordsContainer.classList.toggle("hidden");
                 // 切换按钮文字
                 toggleBtn.textContent = mainContent.classList.contains("keywords-hidden") ? "☷" : "☰";
+            });
+        }
+
+        // 添加翻译开关
+        const translationToggle = document.getElementById("translation-toggle");
+        if (translationToggle) {
+            translationToggle.addEventListener("change", (e) => {
+                this.translationEnabled = e.target.checked;
+                if (this.translationEnabled) {
+                    // 如果有已转录但未翻译的内容，重新翻译全部
+                    this.retranslateAll();
+                }
+            });
+        }
+
+        // 添加语言选择
+        const languageSelector = document.getElementById("target-language");
+        if (languageSelector) {
+            languageSelector.addEventListener("change", (e) => {
+                this.targetLanguage = e.target.value;
+                // 语言改变，重新翻译全部
+                if (this.translationEnabled) {
+                    this.retranslateAll();
+                }
             });
         }
     }
@@ -300,6 +337,7 @@ class StreamNote {
 
     clear() {
         this.preciseResults = {};
+        this.translationResults = {};
         this.chunkIndex = 0;
         this.currentTranscriptText = "";
         this.updateDisplay();
@@ -356,9 +394,15 @@ class StreamNote {
                     minute: '2-digit',
                     second: '2-digit'
                 });
-                this.preciseResults[this.chunkIndex] = { text, timestamp };
+                const currentIndex = this.chunkIndex;
+                this.preciseResults[currentIndex] = { text, timestamp };
                 this.chunkIndex += 1;
                 this.updateDisplay();
+
+                // 自动翻译
+                if (this.translationEnabled) {
+                    this.translateText(text, currentIndex);
+                }
 
                 // 自动保存到当前 session
                 this.saveToSession();
@@ -374,8 +418,11 @@ class StreamNote {
 
     updateDisplay() {
         const transcriptDiv = document.getElementById("transcript");
+        const translationDiv = document.getElementById("translation");
 
-        const formattedLines = Object.values(this.preciseResults).map(item => {
+        // 更新转录显示
+        const formattedLines = Object.keys(this.preciseResults).map(key => {
+            const item = this.preciseResults[key];
             if (!item || !item.text) return null;
 
             const text = item.text.trim();
@@ -386,7 +433,7 @@ class StreamNote {
                 second: '2-digit'
             });
 
-            return `<p>[${timestamp}] ${text}</p>`;
+            return `<p data-index="${key}">[${timestamp}] ${text}</p>`;
         }).filter(line => line !== null);
 
         if (formattedLines.length > 0) {
@@ -395,6 +442,31 @@ class StreamNote {
             transcriptDiv.innerHTML = '<p class="placeholder">Press "Start Recording" to begin...</p>';
         }
         transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
+
+        // 更新翻译显示
+        const translationLines = Object.keys(this.preciseResults).map(key => {
+            const item = this.preciseResults[key];
+            if (!item || !item.text) return null;
+
+            const timestamp = item.timestamp || new Date().toLocaleTimeString('zh-CN', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            const translation = this.translationResults[key];
+            const translationText = translation || '<span class="placeholder">Translating...</span>';
+
+            return `<p data-index="${key}">[${timestamp}] ${translationText}</p>`;
+        }).filter(line => line !== null);
+
+        if (translationLines.length > 0) {
+            translationDiv.innerHTML = translationLines.join('');
+        } else {
+            translationDiv.innerHTML = '<p class="placeholder">Translation will appear here...</p>';
+        }
+        translationDiv.scrollTop = translationDiv.scrollHeight;
 
         // 在更新HTML后，立即重新应用所有已收集的关键词高亮
         if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
@@ -406,6 +478,58 @@ class StreamNote {
 
     updateStatus(text) {
         document.getElementById("status").textContent = text;
+    }
+
+    /**
+     * 翻译文本
+     */
+    async translateText(text, index) {
+        if (!text || !this.translationEnabled) return;
+
+        try {
+            const response = await fetch("http://localhost:5001/api/translate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    text: text,
+                    target_lang: this.targetLanguage
+                })
+            });
+
+            if (!response.ok) {
+                console.error(`[ERROR] Translation API error: ${response.status}`);
+                return;
+            }
+
+            const result = await response.json();
+            const translation = result.translation.trim();
+
+            if (translation) {
+                console.log("[TRANSLATE]", translation);
+                this.translationResults[index] = translation;
+                this.updateDisplay();
+                this.saveToSession();
+            }
+
+        } catch (error) {
+            console.error("[ERROR] Translation request failed:", error);
+        }
+    }
+
+    /**
+     * 重新翻译所有内容
+     */
+    async retranslateAll() {
+        this.translationResults = {};
+        this.updateDisplay();
+
+        for (const [index, item] of Object.entries(this.preciseResults)) {
+            if (item && item.text) {
+                await this.translateText(item.text, index);
+            }
+        }
     }
 
     /**

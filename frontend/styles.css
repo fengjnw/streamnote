@@ -318,6 +318,43 @@ header p {
     height: 18px;
 }
 
+.translation-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.translation-controls label {
+    font-weight: 500;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.translation-controls input[type="checkbox"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+.language-selector {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.95em;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.language-selector:hover,
+.language-selector:focus {
+    border-color: #667eea;
+    outline: none;
+}
+
 .toggle-panel-btn {
     background: #667eea;
     color: white;
@@ -431,16 +468,50 @@ header p {
     grid-template-columns: 1fr;
 }
 
-.transcript-container {
+/* 转录和翻译区域（左右分栏） */
+.transcription-section {
+    display: flex;
+    gap: 0;
+    overflow: hidden;
+    flex: 1;
+}
+
+.transcript-container,
+.translation-container {
+    flex: 1;
     padding: 20px;
     overflow-y: auto;
     background: white;
+}
+
+.transcript-container {
     border-right: 1px solid #e9ecef;
-    transition: border-right 0.3s ease;
+}
+
+.translation-container {
+    background: #f8f9fa;
 }
 
 .main-content.keywords-hidden .transcript-container {
-    border-right: none;
+    border-right: 1px solid #e9ecef;
+}
+
+.transcript-container h2,
+.translation-container h2 {
+    font-size: 1.3em;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.translation {
+    line-height: 1.8;
+    font-size: 1.1em;
+    color: #333;
+}
+
+.translation p {
+    margin-bottom: 15px;
+    word-wrap: break-word;
 }
 
 .keywords-container-main {

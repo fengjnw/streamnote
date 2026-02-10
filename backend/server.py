@@ -79,6 +79,48 @@ def extract_keywords():
         traceback.print_exc()
         return {"error": str(e)}, 500
 
+
+@app.route("/api/translate", methods=["POST"])
+def translate():
+    """
+    翻译 API (GPT 驱动)
+    """
+    try:
+        data = request.json
+        text = data.get("text", "")
+        target_lang = data.get("target_lang", "Chinese")
+        
+        if not text or len(text) < 1:
+            return jsonify({"translation": ""})
+        
+        print(f"[TRANSLATE] Translating to {target_lang} (text_len={len(text)})")
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"You are a professional translator. Translate the following text to {target_lang}. Only provide the translation, no explanations."
+                },
+                {
+                    "role": "user",
+                    "content": text
+                }
+            ],
+            temperature=0.3
+        )
+        
+        translation = response.choices[0].message.content.strip()
+        print(f"[TRANSLATE] Success: {translation[:60]}")
+        
+        return jsonify({"translation": translation})
+        
+    except Exception as e:
+        print(f"[ERROR] Translation: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}, 500
+
 @app.route("/health", methods=["GET"])
 def health_check():
     return {"status": "ok"}
