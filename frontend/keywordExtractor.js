@@ -8,9 +8,7 @@ class KeywordExtractor {
         this.apiUrl = config.apiUrl || "http://localhost:5000/api/extract-keywords";
         this.transcriptElement = config.transcriptElement || document.getElementById("transcript");
         this.keywordElement = config.keywordElement || document.getElementById("keywords-display");
-        this.method = config.method || "combined"; // fast, smart, domain, combined
         this.topK = config.topK || 5;
-        this.domain = config.domain || null; // 可选的学科领域
 
         this.enabled = true;  // 是否启用关键词提取
         this.intensity = 5;   // 强度等级 (1-10)
@@ -23,7 +21,7 @@ class KeywordExtractor {
     }
 
     /**
-     * 提取关键词
+     * 提取关键词 (AI 驱动)
      * @param {string} text - 输入文本
      * @returns {Promise<Array>} 关键词列表
      */
@@ -35,13 +33,8 @@ class KeywordExtractor {
         try {
             const payload = {
                 text: text,
-                method: this.method,
                 top_k: this.topK
             };
-
-            if (this.domain) {
-                payload.domain = this.domain;
-            }
 
             console.log("[KeywordExtractor] Requesting with payload:", payload);
 
@@ -331,26 +324,6 @@ class KeywordExtractor {
         } catch (error) {
             console.error("[KeywordExtractor] Error highlighting keywords in element:", error);
         }
-    }
-
-    /**
-     * 更改提取方法
-     * @param {string} method - fast, smart, domain, combined
-     */
-    setMethod(method) {
-        if (['fast', 'smart', 'domain', 'combined'].includes(method)) {
-            this.method = method;
-            console.log("[KeywordExtractor] Method changed to:", method);
-        }
-    }
-
-    /**
-     * 更改学科领域
-     * @param {string} domain - 学科名称
-     */
-    setDomain(domain) {
-        this.domain = domain;
-        console.log("[KeywordExtractor] Domain changed to:", domain);
     }
 
     /**

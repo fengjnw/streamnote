@@ -34,7 +34,6 @@ class StreamNote {
             apiUrl: "http://localhost:5001/api/extract-keywords",
             transcriptElement: document.getElementById("transcript"),
             keywordElement: document.getElementById("keywords-display"),
-            method: "combined",
             topK: 5
         });
 
@@ -61,31 +60,6 @@ class StreamNote {
                     intensityValue.textContent = intensity;
                 }
                 // 强度改变时，清除已有的关键词并重新识别（确保一致性）
-                this.keywordExtractor.allCollectedKeywords = [];
-                this.keywordExtractor.clearHighlights(document.getElementById("transcript"));
-                await this.processKeywords();
-            });
-        }
-
-        // 绑定方法选择器
-        const methodSelect = document.getElementById("keyword-method");
-        const domainSelect = document.getElementById("keyword-domain");
-
-        if (methodSelect) {
-            methodSelect.addEventListener("change", async (e) => {
-                this.keywordExtractor.setMethod(e.target.value);
-                // 重新提取时清除旧结果，确保一致性
-                this.keywordExtractor.allCollectedKeywords = [];
-                this.keywordExtractor.clearHighlights(document.getElementById("transcript"));
-                await this.processKeywords();
-            });
-        }
-
-        if (domainSelect) {
-            domainSelect.addEventListener("change", async (e) => {
-                const domain = e.target.value || null;
-                this.keywordExtractor.setDomain(domain);
-                // 重新提取时清除旧结果，确保一致性
                 this.keywordExtractor.allCollectedKeywords = [];
                 this.keywordExtractor.clearHighlights(document.getElementById("transcript"));
                 await this.processKeywords();

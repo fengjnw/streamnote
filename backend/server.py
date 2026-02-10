@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from openai import OpenAI
 from config import OPENAI_API_KEY, FLASK_CONFIG
-from keyword_extractor import create_extractor, DOMAIN_KEYWORDS
+from keyword_extractor import create_extractor
 import io
 
 app = Flask(__name__)
@@ -55,44 +55,20 @@ def transcribe():
 @app.route("/api/extract-keywords", methods=["POST"])
 def extract_keywords():
     """
-    提取关键词 API
-    支持四种方法：fast (TF-IDF), smart (OpenAI), domain (领域匹配), combined (组合)
+    提取关键词 API (AI 驱动 - OpenAI)
     """
     try:
         data = request.json
         text = data.get("text", "")
-        method = data.get("method", "combined")
         top_k = data.get("top_k", 5)
-        domain = data.get("domain")
         
         if not text or len(text) < 10:
             return jsonify({"keywords": []})
         
-        print(f"[KEYWORDS] Extracting with method={method}, text_len={len(text)}")
+        print(f"[KEYWORDS] Extracting (text_len={len(text)})")
         
-        if method == "fast":
-            keywords = keyword_extractor.extract_fast(text, top_k)
-            result = {"method": "fast", "keywords": keywords}
-            
-        elif method == "smart":
-            keywords = keyword_extractor.extract_smart(text, context=domain, top_k=top_k)
-            result = {"method": "smart", "keywords": keywords}
-            
-        elif method == "domain":
-            domain_kws = {domain: DOMAIN_KEYWORDS.get(domain, [])} if domain else DOMAIN_KEYWORDS
-            keywords = keyword_extractor.extract_domain_keywords(text, domain_kws, top_k)
-            result = {"method": "domain", "keywords": keywords}
-            
-        elif method == "combined":
-            results = keyword_extractor.extract_combined(
-                text,
-                use_openai=True,
-                domain_keywords=DOMAIN_KEYWORDS if not domain else {domain: DOMAIN_KEYWORDS.get(domain, [])},
-                top_k=top_k
-            )
-            result = {"method": "combined", "keywords": results["combined"], "details": results}
-        else:
-            return {"error": f"Unknown method: {method}"}, 400
+        keywords = keyword_extractor.extract_smart(text, top_k=top_k)
+        result = {"keywords": keywords}
         
         print(f"[KEYWORDS] Success: {result}")
         return jsonify(result)
