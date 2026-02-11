@@ -461,6 +461,10 @@ class StreamNote {
         const formData = new FormData();
         formData.append("file", audioBlob, "audio.webm");
 
+        // 记录请求时的 sessionId，用于后续保存到正确的 session
+        const sessionIdAtRequest = this.sessionManager.currentSessionId;
+        const currentChunkIndex = this.chunkIndex;
+
         try {
             const response = await fetch("http://localhost:5001/api/transcribe", {
                 method: "POST",
@@ -483,21 +487,31 @@ class StreamNote {
                     minute: '2-digit',
                     second: '2-digit'
                 });
-                const currentIndex = this.chunkIndex;
-                this.preciseResults[currentIndex] = { text, timestamp };
-                this.chunkIndex += 1;
-                this.updateDisplay();
 
-                // 自动翻译
-                if (this.translationEnabled) {
-                    this.translateText(text, currentIndex);
+                // 直接保存到请求时的 session
+                const transcriptData = { [currentChunkIndex]: { text, timestamp } };
+                const saved = this.sessionManager.updateTranscriptsForSession(sessionIdAtRequest, transcriptData);
+
+                if (saved) {
+                    this.chunkIndex += 1;
+
+                    // 只有在仍然在同一个 session 时，才更新本地显示
+                    if (this.sessionManager.currentSessionId === sessionIdAtRequest) {
+                        this.preciseResults[currentChunkIndex] = { text, timestamp };
+                        this.updateDisplay();
+
+                        // 自动翻译
+                        if (this.translationEnabled) {
+                            this.translateText(text, currentChunkIndex);
+                        }
+
+                        // 处理关键词提取
+                        this.processKeywords();
+                    } else {
+                        // 如果已切换到其他 session，仅记录日志
+                        console.log(`[TRANSCRIBE] Saved to session ${sessionIdAtRequest}, but user is now in session ${this.sessionManager.currentSessionId}`);
+                    }
                 }
-
-                // 自动保存到当前 session
-                this.saveToSession();
-
-                // 处理关键词提取
-                this.processKeywords();
             }
 
         } catch (error) {

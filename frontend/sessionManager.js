@@ -105,7 +105,7 @@ class SessionManager {
     }
 
     /**
-     * 更新当前 session 的转录内容
+     * 更新指定 session 的转录内容
      */
     updateCurrentTranscripts(transcripts) {
         const session = this.getCurrentSession();
@@ -114,6 +114,24 @@ class SessionManager {
             session.lastModified = Date.now();
             this.saveSessions();
         }
+    }
+
+    /**
+     * 更新指定 sessionId 的转录内容（用于处理切换 session 期间的转录）
+     */
+    updateTranscriptsForSession(sessionId, transcripts) {
+        // 检查该 session 是否还存在
+        if (!this.sessions[sessionId]) {
+            console.warn(`[SessionManager] Session ${sessionId} not found, discarding results`);
+            return false;
+        }
+
+        // 合并新的转录内容
+        const session = this.sessions[sessionId];
+        session.transcripts = { ...session.transcripts, ...transcripts };
+        session.lastModified = Date.now();
+        this.saveSessions();
+        return true;
     }
 
     /**
