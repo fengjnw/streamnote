@@ -184,8 +184,29 @@ class StreamNote {
                 }
 
                 if (e.target.checked) {
-                    // 重新高亮
-                    this.keywordExtractor.reHighlightElement();
+                    // 重新打开时，恢复已有的关键词显示和高亮
+                    const keywordsOriginalDisplay = document.getElementById("keywords-display");
+                    if (this.keywordExtractor.allCollectedKeywords.length > 0) {
+                        // 恢复关键词显示
+                        if (keywordsOriginalDisplay) {
+                            this.keywordExtractor.displayKeywordsList(
+                                this.keywordExtractor.allCollectedKeywords,
+                                keywordsOriginalDisplay
+                            );
+                        }
+                        // 恢复高亮
+                        this.keywordExtractor.reHighlightElement();
+
+                        // 恢复译文关键词（如果翻译功能开启）
+                        if (this.translationEnabled) {
+                            this.translateAndDisplayKeywords();
+                        }
+                    } else {
+                        // 如果没有缓存的关键词，显示占位文本
+                        if (keywordsOriginalDisplay) {
+                            keywordsOriginalDisplay.innerHTML = '<p class="placeholder">Keywords will appear here...</p>';
+                        }
+                    }
                 }
             });
         }
@@ -200,10 +221,10 @@ class StreamNote {
                 if (intensityValue) {
                     intensityValue.textContent = intensity;
                 }
-                // 强度改变时，清除已有的关键词并重新识别（确保一致性）
-                this.keywordExtractor.allCollectedKeywords = [];
+                // 强度改变时，保持已有的全文，但用新强度重新提取关键词
+                // 不清空 allCollectedKeywords，直接重新处理
                 this.keywordExtractor.clearHighlights(document.getElementById("transcript"));
-                await this.processKeywords();
+                await this.reprocessAllKeywords();
             });
         }
 
@@ -234,8 +255,9 @@ class StreamNote {
                 }
 
                 if (this.translationEnabled) {
-                    // 如果有已转录但未翻译的内容，重新翻译全部
-                    this.retranslateAll();
+                    // 恢复已有的翻译结果，不重新翻译
+                    // 只翻译尚未翻译的新内容
+                    this.translateMissingContent();
                 }
             });
         }
@@ -599,7 +621,7 @@ class StreamNote {
     }
 
     /**
-     * 重新翻译所有内容
+     * 重新翻译所有内容（仅在语言切换或强制刷新时使用）
      */
     async retranslateAll() {
         this.translationResults = {};
@@ -618,10 +640,34 @@ class StreamNote {
     }
 
     /**
+     * 只翻译缺失的内容（用于翻译开关重新打开时）
+     */
+    async translateMissingContent() {
+        // 检查是否有未翻译的内容
+        let hasUntranslated = false;
+        for (const [index, item] of Object.entries(this.preciseResults)) {
+            if (item && item.text && !this.translationResults[index]) {
+                hasUntranslated = true;
+                await this.translateText(item.text, index);
+            }
+        }
+
+        // 如果没有未翻译的内容，只需要更新显示即可
+        if (!hasUntranslated) {
+            this.updateDisplay();
+        }
+
+        // 翻译并显示关键词（如果有）
+        if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
+            await this.translateAndDisplayKeywords();
+        }
+    }
+
+    /**
      * 处理关键词提取 - 基于整个转录文本
      */
     async processKeywords() {
-        if (!this.keywordExtractor) return;
+        if (!this.keywordExtractor || !this.keywordExtractor.enabled) return;
 
         // 收集所有转录文本（保证准确率）
         this.currentTranscriptText = Object.values(this.preciseResults)
@@ -634,6 +680,40 @@ class StreamNote {
             // 获取转录div元素
             const transcriptDiv = document.getElementById("transcript");
             // 基于整个文本提取关键词，应用到当前div
+            await this.keywordExtractor.processText(this.currentTranscriptText, transcriptDiv);
+
+            // 显示原文关键词
+            const keywordsOriginalDisplay = document.getElementById("keywords-display");
+            if (keywordsOriginalDisplay && this.keywordExtractor.allCollectedKeywords.length > 0) {
+                this.keywordExtractor.displayKeywordsList(this.keywordExtractor.allCollectedKeywords, keywordsOriginalDisplay);
+            }
+
+            // 翻译并显示译文关键词
+            if (this.translationEnabled && this.keywordExtractor.allCollectedKeywords.length > 0) {
+                await this.translateAndDisplayKeywords();
+            }
+        }
+    }
+
+    /**
+     * 重新处理所有关键词（强度改变时使用）
+     */
+    async reprocessAllKeywords() {
+        if (!this.keywordExtractor || !this.keywordExtractor.enabled) return;
+
+        // 获取当前的全文
+        this.currentTranscriptText = Object.values(this.preciseResults)
+            .map(item => item && item.text ? item.text : "")
+            .join(" ");
+
+        if (this.currentTranscriptText.length > 10) {
+            console.log(`[StreamNote] Reprocessing keywords with new intensity: ${this.keywordExtractor.intensity}`);
+
+            // 清空旧的关键词
+            this.keywordExtractor.allCollectedKeywords = [];
+
+            // 重新提取
+            const transcriptDiv = document.getElementById("transcript");
             await this.keywordExtractor.processText(this.currentTranscriptText, transcriptDiv);
 
             // 显示原文关键词
