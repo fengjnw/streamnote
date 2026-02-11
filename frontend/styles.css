@@ -464,6 +464,7 @@ header p {
     padding: 20px;
     overflow-y: auto;
     background: white;
+    scroll-behavior: smooth;
 }
 
 .transcript-container {

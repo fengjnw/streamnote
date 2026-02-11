@@ -30,10 +30,19 @@ class StreamNote {
         this.translationEnabled = true;
         this.targetLanguage = "Chinese";
 
+        // 同步滚动
+        this.isSyncingScroll = false;
+        this.scrollTimeout = null;
+
         this.initSessionManager();
         this.setupUIListeners();
         this.initKeywordExtractor();
         this.loadCurrentSession();
+
+        // 延迟设置同步滚动，确保元素已加载
+        setTimeout(() => {
+            this.setupSyncScroll();
+        }, 100);
     }
 
     /**
@@ -450,7 +459,6 @@ class StreamNote {
         } else {
             transcriptDiv.innerHTML = '<p class="placeholder">Press "Start Recording" to begin...</p>';
         }
-        transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
 
         // 更新翻译显示
         const translationLines = Object.keys(this.preciseResults).map(key => {
@@ -475,7 +483,21 @@ class StreamNote {
         } else {
             translationDiv.innerHTML = '<p class="placeholder">Translation will appear here...</p>';
         }
-        translationDiv.scrollTop = translationDiv.scrollHeight;
+
+        // 自动滚动到底部（阻止同步滚动触发）
+        // 注意：要滚动外层容器，不是内容 div
+        this.isSyncingScroll = true;
+        const transcriptContainer = document.querySelector(".transcript-container");
+        const translationContainer = document.querySelector(".translation-container");
+        if (transcriptContainer) {
+            transcriptContainer.scrollTop = transcriptContainer.scrollHeight;
+        }
+        if (translationContainer) {
+            translationContainer.scrollTop = translationContainer.scrollHeight;
+        }
+        setTimeout(() => {
+            this.isSyncingScroll = false;
+        }, 100);
 
         // 在更新HTML后，立即重新应用所有已收集的关键词高亮
         if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
@@ -623,6 +645,64 @@ class StreamNote {
         } catch (error) {
             console.error("[ERROR] Keyword translation failed:", error);
         }
+    }
+
+    /**
+     * 设置同步滚动
+     */
+    setupSyncScroll() {
+        // 注意：滚动的是外层容器，不是内容 div
+        const transcriptContainer = document.querySelector(".transcript-container");
+        const translationContainer = document.querySelector(".translation-container");
+
+        if (!transcriptContainer || !translationContainer) {
+            console.warn('[StreamNote] Sync scroll containers not found');
+            return;
+        }
+
+        // 原文容器滚动时，同步译文容器（使用百分比同步）
+        transcriptContainer.addEventListener('scroll', () => {
+            if (this.isSyncingScroll) return;
+
+            clearTimeout(this.scrollTimeout);
+            this.scrollTimeout = setTimeout(() => {
+                this.isSyncingScroll = true;
+
+                // 计算滚动百分比
+                const scrollPercentage = transcriptContainer.scrollTop /
+                    (transcriptContainer.scrollHeight - transcriptContainer.clientHeight);
+
+                // 应用到译文容器
+                translationContainer.scrollTop = scrollPercentage *
+                    (translationContainer.scrollHeight - translationContainer.clientHeight);
+
+                setTimeout(() => {
+                    this.isSyncingScroll = false;
+                }, 100);
+            }, 30); // 防抖 30ms
+        });
+
+        // 译文容器滚动时，同步原文容器（使用百分比同步）
+        translationContainer.addEventListener('scroll', () => {
+            if (this.isSyncingScroll) return;
+
+            clearTimeout(this.scrollTimeout);
+            this.scrollTimeout = setTimeout(() => {
+                this.isSyncingScroll = true;
+
+                // 计算滚动百分比
+                const scrollPercentage = translationContainer.scrollTop /
+                    (translationContainer.scrollHeight - translationContainer.clientHeight);
+
+                // 应用到原文容器
+                transcriptContainer.scrollTop = scrollPercentage *
+                    (transcriptContainer.scrollHeight - transcriptContainer.clientHeight);
+
+                setTimeout(() => {
+                    this.isSyncingScroll = false;
+                }, 100);
+            }, 30); // 防抖 30ms
+        });
     }
 
     startDurationUpdate() {
