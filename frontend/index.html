@@ -55,8 +55,6 @@
                         Enable Keywords
                     </label>
 
-                    <button id="keywords-panel-toggle" class="toggle-panel-btn" title="Toggle Keywords Panel">☰</button>
-
                     <label for="keyword-intensity">Intensity:</label>
                     <input type="range" id="keyword-intensity" min="1" max="10" value="5" class="intensity-slider">
                     <span id="intensity-value">5</span>
@@ -94,10 +92,19 @@
                     </div>
                 </div>
 
-                <div class="keywords-container-main">
-                    <h2>Keywords</h2>
-                    <div id="keywords-display" class="keywords-display">
-                        <p class="placeholder">Keywords will appear here...</p>
+                <div class="keywords-section">
+                    <div class="keywords-original">
+                        <h3>Keywords (Original)</h3>
+                        <div id="keywords-display" class="keywords-display">
+                            <p class="placeholder">Keywords will appear here...</p>
+                        </div>
+                    </div>
+
+                    <div class="keywords-translated">
+                        <h3>Keywords (Translated)</h3>
+                        <div id="keywords-translated-display" class="keywords-display">
+                            <p class="placeholder">Translated keywords will appear here...</p>
+                        </div>
                     </div>
                 </div>
             </div>

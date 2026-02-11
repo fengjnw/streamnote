@@ -194,14 +194,17 @@ class KeywordExtractor {
     /**
      * 显示关键词列表
      * @param {Array<string>} keywords - 关键词数组
+     * @param {HTMLElement} targetElement - 目标显示元素（可选，默认使用 this.keywordElement）
      */
-    displayKeywordsList(keywords) {
-        if (!this.keywordElement) {
+    displayKeywordsList(keywords, targetElement = null) {
+        const element = targetElement || this.keywordElement;
+
+        if (!element) {
             return;
         }
 
         if (keywords.length === 0) {
-            this.keywordElement.innerHTML = '<p style="color: #999;">No keywords detected</p>';
+            element.innerHTML = '<p class="placeholder">No keywords detected</p>';
             return;
         }
 
@@ -210,7 +213,6 @@ class KeywordExtractor {
 
         const html = `
             <div class="keywords-container">
-                <h3>Key Terms (${uniqueKeywords.length})</h3>
                 <div class="keywords-list">
                     ${uniqueKeywords.map(kw => `
                         <span class="keyword-badge" title="${kw}">${kw}</span>
@@ -219,7 +221,7 @@ class KeywordExtractor {
             </div>
         `;
 
-        this.keywordElement.innerHTML = html;
+        element.innerHTML = html;
     }
 
     /**
