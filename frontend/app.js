@@ -42,7 +42,36 @@ class StreamNote {
         // 延迟设置同步滚动，确保元素已加载
         setTimeout(() => {
             this.setupSyncScroll();
+            this.initializeVisibility();
         }, 100);
+    }
+
+    /**
+     * 初始化显示/隐藏状态
+     */
+    initializeVisibility() {
+        // 根据翻译开关状态设置译文容器显示/隐藏
+        const translationToggle = document.getElementById("translation-toggle");
+        if (translationToggle) {
+            const translationContainer = document.querySelector(".translation-container");
+            const keywordsTranslated = document.querySelector(".keywords-translated");
+
+            if (translationContainer) {
+                translationContainer.style.display = translationToggle.checked ? 'flex' : 'none';
+            }
+            if (keywordsTranslated) {
+                keywordsTranslated.style.display = translationToggle.checked ? 'flex' : 'none';
+            }
+        }
+
+        // 根据关键词开关状态设置关键词区域显示/隐藏
+        const keywordToggle = document.getElementById("keyword-toggle");
+        if (keywordToggle) {
+            const keywordsSection = document.querySelector(".keywords-section");
+            if (keywordsSection) {
+                keywordsSection.style.display = keywordToggle.checked ? 'flex' : 'none';
+            }
+        }
     }
 
     /**
@@ -147,6 +176,13 @@ class StreamNote {
         if (toggleCheckbox) {
             toggleCheckbox.addEventListener("change", (e) => {
                 this.keywordExtractor.setEnabled(e.target.checked);
+
+                // 显示/隐藏关键词区域
+                const keywordsSection = document.querySelector(".keywords-section");
+                if (keywordsSection) {
+                    keywordsSection.style.display = e.target.checked ? 'flex' : 'none';
+                }
+
                 if (e.target.checked) {
                     // 重新高亮
                     this.keywordExtractor.reHighlightElement();
@@ -184,6 +220,19 @@ class StreamNote {
         if (translationToggle) {
             translationToggle.addEventListener("change", (e) => {
                 this.translationEnabled = e.target.checked;
+
+                // 显示/隐藏译文容器
+                const translationContainer = document.querySelector(".translation-container");
+                if (translationContainer) {
+                    translationContainer.style.display = e.target.checked ? 'flex' : 'none';
+                }
+
+                // 显示/隐藏译文关键词
+                const keywordsTranslated = document.querySelector(".keywords-translated");
+                if (keywordsTranslated) {
+                    keywordsTranslated.style.display = e.target.checked ? 'flex' : 'none';
+                }
+
                 if (this.translationEnabled) {
                     // 如果有已转录但未翻译的内容，重新翻译全部
                     this.retranslateAll();

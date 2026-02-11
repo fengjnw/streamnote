@@ -465,10 +465,19 @@ header p {
     overflow-y: auto;
     background: white;
     scroll-behavior: smooth;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
 }
 
 .transcript-container {
     border-right: 1px solid #e9ecef;
+}
+
+/* 当译文容器隐藏时，原文容器占满全宽 */
+.translation-container[style*="display: none"]~.transcript-container,
+.transcript-container:only-child {
+    border-right: none;
 }
 
 .translation-container {
@@ -480,6 +489,13 @@ header p {
     font-size: 1.3em;
     margin-bottom: 15px;
     color: #333;
+    flex-shrink: 0;
+}
+
+.transcript,
+.translation {
+    flex: 1;
+    overflow: visible;
 }
 
 /* 关键词区域（左右分栏） */
@@ -490,6 +506,7 @@ header p {
     overflow: hidden;
     min-height: 150px;
     max-height: 250px;
+    transition: all 0.3s ease;
 }
 
 .keywords-original,
@@ -498,10 +515,19 @@ header p {
     padding: 15px 20px;
     overflow-y: auto;
     background: white;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
 }
 
 .keywords-original {
     border-right: 1px solid #e9ecef;
+}
+
+/* 当译文关键词隐藏时，原文关键词占满全宽 */
+.keywords-translated[style*="display: none"]~.keywords-original,
+.keywords-original:only-child {
+    border-right: none;
 }
 
 .keywords-translated {
@@ -514,6 +540,16 @@ header p {
     margin-bottom: 12px;
     color: #333;
     font-weight: 600;
+    flex-shrink: 0;
+}
+
+.keywords-display {
+    flex: 1;
+    overflow: visible;
+    background: transparent;
+    padding: 0;
+    border-radius: 6px;
+    min-height: 80px;
 }
 
 .translation {
@@ -525,13 +561,6 @@ header p {
 .translation p {
     margin-bottom: 15px;
     word-wrap: break-word;
-}
-
-.keywords-display {
-    background: transparent;
-    padding: 0;
-    border-radius: 6px;
-    min-height: 80px;
 }
 
 .transcript {
