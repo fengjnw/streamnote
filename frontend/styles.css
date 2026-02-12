@@ -318,6 +318,43 @@ header p {
     height: 18px;
 }
 
+.translation-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.translation-controls label {
+    font-weight: 500;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.translation-controls input[type="checkbox"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+.language-selector {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.95em;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.language-selector:hover,
+.language-selector:focus {
+    border-color: #667eea;
+    outline: none;
+}
+
 .toggle-panel-btn {
     background: #667eea;
     color: white;
@@ -404,60 +441,126 @@ header p {
 
 /* 主要内容区域 */
 .main-content {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
     flex: 1;
     overflow: hidden;
     padding: 0;
-
-    .session-panel {
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .session-panel.collapsed {
-        width: 0;
-    }
-
-    .container {
-        flex-direction: column;
-    }
-
-    transition: grid-template-columns 0.3s ease;
 }
 
-.main-content.keywords-hidden {
-    grid-template-columns: 1fr;
+/* 转录和翻译区域（左右分栏） */
+.transcription-section {
+    display: flex;
+    gap: 0;
+    overflow: hidden;
+    flex: 2;
+    border-bottom: 2px solid #e9ecef;
 }
 
-.transcript-container {
+.transcript-container,
+.translation-container {
+    flex: 1;
     padding: 20px;
     overflow-y: auto;
     background: white;
-    border-right: 1px solid #e9ecef;
-    transition: border-right 0.3s ease;
+    scroll-behavior: smooth;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
 }
 
-.main-content.keywords-hidden .transcript-container {
+.transcript-container {
+    border-right: 1px solid #e9ecef;
+}
+
+/* 当译文容器隐藏时，原文容器占满全宽 */
+.translation-container[style*="display: none"]~.transcript-container,
+.transcript-container:only-child {
     border-right: none;
 }
 
-.keywords-container-main {
-    padding: 20px;
-    overflow-y: auto;
+.translation-container {
     background: #f8f9fa;
-    transition: all 0.3s ease;
 }
 
-.keywords-container-main.hidden {
-    display: none;
-}
-
-.keywords-container-main h2 {
+.transcript-container h2,
+.translation-container h2 {
     font-size: 1.3em;
     margin-bottom: 15px;
     color: #333;
+    flex-shrink: 0;
+}
+
+.transcript,
+.translation {
+    flex: 1;
+    overflow: visible;
+}
+
+/* 关键词区域（左右分栏） */
+.keywords-section {
+    display: flex;
+    gap: 0;
+    flex: 1;
+    overflow: hidden;
+    min-height: 150px;
+    max-height: 250px;
+    transition: all 0.3s ease;
+}
+
+.keywords-original,
+.keywords-translated {
+    flex: 1;
+    padding: 15px 20px;
+    overflow-y: auto;
+    background: white;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.keywords-original {
+    border-right: 1px solid #e9ecef;
+}
+
+/* 当译文关键词隐藏时，原文关键词占满全宽 */
+.keywords-translated[style*="display: none"]~.keywords-original,
+.keywords-original:only-child {
+    border-right: none;
+}
+
+.keywords-translated {
+    background: #f8f9fa;
+}
+
+.keywords-original h3,
+.keywords-translated h3 {
+    font-size: 1.1em;
+    margin-bottom: 12px;
+    color: #333;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.keywords-display {
+    flex: 1;
+    overflow: visible;
+    background: transparent;
+    padding: 0;
+    border-radius: 6px;
+    min-height: 80px;
+}
+
+.translation {
+    line-height: 1.8;
+    font-size: 1.1em;
+    color: #333;
+}
+
+.translation p {
+    margin-bottom: 15px;
+    word-wrap: break-word;
 }
 
 .transcript {
@@ -474,6 +577,7 @@ header p {
 .placeholder {
     color: #999;
     font-style: italic;
+    font-size: 0.95em;
 }
 
 .temporary {
@@ -524,13 +628,6 @@ header p {
     white-space: nowrap;
     z-index: 100;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-}
-
-.keywords-display {
-    background: white;
-    padding: 15px;
-    border-radius: 6px;
-    min-height: 100px;
 }
 
 .keywords-container {

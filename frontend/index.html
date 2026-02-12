@@ -55,26 +55,57 @@
                         Enable Keywords
                     </label>
 
-                    <button id="keywords-panel-toggle" class="toggle-panel-btn" title="Toggle Keywords Panel">☰</button>
-
                     <label for="keyword-intensity">Intensity:</label>
                     <input type="range" id="keyword-intensity" min="1" max="10" value="5" class="intensity-slider">
                     <span id="intensity-value">5</span>
                 </div>
+
+                <div class="translation-controls">
+                    <label>
+                        <input type="checkbox" id="translation-toggle" checked>
+                        Enable Translation
+                    </label>
+                    <select id="target-language" class="language-selector">
+                        <option value="Chinese">中文</option>
+                        <option value="English">English</option>
+                        <option value="Spanish">Español</option>
+                        <option value="French">Français</option>
+                        <option value="Japanese">日本語</option>
+                        <option value="Korean">한국어</option>
+                    </select>
+                </div>
             </div>
 
             <div class="main-content">
-                <div class="transcript-container">
-                    <h2>Transcription</h2>
-                    <div id="transcript" class="transcript">
-                        <p class="placeholder">Press "Start Recording" to begin...</p>
+                <div class="transcription-section">
+                    <div class="transcript-container">
+                        <h2>Transcription</h2>
+                        <div id="transcript" class="transcript">
+                            <p class="placeholder">Press "Start Recording" to begin...</p>
+                        </div>
+                    </div>
+
+                    <div class="translation-container">
+                        <h2>Translation</h2>
+                        <div id="translation" class="translation">
+                            <p class="placeholder">Translation will appear here...</p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="keywords-container-main">
-                    <h2>Keywords</h2>
-                    <div id="keywords-display" class="keywords-display">
-                        <p class="placeholder">Keywords will appear here...</p>
+                <div class="keywords-section">
+                    <div class="keywords-original">
+                        <h3>Keywords (Original)</h3>
+                        <div id="keywords-display" class="keywords-display">
+                            <p class="placeholder">Keywords will appear here...</p>
+                        </div>
+                    </div>
+
+                    <div class="keywords-translated">
+                        <h3>Keywords (Translated)</h3>
+                        <div id="keywords-translated-display" class="keywords-display">
+                            <p class="placeholder">Translated keywords will appear here...</p>
+                        </div>
                     </div>
                 </div>
             </div>

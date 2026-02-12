@@ -21,6 +21,46 @@ class SessionManager {
             const saved = localStorage.getItem(this.STORAGE_KEY);
             if (saved) {
                 this.sessions = JSON.parse(saved);
+
+                // 向后兼容：为旧 session 添加默认设置和多语言结构
+                Object.keys(this.sessions).forEach(id => {
+                    const session = this.sessions[id];
+
+                    // 兼容：将旧的单语言 translations 转为多语言结构
+                    if (session.translations && !session.translations.Chinese) {
+                        const oldTranslations = { ...session.translations };
+                        session.translations = {
+                            Chinese: oldTranslations,  // 假定旧数据是中文
+                            English: {},
+                            Spanish: {},
+                            French: {},
+                            Japanese: {},
+                            Korean: {}
+                        };
+                    }
+
+                    // 兼容：将旧的单语言 translatedKeywords 转为多语言结构
+                    if (Array.isArray(session.translatedKeywords)) {
+                        const oldKeywords = [...session.translatedKeywords];
+                        session.translatedKeywords = {
+                            Chinese: oldKeywords,  // 假定旧数据是中文
+                            English: [],
+                            Spanish: [],
+                            French: [],
+                            Japanese: [],
+                            Korean: []
+                        };
+                    }
+
+                    if (!session.settings) {
+                        session.settings = {
+                            translationEnabled: true,
+                            targetLanguage: "Chinese",
+                            keywordEnabled: true,
+                            keywordIntensity: 5
+                        };
+                    }
+                });
             }
 
             const currentId = localStorage.getItem(this.CURRENT_SESSION_KEY);
@@ -59,7 +99,29 @@ class SessionManager {
             id: id,
             name: defaultName,
             transcripts: {},
+            translations: {  // 改为多语言结构
+                Chinese: {},
+                English: {},
+                Spanish: {},
+                French: {},
+                Japanese: {},
+                Korean: {}
+            },
             keywords: [],
+            translatedKeywords: {  // 改为多语言结构
+                Chinese: [],
+                English: [],
+                Spanish: [],
+                French: [],
+                Japanese: [],
+                Korean: []
+            },
+            settings: {
+                translationEnabled: true,
+                targetLanguage: "Chinese",
+                keywordEnabled: true,
+                keywordIntensity: 5
+            },
             createdAt: Date.now(),
             lastModified: Date.now()
         };
@@ -104,7 +166,7 @@ class SessionManager {
     }
 
     /**
-     * 更新当前 session 的转录内容
+     * 更新指定 session 的转录内容
      */
     updateCurrentTranscripts(transcripts) {
         const session = this.getCurrentSession();
@@ -116,12 +178,72 @@ class SessionManager {
     }
 
     /**
+     * 更新指定 sessionId 的转录内容（用于处理切换 session 期间的转录）
+     */
+    updateTranscriptsForSession(sessionId, transcripts) {
+        // 检查该 session 是否还存在
+        if (!this.sessions[sessionId]) {
+            console.warn(`[SessionManager] Session ${sessionId} not found, discarding results`);
+            return false;
+        }
+
+        // 合并新的转录内容
+        const session = this.sessions[sessionId];
+        session.transcripts = { ...session.transcripts, ...transcripts };
+        session.lastModified = Date.now();
+        this.saveSessions();
+        return true;
+    }
+
+    /**
      * 更新当前 session 的关键词
      */
     updateCurrentKeywords(keywords) {
         const session = this.getCurrentSession();
         if (session) {
             session.keywords = [...keywords];
+            session.lastModified = Date.now();
+            this.saveSessions();
+        }
+    }
+
+    /**
+     * 更新当前 session 的翻译内容（指定语言）
+     */
+    updateCurrentTranslations(translations, language) {
+        const session = this.getCurrentSession();
+        if (session) {
+            if (!session.translations[language]) {
+                session.translations[language] = {};
+            }
+            session.translations[language] = { ...session.translations[language], ...translations };
+            session.lastModified = Date.now();
+            this.saveSessions();
+        }
+    }
+
+    /**
+     * 更新当前 session 的译文关键词（指定语言）
+     */
+    updateCurrentTranslatedKeywords(translatedKeywords, language) {
+        const session = this.getCurrentSession();
+        if (session) {
+            if (!session.translatedKeywords[language]) {
+                session.translatedKeywords[language] = [];
+            }
+            session.translatedKeywords[language] = [...translatedKeywords];
+            session.lastModified = Date.now();
+            this.saveSessions();
+        }
+    }
+
+    /**
+     * 更新当前 session 的设置
+     */
+    updateCurrentSettings(settings) {
+        const session = this.getCurrentSession();
+        if (session) {
+            session.settings = { ...session.settings, ...settings };
             session.lastModified = Date.now();
             this.saveSessions();
         }
