@@ -187,7 +187,7 @@ class StreamNote {
 
                 // 恢复译文关键词
                 const keywordsTranslatedDisplay = document.getElementById("keywords-translated-display");
-                
+
                 if (this.translationEnabled && session.translatedKeywords && session.translatedKeywords[this.targetLanguage]) {
                     // 有缓存的译文，直接显示
                     const translatedKeywords = session.translatedKeywords[this.targetLanguage];
@@ -221,7 +221,7 @@ class StreamNote {
                 // 没有关键词，清空显示
                 const keywordsOriginalDisplay = document.getElementById("keywords-display");
                 const keywordsTranslatedDisplay = document.getElementById("keywords-translated-display");
-                
+
                 if (keywordsOriginalDisplay) {
                     keywordsOriginalDisplay.innerHTML = '<p class="placeholder">Keywords will appear here...</p>';
                 }
@@ -245,7 +245,7 @@ class StreamNote {
         // 如果正在录制，优先保存到录制中的session
         const sessionId = targetSessionId || this.recordingSessionId || this.sessionManager.currentSessionId;
         const session = this.sessionManager.getSession(sessionId);
-        
+
         if (!session) {
             console.error(`[ERROR] Session ${sessionId} not found`);
             return;
