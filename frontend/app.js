@@ -30,6 +30,10 @@ class StreamNote {
         this.translationEnabled = true;
         this.targetLanguage = "Chinese";
 
+        // 全局转录状态（跨 session）
+        this.recordingSessionId = null;  // 记录当前正在转录的 session
+        this.displaySessionId = null;    // 当前显示的 session（用户看到的）
+
         // 同步滚动
         this.isSyncingScroll = false;
         this.scrollTimeout = null;
@@ -96,10 +100,19 @@ class StreamNote {
         const session = this.sessionManager.getCurrentSession();
         if (!session) return;
 
-        // 停止当前录制
-        if (this.isRecording) {
-            this.stop();
+        // 设置当前显示的 session
+        this.displaySessionId = this.sessionManager.currentSessionId;
+
+        // 不再自动停止转录，保持全局转录状态
+        // 如果有其他 session 在录制，显示提示
+        if (this.recordingSessionId !== null && this.recordingSessionId !== this.sessionManager.currentSessionId) {
+            const recordingSession = this.sessionManager.getSession(this.recordingSessionId);
+            const recordingSessionName = recordingSession ? recordingSession.name : "Unknown";
+            this.showStatusMessage(`💬 Recording in "${recordingSessionName}" will continue in background`, 3000);
         }
+
+        // 更新录制指示器UI
+        this.updateRecordingIndicator();
 
         // 恢复功能设置
         if (session.settings) {
@@ -172,15 +185,48 @@ class StreamNote {
                     this.keywordExtractor.reHighlightElement(transcriptDiv);
                 }
 
-                // 恢复译文关键词（如果翻译开启且有缓存）
+                // 恢复译文关键词
+                const keywordsTranslatedDisplay = document.getElementById("keywords-translated-display");
+                
                 if (this.translationEnabled && session.translatedKeywords && session.translatedKeywords[this.targetLanguage]) {
+                    // 有缓存的译文，直接显示
                     const translatedKeywords = session.translatedKeywords[this.targetLanguage];
                     if (translatedKeywords && translatedKeywords.length > 0) {
-                        const keywordsTranslatedDisplay = document.getElementById("keywords-translated-display");
                         if (keywordsTranslatedDisplay) {
                             this.keywordExtractor.displayKeywordsList(translatedKeywords, keywordsTranslatedDisplay);
                         }
+                    } else {
+                        // 缓存为空数组，显示占位文本
+                        if (keywordsTranslatedDisplay) {
+                            keywordsTranslatedDisplay.innerHTML = '<p class="placeholder">Translated keywords will appear here...</p>';
+                        }
                     }
+                } else if (this.translationEnabled) {
+                    // 翻译开启但没有缓存，需要重新翻译
+                    // 只在当前session有关键词时才翻译
+                    if (keywordsTranslatedDisplay) {
+                        keywordsTranslatedDisplay.innerHTML = '<p class="placeholder">Translating keywords...</p>';
+                    }
+                    // 异步翻译关键词，指定当前session作为目标
+                    setTimeout(() => {
+                        this.translateAndDisplayKeywords(this.sessionManager.currentSessionId);
+                    }, 100);
+                } else {
+                    // 翻译功能关闭，显示占位文本
+                    if (keywordsTranslatedDisplay) {
+                        keywordsTranslatedDisplay.innerHTML = '<p class="placeholder">Translated keywords will appear here...</p>';
+                    }
+                }
+            } else {
+                // 没有关键词，清空显示
+                const keywordsOriginalDisplay = document.getElementById("keywords-display");
+                const keywordsTranslatedDisplay = document.getElementById("keywords-translated-display");
+                
+                if (keywordsOriginalDisplay) {
+                    keywordsOriginalDisplay.innerHTML = '<p class="placeholder">Keywords will appear here...</p>';
+                }
+                if (keywordsTranslatedDisplay) {
+                    keywordsTranslatedDisplay.innerHTML = '<p class="placeholder">Translated keywords will appear here...</p>';
                 }
             }
         }
@@ -192,10 +238,21 @@ class StreamNote {
     /**
      * 保存当前数据到 session
      */
-    saveToSession() {
+    saveToSession(targetSessionId = null) {
         if (!this.sessionManager) return;
 
-        this.sessionManager.updateCurrentTranscripts(this.preciseResults);
+        // 如果没有指定目标session，则使用当前session
+        // 如果正在录制，优先保存到录制中的session
+        const sessionId = targetSessionId || this.recordingSessionId || this.sessionManager.currentSessionId;
+        const session = this.sessionManager.getSession(sessionId);
+        
+        if (!session) {
+            console.error(`[ERROR] Session ${sessionId} not found`);
+            return;
+        }
+
+        // 保存转录内容
+        this.sessionManager.updateTranscriptsForSession(sessionId, this.preciseResults);
 
         // 保存关键词
         if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords) {
@@ -271,7 +328,7 @@ class StreamNote {
 
                         // 恢复译文关键词（如果翻译功能开启）
                         if (this.translationEnabled) {
-                            this.translateAndDisplayKeywords();
+                            this.translateAndDisplayKeywords(this.sessionManager.currentSessionId);
                         }
                     } else {
                         // 如果没有缓存的关键词，显示占位文本
@@ -369,6 +426,18 @@ class StreamNote {
 
     async start() {
         try {
+            // 检查是否已有其他 session 在录制
+            if (this.recordingSessionId !== null && this.recordingSessionId !== this.sessionManager.currentSessionId) {
+                const recordingSession = this.sessionManager.getSession(this.recordingSessionId);
+                const recordingSessionName = recordingSession ? recordingSession.name : "Unknown";
+                this.showStatusMessage(`⚠️ Stop recording in "${recordingSessionName}" first!`, 3000);
+                return;
+            }
+
+            // 设置全局录制状态
+            this.recordingSessionId = this.sessionManager.currentSessionId;
+            this.updateRecordingIndicator();
+
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
             // 设置音量检测
@@ -484,6 +553,10 @@ class StreamNote {
         if (this.mediaRecorder && this.isRecording) {
             this.isRecording = false;
 
+            // 清除全局录制状态
+            this.recordingSessionId = null;
+            this.updateRecordingIndicator();
+
             if (this.checkInterval) {
                 clearInterval(this.checkInterval);
                 this.checkInterval = null;
@@ -554,7 +627,8 @@ class StreamNote {
         formData.append("file", audioBlob, "audio.webm");
 
         // 记录请求时的 sessionId，用于后续保存到正确的 session
-        const sessionIdAtRequest = this.sessionManager.currentSessionId;
+        // 如果正在录制，使用录制中的 session；否则使用当前显示的 session
+        const sessionIdAtRequest = this.recordingSessionId || this.sessionManager.currentSessionId;
         const currentChunkIndex = this.chunkIndex;
 
         try {
@@ -592,13 +666,13 @@ class StreamNote {
                         this.preciseResults[currentChunkIndex] = { text, timestamp };
                         this.updateDisplay();
 
-                        // 自动翻译
+                        // 自动翻译（保存到原来的录制session）
                         if (this.translationEnabled) {
-                            this.translateText(text, currentChunkIndex);
+                            this.translateText(text, currentChunkIndex, sessionIdAtRequest);
                         }
 
                         // 处理关键词提取
-                        this.processKeywords();
+                        this.processKeywords(sessionIdAtRequest);
                     } else {
                         // 如果已切换到其他 session，仅记录日志
                         console.log(`[TRANSCRIBE] Saved to session ${sessionIdAtRequest}, but user is now in session ${this.sessionManager.currentSessionId}`);
@@ -689,9 +763,62 @@ class StreamNote {
     }
 
     /**
+     * 显示临时状态消息（自动消失）
+     * @param {String} message - 消息内容
+     * @param {Number} duration - 消息显示时长（毫秒），默认 3000
+     */
+    showStatusMessage(message, duration = 3000) {
+        const statusEl = document.getElementById("status");
+        const originalText = statusEl.textContent;
+        statusEl.textContent = message;
+
+        setTimeout(() => {
+            if (statusEl.textContent === message) {
+                statusEl.textContent = originalText;
+            }
+        }, duration);
+    }
+
+    /**
+     * 更新录制指示器UI
+     * 显示当前正在录制的session，并高亮session列表
+     */
+    updateRecordingIndicator() {
+        const indicator = document.getElementById("recording-indicator");
+        const sessionNameEl = document.getElementById("recording-session-name");
+
+        if (this.recordingSessionId !== null) {
+            // 显示录制指示器
+            const recordingSession = this.sessionManager.getSession(this.recordingSessionId);
+            const recordingSessionName = recordingSession ? recordingSession.name : "Unknown";
+            sessionNameEl.textContent = recordingSessionName;
+            indicator.style.display = "inline-block";
+
+            // 高亮session列表中正在录制的session
+            const sessionItems = document.querySelectorAll(".session-item");
+            sessionItems.forEach(item => {
+                if (item.dataset.sessionId === this.recordingSessionId) {
+                    item.classList.add("recording");
+                } else {
+                    item.classList.remove("recording");
+                }
+            });
+        } else {
+            // 隐藏录制指示器
+            indicator.style.display = "none";
+
+            // 移除所有session的录制高亮
+            const sessionItems = document.querySelectorAll(".session-item");
+            sessionItems.forEach(item => {
+                item.classList.remove("recording");
+            });
+        }
+    }
+
+    /**
      * 翻译文本
      */
-    async translateText(text, index) {
+    async translateText(text, index, targetSessionId = null) {
         if (!text || !this.translationEnabled) return;
 
         try {
@@ -718,7 +845,8 @@ class StreamNote {
                 console.log("[TRANSLATE]", translation);
                 this.translationResults[index] = translation;
                 this.updateDisplay();
-                this.saveToSession();
+                // 保存翻译到正确的session（录制中的session或当前session）
+                this.saveToSession(targetSessionId);
             }
 
         } catch (error) {
@@ -757,7 +885,7 @@ class StreamNote {
 
             // 恢复或翻译关键词
             if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
-                await this.translateAndDisplayKeywords();
+                await this.translateAndDisplayKeywords(this.sessionManager.currentSessionId);
             }
             return;
         }
@@ -798,9 +926,9 @@ class StreamNote {
             }, 2000);
         }
 
-        // 重新翻译关键词
+        // 重新翻译关键词（保存到当前session）
         if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
-            await this.translateAndDisplayKeywords();
+            await this.translateAndDisplayKeywords(this.sessionManager.currentSessionId);
         }
     }
 
@@ -838,7 +966,7 @@ class StreamNote {
     /**
      * 处理关键词提取 - 基于整个转录文本
      */
-    async processKeywords() {
+    async processKeywords(targetSessionId = null) {
         if (!this.keywordExtractor || !this.keywordExtractor.enabled) return;
 
         // 收集所有转录文本（保证准确率）
@@ -862,7 +990,7 @@ class StreamNote {
 
             // 翻译并显示译文关键词
             if (this.translationEnabled && this.keywordExtractor.allCollectedKeywords.length > 0) {
-                await this.translateAndDisplayKeywords();
+                await this.translateAndDisplayKeywords(targetSessionId);
             }
         }
     }
@@ -896,7 +1024,7 @@ class StreamNote {
 
             // 翻译并显示译文关键词
             if (this.translationEnabled && this.keywordExtractor.allCollectedKeywords.length > 0) {
-                await this.translateAndDisplayKeywords();
+                await this.translateAndDisplayKeywords(this.sessionManager.currentSessionId);
             }
         }
     }
@@ -904,8 +1032,14 @@ class StreamNote {
     /**
      * 翻译并显示关键词
      */
-    async translateAndDisplayKeywords() {
+    async translateAndDisplayKeywords(targetSessionId = null) {
         if (!this.keywordExtractor || !this.keywordExtractor.allCollectedKeywords) return;
+
+        // 如果没有指定目标session，则使用当前session或录制中的session
+        const sessionId = targetSessionId || this.recordingSessionId || this.sessionManager.currentSessionId;
+        const session = this.sessionManager.getSession(sessionId);
+
+        if (!session) return;
 
         const keywords = this.keywordExtractor.allCollectedKeywords;
         const keywordsTranslatedDisplay = document.getElementById("keywords-translated-display");
@@ -913,7 +1047,6 @@ class StreamNote {
         if (!keywordsTranslatedDisplay) return;
 
         // 检查当前语言的缓存
-        const session = this.sessionManager.getCurrentSession();
         if (session && session.translatedKeywords && session.translatedKeywords[this.targetLanguage]) {
             const cachedKeywords = session.translatedKeywords[this.targetLanguage];
             if (cachedKeywords && cachedKeywords.length > 0) {
@@ -954,9 +1087,14 @@ class StreamNote {
             // 显示译文关键词
             this.keywordExtractor.displayKeywordsList(translatedKeywords, keywordsTranslatedDisplay);
 
-            // 保存译文关键词到 session（指定语言）
+            // 保存译文关键词到正确的 session（指定语言）
             if (this.sessionManager) {
-                this.sessionManager.updateCurrentTranslatedKeywords(translatedKeywords, this.targetLanguage);
+                // 直接更新session对象中的translatedKeywords
+                if (!session.translatedKeywords) {
+                    session.translatedKeywords = {};
+                }
+                session.translatedKeywords[this.targetLanguage] = translatedKeywords;
+                this.sessionManager.saveSessions();
             }
 
             console.log(`[TRANSLATE KEYWORDS] Success (${this.targetLanguage}):`, translatedKeywords);

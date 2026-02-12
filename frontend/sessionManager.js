@@ -143,6 +143,13 @@ class SessionManager {
     }
 
     /**
+     * 获取指定 ID 的 session
+     */
+    getSession(sessionId) {
+        return this.sessions[sessionId] || null;
+    }
+
+    /**
      * 切换到指定 session
      */
     switchSession(sessionId) {

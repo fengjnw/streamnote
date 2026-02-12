@@ -154,6 +154,16 @@ header p {
     color: white;
 }
 
+.session-item.recording {
+    border: 2px solid #ff4444;
+    box-shadow: 0 0 12px rgba(255, 68, 68, 0.3);
+}
+
+.session-item.recording .session-name::before {
+    content: "🔴 ";
+    margin-right: 4px;
+}
+
 .session-info {
     flex: 1;
     overflow: hidden;
@@ -593,6 +603,26 @@ header p {
     border-top: 1px solid #e9ecef;
     font-size: 0.9em;
     color: #666;
+}
+
+.recording-indicator {
+    color: #ff4444;
+    font-weight: 600;
+    animation: pulse 1.5s infinite;
+}
+
+.recording-indicator strong {
+    color: #ff4444;
+    font-weight: 700;
+}
+
+@keyframes pulse {
+    0%, 100%{
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
 }
 
 /* ================ 关键词样式 ================ */
