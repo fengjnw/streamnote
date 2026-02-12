@@ -101,21 +101,63 @@ class StreamNote {
             this.stop();
         }
 
+        // 恢复功能设置
+        if (session.settings) {
+            this.translationEnabled = session.settings.translationEnabled;
+            this.targetLanguage = session.settings.targetLanguage;
+
+            // 更新 UI 控件状态
+            const translationToggle = document.getElementById("translation-toggle");
+            if (translationToggle) {
+                translationToggle.checked = this.translationEnabled;
+            }
+
+            const languageSelector = document.getElementById("target-language");
+            if (languageSelector) {
+                languageSelector.value = this.targetLanguage;
+            }
+
+            const keywordToggle = document.getElementById("keyword-toggle");
+            if (keywordToggle) {
+                keywordToggle.checked = session.settings.keywordEnabled;
+            }
+
+            const intensitySlider = document.getElementById("keyword-intensity");
+            const intensityValue = document.getElementById("intensity-value");
+            if (intensitySlider) {
+                intensitySlider.value = session.settings.keywordIntensity;
+            }
+            if (intensityValue) {
+                intensityValue.textContent = session.settings.keywordIntensity;
+            }
+
+            // 更新关键词提取器的设置
+            if (this.keywordExtractor) {
+                this.keywordExtractor.setEnabled(session.settings.keywordEnabled);
+                this.keywordExtractor.setIntensity(session.settings.keywordIntensity);
+            }
+        }
+
         // 加载转录内容
         this.preciseResults = { ...session.transcripts };
         this.chunkIndex = Object.keys(this.preciseResults).length;
 
-        // 加载翻译内容
-        this.translationResults = session.translations ? { ...session.translations } : {};
+        // 加载当前语言的翻译内容
+        const currentLang = this.targetLanguage || "Chinese";
+        this.translationResults = (session.translations && session.translations[currentLang])
+            ? { ...session.translations[currentLang] }
+            : {};
 
-        // 更新显示
+        // 更新显示（会应用当前的翻译开关状态）
+        this.initializeVisibility();
         this.updateDisplay();
 
-        // 重置关键词
+        // 重置并恢复关键词
         if (this.keywordExtractor) {
             this.keywordExtractor.reset();
-            // 如果有保存的关键词，恢复它们
-            if (session.keywords && session.keywords.length > 0) {
+
+            // 如果关键词功能开启且有保存的关键词，恢复它们
+            if (session.settings.keywordEnabled && session.keywords && session.keywords.length > 0) {
                 this.keywordExtractor.allCollectedKeywords = [...session.keywords];
 
                 // 显示原文关键词
@@ -130,14 +172,20 @@ class StreamNote {
                     this.keywordExtractor.reHighlightElement(transcriptDiv);
                 }
 
-                // 翻译并显示译文关键词
-                if (this.translationEnabled) {
-                    this.translateAndDisplayKeywords();
+                // 恢复译文关键词（如果翻译开启且有缓存）
+                if (this.translationEnabled && session.translatedKeywords && session.translatedKeywords[this.targetLanguage]) {
+                    const translatedKeywords = session.translatedKeywords[this.targetLanguage];
+                    if (translatedKeywords && translatedKeywords.length > 0) {
+                        const keywordsTranslatedDisplay = document.getElementById("keywords-translated-display");
+                        if (keywordsTranslatedDisplay) {
+                            this.keywordExtractor.displayKeywordsList(translatedKeywords, keywordsTranslatedDisplay);
+                        }
+                    }
                 }
             }
         }
 
-        console.log(`[StreamNote] Loaded session: ${session.name}`);
+        console.log(`[StreamNote] Loaded session: ${session.name}`, session.settings);
         this.updateStatus(`Loaded: ${session.name}`);
     }
 
@@ -154,10 +202,34 @@ class StreamNote {
             this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
         }
 
-        // 保存翻译
+        // 保存翻译（按当前语言保存）
         if (this.translationResults) {
-            this.sessionManager.updateCurrentTranslations(this.translationResults);
+            this.sessionManager.updateCurrentTranslations(this.translationResults, this.targetLanguage);
         }
+
+        // 保存功能设置
+        const settings = {
+            translationEnabled: this.translationEnabled,
+            targetLanguage: this.targetLanguage,
+            keywordEnabled: this.keywordExtractor ? this.keywordExtractor.enabled : true,
+            keywordIntensity: this.keywordExtractor ? this.keywordExtractor.intensity : 5
+        };
+        this.sessionManager.updateCurrentSettings(settings);
+    }
+
+    /**
+     * 单独保存设置到 session（用于UI控件修改时）
+     */
+    saveSettingsToSession() {
+        if (!this.sessionManager) return;
+
+        const settings = {
+            translationEnabled: this.translationEnabled,
+            targetLanguage: this.targetLanguage,
+            keywordEnabled: this.keywordExtractor ? this.keywordExtractor.enabled : true,
+            keywordIntensity: this.keywordExtractor ? this.keywordExtractor.intensity : 5
+        };
+        this.sessionManager.updateCurrentSettings(settings);
     }
 
     /**
@@ -208,6 +280,9 @@ class StreamNote {
                         }
                     }
                 }
+
+                // 保存设置到 session
+                this.saveSettingsToSession();
             });
         }
 
@@ -225,6 +300,9 @@ class StreamNote {
                 // 不清空 allCollectedKeywords，直接重新处理
                 this.keywordExtractor.clearHighlights(document.getElementById("transcript"));
                 await this.reprocessAllKeywords();
+
+                // 保存设置到 session
+                this.saveSettingsToSession();
             });
         }
 
@@ -259,18 +337,32 @@ class StreamNote {
                     // 只翻译尚未翻译的新内容
                     this.translateMissingContent();
                 }
+
+                // 保存设置到 session
+                this.saveSettingsToSession();
             });
         }
 
         // 添加语言选择
         const languageSelector = document.getElementById("target-language");
         if (languageSelector) {
-            languageSelector.addEventListener("change", (e) => {
+            languageSelector.addEventListener("change", async (e) => {
+                const oldLanguage = this.targetLanguage;
                 this.targetLanguage = e.target.value;
+
+                console.log(`[LANGUAGE] Switching from ${oldLanguage} to ${this.targetLanguage}`);
+
                 // 语言改变，重新翻译全部
                 if (this.translationEnabled) {
-                    this.retranslateAll();
+                    // 如果正在录制，提示用户
+                    if (this.isRecording) {
+                        console.log(`[LANGUAGE] Recording in progress, translations will load in background`);
+                    }
+                    await this.retranslateAll();
                 }
+
+                // 保存设置到 session
+                this.saveSettingsToSession();
             });
         }
     }
@@ -638,13 +730,72 @@ class StreamNote {
      * 重新翻译所有内容（仅在语言切换或强制刷新时使用）
      */
     async retranslateAll() {
-        this.translationResults = {};
+        const session = this.sessionManager.getCurrentSession();
+        if (!session) return;
+
+        // 检查当前语言的缓存是否完整
+        const currentLangCache = session.translations[this.targetLanguage] || {};
+        let hasMissingTranslations = false;
+
+        // 检查是否所有转录都已翻译
+        const totalSegments = Object.keys(this.preciseResults).length;
+        const cachedSegments = Object.keys(currentLangCache).length;
+        const missingSegments = [];
+
+        for (const index of Object.keys(this.preciseResults)) {
+            if (!currentLangCache[index]) {
+                hasMissingTranslations = true;
+                missingSegments.push(index);
+            }
+        }
+
+        if (!hasMissingTranslations && cachedSegments > 0) {
+            // 缓存完整，直接使用
+            console.log(`[TRANSLATE] Using cached translations for ${this.targetLanguage} (${cachedSegments} segments)`);
+            this.translationResults = { ...currentLangCache };
+            this.updateDisplay();
+
+            // 恢复或翻译关键词
+            if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
+                await this.translateAndDisplayKeywords();
+            }
+            return;
+        }
+
+        // 缓存不完整，只翻译缺失的部分
+        const missingCount = missingSegments.length;
+        console.log(`[TRANSLATE] Translating ${missingCount}/${totalSegments} segments to ${this.targetLanguage}`);
+
+        // 显示翻译进度提示
+        if (missingCount > 5) {
+            this.updateStatus(`Translating to ${this.targetLanguage}... (${missingCount} segments)`);
+        }
+
+        this.translationResults = { ...currentLangCache };  // 保留已有的翻译
         this.updateDisplay();
 
+        // 翻译缺失的部分
+        let translated = 0;
         for (const [index, item] of Object.entries(this.preciseResults)) {
-            if (item && item.text) {
+            if (item && item.text && !this.translationResults[index]) {
                 await this.translateText(item.text, index);
+                translated++;
+
+                // 更新进度（避免过于频繁）
+                if (missingCount > 5 && translated % 5 === 0) {
+                    this.updateStatus(`Translating... ${translated}/${missingCount}`);
+                }
             }
+        }
+
+        // 翻译完成提示
+        if (missingCount > 5) {
+            this.updateStatus(`Translation complete (${this.targetLanguage})`);
+            setTimeout(() => {
+                if (!this.isRecording) {
+                    this.updateStatus("Ready");
+                }
+            }, 2000);
         }
 
         // 重新翻译关键词
@@ -657,6 +808,13 @@ class StreamNote {
      * 只翻译缺失的内容（用于翻译开关重新打开时）
      */
     async translateMissingContent() {
+        const session = this.sessionManager.getCurrentSession();
+        if (!session) return;
+
+        // 加载当前语言的缓存
+        const currentLangCache = session.translations[this.targetLanguage] || {};
+        this.translationResults = { ...currentLangCache };
+
         // 检查是否有未翻译的内容
         let hasUntranslated = false;
         for (const [index, item] of Object.entries(this.preciseResults)) {
@@ -754,6 +912,19 @@ class StreamNote {
 
         if (!keywordsTranslatedDisplay) return;
 
+        // 检查当前语言的缓存
+        const session = this.sessionManager.getCurrentSession();
+        if (session && session.translatedKeywords && session.translatedKeywords[this.targetLanguage]) {
+            const cachedKeywords = session.translatedKeywords[this.targetLanguage];
+            if (cachedKeywords && cachedKeywords.length > 0) {
+                // 使用缓存
+                console.log(`[TRANSLATE KEYWORDS] Using cached keywords for ${this.targetLanguage}`);
+                this.keywordExtractor.displayKeywordsList(cachedKeywords, keywordsTranslatedDisplay);
+                return;
+            }
+        }
+
+        // 缓存不存在，调用 API 翻译
         try {
             // 批量翻译关键词（用逗号分隔）
             const keywordsText = keywords.join(", ");
@@ -783,7 +954,12 @@ class StreamNote {
             // 显示译文关键词
             this.keywordExtractor.displayKeywordsList(translatedKeywords, keywordsTranslatedDisplay);
 
-            console.log("[TRANSLATE KEYWORDS] Success:", translatedKeywords);
+            // 保存译文关键词到 session（指定语言）
+            if (this.sessionManager) {
+                this.sessionManager.updateCurrentTranslatedKeywords(translatedKeywords, this.targetLanguage);
+            }
+
+            console.log(`[TRANSLATE KEYWORDS] Success (${this.targetLanguage}):`, translatedKeywords);
 
         } catch (error) {
             console.error("[ERROR] Keyword translation failed:", error);

@@ -21,6 +21,46 @@ class SessionManager {
             const saved = localStorage.getItem(this.STORAGE_KEY);
             if (saved) {
                 this.sessions = JSON.parse(saved);
+
+                // 向后兼容：为旧 session 添加默认设置和多语言结构
+                Object.keys(this.sessions).forEach(id => {
+                    const session = this.sessions[id];
+
+                    // 兼容：将旧的单语言 translations 转为多语言结构
+                    if (session.translations && !session.translations.Chinese) {
+                        const oldTranslations = { ...session.translations };
+                        session.translations = {
+                            Chinese: oldTranslations,  // 假定旧数据是中文
+                            English: {},
+                            Spanish: {},
+                            French: {},
+                            Japanese: {},
+                            Korean: {}
+                        };
+                    }
+
+                    // 兼容：将旧的单语言 translatedKeywords 转为多语言结构
+                    if (Array.isArray(session.translatedKeywords)) {
+                        const oldKeywords = [...session.translatedKeywords];
+                        session.translatedKeywords = {
+                            Chinese: oldKeywords,  // 假定旧数据是中文
+                            English: [],
+                            Spanish: [],
+                            French: [],
+                            Japanese: [],
+                            Korean: []
+                        };
+                    }
+
+                    if (!session.settings) {
+                        session.settings = {
+                            translationEnabled: true,
+                            targetLanguage: "Chinese",
+                            keywordEnabled: true,
+                            keywordIntensity: 5
+                        };
+                    }
+                });
             }
 
             const currentId = localStorage.getItem(this.CURRENT_SESSION_KEY);
@@ -59,8 +99,29 @@ class SessionManager {
             id: id,
             name: defaultName,
             transcripts: {},
-            translations: {},
+            translations: {  // 改为多语言结构
+                Chinese: {},
+                English: {},
+                Spanish: {},
+                French: {},
+                Japanese: {},
+                Korean: {}
+            },
             keywords: [],
+            translatedKeywords: {  // 改为多语言结构
+                Chinese: [],
+                English: [],
+                Spanish: [],
+                French: [],
+                Japanese: [],
+                Korean: []
+            },
+            settings: {
+                translationEnabled: true,
+                targetLanguage: "Chinese",
+                keywordEnabled: true,
+                keywordIntensity: 5
+            },
             createdAt: Date.now(),
             lastModified: Date.now()
         };
@@ -147,12 +208,42 @@ class SessionManager {
     }
 
     /**
-     * 更新当前 session 的翻译内容
+     * 更新当前 session 的翻译内容（指定语言）
      */
-    updateCurrentTranslations(translations) {
+    updateCurrentTranslations(translations, language) {
         const session = this.getCurrentSession();
         if (session) {
-            session.translations = { ...translations };
+            if (!session.translations[language]) {
+                session.translations[language] = {};
+            }
+            session.translations[language] = { ...session.translations[language], ...translations };
+            session.lastModified = Date.now();
+            this.saveSessions();
+        }
+    }
+
+    /**
+     * 更新当前 session 的译文关键词（指定语言）
+     */
+    updateCurrentTranslatedKeywords(translatedKeywords, language) {
+        const session = this.getCurrentSession();
+        if (session) {
+            if (!session.translatedKeywords[language]) {
+                session.translatedKeywords[language] = [];
+            }
+            session.translatedKeywords[language] = [...translatedKeywords];
+            session.lastModified = Date.now();
+            this.saveSessions();
+        }
+    }
+
+    /**
+     * 更新当前 session 的设置
+     */
+    updateCurrentSettings(settings) {
+        const session = this.getCurrentSession();
+        if (session) {
+            session.settings = { ...session.settings, ...settings };
             session.lastModified = Date.now();
             this.saveSessions();
         }
