@@ -126,11 +126,8 @@ class SessionManager {
             lastModified: Date.now()
         };
 
-        this.currentSessionId = id;
         this.saveSessions();
-        this.renderSessionList();
-        this.updateSessionNameInput();
-
+        this.switchSession(id);
         console.log(`[SessionManager] Created session: ${defaultName}`);
         return id;
     }
