@@ -696,21 +696,51 @@ header p {
 }
 
 .keyword-badge {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 6px 12px;
+    padding: 6px 10px 6px 12px;
     border-radius: 20px;
     font-size: 0.9em;
     font-weight: 500;
     transition: all 0.3s;
-    cursor: pointer;
+    cursor: default;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+    position: relative;
 }
 
 .keyword-badge:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.keyword-delete-btn {
+    display: none;
+    background: rgba(255, 255, 255, 0.3);
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 14px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.keyword-badge:hover .keyword-delete-btn {
+    display: flex;
+}
+
+.keyword-delete-btn:hover {
+    background: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
 }
 
 @media (max-width: 768px) {
@@ -742,178 +772,7 @@ header p {
     }
 }
 
-/* Keywords Edit Modal Styles */
-.keywords-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-}
 
-.keywords-header h3 {
-    margin: 0;
-    flex: 1;
-}
-
-.btn-edit-keywords {
-    background: none;
-    border: 1px solid #667eea;
-    color: #667eea;
-    padding: 4px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: all 0.3s;
-}
-
-.btn-edit-keywords:hover {
-    background: #667eea;
-    color: white;
-}
-
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    width: 90%;
-    max-width: 500px;
-    max-height: 80vh;
-    display: flex;
-    flex-direction: column;
-}
-
-.modal-header {
-    padding: 20px;
-    border-bottom: 1px solid #e9ecef;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-header h3 {
-    margin: 0;
-    color: #333;
-}
-
-.btn-close-modal {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #999;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-close-modal:hover {
-    color: #333;
-}
-
-.modal-body {
-    padding: 20px;
-    flex: 1;
-    overflow-y: auto;
-}
-
-.edit-keywords-container {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.add-keyword-section {
-    display: flex;
-    gap: 10px;
-}
-
-.keyword-input {
-    flex: 1;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.9em;
-}
-
-.keyword-input:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
-}
-
-.keywords-edit-list {
-    min-height: 100px;
-    padding: 10px;
-    background: #f8f9fa;
-    border-radius: 4px;
-}
-
-.placeholder-edit {
-    text-align: center;
-    color: #999;
-    margin: 20px 0;
-}
-
-.keywords-edit-items {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.keyword-edit-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 6px 10px;
-    border-radius: 20px;
-    font-size: 0.9em;
-}
-
-.keyword-delete-btn {
-    background: rgba(255, 255, 255, 0.3);
-    border: none;
-    color: white;
-    cursor: pointer;
-    padding: 0;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    font-size: 16px;
-    transition: all 0.3s;
-}
-
-.keyword-delete-btn:hover {
-    background: rgba(255, 255, 255, 0.5);
-}
-
-.modal-footer {
-    padding: 20px;
-    border-top: 1px solid #e9ecef;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-}
 
 /* Text Selection Menu */
 .text-selection-menu {

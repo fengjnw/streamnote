@@ -215,7 +215,10 @@ class KeywordExtractor {
             <div class="keywords-container">
                 <div class="keywords-list">
                     ${uniqueKeywords.map(kw => `
-                        <span class="keyword-badge" title="${kw}">${kw}</span>
+                        <span class="keyword-badge" title="${kw}">
+                            ${kw}
+                            <button class="keyword-delete-btn" onclick="window.streamNoteInstance.deleteKeyword('${kw.replace(/'/g, "\\'")}')">×</button>
+                        </span>
                     `).join('')}
                 </div>
             </div>

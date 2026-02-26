@@ -447,43 +447,6 @@ class StreamNote {
             });
         }
 
-        // 添加编辑关键词按钮
-        const editKeywordsBtn = document.getElementById("editKeywordsBtn");
-        if (editKeywordsBtn) {
-            editKeywordsBtn.addEventListener("click", () => this.openEditKeywordsModal());
-        }
-
-        // 编辑关键词模态事件
-        const closeEditModal = document.getElementById("closeEditModal");
-        if (closeEditModal) {
-            closeEditModal.addEventListener("click", () => this.closeEditKeywordsModal());
-        }
-
-        const cancelEditKeywordsBtn = document.getElementById("cancelEditKeywordsBtn");
-        if (cancelEditKeywordsBtn) {
-            cancelEditKeywordsBtn.addEventListener("click", () => this.closeEditKeywordsModal());
-        }
-
-        const addKeywordBtn = document.getElementById("addKeywordBtn");
-        if (addKeywordBtn) {
-            addKeywordBtn.addEventListener("click", () => this.addKeywordToEdit());
-        }
-
-        const saveEditKeywordsBtn = document.getElementById("saveEditKeywordsBtn");
-        if (saveEditKeywordsBtn) {
-            saveEditKeywordsBtn.addEventListener("click", () => this.saveEditedKeywords());
-        }
-
-        // enter键添加关键词
-        const newKeywordInput = document.getElementById("newKeywordInput");
-        if (newKeywordInput) {
-            newKeywordInput.addEventListener("keypress", (e) => {
-                if (e.key === "Enter") {
-                    this.addKeywordToEdit();
-                }
-            });
-        }
-
         // 初始化文本选中菜单功能
         this.initTextSelectionMenu();
     }
@@ -1284,146 +1247,36 @@ class StreamNote {
             }
         }, 1000);
     }
-
     /**
-     * 打开编辑关键词模态窗口
+     * 删除关键词
      */
-    openEditKeywordsModal() {
-        const modal = document.getElementById("keywordsEditModal");
-        if (!modal) return;
-
-        // 清空输入框
-        const newKeywordInput = document.getElementById("newKeywordInput");
-        if (newKeywordInput) {
-            newKeywordInput.value = "";
-            newKeywordInput.focus();
-        }
-
-        // 显示当前关键词列表
-        this.updateEditKeywordsList();
-
-        // 显示模态
-        modal.style.display = "flex";
-    }
-
-    /**
-     * 关闭编辑关键词模态窗口
-     */
-    closeEditKeywordsModal() {
-        const modal = document.getElementById("keywordsEditModal");
-        if (modal) {
-            modal.style.display = "none";
-        }
-    }
-
-    /**
-     * 更新编辑关键词列表显示
-     */
-    updateEditKeywordsList() {
-        const keywordsList = document.getElementById("keywordsList");
-        if (!keywordsList) return;
-
-        if (!this.keywordExtractor || this.keywordExtractor.allCollectedKeywords.length === 0) {
-            keywordsList.innerHTML = "";
-            const placeholder = document.querySelector(".placeholder-edit");
-            if (placeholder) {
-                placeholder.style.display = "block";
-            }
-            return;
-        }
-
-        const placeholder = document.querySelector(".placeholder-edit");
-        if (placeholder) {
-            placeholder.style.display = "none";
-        }
-
-        const keywords = this.keywordExtractor.allCollectedKeywords;
-        keywordsList.innerHTML = keywords.map(kw => `
-            <div class="keyword-edit-item">
-                <span>${kw}</span>
-                <button class="keyword-delete-btn" onclick="streamNoteInstance.deleteKeywordFromEdit('${kw}')" title="Delete">×</button>
-            </div>
-        `).join("");
-    }
-
-    /**
-     * 添加关键词到编辑列表
-     */
-    addKeywordToEdit() {
-        const input = document.getElementById("newKeywordInput");
-        if (!input) return;
-
-        const newKeyword = input.value.trim();
-
-        if (!newKeyword) {
-            this.showStatusMessage("Please enter a keyword", 1500);
-            return;
-        }
-
-        if (!this.keywordExtractor) {
-            this.keywordExtractor = {
-                allCollectedKeywords: []
-            };
-        }
-
-        // 检查是否已存在
-        if (this.keywordExtractor.allCollectedKeywords.includes(newKeyword)) {
-            this.showStatusMessage("This keyword already exists", 1500);
-            return;
-        }
-
-        // 添加到列表
-        this.keywordExtractor.allCollectedKeywords.push(newKeyword);
-
-        // 清空输入框
-        input.value = "";
-        input.focus();
-
-        // 更新显示
-        this.updateEditKeywordsList();
-    }
-
-    /**
-     * 从编辑列表中删除关键词
-     */
-    deleteKeywordFromEdit(keyword) {
+    deleteKeyword(keyword) {
         if (!this.keywordExtractor) return;
 
         const index = this.keywordExtractor.allCollectedKeywords.indexOf(keyword);
         if (index > -1) {
             this.keywordExtractor.allCollectedKeywords.splice(index, 1);
-            this.updateEditKeywordsList();
+            
+            // 更新显示
+            const keywordsDisplay = document.getElementById("keywords-display");
+            if (keywordsDisplay) {
+                this.keywordExtractor.displayKeywordsList(
+                    this.keywordExtractor.allCollectedKeywords,
+                    keywordsDisplay
+                );
+            }
+
+            // 重新高亮转录文本
+            const transcriptDiv = document.getElementById("transcript");
+            if (transcriptDiv) {
+                this.keywordExtractor.reHighlightElement(transcriptDiv);
+            }
+
+            // 保存到 session
+            this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
+
+            this.showStatusMessage(`✓ Removed "${keyword}"`, 1200);
         }
-    }
-
-    /**
-     * 保存编辑后的关键词
-     */
-    saveEditedKeywords() {
-        if (!this.keywordExtractor) return;
-
-        // 关闭模态
-        this.closeEditKeywordsModal();
-
-        // 更新显示
-        const keywordsOriginalDisplay = document.getElementById("keywords-display");
-        if (keywordsOriginalDisplay) {
-            this.keywordExtractor.displayKeywordsList(
-                this.keywordExtractor.allCollectedKeywords,
-                keywordsOriginalDisplay
-            );
-        }
-
-        // 重新高亮转录文本
-        const transcriptDiv = document.getElementById("transcript");
-        if (transcriptDiv && this.keywordExtractor.allCollectedKeywords.length > 0) {
-            this.keywordExtractor.reHighlightElement(transcriptDiv);
-        }
-
-        // 保存到 session
-        this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
-
-        this.showStatusMessage("✓ Keywords updated", 1500);
     }
 }
 
