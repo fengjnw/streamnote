@@ -84,36 +84,81 @@ def extract_keywords():
 def translate():
     """
     翻译 API (GPT 驱动)
+    支持两种模式：
+    1. 普通文本翻译：返回 {"translation": "翻译结果"}
+    2. 关键词列表翻译：返回 {"keywords": ["翻译1", "翻译2", ...]}
     """
     try:
         data = request.json
         text = data.get("text", "")
         target_lang = data.get("target_lang", "Chinese")
+        is_keywords_mode = data.get("is_keywords", False)
         
         if not text or len(text) < 1:
-            return jsonify({"translation": ""})
+            if is_keywords_mode:
+                return jsonify({"keywords": []})
+            else:
+                return jsonify({"translation": ""})
         
-        print(f"[TRANSLATE] Translating to {target_lang} (text_len={len(text)})")
+        print(f"[TRANSLATE] Translating to {target_lang} (text_len={len(text)}, is_keywords={is_keywords_mode})")
+        
+        if is_keywords_mode:
+            # 关键词翻译模式：发送关键词列表，要求逐个翻译，返回JSON数组
+            keywords_list = [kw.strip() for kw in text.split(',') if kw.strip()]
+            print(f"[TRANSLATE] Keywords mode: {len(keywords_list)} keywords detected")
+            
+            system_message = f"""You are a professional translator. You will receive a list of keywords/terms, one per line or comma-separated.
+Your task: Translate EACH keyword/term to {target_lang}. 
+CRITICAL: You must translate EVERY SINGLE keyword. Do not skip any or combine them.
+Return ONLY a JSON array of translated keywords in the EXACT same order, nothing else.
+Format: ["translation1", "translation2", "translation3", ...]"""
+            
+            user_message = ", ".join(keywords_list)
+        else:
+            # 普通文本翻译模式
+            system_message = f"You are a professional translator. Translate the following text to {target_lang}. Only provide the translation, no explanations."
+            user_message = text
         
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {
                     "role": "system",
-                    "content": f"You are a professional translator. Translate the following text to {target_lang}. Only provide the translation, no explanations."
+                    "content": system_message
                 },
                 {
                     "role": "user",
-                    "content": text
+                    "content": user_message
                 }
             ],
             temperature=0.3
         )
         
-        translation = response.choices[0].message.content.strip()
-        print(f"[TRANSLATE] Success: {translation[:60]}")
+        result_text = response.choices[0].message.content.strip()
+        print(f"[TRANSLATE] Raw response: {result_text[:100]}")
         
-        return jsonify({"translation": translation})
+        if is_keywords_mode:
+            # 尝试解析 JSON 数组
+            try:
+                import json
+                translated_keywords = json.loads(result_text)
+                if not isinstance(translated_keywords, list):
+                    # 如果不是数组，尝试从文本中提取
+                    raise ValueError("Response is not a JSON array")
+                print(f"[TRANSLATE] Parsed {len(translated_keywords)} keywords")
+                return jsonify({"keywords": translated_keywords})
+            except (json.JSONDecodeError, ValueError) as e:
+                # 降级：尝试从文本中分割
+                print(f"[TRANSLATE] JSON parse failed: {e}, falling back to text parsing")
+                # 尝试多种分隔符分割（Python正则表达式）
+                import re
+                keywords = [kw.strip() for kw in 
+                           re.split(r'[,，、]', result_text.replace('"', '').replace('[', '').replace(']', ''))
+                           if kw.strip()]
+                print(f"[TRANSLATE] Fallback: parsed {len(keywords)} keywords")
+                return jsonify({"keywords": keywords})
+        else:
+            return jsonify({"translation": result_text})
         
     except Exception as e:
         print(f"[ERROR] Translation: {e}")

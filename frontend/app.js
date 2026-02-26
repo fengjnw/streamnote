@@ -1113,6 +1113,13 @@ class StreamNote {
             // 清空旧的关键词
             this.keywordExtractor.allCollectedKeywords = [];
 
+            // 清除 session 中的翻译缓存（因为关键词已改变，旧翻译已失效）
+            const currentSession = this.sessionManager.getSession(this.sessionManager.currentSessionId);
+            if (currentSession && currentSession.translatedKeywords) {
+                delete currentSession.translatedKeywords[this.targetLanguage];
+                console.log(`[StreamNote] Cleared cached translation for ${this.targetLanguage}`);
+            }
+
             // 重新提取
             const transcriptDiv = document.getElementById("transcript");
             await this.keywordExtractor.processText(this.currentTranscriptText, transcriptDiv);
@@ -1123,7 +1130,7 @@ class StreamNote {
                 this.keywordExtractor.displayKeywordsList(this.keywordExtractor.allCollectedKeywords, keywordsOriginalDisplay);
             }
 
-            // 翻译并显示译文关键词
+            // 翻译并显示译文关键词（缓存已清除，会重新翻译）
             if (this.translationEnabled && this.keywordExtractor.allCollectedKeywords.length > 0) {
                 await this.translateAndDisplayKeywords(this.sessionManager.currentSessionId);
             }
@@ -1147,21 +1154,32 @@ class StreamNote {
 
         if (!keywordsTranslatedDisplay) return;
 
-        // 检查当前语言的缓存
+        console.log(`[TRANSLATE KEYWORDS] Starting translation (${this.targetLanguage}), keywords:`, keywords);
+
+        // 检查当前语言的缓存（同时检查缓存的数量是否与当前关键词数量一致）
         if (session && session.translatedKeywords && session.translatedKeywords[this.targetLanguage]) {
             const cachedKeywords = session.translatedKeywords[this.targetLanguage];
-            if (cachedKeywords && cachedKeywords.length > 0) {
+            // 只有当缓存的关键词数量与当前的关键词数量一致，且缓存内容长度接近时，才使用缓存
+            // （允许有小的偏差，因为可能有去重）
+            if (cachedKeywords && cachedKeywords.length > 0 && 
+                Math.abs(cachedKeywords.length - keywords.length) <= 1) {
                 // 使用缓存
-                console.log(`[TRANSLATE KEYWORDS] Using cached keywords for ${this.targetLanguage}`);
+                console.log(`[TRANSLATE KEYWORDS] Using cached keywords for ${this.targetLanguage}, count:`, cachedKeywords.length);
                 this.keywordExtractor.displayKeywordsList(cachedKeywords, keywordsTranslatedDisplay);
                 return;
+            } else if (cachedKeywords) {
+                // 缓存数量不匹配，清除缓存并重新翻译
+                console.log(`[TRANSLATE KEYWORDS] Cache size mismatch (cached: ${cachedKeywords.length}, current: ${keywords.length}), clearing cache`);
+                delete session.translatedKeywords[this.targetLanguage];
             }
         }
 
-        // 缓存不存在，调用 API 翻译
+        // 缓存不存在或已清除，调用 API 翻译
         try {
-            // 批量翻译关键词（用逗号分隔）
+            // 关键词翻译：逗号分隔的关键词字符串
             const keywordsText = keywords.join(", ");
+
+            console.log(`[TRANSLATE KEYWORDS] Calling API with ${keywords.length} keywords`);
 
             const response = await fetch("http://localhost:5001/api/translate", {
                 method: "POST",
@@ -1170,7 +1188,8 @@ class StreamNote {
                 },
                 body: JSON.stringify({
                     text: keywordsText,
-                    target_lang: this.targetLanguage
+                    target_lang: this.targetLanguage,
+                    is_keywords: true  // 指定为关键词翻译模式
                 })
             });
 
@@ -1180,10 +1199,34 @@ class StreamNote {
             }
 
             const result = await response.json();
-            const translatedText = result.translation.trim();
+            console.log(`[TRANSLATE KEYWORDS] API response:`, result);
 
-            // 分割译文关键词（支持多种分隔符：英文逗号、中文逗号、日语顿号）
-            const translatedKeywords = translatedText.split(/[,，、]/).map(kw => kw.trim()).filter(kw => kw.length > 0);
+            // 处理两种可能的API响应格式
+            let translatedKeywords = [];
+
+            if (result.keywords && Array.isArray(result.keywords)) {
+                // 新格式：直接返回数组
+                translatedKeywords = result.keywords
+                    .map(kw => String(kw).trim())
+                    .filter(kw => kw.length > 0);
+                console.log(`[TRANSLATE KEYWORDS] Parsed ${translatedKeywords.length} keywords from array response`);
+            } else if (result.translation) {
+                // 兼容旧格式：字符串分割
+                const translatedText = result.translation.trim();
+                translatedKeywords = translatedText
+                    .split(/[,，、；;、\n\r]+/)
+                    .map(kw => kw.trim())
+                    .filter(kw => kw.length > 0);
+                console.log(`[TRANSLATE KEYWORDS] Parsed ${translatedKeywords.length} keywords from text response`);
+            }
+
+            console.log(`[TRANSLATE KEYWORDS] Got ${translatedKeywords.length} translated keywords, original: ${keywords.length}`);
+
+            // 检查是否遗漏了术语
+            if (translatedKeywords.length < keywords.length) {
+                console.warn(`[WARNING] Translated keywords count (${translatedKeywords.length}) less than original (${keywords.length})`);
+                // 记录差异，但仍然显示已翻译的术语
+            }
 
             // 显示译文关键词
             this.keywordExtractor.displayKeywordsList(translatedKeywords, keywordsTranslatedDisplay);
@@ -1196,12 +1239,14 @@ class StreamNote {
                 }
                 session.translatedKeywords[this.targetLanguage] = translatedKeywords;
                 this.sessionManager.saveSessions();
+                console.log(`[TRANSLATE KEYWORDS] Saved to session: ${sessionId}`);
             }
 
             console.log(`[TRANSLATE KEYWORDS] Success (${this.targetLanguage}):`, translatedKeywords);
 
         } catch (error) {
             console.error("[ERROR] Keyword translation failed:", error);
+            keywordsTranslatedDisplay.innerHTML = '<p class="placeholder">Translation failed</p>';
         }
     }
 
