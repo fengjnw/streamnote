@@ -600,15 +600,6 @@ header p {
     flex: 1;
 }
 
-.main-content.translation-only-view .keywords-original {
-    display: none;
-}
-
-.main-content.translation-only-view .keywords-translated {
-    border-right: none;
-    flex: 1;
-}
-
 .status-bar {
     display: flex;
     justify-content: space-between;
