@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamNote</title>
+    <link rel="stylesheet" href="../frontend/styles.css">
+</head>
+
+<body>
+    <header>
+        <h1>StreamNote</h1>
+        <p>Real-time classroom transcription</p>
+    </header>
+
+    <div class="container">
+
+        <!-- Session Management Panel -->
+        <div class="session-panel">
+            <div class="session-header">
+                <h3>Sessions</h3>
+                <button id="newSessionBtn" class="btn-icon" title="New Session">+</button>
+                <button id="manageSessionBtn" class="btn-icon" title="Manage Sessions">⚙</button>
+                <button id="toggleSessionPanel" class="btn-icon toggle-btn" title="Toggle Panel">◀</button>
+            </div>
+            <div class="session-list" id="sessionList">
+                <!-- Sessions will be rendered here -->
+            </div>
+            <div class="current-session-info">
+                <input type="text" id="sessionNameInput" placeholder="Session name..." />
+            </div>
+
+            <!-- Manage Menu -->
+            <div id="manageMenu" class="manage-menu" style="display: none;">
+                <button id="exportCurrentBtn" class="manage-menu-item">📄 Export Current Session</button>
+                <button id="exportAllBtn" class="manage-menu-item">📦 Export All Sessions</button>
+                <button id="importBtn" class="manage-menu-item">📥 Import Sessions</button>
+                <button id="clearAllBtn" class="manage-menu-item danger">🗑️ Clear All Data</button>
+            </div>
+            <input type="file" id="importFileInput" accept=".json" style="display: none;" />
+        </div>
+
+        <div class="main-wrapper">
+            <div class="control-panel">
+                <button id="openSessionPanel" class="btn-icon open-session-btn" title="Open Sessions"
+                    style="display: none;">▶</button>
+                <button id="startBtn" class="btn btn-primary">Start Recording</button>
+                <button id="stopBtn" class="btn btn-danger" disabled>Stop Recording</button>
+                <button id="clearBtn" class="btn btn-secondary">Clear</button>
+                <button id="autoScrollBtn" class="btn btn-auto-scroll"
+                    title="Disable to scroll and view previous content">Auto Scroll: ON</button>
+
+                <div class="keyword-controls">
+                    <label>
+                        <input type="checkbox" id="keyword-toggle" checked>
+                        Enable Keywords
+                    </label>
+
+                    <label for="keyword-intensity">Intensity:</label>
+                    <input type="range" id="keyword-intensity" min="1" max="10" value="5" class="intensity-slider">
+                    <span id="intensity-value">5</span>
+                </div>
+
+                <div class="translation-controls">
+                    <label>
+                        <input type="checkbox" id="translation-toggle" checked>
+                        Enable Translation
+                    </label>
+                    <select id="target-language" class="language-selector">
+                        <option value="Chinese">中文</option>
+                        <option value="English">English</option>
+                        <option value="Spanish">Español</option>
+                        <option value="French">Français</option>
+                        <option value="Japanese">日本語</option>
+                        <option value="Korean">한국어</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="transcription-section">
+                    <div class="transcript-container">
+                        <h2>Transcription</h2>
+                        <div id="transcript" class="transcript">
+                            <p class="placeholder">Press "Start Recording" to begin...</p>
+                        </div>
+                    </div>
+
+                    <div class="translation-container">
+                        <h2>Translation</h2>
+                        <div id="translation" class="translation">
+                            <p class="placeholder">Translation will appear here...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="keywords-section">
+                    <div class="keywords-original">
+                        <h3>Keywords (Original)</h3>
+                        <div id="keywords-display" class="keywords-display">
+                            <p class="placeholder">Keywords will appear here...</p>
+                        </div>
+                    </div>
+
+                    <div class="keywords-translated">
+                        <h3>Keywords (Translated)</h3>
+                        <div id="keywords-translated-display" class="keywords-display">
+                            <p class="placeholder">Translated keywords will appear here...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-bar">
+                <span id="status">Ready</span>
+                <span id="recording-indicator" class="recording-indicator" style="display: none;">🔴 Recording in
+                    <strong id="recording-session-name"></strong></span>
+                <span id="duration">Duration: 0:00</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="../frontend/sessionManager.js"></script>
+    <script src="../frontend/keywordExtractor.js"></script>
+    <script src="../frontend/app.js"></script>
+</body>
+
+</html>
