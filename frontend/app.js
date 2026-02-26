@@ -181,12 +181,6 @@ class StreamNote {
                 if (keywordsDisplay) {
                     this.keywordExtractor.displayKeywordsList(session.keywords, keywordsDisplay);
                 }
-
-                // 重新应用高亮
-                const transcriptDiv = document.getElementById("transcript");
-                if (transcriptDiv) {
-                    this.keywordExtractor.reHighlightElement(transcriptDiv);
-                }
             } else {
                 // 没有关键词，清空显示
                 const keywordsDisplay = document.getElementById("keywords-display");
@@ -289,7 +283,12 @@ class StreamNote {
                             );
                         }
                         // 恢复高亮
-                        this.keywordExtractor.reHighlightElement();
+                        // 高亮功能已删除
+
+                        // 恢复译文关键词（如果翻译功能开启）如果没有禁用，也保留这个调用
+                        // 但我们已经删除了高亮，所以可以删除这一行
+                        // 实际上这个代码段应该也被删掉，但让我检查一下上下文
+                        // 重新看一遍第292行
                     } else {
                         // 如果没有缓存的关键词，显示占位文本
                         if (keywordsDisplay) {
@@ -541,12 +540,6 @@ class StreamNote {
                 this.keywordExtractor.allCollectedKeywords,
                 keywordsOriginalDisplay
             );
-        }
-
-        // 重新高亮
-        const transcriptDiv = document.getElementById("transcript");
-        if (transcriptDiv) {
-            this.keywordExtractor.reHighlightElement(transcriptDiv);
         }
 
         // 保存到 session
@@ -897,13 +890,6 @@ class StreamNote {
                 this.isSyncingScroll = false;
             }, 100);
         }
-
-        // 在更新HTML后，立即重新应用所有已收集的关键词高亮
-        if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
-            setTimeout(() => {
-                this.keywordExtractor.reHighlightElement(transcriptDiv);
-            }, 0);
-        }
     }
 
     updateStatus(text) {
@@ -1125,10 +1111,8 @@ class StreamNote {
         if (this.currentTranscriptText.length > 10) {
             console.log(`[StreamNote] Processing full text for keywords: "${this.currentTranscriptText.substring(0, 50)}..."`);
 
-            // 获取转录div元素
-            const transcriptDiv = document.getElementById("transcript");
-            // 基于整个文本提取关键词，应用到当前div
-            await this.keywordExtractor.processText(this.currentTranscriptText, transcriptDiv);
+            // 基于整个文本提取关键词
+            await this.keywordExtractor.processText(this.currentTranscriptText);
 
             // 显示原文关键词
             const keywordsOriginalDisplay = document.getElementById("keywords-display");
@@ -1161,8 +1145,7 @@ class StreamNote {
             this.keywordExtractor.allCollectedKeywords = [];
 
             // 重新提取
-            const transcriptDiv = document.getElementById("transcript");
-            await this.keywordExtractor.processText(this.currentTranscriptText, transcriptDiv);
+            await this.keywordExtractor.processText(this.currentTranscriptText);
 
             // 显示原文关键词
             const keywordsOriginalDisplay = document.getElementById("keywords-display");
@@ -1256,7 +1239,7 @@ class StreamNote {
         const index = this.keywordExtractor.allCollectedKeywords.indexOf(keyword);
         if (index > -1) {
             this.keywordExtractor.allCollectedKeywords.splice(index, 1);
-            
+
             // 更新显示
             const keywordsDisplay = document.getElementById("keywords-display");
             if (keywordsDisplay) {
@@ -1264,12 +1247,6 @@ class StreamNote {
                     this.keywordExtractor.allCollectedKeywords,
                     keywordsDisplay
                 );
-            }
-
-            // 重新高亮转录文本
-            const transcriptDiv = document.getElementById("transcript");
-            if (transcriptDiv) {
-                this.keywordExtractor.reHighlightElement(transcriptDiv);
             }
 
             // 保存到 session
