@@ -398,6 +398,18 @@ class StreamNote {
                     keywordsTranslated.style.display = e.target.checked ? 'flex' : 'none';
                 }
 
+                // 如果禁用翻译，也要关闭"只显示译文"模式
+                if (!e.target.checked) {
+                    const showOnlyTranslationToggle = document.getElementById("show-only-translation");
+                    if (showOnlyTranslationToggle && showOnlyTranslationToggle.checked) {
+                        showOnlyTranslationToggle.checked = false;
+                        const mainContent = document.querySelector(".main-content");
+                        if (mainContent) {
+                            mainContent.classList.remove("translation-only-view");
+                        }
+                    }
+                }
+
                 if (this.translationEnabled) {
                     // 恢复已有的翻译结果，不重新翻译
                     // 只翻译尚未翻译的新内容
@@ -429,6 +441,34 @@ class StreamNote {
 
                 // 保存设置到 session
                 this.saveSettingsToSession();
+            });
+        }
+
+        // 添加"只显示译文"开关
+        const showOnlyTranslationToggle = document.getElementById("show-only-translation");
+        if (showOnlyTranslationToggle) {
+            showOnlyTranslationToggle.addEventListener("change", (e) => {
+                if (e.target.checked) {
+                    // 如果要打开"只显示译文"，必须先启用翻译
+                    if (!this.translationEnabled) {
+                        const translationToggle = document.getElementById("translation-toggle");
+                        if (translationToggle) {
+                            translationToggle.checked = true;
+                            translationToggle.dispatchEvent(new Event("change"));
+                        }
+                    }
+                }
+
+                const mainContent = document.querySelector(".main-content");
+                if (mainContent) {
+                    if (e.target.checked) {
+                        // 添加translation-only-view类
+                        mainContent.classList.add("translation-only-view");
+                    } else {
+                        // 移除translation-only-view类
+                        mainContent.classList.remove("translation-only-view");
+                    }
+                }
             });
         }
     }

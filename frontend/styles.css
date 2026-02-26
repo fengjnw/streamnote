@@ -599,9 +599,30 @@ header p {
     font-size: 0.95em;
 }
 
+}
+
 .temporary {
     color: #999;
     font-weight: 500;
+}
+
+/* ================ 只显示译文模式 ================ */
+.main-content.translation-only-view .transcript-container {
+    display: none;
+}
+
+.main-content.translation-only-view .translation-container {
+    border-right: none;
+    flex: 1;
+}
+
+.main-content.translation-only-view .keywords-original {
+    display: none;
+}
+
+.main-content.translation-only-view .keywords-translated {
+    border-right: none;
+    flex: 1;
 }
 
 .status-bar {
