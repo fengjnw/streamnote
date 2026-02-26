@@ -41,6 +41,10 @@ class StreamNote {
         // 自动滚动开关
         this.autoScroll = true;
 
+        // 文本选中菜单
+        this.selectedText = "";
+        this.selectedTextElement = null;
+
         this.initSessionManager();
         this.setupUIListeners();
         this.initKeywordExtractor();
@@ -61,13 +65,9 @@ class StreamNote {
         const translationToggle = document.getElementById("translation-toggle");
         if (translationToggle) {
             const translationContainer = document.querySelector(".translation-container");
-            const keywordsTranslated = document.querySelector(".keywords-translated");
 
             if (translationContainer) {
                 translationContainer.style.display = translationToggle.checked ? 'flex' : 'none';
-            }
-            if (keywordsTranslated) {
-                keywordsTranslated.style.display = translationToggle.checked ? 'flex' : 'none';
             }
         }
 
@@ -176,10 +176,10 @@ class StreamNote {
             if (session.settings.keywordEnabled && session.keywords && session.keywords.length > 0) {
                 this.keywordExtractor.allCollectedKeywords = [...session.keywords];
 
-                // 显示原文关键词
-                const keywordsOriginalDisplay = document.getElementById("keywords-display");
-                if (keywordsOriginalDisplay) {
-                    this.keywordExtractor.displayKeywordsList(session.keywords, keywordsOriginalDisplay);
+                // 显示关键词
+                const keywordsDisplay = document.getElementById("keywords-display");
+                if (keywordsDisplay) {
+                    this.keywordExtractor.displayKeywordsList(session.keywords, keywordsDisplay);
                 }
 
                 // 重新应用高亮
@@ -187,49 +187,11 @@ class StreamNote {
                 if (transcriptDiv) {
                     this.keywordExtractor.reHighlightElement(transcriptDiv);
                 }
-
-                // 恢复译文关键词
-                const keywordsTranslatedDisplay = document.getElementById("keywords-translated-display");
-
-                if (this.translationEnabled && session.translatedKeywords && session.translatedKeywords[this.targetLanguage]) {
-                    // 有缓存的译文，直接显示
-                    const translatedKeywords = session.translatedKeywords[this.targetLanguage];
-                    if (translatedKeywords && translatedKeywords.length > 0) {
-                        if (keywordsTranslatedDisplay) {
-                            this.keywordExtractor.displayKeywordsList(translatedKeywords, keywordsTranslatedDisplay);
-                        }
-                    } else {
-                        // 缓存为空数组，显示占位文本
-                        if (keywordsTranslatedDisplay) {
-                            keywordsTranslatedDisplay.innerHTML = '<p class="placeholder">Translated keywords will appear here...</p>';
-                        }
-                    }
-                } else if (this.translationEnabled) {
-                    // 翻译开启但没有缓存，需要重新翻译
-                    // 只在当前session有关键词时才翻译
-                    if (keywordsTranslatedDisplay) {
-                        keywordsTranslatedDisplay.innerHTML = '<p class="placeholder">Translating keywords...</p>';
-                    }
-                    // 异步翻译关键词，指定当前session作为目标
-                    setTimeout(() => {
-                        this.translateAndDisplayKeywords(this.sessionManager.currentSessionId);
-                    }, 100);
-                } else {
-                    // 翻译功能关闭，显示占位文本
-                    if (keywordsTranslatedDisplay) {
-                        keywordsTranslatedDisplay.innerHTML = '<p class="placeholder">Translated keywords will appear here...</p>';
-                    }
-                }
             } else {
                 // 没有关键词，清空显示
-                const keywordsOriginalDisplay = document.getElementById("keywords-display");
-                const keywordsTranslatedDisplay = document.getElementById("keywords-translated-display");
-
-                if (keywordsOriginalDisplay) {
-                    keywordsOriginalDisplay.innerHTML = '<p class="placeholder">Keywords will appear here...</p>';
-                }
-                if (keywordsTranslatedDisplay) {
-                    keywordsTranslatedDisplay.innerHTML = '<p class="placeholder">Translated keywords will appear here...</p>';
+                const keywordsDisplay = document.getElementById("keywords-display");
+                if (keywordsDisplay) {
+                    keywordsDisplay.innerHTML = '<p class="placeholder">Keywords will appear here...</p>';
                 }
             }
         }
@@ -317,26 +279,21 @@ class StreamNote {
 
                 if (e.target.checked) {
                     // 重新打开时，恢复已有的关键词显示和高亮
-                    const keywordsOriginalDisplay = document.getElementById("keywords-display");
+                    const keywordsDisplay = document.getElementById("keywords-display");
                     if (this.keywordExtractor.allCollectedKeywords.length > 0) {
                         // 恢复关键词显示
-                        if (keywordsOriginalDisplay) {
+                        if (keywordsDisplay) {
                             this.keywordExtractor.displayKeywordsList(
                                 this.keywordExtractor.allCollectedKeywords,
-                                keywordsOriginalDisplay
+                                keywordsDisplay
                             );
                         }
                         // 恢复高亮
                         this.keywordExtractor.reHighlightElement();
-
-                        // 恢复译文关键词（如果翻译功能开启）
-                        if (this.translationEnabled) {
-                            this.translateAndDisplayKeywords(this.sessionManager.currentSessionId);
-                        }
                     } else {
                         // 如果没有缓存的关键词，显示占位文本
-                        if (keywordsOriginalDisplay) {
-                            keywordsOriginalDisplay.innerHTML = '<p class="placeholder">Keywords will appear here...</p>';
+                        if (keywordsDisplay) {
+                            keywordsDisplay.innerHTML = '<p class="placeholder">Keywords will appear here...</p>';
                         }
                     }
                 }
@@ -392,12 +349,6 @@ class StreamNote {
                     translationContainer.style.display = e.target.checked ? 'flex' : 'none';
                 }
 
-                // 显示/隐藏译文关键词
-                const keywordsTranslated = document.querySelector(".keywords-translated");
-                if (keywordsTranslated) {
-                    keywordsTranslated.style.display = e.target.checked ? 'flex' : 'none';
-                }
-
                 // 如果禁用翻译，也要关闭"只显示译文"模式
                 if (!e.target.checked) {
                     const showOnlyTranslationToggle = document.getElementById("show-only-translation");
@@ -408,12 +359,6 @@ class StreamNote {
                             mainContent.classList.remove("translation-only-view");
                         }
                     }
-                }
-
-                if (this.translationEnabled) {
-                    // 恢复已有的翻译结果，不重新翻译
-                    // 只翻译尚未翻译的新内容
-                    this.translateMissingContent();
                 }
 
                 // 保存设置到 session
@@ -501,6 +446,151 @@ class StreamNote {
                 }
             });
         }
+
+        // 添加编辑关键词按钮
+        const editKeywordsBtn = document.getElementById("editKeywordsBtn");
+        if (editKeywordsBtn) {
+            editKeywordsBtn.addEventListener("click", () => this.openEditKeywordsModal());
+        }
+
+        // 编辑关键词模态事件
+        const closeEditModal = document.getElementById("closeEditModal");
+        if (closeEditModal) {
+            closeEditModal.addEventListener("click", () => this.closeEditKeywordsModal());
+        }
+
+        const cancelEditKeywordsBtn = document.getElementById("cancelEditKeywordsBtn");
+        if (cancelEditKeywordsBtn) {
+            cancelEditKeywordsBtn.addEventListener("click", () => this.closeEditKeywordsModal());
+        }
+
+        const addKeywordBtn = document.getElementById("addKeywordBtn");
+        if (addKeywordBtn) {
+            addKeywordBtn.addEventListener("click", () => this.addKeywordToEdit());
+        }
+
+        const saveEditKeywordsBtn = document.getElementById("saveEditKeywordsBtn");
+        if (saveEditKeywordsBtn) {
+            saveEditKeywordsBtn.addEventListener("click", () => this.saveEditedKeywords());
+        }
+
+        // enter键添加关键词
+        const newKeywordInput = document.getElementById("newKeywordInput");
+        if (newKeywordInput) {
+            newKeywordInput.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") {
+                    this.addKeywordToEdit();
+                }
+            });
+        }
+
+        // 初始化文本选中菜单功能
+        this.initTextSelectionMenu();
+    }
+
+    /**
+     * 初始化文本选中菜单功能
+     */
+    initTextSelectionMenu() {
+        const transcriptDiv = document.getElementById("transcript");
+        const translationDiv = document.getElementById("translation");
+        const textSelectionMenu = document.getElementById("textSelectionMenu");
+        const addSelectedKeywordBtn = document.getElementById("addSelectedAsKeywordBtn");
+
+        if (!textSelectionMenu || !addSelectedKeywordBtn) return;
+
+        // 在两个容器上都添加mouseup事件
+        const containers = [
+            { element: transcriptDiv, name: "transcript" },
+            { element: translationDiv, name: "translation" }
+        ];
+
+        containers.forEach(container => {
+            if (container.element) {
+                container.element.addEventListener("mouseup", (e) => this.handleTextSelection(e, textSelectionMenu));
+            }
+        });
+
+        // 添加关键词按钮事件
+        addSelectedKeywordBtn.addEventListener("click", () => {
+            if (this.selectedText.trim()) {
+                this.addSelectedTextAsKeyword();
+                textSelectionMenu.style.display = "none";
+            }
+        });
+
+        // 点击其他地方隐藏菜单
+        document.addEventListener("click", (e) => {
+            if (!textSelectionMenu.contains(e.target) &&
+                !transcriptDiv?.contains(e.target) &&
+                !translationDiv?.contains(e.target)) {
+                textSelectionMenu.style.display = "none";
+            }
+        });
+    }
+
+    /**
+     * 处理文本选中事件
+     */
+    handleTextSelection(e, menu) {
+        const selection = window.getSelection();
+        const selectedText = selection.toString().trim();
+
+        if (!selectedText || selectedText.length === 0) {
+            menu.style.display = "none";
+            return;
+        }
+
+        this.selectedText = selectedText;
+        this.selectedTextElement = e.target;
+
+        // 显示菜单
+        const x = e.pageX;
+        const y = e.pageY;
+
+        menu.style.left = x + "px";
+        menu.style.top = y + "px";
+        menu.style.display = "flex";
+        menu.style.flexDirection = "column";
+    }
+
+    /**
+     * 将选中的文本添加为关键词
+     */
+    addSelectedTextAsKeyword() {
+        if (!this.selectedText || !this.keywordExtractor) return;
+
+        const keyword = this.selectedText.trim();
+
+        // 检查是否已存在
+        if (this.keywordExtractor.allCollectedKeywords.includes(keyword)) {
+            this.showStatusMessage("This keyword already exists", 1500);
+            return;
+        }
+
+        // 添加关键词
+        this.keywordExtractor.allCollectedKeywords.push(keyword);
+
+        // 更新显示
+        const keywordsOriginalDisplay = document.getElementById("keywords-display");
+        if (keywordsOriginalDisplay) {
+            this.keywordExtractor.displayKeywordsList(
+                this.keywordExtractor.allCollectedKeywords,
+                keywordsOriginalDisplay
+            );
+        }
+
+        // 重新高亮
+        const transcriptDiv = document.getElementById("transcript");
+        if (transcriptDiv) {
+            this.keywordExtractor.reHighlightElement(transcriptDiv);
+        }
+
+        // 保存到 session
+        this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
+
+        this.showStatusMessage(`✓ Added "${keyword}" to keywords`, 1500);
+        this.selectedText = "";
     }
 
     async start() {
@@ -669,12 +759,6 @@ class StreamNote {
         this.updateDisplay();
         if (this.keywordExtractor) {
             this.keywordExtractor.reset();
-        }
-
-        // 清空译文关键词显示
-        const keywordsTranslatedDisplay = document.getElementById("keywords-translated-display");
-        if (keywordsTranslatedDisplay) {
-            keywordsTranslatedDisplay.innerHTML = '<p class="placeholder">Translated keywords will appear here...</p>';
         }
 
         this.updateStatus("Cleared");
@@ -986,7 +1070,7 @@ class StreamNote {
 
             // 恢复或翻译关键词
             if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
-                await this.translateAndDisplayKeywords(this.sessionManager.currentSessionId);
+                // 关键词翻译已删除
             }
             return;
         }
@@ -1029,7 +1113,7 @@ class StreamNote {
 
         // 重新翻译关键词（保存到当前session）
         if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
-            await this.translateAndDisplayKeywords(this.sessionManager.currentSessionId);
+            // 关键词翻译已删除
         }
     }
 
@@ -1060,7 +1144,7 @@ class StreamNote {
 
         // 翻译并显示关键词（如果有）
         if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
-            await this.translateAndDisplayKeywords();
+            // 关键词翻译已删除
         }
     }
 
@@ -1091,7 +1175,7 @@ class StreamNote {
 
             // 翻译并显示译文关键词
             if (this.translationEnabled && this.keywordExtractor.allCollectedKeywords.length > 0) {
-                await this.translateAndDisplayKeywords(targetSessionId);
+                // 关键词翻译已删除
             }
         }
     }
@@ -1113,13 +1197,6 @@ class StreamNote {
             // 清空旧的关键词
             this.keywordExtractor.allCollectedKeywords = [];
 
-            // 清除 session 中的翻译缓存（因为关键词已改变，旧翻译已失效）
-            const currentSession = this.sessionManager.getSession(this.sessionManager.currentSessionId);
-            if (currentSession && currentSession.translatedKeywords) {
-                delete currentSession.translatedKeywords[this.targetLanguage];
-                console.log(`[StreamNote] Cleared cached translation for ${this.targetLanguage}`);
-            }
-
             // 重新提取
             const transcriptDiv = document.getElementById("transcript");
             await this.keywordExtractor.processText(this.currentTranscriptText, transcriptDiv);
@@ -1132,123 +1209,11 @@ class StreamNote {
 
             // 翻译并显示译文关键词（缓存已清除，会重新翻译）
             if (this.translationEnabled && this.keywordExtractor.allCollectedKeywords.length > 0) {
-                await this.translateAndDisplayKeywords(this.sessionManager.currentSessionId);
+                // 关键词翻译已删除
             }
         }
     }
 
-    /**
-     * 翻译并显示关键词
-     */
-    async translateAndDisplayKeywords(targetSessionId = null) {
-        if (!this.keywordExtractor || !this.keywordExtractor.allCollectedKeywords) return;
-
-        // 如果没有指定目标session，则使用当前session或录制中的session
-        const sessionId = targetSessionId || this.recordingSessionId || this.sessionManager.currentSessionId;
-        const session = this.sessionManager.getSession(sessionId);
-
-        if (!session) return;
-
-        const keywords = this.keywordExtractor.allCollectedKeywords;
-        const keywordsTranslatedDisplay = document.getElementById("keywords-translated-display");
-
-        if (!keywordsTranslatedDisplay) return;
-
-        console.log(`[TRANSLATE KEYWORDS] Starting translation (${this.targetLanguage}), keywords:`, keywords);
-
-        // 检查当前语言的缓存（同时检查缓存的数量是否与当前关键词数量一致）
-        if (session && session.translatedKeywords && session.translatedKeywords[this.targetLanguage]) {
-            const cachedKeywords = session.translatedKeywords[this.targetLanguage];
-            // 只有当缓存的关键词数量与当前的关键词数量一致，且缓存内容长度接近时，才使用缓存
-            // （允许有小的偏差，因为可能有去重）
-            if (cachedKeywords && cachedKeywords.length > 0 && 
-                Math.abs(cachedKeywords.length - keywords.length) <= 1) {
-                // 使用缓存
-                console.log(`[TRANSLATE KEYWORDS] Using cached keywords for ${this.targetLanguage}, count:`, cachedKeywords.length);
-                this.keywordExtractor.displayKeywordsList(cachedKeywords, keywordsTranslatedDisplay);
-                return;
-            } else if (cachedKeywords) {
-                // 缓存数量不匹配，清除缓存并重新翻译
-                console.log(`[TRANSLATE KEYWORDS] Cache size mismatch (cached: ${cachedKeywords.length}, current: ${keywords.length}), clearing cache`);
-                delete session.translatedKeywords[this.targetLanguage];
-            }
-        }
-
-        // 缓存不存在或已清除，调用 API 翻译
-        try {
-            // 关键词翻译：逗号分隔的关键词字符串
-            const keywordsText = keywords.join(", ");
-
-            console.log(`[TRANSLATE KEYWORDS] Calling API with ${keywords.length} keywords`);
-
-            const response = await fetch("http://localhost:5001/api/translate", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    text: keywordsText,
-                    target_lang: this.targetLanguage,
-                    is_keywords: true  // 指定为关键词翻译模式
-                })
-            });
-
-            if (!response.ok) {
-                console.error(`[ERROR] Keyword translation API error: ${response.status}`);
-                return;
-            }
-
-            const result = await response.json();
-            console.log(`[TRANSLATE KEYWORDS] API response:`, result);
-
-            // 处理两种可能的API响应格式
-            let translatedKeywords = [];
-
-            if (result.keywords && Array.isArray(result.keywords)) {
-                // 新格式：直接返回数组
-                translatedKeywords = result.keywords
-                    .map(kw => String(kw).trim())
-                    .filter(kw => kw.length > 0);
-                console.log(`[TRANSLATE KEYWORDS] Parsed ${translatedKeywords.length} keywords from array response`);
-            } else if (result.translation) {
-                // 兼容旧格式：字符串分割
-                const translatedText = result.translation.trim();
-                translatedKeywords = translatedText
-                    .split(/[,，、；;、\n\r]+/)
-                    .map(kw => kw.trim())
-                    .filter(kw => kw.length > 0);
-                console.log(`[TRANSLATE KEYWORDS] Parsed ${translatedKeywords.length} keywords from text response`);
-            }
-
-            console.log(`[TRANSLATE KEYWORDS] Got ${translatedKeywords.length} translated keywords, original: ${keywords.length}`);
-
-            // 检查是否遗漏了术语
-            if (translatedKeywords.length < keywords.length) {
-                console.warn(`[WARNING] Translated keywords count (${translatedKeywords.length}) less than original (${keywords.length})`);
-                // 记录差异，但仍然显示已翻译的术语
-            }
-
-            // 显示译文关键词
-            this.keywordExtractor.displayKeywordsList(translatedKeywords, keywordsTranslatedDisplay);
-
-            // 保存译文关键词到正确的 session（指定语言）
-            if (this.sessionManager) {
-                // 直接更新session对象中的translatedKeywords
-                if (!session.translatedKeywords) {
-                    session.translatedKeywords = {};
-                }
-                session.translatedKeywords[this.targetLanguage] = translatedKeywords;
-                this.sessionManager.saveSessions();
-                console.log(`[TRANSLATE KEYWORDS] Saved to session: ${sessionId}`);
-            }
-
-            console.log(`[TRANSLATE KEYWORDS] Success (${this.targetLanguage}):`, translatedKeywords);
-
-        } catch (error) {
-            console.error("[ERROR] Keyword translation failed:", error);
-            keywordsTranslatedDisplay.innerHTML = '<p class="placeholder">Translation failed</p>';
-        }
-    }
 
     /**
      * 设置同步滚动
@@ -1319,8 +1284,149 @@ class StreamNote {
             }
         }, 1000);
     }
+
+    /**
+     * 打开编辑关键词模态窗口
+     */
+    openEditKeywordsModal() {
+        const modal = document.getElementById("keywordsEditModal");
+        if (!modal) return;
+
+        // 清空输入框
+        const newKeywordInput = document.getElementById("newKeywordInput");
+        if (newKeywordInput) {
+            newKeywordInput.value = "";
+            newKeywordInput.focus();
+        }
+
+        // 显示当前关键词列表
+        this.updateEditKeywordsList();
+
+        // 显示模态
+        modal.style.display = "flex";
+    }
+
+    /**
+     * 关闭编辑关键词模态窗口
+     */
+    closeEditKeywordsModal() {
+        const modal = document.getElementById("keywordsEditModal");
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    /**
+     * 更新编辑关键词列表显示
+     */
+    updateEditKeywordsList() {
+        const keywordsList = document.getElementById("keywordsList");
+        if (!keywordsList) return;
+
+        if (!this.keywordExtractor || this.keywordExtractor.allCollectedKeywords.length === 0) {
+            keywordsList.innerHTML = "";
+            const placeholder = document.querySelector(".placeholder-edit");
+            if (placeholder) {
+                placeholder.style.display = "block";
+            }
+            return;
+        }
+
+        const placeholder = document.querySelector(".placeholder-edit");
+        if (placeholder) {
+            placeholder.style.display = "none";
+        }
+
+        const keywords = this.keywordExtractor.allCollectedKeywords;
+        keywordsList.innerHTML = keywords.map(kw => `
+            <div class="keyword-edit-item">
+                <span>${kw}</span>
+                <button class="keyword-delete-btn" onclick="streamNoteInstance.deleteKeywordFromEdit('${kw}')" title="Delete">×</button>
+            </div>
+        `).join("");
+    }
+
+    /**
+     * 添加关键词到编辑列表
+     */
+    addKeywordToEdit() {
+        const input = document.getElementById("newKeywordInput");
+        if (!input) return;
+
+        const newKeyword = input.value.trim();
+
+        if (!newKeyword) {
+            this.showStatusMessage("Please enter a keyword", 1500);
+            return;
+        }
+
+        if (!this.keywordExtractor) {
+            this.keywordExtractor = {
+                allCollectedKeywords: []
+            };
+        }
+
+        // 检查是否已存在
+        if (this.keywordExtractor.allCollectedKeywords.includes(newKeyword)) {
+            this.showStatusMessage("This keyword already exists", 1500);
+            return;
+        }
+
+        // 添加到列表
+        this.keywordExtractor.allCollectedKeywords.push(newKeyword);
+
+        // 清空输入框
+        input.value = "";
+        input.focus();
+
+        // 更新显示
+        this.updateEditKeywordsList();
+    }
+
+    /**
+     * 从编辑列表中删除关键词
+     */
+    deleteKeywordFromEdit(keyword) {
+        if (!this.keywordExtractor) return;
+
+        const index = this.keywordExtractor.allCollectedKeywords.indexOf(keyword);
+        if (index > -1) {
+            this.keywordExtractor.allCollectedKeywords.splice(index, 1);
+            this.updateEditKeywordsList();
+        }
+    }
+
+    /**
+     * 保存编辑后的关键词
+     */
+    saveEditedKeywords() {
+        if (!this.keywordExtractor) return;
+
+        // 关闭模态
+        this.closeEditKeywordsModal();
+
+        // 更新显示
+        const keywordsOriginalDisplay = document.getElementById("keywords-display");
+        if (keywordsOriginalDisplay) {
+            this.keywordExtractor.displayKeywordsList(
+                this.keywordExtractor.allCollectedKeywords,
+                keywordsOriginalDisplay
+            );
+        }
+
+        // 重新高亮转录文本
+        const transcriptDiv = document.getElementById("transcript");
+        if (transcriptDiv && this.keywordExtractor.allCollectedKeywords.length > 0) {
+            this.keywordExtractor.reHighlightElement(transcriptDiv);
+        }
+
+        // 保存到 session
+        this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
+
+        this.showStatusMessage("✓ Keywords updated", 1500);
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    new StreamNote();
+    window.streamNoteInstance = new StreamNote();
 });
