@@ -471,6 +471,36 @@ class StreamNote {
                 }
             });
         }
+
+        // 添加手动提取关键词按钮
+        const extractKeywordsBtn = document.getElementById("extractKeywordsBtn");
+        if (extractKeywordsBtn) {
+            extractKeywordsBtn.addEventListener("click", async () => {
+                if (!this.keywordExtractor || !this.keywordExtractor.enabled) {
+                    this.showStatusMessage("Enable keywords first", 2000);
+                    return;
+                }
+
+                if (Object.keys(this.preciseResults).length === 0) {
+                    this.showStatusMessage("No transcript available to extract keywords from", 2000);
+                    return;
+                }
+
+                extractKeywordsBtn.disabled = true;
+                extractKeywordsBtn.textContent = "Extracting...";
+
+                try {
+                    await this.processKeywords(this.recordingSessionId || this.sessionManager.currentSessionId);
+                    this.showStatusMessage("✓ Keywords extracted", 1500);
+                } catch (error) {
+                    console.error("[StreamNote] Error extracting keywords:", error);
+                    this.showStatusMessage("✗ Failed to extract keywords", 2000);
+                } finally {
+                    extractKeywordsBtn.disabled = false;
+                    extractKeywordsBtn.textContent = "Extract Keywords";
+                }
+            });
+        }
     }
 
     async start() {
@@ -740,8 +770,8 @@ class StreamNote {
                             this.translateText(text, currentChunkIndex, sessionIdAtRequest);
                         }
 
-                        // 处理关键词提取
-                        this.processKeywords(sessionIdAtRequest);
+                        // 关键词提取改为手动触发，注释掉自动调用
+                        // this.processKeywords(sessionIdAtRequest);
                     } else {
                         // 如果已切换到其他 session，仅记录日志
                         console.log(`[TRANSCRIBE] Saved to session ${sessionIdAtRequest}, but user is now in session ${this.sessionManager.currentSessionId}`);
