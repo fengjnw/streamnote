@@ -444,6 +444,15 @@ header p {
     color: white;
 }
 
+.btn-auto-scroll {
+    background: #28a745;
+    color: white;
+}
+
+.btn-auto-scroll:hover:not(:disabled) {
+    background: #218838;
+}
+
 .btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;

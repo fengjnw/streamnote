@@ -38,6 +38,9 @@ class StreamNote {
         this.isSyncingScroll = false;
         this.scrollTimeout = null;
 
+        // 自动滚动开关
+        this.autoScroll = true;
+
         this.initSessionManager();
         this.setupUIListeners();
         this.initKeywordExtractor();
@@ -371,6 +374,12 @@ class StreamNote {
         document.getElementById("stopBtn").addEventListener("click", () => this.stop());
         document.getElementById("clearBtn").addEventListener("click", () => this.clear());
 
+        // 自动滚动开关
+        const autoScrollBtn = document.getElementById("autoScrollBtn");
+        if (autoScrollBtn) {
+            autoScrollBtn.addEventListener("click", () => this.toggleAutoScroll());
+        }
+
         // 添加翻译开关
         const translationToggle = document.getElementById("translation-toggle");
         if (translationToggle) {
@@ -604,6 +613,26 @@ class StreamNote {
         this.saveToSession();
     }
 
+    toggleAutoScroll() {
+        this.autoScroll = !this.autoScroll;
+        const autoScrollBtn = document.getElementById("autoScrollBtn");
+        if (autoScrollBtn) {
+            autoScrollBtn.textContent = `Auto Scroll: ${this.autoScroll ? 'ON' : 'OFF'}`;
+        }
+
+        // 如果开启自动滚动，立即滚动到底部
+        if (this.autoScroll) {
+            const transcriptContainer = document.querySelector(".transcript-container");
+            const translationContainer = document.querySelector(".translation-container");
+            if (transcriptContainer) {
+                transcriptContainer.scrollTop = transcriptContainer.scrollHeight;
+            }
+            if (translationContainer) {
+                translationContainer.scrollTop = translationContainer.scrollHeight;
+            }
+        }
+    }
+
     getVolume() {
         if (!this.analyser) return 0;
         const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
@@ -735,20 +764,22 @@ class StreamNote {
             translationDiv.innerHTML = '<p class="placeholder">Translation will appear here...</p>';
         }
 
-        // 自动滚动到底部（阻止同步滚动触发）
+        // 仅在自动滚动启用时滚动到底部（阻止同步滚动触发）
         // 注意：要滚动外层容器，不是内容 div
-        this.isSyncingScroll = true;
-        const transcriptContainer = document.querySelector(".transcript-container");
-        const translationContainer = document.querySelector(".translation-container");
-        if (transcriptContainer) {
-            transcriptContainer.scrollTop = transcriptContainer.scrollHeight;
+        if (this.autoScroll) {
+            this.isSyncingScroll = true;
+            const transcriptContainer = document.querySelector(".transcript-container");
+            const translationContainer = document.querySelector(".translation-container");
+            if (transcriptContainer) {
+                transcriptContainer.scrollTop = transcriptContainer.scrollHeight;
+            }
+            if (translationContainer) {
+                translationContainer.scrollTop = translationContainer.scrollHeight;
+            }
+            setTimeout(() => {
+                this.isSyncingScroll = false;
+            }, 100);
         }
-        if (translationContainer) {
-            translationContainer.scrollTop = translationContainer.scrollHeight;
-        }
-        setTimeout(() => {
-            this.isSyncingScroll = false;
-        }, 100);
 
         // 在更新HTML后，立即重新应用所有已收集的关键词高亮
         if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
