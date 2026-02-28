@@ -521,13 +521,24 @@ class StreamNote {
             hideAllContent();
             contentEl.classList.add("active");
             sidePanelTitle.textContent = title;
+            
+            // Set flag to prevent resize-induced scroll from closing autoScroll
+            this.isSyncingScroll = true;
             sidePanelsContainer.classList.add("expanded");
+            setTimeout(() => {
+                this.isSyncingScroll = false;
+            }, 350); // Match the 0.3s transition + buffer
         };
 
         // Close panel button
         if (closeSidePanelBtn) {
             closeSidePanelBtn.addEventListener("click", () => {
+                // Set flag to prevent resize-induced scroll from closing autoScroll
+                this.isSyncingScroll = true;
                 sidePanelsContainer.classList.remove("expanded");
+                setTimeout(() => {
+                    this.isSyncingScroll = false;
+                }, 350); // Match the 0.3s transition + buffer
             });
         }
 
@@ -538,7 +549,11 @@ class StreamNote {
                 const isActive = keywordsContent.classList.contains("active");
                 
                 if (isOpen && isActive) {
+                    this.isSyncingScroll = true;
                     sidePanelsContainer.classList.remove("expanded");
+                    setTimeout(() => {
+                        this.isSyncingScroll = false;
+                    }, 350);
                 } else {
                     showContent(keywordsContent, "Keywords");
                 }
@@ -551,7 +566,11 @@ class StreamNote {
                 const isActive = historyContent.classList.contains("active");
                 
                 if (isOpen && isActive) {
+                    this.isSyncingScroll = true;
                     sidePanelsContainer.classList.remove("expanded");
+                    setTimeout(() => {
+                        this.isSyncingScroll = false;
+                    }, 350);
                 } else {
                     showContent(historyContent, "History");
                 }
@@ -564,7 +583,11 @@ class StreamNote {
                 const isActive = settingsContent.classList.contains("active");
                 
                 if (isOpen && isActive) {
+                    this.isSyncingScroll = true;
                     sidePanelsContainer.classList.remove("expanded");
+                    setTimeout(() => {
+                        this.isSyncingScroll = false;
+                    }, 350);
                 } else {
                     showContent(settingsContent, "Settings");
                 }
