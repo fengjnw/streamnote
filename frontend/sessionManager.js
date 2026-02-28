@@ -94,22 +94,17 @@ class SessionManager {
     createNewSession(name = null) {
         const id = Date.now().toString();
         
-        // Generate default name using current date and time
+        // Generate default name using ISO 8601 format (YYYY-MM-DD HH:MM:SS)
         let defaultName = name;
         if (!defaultName) {
             const now = new Date();
-            const dateStr = now.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
-            const timeStr = now.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            });
-            defaultName = `${dateStr} ${timeStr}`;
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            defaultName = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
         }
 
         this.sessions[id] = {
