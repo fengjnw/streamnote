@@ -641,84 +641,121 @@ class StreamNote {
     /**
      * 初始化文本选中菜单功能
      */
+    /**
+     * 初始化浮动按钮功能（替换菜单）
+     */
     initTextSelectionMenu() {
-        const transcriptDiv = document.getElementById("transcript");
-        const translationDiv = document.getElementById("translation");
-        const textSelectionMenu = document.getElementById("textSelectionMenu");
-        const explainBtn = document.getElementById("explainSelectedTextBtn");
-        const addSelectedKeywordBtn = document.getElementById("addSelectedAsKeywordBtn");
+        const floatingExplainBtn = document.getElementById("floatingExplainBtn");
+        const floatingAddKeywordBtn = document.getElementById("floatingAddKeywordBtn");
 
-        if (!textSelectionMenu || !addSelectedKeywordBtn || !explainBtn) return;
+        // 获取侧边栏相关元素
+        const sidePanelsContainer = document.querySelector(".side-panels-container");
+        const sidePanelTitle = document.getElementById("sidePanelTitle");
+        const keywordsContent = document.getElementById("keywordsContent");
+        const historyContent = document.getElementById("historyContent");
+        const settingsContent = document.getElementById("settingsContent");
 
-        // 在两个容器上都添加mouseup事件
-        const containers = [
-            { element: transcriptDiv, name: "transcript" },
-            { element: translationDiv, name: "translation" }
-        ];
+        if (!floatingExplainBtn || !floatingAddKeywordBtn) return;
 
-        containers.forEach(container => {
-            if (container.element) {
-                container.element.addEventListener("mouseup", (e) => this.handleTextSelection(e, textSelectionMenu));
+        // Hide all content
+        const hideAllContent = () => {
+            keywordsContent.classList.remove("active");
+            historyContent.classList.remove("active");
+            settingsContent.classList.remove("active");
+        };
+
+        // 监听选中事件
+        document.addEventListener("selectionchange", () => {
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+
+            if (!selectedText || selectedText.length === 0) {
+                floatingExplainBtn.style.display = "none";
+                floatingAddKeywordBtn.style.display = "none";
+                return;
+            }
+
+            // 检查选中内容是否在转录或翻译区域
+            const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+            if (!range) {
+                floatingExplainBtn.style.display = "none";
+                floatingAddKeywordBtn.style.display = "none";
+                return;
+            }
+
+            const transcriptDiv = document.getElementById("transcript");
+            const translationDiv = document.getElementById("translation");
+
+            const inTranscript = transcriptDiv?.contains(range.commonAncestorContainer);
+            const inTranslation = translationDiv?.contains(range.commonAncestorContainer);
+
+            if (inTranscript || inTranslation) {
+                this.selectedText = selectedText;
+                this.selectedTextElement = range.commonAncestorContainer;
+
+                // 显示按钮
+                floatingExplainBtn.style.display = "inline-block";
+                floatingAddKeywordBtn.style.display = "inline-block";
+            } else {
+                floatingExplainBtn.style.display = "none";
+                floatingAddKeywordBtn.style.display = "none";
             }
         });
 
         // 解释按钮事件
-        explainBtn.addEventListener("click", async () => {
+        floatingExplainBtn.addEventListener("click", async () => {
             if (this.selectedText.trim()) {
                 const term = this.selectedText.trim();
                 // 如果不在历史中，先加入
                 if (!this.keywordExtractor.queryHistory.includes(term)) {
                     this.keywordExtractor.addToQueryHistory(term);
                 }
-                // 等待 DOM 更新后再展开
-                setTimeout(() => {
-                    this.keywordExtractor.toggleExplanation(term);
-                }, 0);
-                textSelectionMenu.style.display = "none";
+
+                // 打开 History 面板
+                if (historyContent && sidePanelTitle && sidePanelsContainer) {
+                    hideAllContent();
+                    historyContent.classList.add("active");
+                    sidePanelTitle.textContent = "History";
+                    this.isSyncingScroll = true;
+                    sidePanelsContainer.classList.add("expanded");
+                    setTimeout(() => {
+                        this.isSyncingScroll = false;
+                    }, 350);
+
+                    // 等待 DOM 更新后再展开
+                    setTimeout(() => {
+                        this.keywordExtractor.toggleExplanation(term);
+                    }, 50);
+                }
+
+                // 隐藏浮动按钮
+                floatingExplainBtn.style.display = "none";
+                floatingAddKeywordBtn.style.display = "none";
             }
         });
 
         // 添加关键词按钮事件
-        addSelectedKeywordBtn.addEventListener("click", () => {
+        floatingAddKeywordBtn.addEventListener("click", () => {
             if (this.selectedText.trim()) {
                 this.addSelectedTextAsKeyword();
-                textSelectionMenu.style.display = "none";
+
+                // 打开 Keywords 面板
+                if (keywordsContent && sidePanelTitle && sidePanelsContainer) {
+                    hideAllContent();
+                    keywordsContent.classList.add("active");
+                    sidePanelTitle.textContent = "Keywords";
+                    this.isSyncingScroll = true;
+                    sidePanelsContainer.classList.add("expanded");
+                    setTimeout(() => {
+                        this.isSyncingScroll = false;
+                    }, 350);
+                }
+
+                // 隐藏浮动按钮
+                floatingExplainBtn.style.display = "none";
+                floatingAddKeywordBtn.style.display = "none";
             }
         });
-
-        // 点击其他地方隐藏菜单
-        document.addEventListener("click", (e) => {
-            if (!textSelectionMenu.contains(e.target) &&
-                !transcriptDiv?.contains(e.target) &&
-                !translationDiv?.contains(e.target)) {
-                textSelectionMenu.style.display = "none";
-            }
-        });
-    }
-
-    /**
-     * 处理文本选中事件
-     */
-    handleTextSelection(e, menu) {
-        const selection = window.getSelection();
-        const selectedText = selection.toString().trim();
-
-        if (!selectedText || selectedText.length === 0) {
-            menu.style.display = "none";
-            return;
-        }
-
-        this.selectedText = selectedText;
-        this.selectedTextElement = e.target;
-
-        // 显示菜单
-        const x = e.pageX;
-        const y = e.pageY;
-
-        menu.style.left = x + "px";
-        menu.style.top = y + "px";
-        menu.style.display = "flex";
-        menu.style.flexDirection = "column";
     }
 
     /**

@@ -53,6 +53,14 @@
 
                 <div class="spacer"></div>
 
+                <!-- Text Selection Tools -->
+                <div class="text-tools">
+                    <button id="floatingExplainBtn" class="btn btn-secondary" style="display: none;"
+                        title="Explain selected text">💡 Explain</button>
+                    <button id="floatingAddKeywordBtn" class="btn btn-secondary" style="display: none;"
+                        title="Add selected text as keyword">➕ Add Keyword</button>
+                </div>
+
                 <!-- Quick Access Buttons for Side Panel Tabs -->
                 <div class="panel-controls">
                     <button id="quickAccessKeywords" class="btn btn-secondary" title="Keywords">📌 Keywords</button>
@@ -98,11 +106,6 @@
                     <div id="keywordsContent" class="panel-content active">
                         <div id="keywords-display" class="keywords-display">
                             <p class="placeholder">Select text to add keywords...</p>
-                        </div>
-                        <!-- Text Selection Menu for Adding Keywords -->
-                        <div id="textSelectionMenu" class="text-selection-menu" style="display: none;">
-                            <button id="explainSelectedTextBtn" class="menu-item">💡 Explain</button>
-                            <button id="addSelectedAsKeywordBtn" class="menu-item">+ Add as Keyword</button>
                         </div>
                         <div
                             style="padding: 8px 12px; background: #f8f9fa; border-top: 1px solid #e9ecef; margin-top: auto;">
