@@ -121,15 +121,15 @@ class KeywordExtractor {
         const uniqueKeywords = [...new Set(keywords)];
 
         const html = `
-            <div class="keywords-container">
-                <div class="keywords-list">
-                    ${uniqueKeywords.map(kw => `
-                        <span class="keyword-badge" title="Click to see explanation" style="cursor: pointer;" onclick="window.keywordExtractorInstance.showExplanation('${kw.replace(/'/g, "\\'")}')" >
-                            <span class="keyword-text">${kw}</span>
-                            <button class="keyword-delete-btn" onclick="event.stopPropagation(); window.streamNoteInstance.deleteKeyword('${kw.replace(/'/g, "\\'")}')">×</button>
+            <div class="keywords-items">
+                ${uniqueKeywords.map(kw => `
+                    <div class="keyword-item">
+                        <span class="keyword-text" onclick="window.keywordExtractorInstance.showExplanation('${kw.replace(/'/g, "\\'")}')" style="cursor: pointer; flex: 1;">
+                            ${kw}
                         </span>
-                    `).join('')}
-                </div>
+                        <button class="keyword-delete-btn" onclick="window.streamNoteInstance.deleteKeyword('${kw.replace(/'/g, "\\'")}')">×</button>
+                    </div>
+                `).join('')}
             </div>
         `;
 

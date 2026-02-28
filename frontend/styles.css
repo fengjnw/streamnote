@@ -666,6 +666,59 @@ header h1 {
     color: #d32f2f;
 }
 
+/* 关键词列表项 - 与查询历史保持一致 */
+.keywords-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.keyword-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    transition: all 0.2s;
+}
+
+.keyword-item:hover {
+    background: #e8f0ff;
+    border-color: #667eea;
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.1);
+}
+
+.keyword-text {
+    flex: 1;
+    color: #333;
+    font-size: 0.95em;
+    word-break: break-word;
+}
+
+.keyword-delete-btn {
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 0 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.keyword-delete-btn:hover {
+    background: #ffebee;
+    color: #d32f2f;
+}
+
 .translation {
     line-height: 1.8;
     font-size: 1.1em;
@@ -773,71 +826,6 @@ header h1 {
     }
 }
 
-.keywords-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.keywords-container h3 {
-    font-size: 1.1em;
-    color: #333;
-    margin: 0;
-}
-
-.keywords-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.keyword-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 6px 10px 6px 12px;
-    border-radius: 20px;
-    font-size: 0.9em;
-    font-weight: 500;
-    transition: all 0.3s;
-    cursor: default;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-    position: relative;
-}
-
-.keyword-badge:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.keyword-delete-btn {
-    display: none;
-    background: rgba(255, 255, 255, 0.3);
-    border: none;
-    color: white;
-    cursor: pointer;
-    padding: 0;
-    width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    font-size: 14px;
-    flex-shrink: 0;
-    transition: all 0.2s;
-}
-
-.keyword-badge:hover .keyword-delete-btn {
-    display: flex;
-}
-
-.keyword-delete-btn:hover {
-    background: rgba(255, 255, 255, 0.5);
-    transform: scale(1.1);
-}
 
 @media (max-width: 768px) {
     header h1 {
