@@ -246,9 +246,9 @@ header h1 {
 }
 
 .current-session-info {
-    padding: 12px 15px;
-    background: #f8f9fa;
-    border-top: 1px solid #e9ecef;
+    padding: 10px 15px;
+    background: white;
+    border-bottom: 1px solid #e9ecef;
     flex-shrink: 0;
 }
 
