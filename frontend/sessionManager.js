@@ -444,6 +444,14 @@ class SessionManager {
 
         const togglePanel = () => {
             sessionPanel.classList.toggle('expanded');
+            
+            // Update button active state
+            const isExpanded = sessionPanel.classList.contains('expanded');
+            if (isExpanded) {
+                openBtn.classList.add('active');
+            } else {
+                openBtn.classList.remove('active');
+            }
 
             // Set flag to prevent resize-induced scroll from affecting auto-scroll/content
             if (window.streamNoteInstance) {
@@ -460,6 +468,11 @@ class SessionManager {
 
         if (openBtn && sessionPanel) {
             openBtn.addEventListener('click', togglePanel);
+        }
+
+        // 初始化按钮状态
+        if (sessionPanel && sessionPanel.classList.contains('expanded') && openBtn) {
+            openBtn.classList.add('active');
         }
 
         // Session 名称输入框

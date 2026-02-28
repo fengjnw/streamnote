@@ -78,12 +78,22 @@ class StreamNote {
         // 文本面板默认都显示，由用户通过面板切换按钮控制
         const transcriptPanel = document.querySelector(".transcript-panel");
         const translationPanel = document.querySelector(".translation-panel");
+        const toggleTranscriptPanelBtn = document.getElementById("toggleTranscriptPanel");
+        const toggleTranslationPanelBtn = document.getElementById("toggleTranslationPanel");
 
         if (transcriptPanel) {
             transcriptPanel.classList.add("expanded");
+            // Set button active state
+            if (toggleTranscriptPanelBtn) {
+                toggleTranscriptPanelBtn.classList.add("active");
+            }
         }
         if (translationPanel) {
             translationPanel.classList.add("expanded");
+            // Set button active state
+            if (toggleTranslationPanelBtn) {
+                toggleTranslationPanelBtn.classList.add("active");
+            }
         }
     }
 
@@ -446,6 +456,13 @@ class StreamNote {
                 if (transcriptPanel) {
                     transcriptPanel.classList.toggle("collapsed");
                     transcriptPanel.classList.toggle("expanded");
+                    // Update button state
+                    const isExpanded = transcriptPanel.classList.contains("expanded");
+                    if (isExpanded) {
+                        toggleTranscriptPanelBtn.classList.add("active");
+                    } else {
+                        toggleTranscriptPanelBtn.classList.remove("active");
+                    }
                     this.savePanelState();
                 }
             });
@@ -457,6 +474,13 @@ class StreamNote {
                 if (translationPanel) {
                     translationPanel.classList.toggle("collapsed");
                     translationPanel.classList.toggle("expanded");
+                    // Update button state
+                    const isExpanded = translationPanel.classList.contains("expanded");
+                    if (isExpanded) {
+                        toggleTranslationPanelBtn.classList.add("active");
+                    } else {
+                        toggleTranslationPanelBtn.classList.remove("active");
+                    }
                     this.savePanelState();
                 }
             });
@@ -468,6 +492,8 @@ class StreamNote {
                 if (transcriptPanel) {
                     transcriptPanel.classList.add("collapsed");
                     transcriptPanel.classList.remove("expanded");
+                    // Update button state
+                    toggleTranscriptPanelBtn.classList.remove("active");
                     this.savePanelState();
                 }
             });
@@ -479,6 +505,8 @@ class StreamNote {
                 if (translationPanel) {
                     translationPanel.classList.add("collapsed");
                     translationPanel.classList.remove("expanded");
+                    // Update button state
+                    toggleTranslationPanelBtn.classList.remove("active");
                     this.savePanelState();
                 }
             });
@@ -567,6 +595,10 @@ class StreamNote {
             keywordsContent.classList.remove("active");
             historyContent.classList.remove("active");
             settingsContent.classList.remove("active");
+            // Clear active state from all quick access buttons
+            quickAccessKeywords.classList.remove("active");
+            quickAccessHistory.classList.remove("active");
+            quickAccessSettings.classList.remove("active");
         };
 
         // Show specific content
@@ -574,6 +606,15 @@ class StreamNote {
             hideAllContent();
             contentEl.classList.add("active");
             sidePanelTitle.textContent = title;
+
+            // Update corresponding button active state
+            if (contentEl === keywordsContent) {
+                quickAccessKeywords.classList.add("active");
+            } else if (contentEl === historyContent) {
+                quickAccessHistory.classList.add("active");
+            } else if (contentEl === settingsContent) {
+                quickAccessSettings.classList.add("active");
+            }
 
             // Show/hide auto extract keywords button and explanation language selector based on active tab
             const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
@@ -599,6 +640,10 @@ class StreamNote {
                 // Set flag to prevent resize-induced scroll from closing autoScroll
                 this.isSyncingScroll = true;
                 sidePanelsContainer.classList.remove("expanded");
+                // Remove active state from all quick access buttons
+                quickAccessKeywords.classList.remove("active");
+                quickAccessHistory.classList.remove("active");
+                quickAccessSettings.classList.remove("active");
                 setTimeout(() => {
                     this.isSyncingScroll = false;
                 }, 350); // Match the 0.3s transition + buffer
@@ -614,6 +659,7 @@ class StreamNote {
                 if (isOpen && isActive) {
                     this.isSyncingScroll = true;
                     sidePanelsContainer.classList.remove("expanded");
+                    quickAccessKeywords.classList.remove("active");
                     setTimeout(() => {
                         this.isSyncingScroll = false;
                     }, 350);
@@ -631,6 +677,7 @@ class StreamNote {
                 if (isOpen && isActive) {
                     this.isSyncingScroll = true;
                     sidePanelsContainer.classList.remove("expanded");
+                    quickAccessHistory.classList.remove("active");
                     setTimeout(() => {
                         this.isSyncingScroll = false;
                     }, 350);
@@ -648,6 +695,7 @@ class StreamNote {
                 if (isOpen && isActive) {
                     this.isSyncingScroll = true;
                     sidePanelsContainer.classList.remove("expanded");
+                    quickAccessSettings.classList.remove("active");
                     setTimeout(() => {
                         this.isSyncingScroll = false;
                     }, 350);

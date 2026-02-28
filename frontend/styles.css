@@ -450,7 +450,7 @@ header h1 {
     flex-shrink: 0;
 }
 
-.text-panel-header > :nth-child(2) {
+.text-panel-header> :nth-child(2) {
     margin-left: auto;
 }
 
@@ -490,6 +490,22 @@ header h1 {
     background: #dee2e6;
     transform: scale(1.08);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+/* Active/highlighted button state - higher specificity to override secondary style */
+.control-btn.active,
+.control-btn-secondary.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
+    font-weight: 600;
+}
+
+.control-btn.active:hover:not(:disabled),
+.control-btn-secondary.active:hover:not(:disabled) {
+    background: linear-gradient(135deg, #5568d3 0%, #653a91 100%) !important;
+    transform: scale(1.12);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5) !important;
 }
 
 .control-btn:disabled {
