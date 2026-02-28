@@ -517,14 +517,22 @@ header p {
     overflow: visible;
 }
 
-/* 关键词区域（左右分栏） */
-.keywords-section {
+/* 底部区域（关键词 + 查询历史） */
+.bottom-section {
     display: flex;
     gap: 0;
     flex: 1;
     overflow: hidden;
-    min-height: 150px;
-    max-height: 250px;
+    border-top: 2px solid #e9ecef;
+}
+
+/* 关键词区域 */
+.keywords-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    flex: 1;
+    overflow: hidden;
     transition: all 0.3s ease;
 }
 
