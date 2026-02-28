@@ -7,6 +7,7 @@ class StreamNote {
         this.startTime = null;
         this.audioChunks = [];
         this.durationInterval = null;
+        this.statsUpdateInterval = null;
 
         // 停顿检测
         this.audioContext = null;
@@ -110,14 +111,11 @@ class StreamNote {
         const session = this.sessionManager.getCurrentSession();
         if (!session) return;
 
-        // 更新 header 中的当前 session 显示
-        const currentSessionDisplay = document.getElementById('currentSessionDisplay');
-        if (currentSessionDisplay) {
-            currentSessionDisplay.textContent = `📌 Current: ${session.name || 'Untitled'}`;
-        }
-
         // 设置当前显示的 session
         this.displaySessionId = this.sessionManager.currentSessionId;
+
+        // 更新 header 中的 session 信息
+        this.updateSessionInfo();
 
         // 不再自动停止转录，保持全局转录状态
         // 如果有其他 session 在录制，显示提示
@@ -227,6 +225,88 @@ class StreamNote {
 
         console.log(`[StreamNote] Loaded session: ${session.name}`, session.settings);
         this.updateStatus(`Loaded: ${session.name}`);
+    }
+
+    /**
+     * 更新 header 中的 session 信息显示
+     */
+    updateSessionInfo() {
+        const session = this.sessionManager.getCurrentSession();
+        if (!session) return;
+
+        // 更新 session 名称
+        const sessionNameDisplay = document.getElementById('sessionNameDisplay');
+        if (sessionNameDisplay) {
+            sessionNameDisplay.textContent = session.name || 'Untitled Session';
+        }
+
+        // 更新 session 统计信息
+        this.updateSessionStats();
+    }
+
+    /**
+     * 更新 session 的统计信息（时长、字数、关键词数等）
+     */
+    updateSessionStats() {
+        const session = this.sessionManager.getCurrentSession();
+        if (!session) return;
+
+        // 计算会话时长
+        const startTime = session.startTime || Date.now();
+        const duration = Math.floor((Date.now() - startTime) / 1000);
+        const minutes = Math.floor(duration / 60);
+        const seconds = duration % 60;
+        const durationDisplay = document.getElementById('sessionDurationDisplay');
+        if (durationDisplay) {
+            durationDisplay.textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // 计算转录字数
+        let totalChars = 0;
+        if (session.transcripts) {
+            Object.values(session.transcripts).forEach(text => {
+                totalChars += (text || '').length;
+            });
+        }
+        const charCountDisplay = document.getElementById('sessionCharCountDisplay');
+        if (charCountDisplay) {
+            charCountDisplay.textContent = totalChars.toLocaleString();
+        }
+
+        // 计算关键词数
+        let keywordCount = 0;
+        if (session.keywords && Array.isArray(session.keywords)) {
+            keywordCount = session.keywords.length;
+        }
+        const keywordCountDisplay = document.getElementById('sessionKeywordCountDisplay');
+        if (keywordCountDisplay) {
+            keywordCountDisplay.textContent = keywordCount;
+        }
+
+        // 显示翻译语言
+        if (this.translationEnabled && this.targetLanguage) {
+            const translationStatusDisplay = document.getElementById('translationStatusDisplay');
+            const translationLangDisplay = document.getElementById('translationLangDisplay');
+            if (translationStatusDisplay) {
+                translationStatusDisplay.style.display = 'flex';
+            }
+            if (translationLangDisplay) {
+                const langNames = {
+                    'Chinese': '中文',
+                    'English': 'English',
+                    'Spanish': 'Español',
+                    'French': 'Français',
+                    'Japanese': '日本語',
+                    'Korean': '한국어'
+                };
+                translationLangDisplay.textContent = langNames[this.targetLanguage] || this.targetLanguage;
+            }
+        } else {
+            const translationStatusDisplay = document.getElementById('translationStatusDisplay');
+            if (translationStatusDisplay) {
+                translationStatusDisplay.style.display = 'none';
+            }
+        }
     }
 
     /**
@@ -910,6 +990,10 @@ class StreamNote {
             this.updateStatus("Recording...");
             this.startDurationUpdate();
 
+            // 每秒更新 session 统计信息
+            if (this.statsUpdateInterval) clearInterval(this.statsUpdateInterval);
+            this.statsUpdateInterval = setInterval(() => this.updateSessionStats(), 1000);
+
         } catch (error) {
             console.error("[ERROR] Microphone access:", error);
             this.updateStatus("Microphone access denied");
@@ -929,6 +1013,12 @@ class StreamNote {
                 this.checkInterval = null;
             }
 
+            // 清除 stats 更新定时器
+            if (this.statsUpdateInterval) {
+                clearInterval(this.statsUpdateInterval);
+                this.statsUpdateInterval = null;
+            }
+
             if (this.audioContext) {
                 this.audioContext.close();
             }
@@ -942,6 +1032,9 @@ class StreamNote {
             document.getElementById("startBtn").disabled = false;
             document.getElementById("stopBtn").disabled = true;
             this.updateStatus("Stopped");
+
+            // 停止时更新一次统计信息
+            this.updateSessionStats();
 
             if (this.durationInterval) {
                 clearInterval(this.durationInterval);
@@ -960,6 +1053,7 @@ class StreamNote {
         }
 
         this.updateStatus("Cleared");
+        this.updateSessionStats();
 
         // 保存到当前 session
         this.saveToSession();
@@ -1098,6 +1192,9 @@ class StreamNote {
     }
 
     updateDisplay() {
+        // 更新 session 统计信息
+        this.updateSessionStats();
+
         const transcriptDiv = document.getElementById("transcript");
         const translationDiv = document.getElementById("translation");
 

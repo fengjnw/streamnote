@@ -10,9 +10,20 @@
 
 <body>
     <header>
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 30px;">
             <h1 style="margin: 0;">StreamNote</h1>
-            <div id="currentSessionDisplay" style="flex: 1; font-size: 0.95em; opacity: 0.9;"></div>
+            <div id="sessionInfoDisplay"
+                style="flex: 1; display: flex; gap: 30px; font-size: 0.95em; opacity: 0.9; align-items: center;">
+                <div id="sessionNameDisplay" style="font-weight: 600; min-width: 150px;"></div>
+                <div id="sessionStatsDisplay" style="display: flex; gap: 25px; font-size: 0.9em;">
+                    <div><span style="opacity: 0.8;">⏱️</span> <span id="sessionDurationDisplay">0:00</span></div>
+                    <div><span style="opacity: 0.8;">📝</span> <span id="sessionCharCountDisplay">0</span> chars</div>
+                    <div><span style="opacity: 0.8;">🔑</span> <span id="sessionKeywordCountDisplay">0</span> keywords
+                    </div>
+                    <div id="translationStatusDisplay" style="display: none;"><span style="opacity: 0.8;">🌐</span>
+                        <span id="translationLangDisplay">中文</span></div>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -45,27 +56,30 @@
 
         <div class="main-wrapper">
             <div class="control-panel">
-                <button id="openSessionPanel" class="open-session-btn" title="Open Sessions" style="display: none;">📋
-                    Sessions</button>
-                <button id="startBtn" class="btn btn-primary">Start Recording</button>
-                <button id="stopBtn" class="btn btn-danger" disabled>Stop Recording</button>
-                <button id="clearBtn" class="btn btn-secondary">Clear</button>
+                <button id="openSessionPanel" class="open-session-btn" title="Open Sessions"
+                    style="display: none;">📋</button>
+                <button id="startBtn" class="control-btn control-btn-primary" title="Start Recording">🎙️</button>
+                <button id="stopBtn" class="control-btn control-btn-danger" disabled title="Stop Recording">⏹️</button>
+                <button id="clearBtn" class="control-btn control-btn-secondary" title="Clear">🗑️</button>
 
-                <div class="spacer"></div>
+                <div class="control-spacer"></div>
 
                 <!-- Text Selection Tools -->
                 <div class="text-tools">
-                    <button id="floatingExplainBtn" class="btn btn-secondary" style="display: none;"
-                        title="Explain selected text">💡 Explain</button>
-                    <button id="floatingAddKeywordBtn" class="btn btn-secondary" style="display: none;"
-                        title="Add selected text as keyword">➕ Add Keyword</button>
+                    <button id="floatingExplainBtn" class="control-btn control-btn-secondary" style="display: none;"
+                        title="Explain selected text">💡</button>
+                    <button id="floatingAddKeywordBtn" class="control-btn control-btn-secondary" style="display: none;"
+                        title="Add selected text as keyword">➕</button>
                 </div>
 
                 <!-- Quick Access Buttons for Side Panel Tabs -->
                 <div class="panel-controls">
-                    <button id="quickAccessKeywords" class="btn btn-secondary" title="Keywords">📌 Keywords</button>
-                    <button id="quickAccessHistory" class="btn btn-secondary" title="History">📜 History</button>
-                    <button id="quickAccessSettings" class="btn btn-secondary" title="Settings">⚙️ Settings</button>
+                    <button id="quickAccessKeywords" class="control-btn control-btn-secondary"
+                        title="Keywords">📌</button>
+                    <button id="quickAccessHistory" class="control-btn control-btn-secondary"
+                        title="History">📜</button>
+                    <button id="quickAccessSettings" class="control-btn control-btn-secondary"
+                        title="Settings">⚙️</button>
                 </div>
             </div>
 

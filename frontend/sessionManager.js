@@ -160,10 +160,10 @@ class SessionManager {
         this.renderSessionList();
         this.updateSessionNameInput();
 
-        // 更新 header 中的当前 session 显示
-        const currentSessionDisplay = document.getElementById('currentSessionDisplay');
-        if (currentSessionDisplay) {
-            currentSessionDisplay.textContent = `📌 Current: ${this.sessions[sessionId].name}`;
+        // 更新 header 中的 session 名称和信息
+        const sessionNameDisplay = document.getElementById('sessionNameDisplay');
+        if (sessionNameDisplay) {
+            sessionNameDisplay.textContent = this.sessions[sessionId].name;
         }
 
         // 触发自定义事件通知 StreamNote
@@ -270,10 +270,10 @@ class SessionManager {
             this.saveSessions();
             this.renderSessionList();
 
-            // 更新 header 中的当前 session 显示
-            const currentSessionDisplay = document.getElementById('currentSessionDisplay');
-            if (currentSessionDisplay) {
-                currentSessionDisplay.textContent = `📌 Current: ${session.name}`;
+            // 更新 header 中的 session 名称显示
+            const sessionNameDisplay = document.getElementById('sessionNameDisplay');
+            if (sessionNameDisplay) {
+                sessionNameDisplay.textContent = session.name;
             }
 
             console.log(`[SessionManager] Renamed to: ${newName}`);
