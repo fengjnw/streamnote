@@ -489,9 +489,10 @@ class StreamNote {
         const transcriptDiv = document.getElementById("transcript");
         const translationDiv = document.getElementById("translation");
         const textSelectionMenu = document.getElementById("textSelectionMenu");
+        const explainBtn = document.getElementById("explainSelectedTextBtn");
         const addSelectedKeywordBtn = document.getElementById("addSelectedAsKeywordBtn");
 
-        if (!textSelectionMenu || !addSelectedKeywordBtn) return;
+        if (!textSelectionMenu || !addSelectedKeywordBtn || !explainBtn) return;
 
         // 在两个容器上都添加mouseup事件
         const containers = [
@@ -502,6 +503,14 @@ class StreamNote {
         containers.forEach(container => {
             if (container.element) {
                 container.element.addEventListener("mouseup", (e) => this.handleTextSelection(e, textSelectionMenu));
+            }
+        });
+
+        // 解释按钮事件
+        explainBtn.addEventListener("click", () => {
+            if (this.selectedText.trim()) {
+                this.keywordExtractor.showExplanation(this.selectedText.trim());
+                textSelectionMenu.style.display = "none";
             }
         });
 
