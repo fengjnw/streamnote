@@ -251,8 +251,21 @@ class StreamNote {
         const session = this.sessionManager.getCurrentSession();
         if (!session) return;
 
-        // 计算会话时长
+        // 显示 session 创建日期
         const startTime = session.startTime || Date.now();
+        const dateDisplay = document.getElementById('sessionDateDisplay');
+        if (dateDisplay) {
+            const date = new Date(startTime);
+            const dateStr = date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            dateDisplay.textContent = dateStr;
+        }
+
+        // 计算会话时长
         const duration = Math.floor((Date.now() - startTime) / 1000);
         const minutes = Math.floor(duration / 60);
         const seconds = duration % 60;
@@ -271,6 +284,16 @@ class StreamNote {
         const charCountDisplay = document.getElementById('sessionCharCountDisplay');
         if (charCountDisplay) {
             charCountDisplay.textContent = totalChars.toLocaleString();
+        }
+
+        // 计算 items 数量
+        let itemCount = 0;
+        if (session.transcripts) {
+            itemCount = Object.keys(session.transcripts).length;
+        }
+        const itemCountDisplay = document.getElementById('sessionItemCountDisplay');
+        if (itemCountDisplay) {
+            itemCountDisplay.textContent = itemCount;
         }
 
         // 计算关键词数

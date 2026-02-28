@@ -16,8 +16,10 @@
                 style="flex: 1; display: flex; gap: 30px; font-size: 0.95em; opacity: 0.9; align-items: center;">
                 <div id="sessionNameDisplay" style="font-weight: 600; min-width: 150px;"></div>
                 <div id="sessionStatsDisplay" style="display: flex; gap: 25px; font-size: 0.9em;">
+                    <div><span style="opacity: 0.8;">📅</span> <span id="sessionDateDisplay">-</span></div>
                     <div><span style="opacity: 0.8;">⏱️</span> <span id="sessionDurationDisplay">0:00</span></div>
                     <div><span style="opacity: 0.8;">📝</span> <span id="sessionCharCountDisplay">0</span> chars</div>
+                    <div><span style="opacity: 0.8;">📄</span> <span id="sessionItemCountDisplay">0</span> items</div>
                     <div><span style="opacity: 0.8;">🔑</span> <span id="sessionKeywordCountDisplay">0</span> keywords
                     </div>
                     <div id="translationStatusDisplay" style="display: none;"><span style="opacity: 0.8;">🌐</span>
@@ -28,36 +30,9 @@
     </header>
 
     <div class="container">
-
-        <!-- Session Management Panel -->
-        <div class="session-panel">
-            <div class="session-header">
-                <h3>Sessions</h3>
-                <button id="newSessionBtn" class="btn-icon" title="New Session">+</button>
-                <button id="manageSessionBtn" class="btn-icon" title="Manage Sessions">⚙</button>
-                <button id="toggleSessionPanel" class="btn-icon toggle-btn" title="Toggle Panel">◀</button>
-                <!-- Manage Menu -->
-                <div id="manageMenu" class="manage-menu" style="display: none;">
-                    <button id="exportCurrentBtn" class="manage-menu-item">📄 Export Current Session</button>
-                    <button id="exportAllBtn" class="manage-menu-item">📦 Export All Sessions</button>
-                    <button id="importBtn" class="manage-menu-item">📥 Import Sessions</button>
-                    <button id="clearAllBtn" class="manage-menu-item danger">🗑️ Clear All Data</button>
-                </div>
-            </div>
-            <div class="session-list" id="sessionList">
-                <!-- Sessions will be rendered here -->
-            </div>
-            <div class="current-session-info">
-                <input type="text" id="sessionNameInput" placeholder="Session name..." />
-            </div>
-
-            <input type="file" id="importFileInput" accept=".json" style="display: none;" />
-        </div>
-
         <div class="main-wrapper">
             <div class="control-panel">
-                <button id="openSessionPanel" class="open-session-btn" title="Open Sessions"
-                    style="display: none;">📋</button>
+                <button id="openSessionPanel" class="control-btn control-btn-secondary" title="Open Sessions">📋</button>
                 <button id="startBtn" class="control-btn control-btn-primary" title="Start Recording">🎙️</button>
                 <button id="stopBtn" class="control-btn control-btn-danger" disabled title="Stop Recording">⏹️</button>
                 <button id="clearBtn" class="control-btn control-btn-secondary" title="Clear">🗑️</button>
@@ -84,6 +59,37 @@
             </div>
 
             <div class="content-wrapper">
+                <!-- Session Management Panel (Left) -->
+                <div class="session-panel">
+                    <!-- Session Panel Header -->
+                    <div class="session-panel-header">
+                        <h3>Sessions</h3>
+                        <div style="display: flex; gap: 4px;">
+                            <button id="newSessionBtn" class="btn-icon" title="New Session">+</button>
+                            <button id="manageSessionBtn" class="btn-icon" title="Manage Sessions">⚙</button>
+                            <button id="toggleSessionPanel" class="btn-icon toggle-btn" title="Close Panel">✕</button>
+                        </div>
+                        <!-- Manage Menu -->
+                        <div id="manageMenu" class="manage-menu" style="display: none;">
+                            <button id="exportCurrentBtn" class="manage-menu-item">📄 Export Current Session</button>
+                            <button id="exportAllBtn" class="manage-menu-item">📦 Export All Sessions</button>
+                            <button id="importBtn" class="manage-menu-item">📥 Import Sessions</button>
+                            <button id="clearAllBtn" class="manage-menu-item danger">🗑️ Clear All Data</button>
+                        </div>
+                    </div>
+                    <!-- Session Panel Content -->
+                    <div class="session-panel-content">
+                        <div class="session-list" id="sessionList">
+                            <!-- Sessions will be rendered here -->
+                        </div>
+                        <div class="current-session-info">
+                            <input type="text" id="sessionNameInput" placeholder="Session name..." />
+                        </div>
+                    </div>
+
+                    <input type="file" id="importFileInput" accept=".json" style="display: none;" />
+                </div>
+
                 <div class="main-content">
                     <div class="transcription-section">
                         <div class="transcript-container">
@@ -108,7 +114,7 @@
                     </div>
                 </div>
 
-                <!-- Collapsible Side Panels -->
+                <!-- Collapsible Side Panels (Right) -->
                 <div class="side-panels-container">
                     <!-- Side Panel Header -->
                     <div class="side-panel-header">

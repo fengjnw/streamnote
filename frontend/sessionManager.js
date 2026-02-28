@@ -429,11 +429,9 @@ class SessionManager {
         const toggleBtn = document.getElementById('toggleSessionPanel');
         const openBtn = document.getElementById('openSessionPanel');
         const sessionPanel = document.querySelector('.session-panel');
-        const mainWrapper = document.querySelector('.main-wrapper');
 
         const togglePanel = () => {
-            const isCollapsed = sessionPanel.classList.toggle('collapsed');
-            mainWrapper.classList.toggle('session-panel-collapsed');
+            sessionPanel.classList.toggle('expanded');
 
             // Set flag to prevent resize-induced scroll from affecting auto-scroll/content
             if (window.streamNoteInstance) {
@@ -441,13 +439,6 @@ class SessionManager {
                 setTimeout(() => {
                     window.streamNoteInstance.isSyncingScroll = false;
                 }, 350); // Match the 0.3s transition + buffer
-            }
-
-            if (toggleBtn) {
-                toggleBtn.textContent = isCollapsed ? '▶' : '◀';
-            }
-            if (openBtn) {
-                openBtn.style.display = isCollapsed ? 'flex' : 'none';
             }
         };
 
@@ -550,19 +541,11 @@ class SessionManager {
         listContainer.innerHTML = sessionIds.map(id => {
             const session = this.sessions[id];
             const isActive = id === this.currentSessionId;
-            const transcriptCount = Object.keys(session.transcripts || {}).length;
-            const date = new Date(session.lastModified).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
 
             return `
                 <div class="session-item ${isActive ? 'active' : ''}" data-session-id="${id}">
                     <div class="session-info">
                         <div class="session-name">${session.name}</div>
-                        <div class="session-meta">${date} · ${transcriptCount} items</div>
                     </div>
                     <button class="delete-session-btn" data-session-id="${id}" title="Delete">×</button>
                 </div>
