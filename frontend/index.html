@@ -79,7 +79,8 @@
                         </div>
 
                         <!-- Floating Auto Scroll Button -->
-                        <button id="floatingAutoScrollBtn" class="floating-auto-scroll-btn" title="Click to enable auto scroll">
+                        <button id="floatingAutoScrollBtn" class="floating-auto-scroll-btn"
+                            title="Click to enable auto scroll">
                             ↓ Auto Scroll OFF
                         </button>
                     </div>
@@ -94,7 +95,7 @@
                     </div>
 
                     <!-- Keywords Content -->
-                    <div id="keywordsContent" class="panel-content" style="display: flex; flex-direction: column;">
+                    <div id="keywordsContent" class="panel-content active">
                         <div id="keywords-display" class="keywords-display">
                             <p class="placeholder">Select text to add keywords...</p>
                         </div>
@@ -103,20 +104,22 @@
                             <button id="explainSelectedTextBtn" class="menu-item">💡 Explain</button>
                             <button id="addSelectedAsKeywordBtn" class="menu-item">+ Add as Keyword</button>
                         </div>
-                        <div style="padding: 8px 12px; background: #f8f9fa; border-top: 1px solid #e9ecef; margin-top: auto;">
-                            <button id="autoExtractKeywordsBtn" class="btn-icon" title="Auto extract keywords">🔄</button>
+                        <div
+                            style="padding: 8px 12px; background: #f8f9fa; border-top: 1px solid #e9ecef; margin-top: auto;">
+                            <button id="autoExtractKeywordsBtn" class="btn-icon"
+                                title="Auto extract keywords">🔄</button>
                         </div>
                     </div>
 
                     <!-- History Content -->
-                    <div id="historyContent" class="panel-content" style="display: none; flex-direction: column;">
+                    <div id="historyContent" class="panel-content">
                         <div id="query-history-list" class="query-history-list">
                             <p class="placeholder">No queries yet</p>
                         </div>
                     </div>
 
                     <!-- Settings Content -->
-                    <div id="settingsContent" class="panel-content" style="display: none; flex-direction: column;">
+                    <div id="settingsContent" class="panel-content">
                         <div class="settings-group">
                             <label class="settings-label">
                                 <input type="checkbox" id="keyword-toggle" checked>
@@ -127,7 +130,8 @@
                         <div class="settings-group">
                             <label class="settings-label" for="keyword-intensity">Keyword Intensity:</label>
                             <div class="slider-container">
-                                <input type="range" id="keyword-intensity" min="1" max="10" value="5" class="intensity-slider">
+                                <input type="range" id="keyword-intensity" min="1" max="10" value="5"
+                                    class="intensity-slider">
                                 <span id="intensity-value">5</span>
                             </div>
                         </div>
@@ -161,7 +165,8 @@
                         <div class="settings-divider"></div>
 
                         <div class="settings-group">
-                            <label class="settings-label" for="keyword-explanation-language">Keyword Explanation Language:</label>
+                            <label class="settings-label" for="keyword-explanation-language">Keyword Explanation
+                                Language:</label>
                             <select id="keyword-explanation-language" class="language-selector">
                                 <option value="original">Original (English)</option>
                                 <option value="Chinese">中文</option>

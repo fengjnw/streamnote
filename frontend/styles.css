@@ -538,6 +538,7 @@ header h1 {
     padding: 12px 15px;
     background: white;
     display: none;
+    flex-direction: column;
 }
 
 .side-panels-container .panel-content.active {
