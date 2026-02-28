@@ -43,6 +43,7 @@ class StreamNote {
 
         // 自动滚动开关
         this.autoScroll = true;
+        this.isTogglingAutoScroll = false;  // 用户刚刚点击了自动滚动按钮
 
         // 文本选中菜单
         this.selectedText = "";
@@ -57,6 +58,15 @@ class StreamNote {
         setTimeout(() => {
             this.setupSyncScroll();
             this.initializeVisibility();
+            // 设置容器为 auto 滚动行为（而不是 smooth）
+            const transcriptContainer = document.querySelector(".transcript-container");
+            const translationContainer = document.querySelector(".translation-container");
+            if (transcriptContainer) {
+                transcriptContainer.style.scrollBehavior = 'auto';
+            }
+            if (translationContainer) {
+                translationContainer.style.scrollBehavior = 'auto';
+            }
         }, 100);
     }
 
@@ -869,21 +879,38 @@ class StreamNote {
 
     toggleAutoScroll() {
         this.autoScroll = !this.autoScroll;
-        const autoScrollBtn = document.getElementById("autoScrollBtn");
-        if (autoScrollBtn) {
-            autoScrollBtn.textContent = `Auto Scroll: ${this.autoScroll ? 'ON' : 'OFF'}`;
-        }
+        this.updateAutoScrollButton();
 
         // 如果开启自动滚动，立即滚动到底部
         if (this.autoScroll) {
+            // 设置标志，防止滚动事件认为这是用户手动滚动
+            this.isTogglingAutoScroll = true;
             const transcriptContainer = document.querySelector(".transcript-container");
             const translationContainer = document.querySelector(".translation-container");
+
+            // 临时改为 auto（直接跳转到底部）
             if (transcriptContainer) {
+                transcriptContainer.style.scrollBehavior = 'auto';
                 transcriptContainer.scrollTop = transcriptContainer.scrollHeight;
+                transcriptContainer.style.scrollBehavior = 'smooth';
             }
             if (translationContainer) {
+                translationContainer.style.scrollBehavior = 'auto';
                 translationContainer.scrollTop = translationContainer.scrollHeight;
+                translationContainer.style.scrollBehavior = 'smooth';
             }
+
+            // 200ms 后清除标志，足够长的时间来避免防抖和同步滚动的冲突
+            setTimeout(() => {
+                this.isTogglingAutoScroll = false;
+            }, 200);
+        }
+    }
+
+    updateAutoScrollButton() {
+        const autoScrollBtn = document.getElementById("autoScrollBtn");
+        if (autoScrollBtn) {
+            autoScrollBtn.textContent = `Auto Scroll: ${this.autoScroll ? 'ON' : 'OFF'}`;
         }
     }
 
@@ -1025,9 +1052,11 @@ class StreamNote {
             const transcriptContainer = document.querySelector(".transcript-container");
             const translationContainer = document.querySelector(".translation-container");
             if (transcriptContainer) {
+                transcriptContainer.style.scrollBehavior = 'auto';
                 transcriptContainer.scrollTop = transcriptContainer.scrollHeight;
             }
             if (translationContainer) {
+                translationContainer.style.scrollBehavior = 'auto';
                 translationContainer.scrollTop = translationContainer.scrollHeight;
             }
             setTimeout(() => {
@@ -1306,7 +1335,7 @@ class StreamNote {
 
 
     /**
-     * 设置同步滚动
+     * 设置同步滚动 - 用户停止滚动后才进行一次跳转同步（不是平滑滚动）
      */
     setupSyncScroll() {
         // 注意：滚动的是外层容器，不是内容 div
@@ -1318,11 +1347,21 @@ class StreamNote {
             return;
         }
 
-        // 原文容器滚动时，同步译文容器（使用百分比同步）
+        // 原文容器滚动时，用户停止后同步译文容器
         transcriptContainer.addEventListener('scroll', () => {
+            // 如果是用户手动滚动（不是系统滚动或正在切换自动滚动），关闭自动滚动
+            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
+                this.autoScroll = false;
+                this.updateAutoScrollButton();
+            }
+
+            // 如果是系统同步在进行，直接返回不处理
             if (this.isSyncingScroll) return;
 
+            // 清除之前的防抖定时器
             clearTimeout(this.scrollTimeout);
+
+            // 等待用户停止滚动（300ms 无新的滚动事件）才进行一次同步
             this.scrollTimeout = setTimeout(() => {
                 this.isSyncingScroll = true;
 
@@ -1330,21 +1369,32 @@ class StreamNote {
                 const scrollPercentage = transcriptContainer.scrollTop /
                     (transcriptContainer.scrollHeight - transcriptContainer.clientHeight);
 
-                // 应用到译文容器
+                // 使用 auto 直接跳转到相应位置
+                translationContainer.style.scrollBehavior = 'auto';
                 translationContainer.scrollTop = scrollPercentage *
                     (translationContainer.scrollHeight - translationContainer.clientHeight);
 
                 setTimeout(() => {
                     this.isSyncingScroll = false;
-                }, 100);
-            }, 30); // 防抖 30ms
+                }, 50);
+            }, 300); // 防抖 300ms，等用户停止滚动
         });
 
-        // 译文容器滚动时，同步原文容器（使用百分比同步）
+        // 译文容器滚动时，用户停止后同步原文容器
         translationContainer.addEventListener('scroll', () => {
+            // 如果是用户手动滚动（不是系统滚动或正在切换自动滚动），关闭自动滚动
+            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
+                this.autoScroll = false;
+                this.updateAutoScrollButton();
+            }
+
+            // 如果是系统同步在进行，直接返回不处理
             if (this.isSyncingScroll) return;
 
+            // 清除之前的防抖定时器
             clearTimeout(this.scrollTimeout);
+
+            // 等待用户停止滚动（300ms 无新的滚动事件）才进行一次同步
             this.scrollTimeout = setTimeout(() => {
                 this.isSyncingScroll = true;
 
@@ -1352,14 +1402,15 @@ class StreamNote {
                 const scrollPercentage = translationContainer.scrollTop /
                     (translationContainer.scrollHeight - translationContainer.clientHeight);
 
-                // 应用到原文容器
+                // 使用 auto 直接跳转到相应位置
+                transcriptContainer.style.scrollBehavior = 'auto';
                 transcriptContainer.scrollTop = scrollPercentage *
                     (transcriptContainer.scrollHeight - transcriptContainer.clientHeight);
 
                 setTimeout(() => {
                     this.isSyncingScroll = false;
-                }, 100);
-            }, 30); // 防抖 30ms
+                }, 50);
+            }, 300); // 防抖 300ms，等用户停止滚动
         });
     }
 
