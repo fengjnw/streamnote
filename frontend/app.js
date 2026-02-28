@@ -74,14 +74,8 @@ class StreamNote {
             }
         }
 
-        // 根据关键词开关状态设置关键词区域显示/隐藏
-        const keywordToggle = document.getElementById("keyword-toggle");
-        if (keywordToggle) {
-            const keywordsSection = document.querySelector(".keywords-section");
-            if (keywordsSection) {
-                keywordsSection.style.display = keywordToggle.checked ? 'flex' : 'none';
-            }
-        }
+        // 关键词不再在main-content中，现在在侧面板中，所以无需在这里处理显示/隐藏
+        // 侧面板由打开/关闭按钮控制
     }
 
     /**
@@ -460,10 +454,10 @@ class StreamNote {
             });
         }
 
-        // 添加手动提取关键词按钮
-        const extractKeywordsBtn = document.getElementById("extractKeywordsBtn");
-        if (extractKeywordsBtn) {
-            extractKeywordsBtn.addEventListener("click", async () => {
+        // 自动提取关键词按钮（在Keywords面板中）
+        const autoExtractKeywordsBtn = document.getElementById("autoExtractKeywordsBtn");
+        if (autoExtractKeywordsBtn) {
+            autoExtractKeywordsBtn.addEventListener("click", async () => {
                 if (!this.keywordExtractor || !this.keywordExtractor.enabled) {
                     this.showStatusMessage("Enable keywords first", 2000);
                     return;
@@ -474,8 +468,9 @@ class StreamNote {
                     return;
                 }
 
-                extractKeywordsBtn.disabled = true;
-                extractKeywordsBtn.textContent = "Extracting...";
+                autoExtractKeywordsBtn.disabled = true;
+                const originalTitle = autoExtractKeywordsBtn.title;
+                autoExtractKeywordsBtn.title = "Extracting...";
 
                 try {
                     await this.processKeywords(this.recordingSessionId || this.sessionManager.currentSessionId);
@@ -484,14 +479,110 @@ class StreamNote {
                     console.error("[StreamNote] Error extracting keywords:", error);
                     this.showStatusMessage("✗ Failed to extract keywords", 2000);
                 } finally {
-                    extractKeywordsBtn.disabled = false;
-                    extractKeywordsBtn.textContent = "Extract Keywords";
+                    autoExtractKeywordsBtn.disabled = false;
+                    autoExtractKeywordsBtn.title = originalTitle;
                 }
             });
         }
 
         // 初始化文本选中菜单功能
         this.initTextSelectionMenu();
+
+        // Keywords 和 Query History 面板控制
+        const sidePanelsContainer = document.querySelector(".side-panels-container");
+        const keywordsPanel = document.getElementById("keywordsPanel");
+        const queryHistoryPanel = document.getElementById("queryHistoryPanel");
+        const toggleKeywordsPanelBtn = document.getElementById("toggleKeywordsPanel");
+        const closeKeywordsPanelBtn = document.getElementById("closeKeywordsPanel");
+        const toggleQueryHistoryBtn = document.getElementById("toggleQueryHistoryPanel");
+        const closeQueryHistoryBtn = document.getElementById("closeQueryHistoryPanel");
+
+        if (toggleKeywordsPanelBtn) {
+            toggleKeywordsPanelBtn.addEventListener("click", () => {
+                if (keywordsPanel && sidePanelsContainer) {
+                    const isVisible = keywordsPanel.style.display !== "none";
+                    keywordsPanel.style.display = isVisible ? "none" : "flex";
+
+                    // 如果有其他面板也需要隐藏，可以在这里控制
+                    // 或者保持都显示的状态
+
+                    // 只要有任何面板显示，就展开容器
+                    const anyPanelVisible = keywordsPanel.style.display !== "none" ||
+                        (queryHistoryPanel && queryHistoryPanel.style.display !== "none");
+                    if (anyPanelVisible) {
+                        sidePanelsContainer.classList.add("expanded");
+                    } else {
+                        sidePanelsContainer.classList.remove("expanded");
+                    }
+                }
+            });
+        }
+
+        if (closeKeywordsPanelBtn) {
+            closeKeywordsPanelBtn.addEventListener("click", () => {
+                if (keywordsPanel) {
+                    keywordsPanel.style.display = "none";
+
+                    // 检查是否还有其他面板显示，如果没有则关闭容器
+                    const anyPanelVisible = (queryHistoryPanel && queryHistoryPanel.style.display !== "none");
+                    if (!anyPanelVisible && sidePanelsContainer) {
+                        sidePanelsContainer.classList.remove("expanded");
+                    }
+                }
+            });
+        }
+
+        if (toggleQueryHistoryBtn) {
+            toggleQueryHistoryBtn.addEventListener("click", () => {
+                if (queryHistoryPanel && sidePanelsContainer) {
+                    const isVisible = queryHistoryPanel.style.display !== "none";
+                    queryHistoryPanel.style.display = isVisible ? "none" : "flex";
+
+                    // 只要有任何面板显示，就展开容器
+                    const anyPanelVisible = (keywordsPanel && keywordsPanel.style.display !== "none") ||
+                        queryHistoryPanel.style.display !== "none";
+                    if (anyPanelVisible) {
+                        sidePanelsContainer.classList.add("expanded");
+                    } else {
+                        sidePanelsContainer.classList.remove("expanded");
+                    }
+                }
+            });
+        }
+
+        if (closeQueryHistoryBtn) {
+            closeQueryHistoryBtn.addEventListener("click", () => {
+                if (queryHistoryPanel) {
+                    queryHistoryPanel.style.display = "none";
+
+                    // 检查是否还有其他面板显示，如果没有则关闭容器
+                    const anyPanelVisible = (keywordsPanel && keywordsPanel.style.display !== "none");
+                    if (!anyPanelVisible && sidePanelsContainer) {
+                        sidePanelsContainer.classList.remove("expanded");
+                    }
+                }
+            });
+        }
+
+        // 设置面板
+        const openSettingsBtn = document.getElementById("openSettingsPanel");
+        const closeSettingsBtn = document.getElementById("closeSettingsPanel");
+        if (openSettingsBtn) {
+            openSettingsBtn.addEventListener("click", () => {
+                const panel = document.getElementById("settingsPanel");
+                if (panel) {
+                    panel.style.display = "flex";
+                }
+            });
+        }
+        if (closeSettingsBtn) {
+            closeSettingsBtn.addEventListener("click", () => {
+                const panel = document.getElementById("settingsPanel");
+                if (panel) {
+                    panel.style.display = "none";
+                }
+            });
+        }
     }
 
     /**

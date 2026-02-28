@@ -11,7 +11,6 @@
 <body>
     <header>
         <h1>StreamNote</h1>
-        <p>Real-time classroom transcription</p>
     </header>
 
     <div class="container">
@@ -48,91 +47,69 @@
                 <button id="startBtn" class="btn btn-primary">Start Recording</button>
                 <button id="stopBtn" class="btn btn-danger" disabled>Stop Recording</button>
                 <button id="clearBtn" class="btn btn-secondary">Clear</button>
+
+                <div class="spacer"></div>
+
                 <button id="autoScrollBtn" class="btn btn-auto-scroll"
                     title="Disable to scroll and view previous content">Auto Scroll: ON</button>
-                <button id="extractKeywordsBtn" class="btn btn-secondary"
-                    title="Extract keywords from current transcript">Extract Keywords</button>
-
-                <div class="keyword-controls">
-                    <label>
-                        <input type="checkbox" id="keyword-toggle" checked>
-                        Enable Keywords
-                    </label>
-
-                    <label for="keyword-intensity">Intensity:</label>
-                    <input type="range" id="keyword-intensity" min="1" max="10" value="5" class="intensity-slider">
-                    <span id="intensity-value">5</span>
-                </div>
-
-                <div class="translation-controls">
-                    <label>
-                        <input type="checkbox" id="translation-toggle" checked>
-                        Enable Translation
-                    </label>
-                    <select id="target-language" class="language-selector">
-                        <option value="Chinese">中文</option>
-                        <option value="English">English</option>
-                        <option value="Spanish">Español</option>
-                        <option value="French">Français</option>
-                        <option value="Japanese">日本語</option>
-                        <option value="Korean">한국어</option>
-                    </select>
-                    <label>
-                        <input type="checkbox" id="show-only-translation">
-                        Show Only Translation
-                    </label>
-                </div>
-
-                <div class="keyword-explanation-controls">
-                    <label for="keyword-explanation-language">Keyword Explanation:</label>
-                    <select id="keyword-explanation-language" class="language-selector">
-                        <option value="original">Original (English)</option>
-                        <option value="Chinese">中文</option>
-                        <option value="Spanish">Español</option>
-                        <option value="French">Français</option>
-                        <option value="Japanese">日本語</option>
-                        <option value="Korean">한국어</option>
-                    </select>
-                </div>
+                <button id="toggleKeywordsPanel" class="btn btn-secondary" title="Toggle Keywords Panel">📌
+                    Keywords</button>
+                <button id="toggleQueryHistoryPanel" class="btn btn-secondary" title="Toggle Query History Panel">📜
+                    History</button>
+                <button id="openSettingsPanel" class="btn btn-secondary" title="Settings">⚙️ Settings</button>
             </div>
 
-            <div class="main-content">
-                <div class="transcription-section">
-                    <div class="transcript-container">
-                        <h2>Transcription</h2>
-                        <div id="transcript" class="transcript">
-                            <p class="placeholder">Press "Start Recording" to begin...</p>
-                        </div>
-                    </div>
-
-                    <div class="translation-container">
-                        <h2>Translation</h2>
-                        <div id="translation" class="translation">
-                            <p class="placeholder">Translation will appear here...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bottom-section">
-                    <div class="keywords-section">
-                        <div class="keywords-original">
-                            <h3>Keywords</h3>
-                            <div id="keywords-display" class="keywords-display">
-                                <p class="placeholder">Select text to add keywords...</p>
+            <div class="content-wrapper">
+                <div class="main-content">
+                    <div class="transcription-section">
+                        <div class="transcript-container">
+                            <h2>Transcription</h2>
+                            <div id="transcript" class="transcript">
+                                <p class="placeholder">Press "Start Recording" to begin...</p>
                             </div>
                         </div>
 
-                        <!-- Text Selection Menu for Adding Keywords -->
-                        <div id="textSelectionMenu" class="text-selection-menu" style="display: none;">
-                            <button id="explainSelectedTextBtn" class="menu-item">💡 Explain</button>
-                            <button id="addSelectedAsKeywordBtn" class="menu-item">+ Add as Keyword</button>
+                        <div class="translation-container">
+                            <h2>Translation</h2>
+                            <div id="translation" class="translation">
+                                <p class="placeholder">Translation will appear here...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collapsible Side Panels -->
+                <div class="side-panels-container">
+                    <!-- Keywords Panel -->
+                    <div id="keywordsPanel" class="collapsible-panel keywords-panel" style="display: none;">
+                        <div class="panel-header">
+                            <h3>Keywords</h3>
+                            <button id="autoExtractKeywordsBtn" class="btn-icon"
+                                title="Auto extract keywords">🔄</button>
+                            <button id="closeKeywordsPanel" class="btn-icon toggle-btn" title="Close">✕</button>
+                        </div>
+                        <div class="panel-content">
+                            <div id="keywords-display" class="keywords-display">
+                                <p class="placeholder">Select text to add keywords...</p>
+                            </div>
+                            <!-- Text Selection Menu for Adding Keywords -->
+                            <div id="textSelectionMenu" class="text-selection-menu" style="display: none;">
+                                <button id="explainSelectedTextBtn" class="menu-item">💡 Explain</button>
+                                <button id="addSelectedAsKeywordBtn" class="menu-item">+ Add as Keyword</button>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="query-history">
-                        <h3>Query History</h3>
-                        <div id="query-history-list" class="query-history-list">
-                            <p class="placeholder">No queries yet</p>
+                    <!-- Query History Panel -->
+                    <div id="queryHistoryPanel" class="collapsible-panel query-history-panel" style="display: none;">
+                        <div class="panel-header">
+                            <h3>Query History</h3>
+                            <button id="closeQueryHistoryPanel" class="btn-icon toggle-btn" title="Close">✕</button>
+                        </div>
+                        <div class="panel-content">
+                            <div id="query-history-list" class="query-history-list">
+                                <p class="placeholder">No queries yet</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -147,7 +124,69 @@
         </div>
     </div>
 
-    <!-- Keyword Explanation Modal -->
+    <!-- Settings Panel -->
+    <div id="settingsPanel" class="side-panel settings-panel" style="display: none;">
+        <div class="panel-header">
+            <h3>Settings</h3>
+            <button id="closeSettingsPanel" class="btn-icon toggle-btn" title="Close Panel">✕</button>
+        </div>
+        <div class="panel-content">
+            <div class="settings-group">
+                <label class="settings-label">
+                    <input type="checkbox" id="keyword-toggle" checked>
+                    <span>Enable Keywords</span>
+                </label>
+            </div>
+
+            <div class="settings-group">
+                <label class="settings-label" for="keyword-intensity">Keyword Intensity:</label>
+                <div class="slider-container">
+                    <input type="range" id="keyword-intensity" min="1" max="10" value="5" class="intensity-slider">
+                    <span id="intensity-value">5</span>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <label class="settings-label">
+                    <input type="checkbox" id="translation-toggle" checked>
+                    <span>Enable Translation</span>
+                </label>
+            </div>
+
+            <div class="settings-group">
+                <label class="settings-label" for="target-language">Target Language:</label>
+                <select id="target-language" class="language-selector">
+                    <option value="Chinese">中文</option>
+                    <option value="English">English</option>
+                    <option value="Spanish">Español</option>
+                    <option value="French">Français</option>
+                    <option value="Japanese">日本語</option>
+                    <option value="Korean">한국어</option>
+                </select>
+            </div>
+
+            <div class="settings-group">
+                <label class="settings-label">
+                    <input type="checkbox" id="show-only-translation">
+                    <span>Show Only Translation</span>
+                </label>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="settings-group">
+                <label class="settings-label" for="keyword-explanation-language">Keyword Explanation Language:</label>
+                <select id="keyword-explanation-language" class="language-selector">
+                    <option value="original">Original (English)</option>
+                    <option value="Chinese">中文</option>
+                    <option value="Spanish">Español</option>
+                    <option value="French">Français</option>
+                    <option value="Japanese">日本語</option>
+                    <option value="Korean">한국어</option>
+                </select>
+            </div>
+        </div>
+    </div>
     <div id="keywordExplanationModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
