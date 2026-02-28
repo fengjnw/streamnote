@@ -20,6 +20,9 @@ class KeywordExtractor {
         // 解释缓存: {"keyword|language": "explanation", ...}
         this.explanationCache = {};
 
+        // 跟踪展开状态的关键词
+        this.expandedKeywords = new Set();
+
         // 查询历史: [term1, term2, ...] (保持查询顺序，新的在前)
         this.queryHistory = [];
         this.maxHistorySize = 20;  // 最多保留20条历史
@@ -101,59 +104,117 @@ class KeywordExtractor {
     }
 
     /**
-     * 显示关键词列表
-     * @param {Array<string>} keywords - 关键词数组
-     * @param {HTMLElement} targetElement - 目标显示元素（可选，默认使用 this.keywordElement）
+     * 通用的列表显示方法（关键词和历史都使用）
+     * @param {Array<string>} items - 要显示的项目列表
+     * @param {HTMLElement} containerElement - 容器元素
+     * @param {string} deleteHandlerName - 删除处理函数的名字（"deleteKeywordItem" 或 "removeFromQueryHistory"）
+     * @param {string} emptyMessage - 列表为空时的提示信息
      */
-    displayKeywordsList(keywords, targetElement = null) {
-        const element = targetElement || this.keywordElement;
-
-        if (!element) {
+    displayItemList(items, containerElement, deleteHandlerName, emptyMessage = "No items") {
+        if (!containerElement) {
             return;
         }
 
-        if (keywords.length === 0) {
-            element.innerHTML = '<p class="placeholder">No keywords detected</p>';
+        if (items.length === 0) {
+            containerElement.innerHTML = `<p class="placeholder">${emptyMessage}</p>`;
             return;
         }
-
-        // 去重并保持顺序
-        const uniqueKeywords = [...new Set(keywords)];
 
         const html = `
             <div class="keywords-items">
-                ${uniqueKeywords.map(kw => `
-                    <div class="keyword-item">
-                        <span class="keyword-text" onclick="window.keywordExtractorInstance.showExplanation('${kw.replace(/'/g, "\\'")}')" style="cursor: pointer; flex: 1;">
-                            ${kw}
-                        </span>
-                        <button class="keyword-delete-btn" onclick="window.streamNoteInstance.deleteKeyword('${kw.replace(/'/g, "\\'")}')">×</button>
+                ${items.map(item => `
+                    <div class="keyword-item-wrapper">
+                        <div class="keyword-item">
+                            <button class="keyword-expand-btn" onclick="window.keywordExtractorInstance.toggleExplanation('${item.replace(/'/g, "\\'")}')"
+                                title="Click to expand/collapse explanation">
+                                <span class="expand-icon">▸</span>
+                            </button>
+                            <span class="keyword-text" onclick="window.keywordExtractorInstance.toggleExplanation('${item.replace(/'/g, "\\'")}')"
+                                style="cursor: pointer; flex: 1;">
+                                ${item}
+                            </span>
+                            <button class="keyword-delete-btn" onclick="window.keywordExtractorInstance.${deleteHandlerName}('${item.replace(/'/g, "\\'")}')">×</button>
+                        </div>
+                        <div class="keyword-explanation" data-keyword="${item}" style="display: none;">
+                            <div class="explanation-content">
+                                <p class="placeholder">Loading...</p>
+                            </div>
+                        </div>
                     </div>
                 `).join('')}
             </div>
         `;
 
-        element.innerHTML = html;
+        containerElement.innerHTML = html;
     }
 
     /**
-     * 显示关键词的解释
+     * 显示关键词列表（可展开式）
+     * @param {Array<string>} keywords - 关键词数组
+     * @param {HTMLElement} targetElement - 目标显示元素（可选，默认使用 this.keywordElement）
+     */
+    displayKeywordsList(keywords, targetElement = null) {
+        const element = targetElement || this.keywordElement;
+        const uniqueKeywords = [...new Set(keywords)];
+        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "No keywords detected");
+    }
+
+    /**
+     * 切换关键词解释的展开/收起状态
      * @param {string} keyword - 关键词
      */
-    async showExplanation(keyword) {
-        const modal = document.getElementById('keywordExplanationModal');
-        const titleElement = document.getElementById('keywordExplanationTitle');
-        const contentElement = document.getElementById('keywordExplanationContent');
+    async toggleExplanation(keyword) {
+        // 更稳健的方式：遍历所有 keyword-explanation 元素，找到匹配的
+        const allExplanations = document.querySelectorAll('.keyword-explanation');
+        let wrapper = null;
 
-        if (!modal || !titleElement || !contentElement) {
-            console.error("[KeywordExtractor] Modal elements not found");
+        for (const elem of allExplanations) {
+            if (elem.getAttribute('data-keyword') === keyword) {
+                wrapper = elem;
+                break;
+            }
+        }
+
+        if (!wrapper) {
+            console.error(`[KeywordExtractor] Could not find explanation container for "${keyword}"`);
             return;
         }
 
-        // 显示加载状态
-        titleElement.textContent = `${keyword}`;
-        contentElement.innerHTML = '<p class="placeholder">Loading explanation...</p>';
-        modal.style.display = 'flex';
+        const expandBtn = wrapper.parentElement?.querySelector('.keyword-expand-btn');
+
+        const isCurrentlyExpanded = this.expandedKeywords.has(keyword);
+
+        if (isCurrentlyExpanded) {
+            // 收起
+            this.expandedKeywords.delete(keyword);
+            wrapper.style.display = 'none';
+            if (expandBtn) {
+                expandBtn.classList.remove('expanded');
+            }
+        } else {
+            // 展开
+            this.expandedKeywords.add(keyword);
+            wrapper.style.display = 'block';
+            if (expandBtn) {
+                expandBtn.classList.add('expanded');
+            }
+            // 如果还没有加载过解释，现在加载它
+            await this.fetchAndShowExplanation(keyword, wrapper);
+        }
+    }
+
+    /**
+     * 获取并显示关键词的解释
+     * @param {string} keyword - 关键词
+     * @param {HTMLElement} container - 显示容器
+     */
+    async fetchAndShowExplanation(keyword, container) {
+        const contentElement = container.querySelector('.explanation-content');
+
+        if (!contentElement) {
+            console.error("[KeywordExtractor] Content element not found");
+            return;
+        }
 
         try {
             // 获取解释语言（从全局 StreamNote 实例）
@@ -168,7 +229,6 @@ class KeywordExtractor {
             if (this.explanationCache[cacheKey]) {
                 console.log(`[KeywordExtractor] Using cached explanation for "${keyword}"`);
                 contentElement.innerHTML = `<p>${this.explanationCache[cacheKey]}</p>`;
-                this.addToQueryHistory(keyword);
                 return;
             }
 
@@ -197,14 +257,13 @@ class KeywordExtractor {
 
             // 显示解释
             contentElement.innerHTML = `<p>${explanation}</p>`;
-
-            // 添加到查询历史
-            this.addToQueryHistory(keyword);
         } catch (error) {
             console.error("[KeywordExtractor] Error fetching explanation:", error);
             contentElement.innerHTML = `<p class="error">Failed to load explanation: ${error.message}</p>`;
         }
     }
+
+
 
     /**
      * 添加项目到查询历史
@@ -252,32 +311,20 @@ class KeywordExtractor {
     }
 
     /**
+     * 删除关键词项（供通用列表使用）
+     * @param {string} keyword - 要删除的关键词
+     */
+    deleteKeywordItem(keyword) {
+        if (window.streamNoteInstance) {
+            window.streamNoteInstance.deleteKeyword(keyword);
+        }
+    }
+
+    /**
      * 显示查询历史
      */
     displayQueryHistory() {
-        if (!this.historyElement) {
-            return;
-        }
-
-        if (this.queryHistory.length === 0) {
-            this.historyElement.innerHTML = '<p class="placeholder">No queries yet</p>';
-            return;
-        }
-
-        const html = `
-            <div class="history-items">
-                ${this.queryHistory.map((term, index) => `
-                    <div class="history-item">
-                        <span class="history-term" onclick="window.keywordExtractorInstance.showExplanation('${term.replace(/'/g, "\\'")}')" style="cursor: pointer; flex: 1;">
-                            ${term}
-                        </span>
-                        <button class="history-delete-btn" onclick="window.keywordExtractorInstance.removeFromQueryHistory('${term.replace(/'/g, "\\'")}')" title="Remove">×</button>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-
-        this.historyElement.innerHTML = html;
+        this.displayItemList(this.queryHistory, this.historyElement, "removeFromQueryHistory", "No queries yet");
     }
 
     /**

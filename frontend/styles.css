@@ -614,59 +614,6 @@ header h1 {
     overflow-y: auto;
 }
 
-.history-items {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.history-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    background: white;
-    border-radius: 6px;
-    border: 1px solid #e0e0e0;
-    transition: all 0.2s;
-}
-
-.history-item:hover {
-    background: #e8f0ff;
-    border-color: #667eea;
-    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.1);
-}
-
-.history-term {
-    flex: 1;
-    color: #333;
-    font-size: 0.95em;
-    word-break: break-word;
-}
-
-.history-delete-btn {
-    background: none;
-    border: none;
-    color: #999;
-    font-size: 1.2em;
-    cursor: pointer;
-    padding: 0 4px;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    transition: all 0.2s;
-    flex-shrink: 0;
-}
-
-.history-delete-btn:hover {
-    background: #ffebee;
-    color: #d32f2f;
-}
-
-/* 关键词列表项 - 与查询历史保持一致 */
 .keywords-items {
     display: flex;
     flex-direction: column;
@@ -717,6 +664,104 @@ header h1 {
 .keyword-delete-btn:hover {
     background: #ffebee;
     color: #d32f2f;
+}
+
+/* ==================== Keywords Expandable Style ==================== */
+.keyword-item-wrapper {
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    transition: all 0.2s;
+    overflow: hidden;
+}
+
+.keyword-item-wrapper:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.1);
+}
+
+.keyword-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: white;
+    transition: all 0.2s;
+}
+
+.keyword-item:hover {
+    background: #e8f0ff;
+}
+
+.keyword-expand-btn {
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 1em;
+    cursor: pointer;
+    padding: 0 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.keyword-expand-btn:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+}
+
+.keyword-expand-btn .expand-icon {
+    display: inline-block;
+    transition: transform 0.2s;
+}
+
+.keyword-expand-btn.expanded .expand-icon {
+    transform: rotate(90deg);
+}
+
+.keyword-explanation {
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    padding: 12px 15px;
+    margin: 0;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        max-height: 0;
+        opacity: 0;
+    }
+
+    to {
+        max-height: 500px;
+        opacity: 1;
+    }
+}
+
+.keyword-explanation .explanation-content {
+    color: #555;
+    line-height: 1.6;
+    font-size: 0.95em;
+    word-break: break-word;
+}
+
+.keyword-explanation .explanation-content p {
+    margin: 0;
+}
+
+.keyword-explanation .explanation-content .placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+.keyword-explanation .explanation-content .error {
+    color: #d32f2f;
+    font-style: italic;
 }
 
 .translation {

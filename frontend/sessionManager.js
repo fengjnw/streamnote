@@ -269,13 +269,13 @@ class SessionManager {
             session.lastModified = Date.now();
             this.saveSessions();
             this.renderSessionList();
-            
+
             // 更新 header 中的当前 session 显示
             const currentSessionDisplay = document.getElementById('currentSessionDisplay');
             if (currentSessionDisplay) {
                 currentSessionDisplay.textContent = `📌 Current: ${session.name}`;
             }
-            
+
             console.log(`[SessionManager] Renamed to: ${newName}`);
         }
     }

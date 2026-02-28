@@ -521,7 +521,7 @@ class StreamNote {
             hideAllContent();
             contentEl.classList.add("active");
             sidePanelTitle.textContent = title;
-            
+
             // Set flag to prevent resize-induced scroll from closing autoScroll
             this.isSyncingScroll = true;
             sidePanelsContainer.classList.add("expanded");
@@ -547,7 +547,7 @@ class StreamNote {
             quickAccessKeywords.addEventListener("click", () => {
                 const isOpen = sidePanelsContainer.classList.contains("expanded");
                 const isActive = keywordsContent.classList.contains("active");
-                
+
                 if (isOpen && isActive) {
                     this.isSyncingScroll = true;
                     sidePanelsContainer.classList.remove("expanded");
@@ -564,7 +564,7 @@ class StreamNote {
             quickAccessHistory.addEventListener("click", () => {
                 const isOpen = sidePanelsContainer.classList.contains("expanded");
                 const isActive = historyContent.classList.contains("active");
-                
+
                 if (isOpen && isActive) {
                     this.isSyncingScroll = true;
                     sidePanelsContainer.classList.remove("expanded");
@@ -581,7 +581,7 @@ class StreamNote {
             quickAccessSettings.addEventListener("click", () => {
                 const isOpen = sidePanelsContainer.classList.contains("expanded");
                 const isActive = settingsContent.classList.contains("active");
-                
+
                 if (isOpen && isActive) {
                     this.isSyncingScroll = true;
                     sidePanelsContainer.classList.remove("expanded");
@@ -612,7 +612,7 @@ class StreamNote {
                     const keys = Object.keys(this.preciseResults);
                     if (keys.length > 0) {
                         const lastIndex = keys[keys.length - 1];
-                        
+
                         if (transcriptContainer) {
                             transcriptContainer.style.scrollBehavior = 'auto';
                             this.scrollToLineBottom(transcriptContainer, lastIndex);
@@ -663,9 +663,17 @@ class StreamNote {
         });
 
         // 解释按钮事件
-        explainBtn.addEventListener("click", () => {
+        explainBtn.addEventListener("click", async () => {
             if (this.selectedText.trim()) {
-                this.keywordExtractor.showExplanation(this.selectedText.trim());
+                const term = this.selectedText.trim();
+                // 如果不在历史中，先加入
+                if (!this.keywordExtractor.queryHistory.includes(term)) {
+                    this.keywordExtractor.addToQueryHistory(term);
+                }
+                // 等待 DOM 更新后再展开
+                setTimeout(() => {
+                    this.keywordExtractor.toggleExplanation(term);
+                }, 0);
                 textSelectionMenu.style.display = "none";
             }
         });
@@ -936,7 +944,7 @@ class StreamNote {
             const keys = Object.keys(this.preciseResults);
             if (keys.length > 0) {
                 const lastIndex = keys[keys.length - 1];
-                
+
                 // 临时改为 auto（直接跳转到底部）
                 if (transcriptContainer) {
                     transcriptContainer.style.scrollBehavior = 'auto';
@@ -1108,12 +1116,12 @@ class StreamNote {
             this.isSyncingScroll = true;
             const transcriptContainer = document.querySelector(".transcript-container");
             const translationContainer = document.querySelector(".translation-container");
-            
+
             // 获取最后一行的索引，用于对齐滚动
             const keys = Object.keys(this.preciseResults);
             if (keys.length > 0) {
                 const lastIndex = keys[keys.length - 1];
-                
+
                 // 使用 scrollToLineBottom 确保两个容器同步滚动到同一行
                 if (transcriptContainer) {
                     transcriptContainer.style.scrollBehavior = 'auto';
@@ -1124,7 +1132,7 @@ class StreamNote {
                     this.scrollToLineBottom(translationContainer, lastIndex);
                 }
             }
-            
+
             setTimeout(() => {
                 this.isSyncingScroll = false;
             }, 100);
