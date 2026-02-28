@@ -1638,6 +1638,13 @@ class StreamNote {
     /**
      * 设置同步滚动 - 基于中心行对齐，原文框后移8个index
      */
+    /**
+     * 检测容器是否滑到底部
+     */
+    isScrolledToBottom(container, threshold = 10) {
+        return container.scrollTop + container.clientHeight >= container.scrollHeight - threshold;
+    }
+
     setupSyncScroll() {
         const transcript = document.getElementById("transcript");
         const translation = document.getElementById("translation");
@@ -1653,6 +1660,12 @@ class StreamNote {
             // 如果是用户手动滚动，关闭自动滚动
             if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
                 this.autoScroll = false;
+                this.updateAutoScrollButton();
+            }
+
+            // 如果用户滑到底部，自动启用自动滚动
+            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(transcript)) {
+                this.autoScroll = true;
                 this.updateAutoScrollButton();
             }
 
@@ -1684,6 +1697,12 @@ class StreamNote {
             // 如果是用户手动滚动，关闭自动滚动
             if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
                 this.autoScroll = false;
+                this.updateAutoScrollButton();
+            }
+
+            // 如果用户滑到底部，自动启用自动滚动
+            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(translation)) {
+                this.autoScroll = true;
                 this.updateAutoScrollButton();
             }
 
