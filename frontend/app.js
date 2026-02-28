@@ -1335,10 +1335,54 @@ class StreamNote {
 
 
     /**
-     * 设置同步滚动 - 用户停止滚动后才进行一次跳转同步（不是平滑滚动）
+     * 获取视口中心对应的 data-index
+     */
+    getCenterLineIndex(container) {
+        const viewportCenterY = container.scrollTop + container.clientHeight / 2;
+        const paragraphs = container.querySelectorAll('p[data-index]');
+
+        if (paragraphs.length === 0) return null;
+
+        let closestElement = paragraphs[0];
+        let closestDistance = Math.abs(
+            (container.scrollTop + paragraphs[0].getBoundingClientRect().top +
+                paragraphs[0].getBoundingClientRect().height / 2) - viewportCenterY
+        );
+
+        // 找最接近视口中心的元素
+        for (let p of paragraphs) {
+            const rect = p.getBoundingClientRect();
+            const elementCenter = container.scrollTop + rect.top + rect.height / 2;
+            const distance = Math.abs(elementCenter - viewportCenterY);
+
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestElement = p;
+            }
+        }
+
+        return closestElement.getAttribute('data-index');
+    }
+
+    /**
+     * 滚动容器使指定 data-index 的元素居中
+     */
+    scrollToLineCenter(container, targetIndex) {
+        const targetElement = container.querySelector(`p[data-index="${targetIndex}"]`);
+        if (!targetElement) return;
+
+        const rect = targetElement.getBoundingClientRect();
+        const elementCenter = container.scrollTop + rect.top + rect.height / 2;
+        const viewportCenter = container.scrollTop + container.clientHeight / 2;
+        const scrollOffset = elementCenter - viewportCenter;
+
+        container.scrollTop += scrollOffset;
+    }
+
+    /**
+     * 设置同步滚动 - 基于中心行对齐，使用 data-index 精确对应
      */
     setupSyncScroll() {
-        // 注意：滚动的是外层容器，不是内容 div
         const transcriptContainer = document.querySelector(".transcript-container");
         const translationContainer = document.querySelector(".translation-container");
 
@@ -1347,70 +1391,62 @@ class StreamNote {
             return;
         }
 
-        // 原文容器滚动时，用户停止后同步译文容器
+        // 原文容器滚动时，同步译文容器
         transcriptContainer.addEventListener('scroll', () => {
-            // 如果是用户手动滚动（不是系统滚动或正在切换自动滚动），关闭自动滚动
+            // 如果是用户手动滚动，关闭自动滚动
             if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
                 this.autoScroll = false;
                 this.updateAutoScrollButton();
             }
 
-            // 如果是系统同步在进行，直接返回不处理
             if (this.isSyncingScroll) return;
 
-            // 清除之前的防抖定时器
             clearTimeout(this.scrollTimeout);
-
-            // 等待用户停止滚动（300ms 无新的滚动事件）才进行一次同步
             this.scrollTimeout = setTimeout(() => {
                 this.isSyncingScroll = true;
 
-                // 计算滚动百分比
-                const scrollPercentage = transcriptContainer.scrollTop /
-                    (transcriptContainer.scrollHeight - transcriptContainer.clientHeight);
+                // 获取原文中心对应的行索引
+                const centerIndex = this.getCenterLineIndex(transcriptContainer);
 
-                // 使用 auto 直接跳转到相应位置
-                translationContainer.style.scrollBehavior = 'auto';
-                translationContainer.scrollTop = scrollPercentage *
-                    (translationContainer.scrollHeight - translationContainer.clientHeight);
+                // 在译文中找到同样的行并使其居中
+                if (centerIndex) {
+                    translationContainer.style.scrollBehavior = 'auto';
+                    this.scrollToLineCenter(translationContainer, centerIndex);
+                }
 
                 setTimeout(() => {
                     this.isSyncingScroll = false;
                 }, 50);
-            }, 300); // 防抖 300ms，等用户停止滚动
+            }, 300); // 防抖 300ms
         });
 
-        // 译文容器滚动时，用户停止后同步原文容器
+        // 译文容器滚动时，同步原文容器
         translationContainer.addEventListener('scroll', () => {
-            // 如果是用户手动滚动（不是系统滚动或正在切换自动滚动），关闭自动滚动
+            // 如果是用户手动滚动，关闭自动滚动
             if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
                 this.autoScroll = false;
                 this.updateAutoScrollButton();
             }
 
-            // 如果是系统同步在进行，直接返回不处理
             if (this.isSyncingScroll) return;
 
-            // 清除之前的防抖定时器
             clearTimeout(this.scrollTimeout);
-
-            // 等待用户停止滚动（300ms 无新的滚动事件）才进行一次同步
             this.scrollTimeout = setTimeout(() => {
                 this.isSyncingScroll = true;
 
-                // 计算滚动百分比
-                const scrollPercentage = translationContainer.scrollTop /
-                    (translationContainer.scrollHeight - translationContainer.clientHeight);
+                // 获取译文中心对应的行索引
+                const centerIndex = this.getCenterLineIndex(translationContainer);
 
-                // 使用 auto 直接跳转到相应位置
-                transcriptContainer.style.scrollBehavior = 'auto';
-                transcriptContainer.scrollTop = scrollPercentage *
-                    (transcriptContainer.scrollHeight - transcriptContainer.clientHeight);
+                // 在原文中找到同样的行并使其居中
+                if (centerIndex) {
+                    transcriptContainer.style.scrollBehavior = 'auto';
+                    this.scrollToLineCenter(transcriptContainer, centerIndex);
+                }
 
                 setTimeout(() => {
                     this.isSyncingScroll = false;
                 }, 50);
-            }, 300); // 防抖 300ms，等用户停止滚动
+            }, 300); // 防抖 300ms
         });
     }
 
