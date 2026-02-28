@@ -393,10 +393,76 @@ header h1 {
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
-.control-btn-danger {
-    background: #ff6b6b;
+.manage-menu-item.danger:hover {
+    background: #ffebee;
+}
+
+/* ================ Text Panels (Transcript & Translation) ================ */
+
+.main-content {
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+    flex: 1;
+    overflow: hidden;
+    padding: 0;
+    position: relative;
+}
+
+.text-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    background: white;
+    border-right: 1px solid #e9ecef;
+    transition: flex 0.3s ease;
+}
+
+.text-panel.collapsed {
+    flex: 0;
+    min-width: 0;
+    display: none;
+}
+
+.text-panel:last-child {
+    border-right: none;
+}
+
+/* Panel Header */
+.text-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    box-shadow: 0 2px 6px rgba(255, 107, 107, 0.3);
+    flex-shrink: 0;
+    gap: 8px;
+    border-bottom: none;
+}
+
+.text-panel-header h3 {
+    margin: 0;
+    font-size: 1em;
+    font-weight: 600;
+}
+
+/* Panel Content */
+.text-panel-content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.transcript,
+.translation {
+    flex: 1;
+    overflow-y: auto;
+    scroll-behavior: smooth;
 }
 
 .control-btn-danger:hover:not(:disabled) {
@@ -642,57 +708,6 @@ header h1 {
     display: flex;
 }
 
-/* 转录和翻译区域（左右分栏） */
-.transcription-section {
-    display: flex;
-    gap: 0;
-    overflow: hidden;
-    flex: 1;
-    border-bottom: none;
-    position: relative;
-}
-
-.transcript-container,
-.translation-container {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    background: white;
-    scroll-behavior: smooth;
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-}
-
-.transcript-container {
-    border-right: 1px solid #e9ecef;
-}
-
-/* 当译文容器隐藏时，原文容器占满全宽 */
-.translation-container[style*="display: none"]~.transcript-container,
-.transcript-container:only-child {
-    border-right: none;
-}
-
-.translation-container {
-    background: #f8f9fa;
-}
-
-.transcript-container h2,
-.translation-container h2 {
-    font-size: 1em;
-    margin-bottom: 12px;
-    color: #333;
-    flex-shrink: 0;
-    font-weight: 600;
-}
-
-.transcript,
-.translation {
-    flex: 1;
-    overflow: visible;
-}
-
 /* 底部区域（关键词 + 查询历史） - 已移至侧面板 */
 
 .keywords-display {
@@ -900,8 +915,7 @@ header h1 {
 .floating-auto-scroll-btn {
     position: absolute;
     bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    right: 20px;
     padding: 10px 16px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -917,22 +931,12 @@ header h1 {
 }
 
 .floating-auto-scroll-btn:hover {
-    transform: translateX(-50%) translateY(-2px);
+    transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
 }
 
 .floating-auto-scroll-btn.hidden {
     display: none;
-}
-
-/* ================ 只显示译文模式 ================ */
-.main-content.translation-only-view .transcript-container {
-    display: none;
-}
-
-.main-content.translation-only-view .translation-container {
-    border-right: none;
-    flex: 1;
 }
 
 .status-bar {

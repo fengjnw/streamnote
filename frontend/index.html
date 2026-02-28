@@ -23,7 +23,8 @@
                     <div><span style="opacity: 0.8;">🔑</span> <span id="sessionKeywordCountDisplay">0</span> keywords
                     </div>
                     <div id="translationStatusDisplay" style="display: none;"><span style="opacity: 0.8;">🌐</span>
-                        <span id="translationLangDisplay">中文</span></div>
+                        <span id="translationLangDisplay">中文</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -32,9 +33,11 @@
     <div class="container">
         <div class="main-wrapper">
             <div class="control-panel">
-                <button id="openSessionPanel" class="control-btn control-btn-secondary" title="Open Sessions">📋</button>
+                <button id="openSessionPanel" class="control-btn control-btn-secondary"
+                    title="Open Sessions">📋</button>
                 <button id="startBtn" class="control-btn control-btn-primary" title="Start Recording">🎙️ Start</button>
-                <button id="stopBtn" class="control-btn control-btn-danger" disabled title="Stop Recording">⏹️ Stop</button>
+                <button id="stopBtn" class="control-btn control-btn-danger" disabled title="Stop Recording">⏹️
+                    Stop</button>
                 <button id="clearBtn" class="control-btn control-btn-secondary" title="Clear">🗑️ Clear</button>
 
                 <div class="control-spacer"></div>
@@ -46,6 +49,16 @@
                     <button id="floatingAddKeywordBtn" class="control-btn control-btn-secondary" style="display: none;"
                         title="Add selected text as keyword">➕</button>
                 </div>
+
+                <!-- Content Area Toggle Buttons -->
+                <div class="panel-controls">
+                    <button id="toggleTranscriptPanel" class="control-btn control-btn-secondary" title="Transcript">📄
+                        Transcript</button>
+                    <button id="toggleTranslationPanel" class="control-btn control-btn-secondary" title="Translation">🌍
+                        Translation</button>
+                </div>
+
+                <div class="control-spacer"></div>
 
                 <!-- Quick Access Buttons for Side Panel Tabs -->
                 <div class="panel-controls">
@@ -91,27 +104,42 @@
                 </div>
 
                 <div class="main-content">
-                    <div class="transcription-section">
-                        <div class="transcript-container">
-                            <h2>Transcription</h2>
+                    <!-- Transcript Panel (Left) -->
+                    <div class="text-panel transcript-panel expanded">
+                        <!-- Panel Header -->
+                        <div class="text-panel-header">
+                            <h3>Transcription</h3>
+                            <button id="closeTranscriptPanelBtn" class="btn-icon toggle-btn"
+                                title="Close Panel">✕</button>
+                        </div>
+                        <!-- Panel Content -->
+                        <div class="text-panel-content">
                             <div id="transcript" class="transcript">
                                 <p class="placeholder">Press "Start Recording" to begin...</p>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="translation-container">
-                            <h2>Translation</h2>
+                    <!-- Translation Panel (Right) -->
+                    <div class="text-panel translation-panel expanded">
+                        <!-- Panel Header -->
+                        <div class="text-panel-header">
+                            <h3>Translation</h3>
+                            <button id="closeTranslationPanelBtn" class="btn-icon toggle-btn"
+                                title="Close Panel">✕</button>
+                        </div>
+                        <!-- Panel Content -->
+                        <div class="text-panel-content">
                             <div id="translation" class="translation">
                                 <p class="placeholder">Translation will appear here...</p>
                             </div>
                         </div>
-
-                        <!-- Floating Auto Scroll Button -->
-                        <button id="floatingAutoScrollBtn" class="floating-auto-scroll-btn"
-                            title="Click to jump to latest">
-                            ↓ Back to Latest
-                        </button>
                     </div>
+
+                    <!-- Floating Auto Scroll Button -->
+                    <button id="floatingAutoScrollBtn" class="floating-auto-scroll-btn" title="Click to jump to latest">
+                        ↓ Back to Latest
+                    </button>
                 </div>
 
                 <!-- Collapsible Side Panels (Right) -->
@@ -160,13 +188,6 @@
                         </div>
 
                         <div class="settings-group">
-                            <label class="settings-label">
-                                <input type="checkbox" id="translation-toggle" checked>
-                                <span>Enable Translation</span>
-                            </label>
-                        </div>
-
-                        <div class="settings-group">
                             <label class="settings-label" for="target-language">Target Language:</label>
                             <select id="target-language" class="language-selector">
                                 <option value="Chinese">中文</option>
@@ -176,13 +197,6 @@
                                 <option value="Japanese">日本語</option>
                                 <option value="Korean">한국어</option>
                             </select>
-                        </div>
-
-                        <div class="settings-group">
-                            <label class="settings-label">
-                                <input type="checkbox" id="show-only-translation">
-                                <span>Show Only Translation</span>
-                            </label>
                         </div>
 
                         <div class="settings-divider"></div>

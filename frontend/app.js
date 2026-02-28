@@ -60,13 +60,13 @@ class StreamNote {
             this.setupSyncScroll();
             this.initializeVisibility();
             // 设置容器为 auto 滚动行为（而不是 smooth）
-            const transcriptContainer = document.querySelector(".transcript-container");
-            const translationContainer = document.querySelector(".translation-container");
-            if (transcriptContainer) {
-                transcriptContainer.style.scrollBehavior = 'auto';
+            const transcript = document.getElementById("transcript");
+            const translation = document.getElementById("translation");
+            if (transcript) {
+                transcript.style.scrollBehavior = 'auto';
             }
-            if (translationContainer) {
-                translationContainer.style.scrollBehavior = 'auto';
+            if (translation) {
+                translation.style.scrollBehavior = 'auto';
             }
         }, 100);
     }
@@ -75,18 +75,16 @@ class StreamNote {
      * 初始化显示/隐藏状态
      */
     initializeVisibility() {
-        // 根据翻译开关状态设置译文容器显示/隐藏
-        const translationToggle = document.getElementById("translation-toggle");
-        if (translationToggle) {
-            const translationContainer = document.querySelector(".translation-container");
+        // 文本面板默认都显示，由用户通过面板切换按钮控制
+        const transcriptPanel = document.querySelector(".transcript-panel");
+        const translationPanel = document.querySelector(".translation-panel");
 
-            if (translationContainer) {
-                translationContainer.style.display = translationToggle.checked ? 'flex' : 'none';
-            }
+        if (transcriptPanel) {
+            transcriptPanel.classList.add("expanded");
         }
-
-        // 关键词不再在main-content中，现在在侧面板中，所以无需在这里处理显示/隐藏
-        // 侧面板由打开/关闭按钮控制
+        if (translationPanel) {
+            translationPanel.classList.add("expanded");
+        }
     }
 
     /**
@@ -135,11 +133,6 @@ class StreamNote {
             this.keywordExplanationLanguage = session.settings.keywordExplanationLanguage || "original";
 
             // 更新 UI 控件状态
-            const translationToggle = document.getElementById("translation-toggle");
-            if (translationToggle) {
-                translationToggle.checked = this.translationEnabled;
-            }
-
             const languageSelector = document.getElementById("target-language");
             if (languageSelector) {
                 languageSelector.value = this.targetLanguage;
@@ -394,6 +387,17 @@ class StreamNote {
     }
 
     /**
+     * 保存面板展开/收缩状态（当前不持久化，用户刷新后重置）
+     */
+    savePanelState() {
+        // 可以在这里添加本地存储逻辑，如需持久化面板状态
+        // localStorage.setItem('panelState', JSON.stringify({
+        //     transcriptExpanded: document.querySelector(".transcript-panel").classList.contains("expanded"),
+        //     translationExpanded: document.querySelector(".translation-panel").classList.contains("expanded")
+        // }));
+    }
+
+    /**
      * 初始化关键词提取器
      */
     initKeywordExtractor() {
@@ -478,32 +482,53 @@ class StreamNote {
         document.getElementById("stopBtn").addEventListener("click", () => this.stop());
         document.getElementById("clearBtn").addEventListener("click", () => this.clear());
 
-        // 添加翻译开关
-        const translationToggle = document.getElementById("translation-toggle");
-        if (translationToggle) {
-            translationToggle.addEventListener("change", (e) => {
-                this.translationEnabled = e.target.checked;
+        // 文本面板切换按钮
+        const toggleTranscriptPanelBtn = document.getElementById("toggleTranscriptPanel");
+        const toggleTranslationPanelBtn = document.getElementById("toggleTranslationPanel");
+        const closeTranscriptPanelBtn = document.getElementById("closeTranscriptPanelBtn");
+        const closeTranslationPanelBtn = document.getElementById("closeTranslationPanelBtn");
 
-                // 显示/隐藏译文容器
-                const translationContainer = document.querySelector(".translation-container");
-                if (translationContainer) {
-                    translationContainer.style.display = e.target.checked ? 'flex' : 'none';
+        if (toggleTranscriptPanelBtn) {
+            toggleTranscriptPanelBtn.addEventListener("click", () => {
+                const transcriptPanel = document.querySelector(".transcript-panel");
+                if (transcriptPanel) {
+                    transcriptPanel.classList.toggle("collapsed");
+                    transcriptPanel.classList.toggle("expanded");
+                    this.savePanelState();
                 }
+            });
+        }
 
-                // 如果禁用翻译，也要关闭"只显示译文"模式
-                if (!e.target.checked) {
-                    const showOnlyTranslationToggle = document.getElementById("show-only-translation");
-                    if (showOnlyTranslationToggle && showOnlyTranslationToggle.checked) {
-                        showOnlyTranslationToggle.checked = false;
-                        const mainContent = document.querySelector(".main-content");
-                        if (mainContent) {
-                            mainContent.classList.remove("translation-only-view");
-                        }
-                    }
+        if (toggleTranslationPanelBtn) {
+            toggleTranslationPanelBtn.addEventListener("click", () => {
+                const translationPanel = document.querySelector(".translation-panel");
+                if (translationPanel) {
+                    translationPanel.classList.toggle("collapsed");
+                    translationPanel.classList.toggle("expanded");
+                    this.savePanelState();
                 }
+            });
+        }
 
-                // 保存设置到 session
-                this.saveSettingsToSession();
+        if (closeTranscriptPanelBtn) {
+            closeTranscriptPanelBtn.addEventListener("click", () => {
+                const transcriptPanel = document.querySelector(".transcript-panel");
+                if (transcriptPanel) {
+                    transcriptPanel.classList.add("collapsed");
+                    transcriptPanel.classList.remove("expanded");
+                    this.savePanelState();
+                }
+            });
+        }
+
+        if (closeTranslationPanelBtn) {
+            closeTranslationPanelBtn.addEventListener("click", () => {
+                const translationPanel = document.querySelector(".translation-panel");
+                if (translationPanel) {
+                    translationPanel.classList.add("collapsed");
+                    translationPanel.classList.remove("expanded");
+                    this.savePanelState();
+                }
             });
         }
 
@@ -527,34 +552,6 @@ class StreamNote {
 
                 // 保存设置到 session
                 this.saveSettingsToSession();
-            });
-        }
-
-        // 添加"只显示译文"开关
-        const showOnlyTranslationToggle = document.getElementById("show-only-translation");
-        if (showOnlyTranslationToggle) {
-            showOnlyTranslationToggle.addEventListener("change", (e) => {
-                if (e.target.checked) {
-                    // 如果要打开"只显示译文"，必须先启用翻译
-                    if (!this.translationEnabled) {
-                        const translationToggle = document.getElementById("translation-toggle");
-                        if (translationToggle) {
-                            translationToggle.checked = true;
-                            translationToggle.dispatchEvent(new Event("change"));
-                        }
-                    }
-                }
-
-                const mainContent = document.querySelector(".main-content");
-                if (mainContent) {
-                    if (e.target.checked) {
-                        // 添加translation-only-view类
-                        mainContent.classList.add("translation-only-view");
-                    } else {
-                        // 移除translation-only-view类
-                        mainContent.classList.remove("translation-only-view");
-                    }
-                }
             });
         }
 
@@ -709,23 +706,23 @@ class StreamNote {
                     // Scroll to bottom immediately
                     this.isTogglingAutoScroll = true;
                     this.isSyncingScroll = true;  // 防止scroll事件触发同步逻辑
-                    const transcriptContainer = document.querySelector(".transcript-container");
-                    const translationContainer = document.querySelector(".translation-container");
+                    const transcript = document.getElementById("transcript");
+                    const translation = document.getElementById("translation");
 
                     // 获取最后一行的索引并滚动到底部
                     const keys = Object.keys(this.preciseResults);
                     if (keys.length > 0) {
                         const lastIndex = keys[keys.length - 1];
 
-                        if (transcriptContainer) {
-                            transcriptContainer.style.scrollBehavior = 'auto';
-                            this.scrollToLineBottom(transcriptContainer, lastIndex);
-                            transcriptContainer.style.scrollBehavior = 'smooth';
+                        if (transcript) {
+                            transcript.style.scrollBehavior = 'auto';
+                            this.scrollToLineBottom(transcript, lastIndex);
+                            transcript.style.scrollBehavior = 'smooth';
                         }
-                        if (translationContainer) {
-                            translationContainer.style.scrollBehavior = 'auto';
-                            this.scrollToLineBottom(translationContainer, lastIndex);
-                            translationContainer.style.scrollBehavior = 'smooth';
+                        if (translation) {
+                            translation.style.scrollBehavior = 'auto';
+                            this.scrollToLineBottom(translation, lastIndex);
+                            translation.style.scrollBehavior = 'smooth';
                         }
                     }
 
@@ -1086,14 +1083,13 @@ class StreamNote {
     toggleAutoScroll() {
         this.autoScroll = !this.autoScroll;
         this.updateAutoScrollButton();
-
         // 如果开启自动滚动，立即滚动到底部
         if (this.autoScroll) {
             // 设置标志，防止滚动事件认为这是用户手动滚动
             this.isTogglingAutoScroll = true;
             this.isSyncingScroll = true;  // 防止scroll事件触发同步逻辑
-            const transcriptContainer = document.querySelector(".transcript-container");
-            const translationContainer = document.querySelector(".translation-container");
+            const transcript = document.getElementById("transcript");
+            const translation = document.getElementById("translation");
 
             // 获取最后一行的索引并滚动到底部
             const keys = Object.keys(this.preciseResults);
@@ -1101,15 +1097,15 @@ class StreamNote {
                 const lastIndex = keys[keys.length - 1];
 
                 // 临时改为 auto（直接跳转到底部）
-                if (transcriptContainer) {
-                    transcriptContainer.style.scrollBehavior = 'auto';
-                    this.scrollToLineBottom(transcriptContainer, lastIndex);
-                    transcriptContainer.style.scrollBehavior = 'smooth';
+                if (transcript) {
+                    transcript.style.scrollBehavior = 'auto';
+                    this.scrollToLineBottom(transcript, lastIndex);
+                    transcript.style.scrollBehavior = 'smooth';
                 }
-                if (translationContainer) {
-                    translationContainer.style.scrollBehavior = 'auto';
-                    this.scrollToLineBottom(translationContainer, lastIndex);
-                    translationContainer.style.scrollBehavior = 'smooth';
+                if (translation) {
+                    translation.style.scrollBehavior = 'auto';
+                    this.scrollToLineBottom(translation, lastIndex);
+                    translation.style.scrollBehavior = 'smooth';
                 }
             }
 
@@ -1267,13 +1263,12 @@ class StreamNote {
         } else {
             translationDiv.innerHTML = '<p class="placeholder">Translation will appear here...</p>';
         }
-
         // 仅在自动滚动启用时滚动到底部（阻止同步滚动触发）
         // 注意：要滚动外层容器，不是内容 div
         if (this.autoScroll) {
             this.isSyncingScroll = true;
-            const transcriptContainer = document.querySelector(".transcript-container");
-            const translationContainer = document.querySelector(".translation-container");
+            const transcript = document.getElementById("transcript");
+            const translation = document.getElementById("translation");
 
             // 获取最后一行的索引，用于对齐滚动
             const keys = Object.keys(this.preciseResults);
@@ -1281,13 +1276,13 @@ class StreamNote {
                 const lastIndex = keys[keys.length - 1];
 
                 // 使用 scrollToLineBottom 确保两个容器同步滚动到同一行
-                if (transcriptContainer) {
-                    transcriptContainer.style.scrollBehavior = 'auto';
-                    this.scrollToLineBottom(transcriptContainer, lastIndex);
+                if (transcript) {
+                    transcript.style.scrollBehavior = 'auto';
+                    this.scrollToLineBottom(transcript, lastIndex);
                 }
-                if (translationContainer) {
-                    translationContainer.style.scrollBehavior = 'auto';
-                    this.scrollToLineBottom(translationContainer, lastIndex);
+                if (translation) {
+                    translation.style.scrollBehavior = 'auto';
+                    this.scrollToLineBottom(translation, lastIndex);
                 }
             }
 
@@ -1631,22 +1626,20 @@ class StreamNote {
     }
 
     /**
-     * 设置同步滚动 - 基于中心行对齐，使用 data-index 精确对应
+     * 设置同步滚动 - 基于中心行对齐，原文框后移8个index
      */
     setupSyncScroll() {
-        const transcriptContainer = document.querySelector(".transcript-container");
-        const translationContainer = document.querySelector(".translation-container");
+        const transcript = document.getElementById("transcript");
+        const translation = document.getElementById("translation");
+        const SCROLL_OFFSET = 8; // 原文框后移的行数
 
-        if (!transcriptContainer || !translationContainer) {
-            console.warn('[StreamNote] Sync scroll containers not found');
+        if (!transcript || !translation) {
+            console.warn('[StreamNote] Sync scroll elements not found');
             return;
         }
 
         // 原文容器滚动时，同步译文容器
-        transcriptContainer.addEventListener('scroll', () => {
-            // 记录滚动前的自动滚动状态，用于决定同步时的对齐方式
-            const wasAutoScrolling = this.autoScroll;
-
+        transcript.addEventListener('scroll', () => {
             // 如果是用户手动滚动，关闭自动滚动
             if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
                 this.autoScroll = false;
@@ -1660,17 +1653,14 @@ class StreamNote {
                 this.isSyncingScroll = true;
 
                 // 获取原文中心对应的行索引
-                const centerIndex = this.getCenterLineIndex(transcriptContainer);
+                const centerIndex = this.getCenterLineIndex(transcript);
 
-                // 在译文中找到同样的行，根据滚动模式选择对齐方式
+                // 在译文中找到同样的行，但向前移SCROLL_OFFSET行
+                // 这样原文比译文"后移"了SCROLL_OFFSET行
                 if (centerIndex) {
-                    translationContainer.style.scrollBehavior = 'auto';
-                    // 自动滚动模式用底部对齐，否则用中心对齐
-                    if (wasAutoScrolling) {
-                        this.scrollToLineBottom(translationContainer, centerIndex);
-                    } else {
-                        this.scrollToLineCenter(translationContainer, centerIndex);
-                    }
+                    const offsetIndex = Math.max(0, parseInt(centerIndex) - SCROLL_OFFSET);
+                    translation.style.scrollBehavior = 'auto';
+                    this.scrollToLineBottom(translation, offsetIndex.toString());
                 }
 
                 setTimeout(() => {
@@ -1680,10 +1670,7 @@ class StreamNote {
         });
 
         // 译文容器滚动时，同步原文容器
-        translationContainer.addEventListener('scroll', () => {
-            // 记录滚动前的自动滚动状态，用于决定同步时的对齐方式
-            const wasAutoScrolling = this.autoScroll;
-
+        translation.addEventListener('scroll', () => {
             // 如果是用户手动滚动，关闭自动滚动
             if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
                 this.autoScroll = false;
@@ -1697,17 +1684,14 @@ class StreamNote {
                 this.isSyncingScroll = true;
 
                 // 获取译文中心对应的行索引
-                const centerIndex = this.getCenterLineIndex(translationContainer);
+                const centerIndex = this.getCenterLineIndex(translation);
 
-                // 在原文中找到同样的行，根据滚动模式选择对齐方式
+                // 在原文中找到同样的行，但向后移SCROLL_OFFSET行
+                // 这样原文比译文"后移"了SCROLL_OFFSET行
                 if (centerIndex) {
-                    transcriptContainer.style.scrollBehavior = 'auto';
-                    // 自动滚动模式用底部对齐，否则用中心对齐
-                    if (wasAutoScrolling) {
-                        this.scrollToLineBottom(transcriptContainer, centerIndex);
-                    } else {
-                        this.scrollToLineCenter(transcriptContainer, centerIndex);
-                    }
+                    const offsetIndex = parseInt(centerIndex) + SCROLL_OFFSET;
+                    transcript.style.scrollBehavior = 'auto';
+                    this.scrollToLineBottom(transcript, offsetIndex.toString());
                 }
 
                 setTimeout(() => {
