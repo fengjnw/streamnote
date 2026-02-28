@@ -17,6 +17,9 @@ class KeywordExtractor {
         // 解释 API
         this.explanationApiUrl = config.explanationApiUrl || "http://localhost:5001/api/explain-keyword";
 
+        // 解释缓存: {"keyword|language": "explanation", ...}
+        this.explanationCache = {};
+
         console.log("[KeywordExtractor] Initialized", config);
     }
 
@@ -151,7 +154,17 @@ class KeywordExtractor {
             // 获取解释语言（从全局 StreamNote 实例）
             const explanationLanguage = window.streamNoteInstance?.keywordExplanationLanguage || "original";
 
+            // 生成缓存 key
+            const cacheKey = `${keyword}|${explanationLanguage}`;
+
             console.log(`[KeywordExtractor] Fetching explanation for "${keyword}" in ${explanationLanguage}`);
+
+            // 检查缓存
+            if (this.explanationCache[cacheKey]) {
+                console.log(`[KeywordExtractor] Using cached explanation for "${keyword}"`);
+                contentElement.innerHTML = `<p>${this.explanationCache[cacheKey]}</p>`;
+                return;
+            }
 
             const response = await fetch(this.explanationApiUrl, {
                 method: "POST",
@@ -172,6 +185,9 @@ class KeywordExtractor {
             const explanation = data.explanation || "No explanation available";
 
             console.log(`[KeywordExtractor] Got explanation: ${explanation.substring(0, 50)}...`);
+
+            // 存入缓存
+            this.explanationCache[cacheKey] = explanation;
 
             // 显示解释
             contentElement.innerHTML = `<p>${explanation}</p>`;

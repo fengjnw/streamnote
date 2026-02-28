@@ -160,6 +160,12 @@ class StreamNote {
             if (this.keywordExtractor) {
                 this.keywordExtractor.setEnabled(session.settings.keywordEnabled);
                 this.keywordExtractor.setIntensity(session.settings.keywordIntensity);
+                
+                // 恢复解释缓存
+                if (session.settings.explanationCache) {
+                    this.keywordExtractor.explanationCache = { ...session.settings.explanationCache };
+                    console.log(`[StreamNote] Restored ${Object.keys(this.keywordExtractor.explanationCache).length} cached explanations`);
+                }
             }
         }
 
@@ -237,7 +243,9 @@ class StreamNote {
             translationEnabled: this.translationEnabled,
             targetLanguage: this.targetLanguage,
             keywordEnabled: this.keywordExtractor ? this.keywordExtractor.enabled : true,
-            keywordIntensity: this.keywordExtractor ? this.keywordExtractor.intensity : 5
+            keywordIntensity: this.keywordExtractor ? this.keywordExtractor.intensity : 5,
+            keywordExplanationLanguage: this.keywordExplanationLanguage,
+            explanationCache: this.keywordExtractor ? this.keywordExtractor.explanationCache : {}
         };
         this.sessionManager.updateCurrentSettings(settings);
     }
@@ -253,7 +261,8 @@ class StreamNote {
             targetLanguage: this.targetLanguage,
             keywordEnabled: this.keywordExtractor ? this.keywordExtractor.enabled : true,
             keywordIntensity: this.keywordExtractor ? this.keywordExtractor.intensity : 5,
-            keywordExplanationLanguage: this.keywordExplanationLanguage
+            keywordExplanationLanguage: this.keywordExplanationLanguage,
+            explanationCache: this.keywordExtractor ? this.keywordExtractor.explanationCache : {}
         };
         this.sessionManager.updateCurrentSettings(settings);
     }
