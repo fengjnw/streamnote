@@ -30,6 +30,9 @@ class StreamNote {
         this.translationEnabled = true;
         this.targetLanguage = "Chinese";
 
+        // 关键词解释功能
+        this.keywordExplanationLanguage = "original";
+
         // 全局转录状态（跨 session）
         this.recordingSessionId = null;  // 记录当前正在转录的 session
         this.displaySessionId = null;    // 当前显示的 session（用户看到的）
@@ -121,6 +124,7 @@ class StreamNote {
         if (session.settings) {
             this.translationEnabled = session.settings.translationEnabled;
             this.targetLanguage = session.settings.targetLanguage;
+            this.keywordExplanationLanguage = session.settings.keywordExplanationLanguage || "original";
 
             // 更新 UI 控件状态
             const translationToggle = document.getElementById("translation-toggle");
@@ -131,6 +135,11 @@ class StreamNote {
             const languageSelector = document.getElementById("target-language");
             if (languageSelector) {
                 languageSelector.value = this.targetLanguage;
+            }
+
+            const explanationLanguageSelector = document.getElementById("keyword-explanation-language");
+            if (explanationLanguageSelector) {
+                explanationLanguageSelector.value = this.keywordExplanationLanguage;
             }
 
             const keywordToggle = document.getElementById("keyword-toggle");
@@ -243,7 +252,8 @@ class StreamNote {
             translationEnabled: this.translationEnabled,
             targetLanguage: this.targetLanguage,
             keywordEnabled: this.keywordExtractor ? this.keywordExtractor.enabled : true,
-            keywordIntensity: this.keywordExtractor ? this.keywordExtractor.intensity : 5
+            keywordIntensity: this.keywordExtractor ? this.keywordExtractor.intensity : 5,
+            keywordExplanationLanguage: this.keywordExplanationLanguage
         };
         this.sessionManager.updateCurrentSettings(settings);
     }
@@ -258,6 +268,9 @@ class StreamNote {
             keywordElement: document.getElementById("keywords-display"),
             topK: 5
         });
+
+        // 使 KeywordExtractor 全局可访问
+        window.keywordExtractorInstance = this.keywordExtractor;
 
         // 绑定开关
         const toggleCheckbox = document.getElementById("keyword-toggle");
@@ -413,6 +426,16 @@ class StreamNote {
                         mainContent.classList.remove("translation-only-view");
                     }
                 }
+            });
+        }
+
+        // 添加关键词解释语言选择
+        const explanationLanguageSelector = document.getElementById("keyword-explanation-language");
+        if (explanationLanguageSelector) {
+            explanationLanguageSelector.addEventListener("change", (e) => {
+                this.keywordExplanationLanguage = e.target.value;
+                console.log(`[KEYWORD EXPLANATION] Language changed to ${this.keywordExplanationLanguage}`);
+                this.saveSettingsToSession();
             });
         }
 

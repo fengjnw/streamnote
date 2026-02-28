@@ -82,6 +82,18 @@
                         Show Only Translation
                     </label>
                 </div>
+
+                <div class="keyword-explanation-controls">
+                    <label for="keyword-explanation-language">Keyword Explanation:</label>
+                    <select id="keyword-explanation-language" class="language-selector">
+                        <option value="original">Original (English)</option>
+                        <option value="Chinese">中文</option>
+                        <option value="Spanish">Español</option>
+                        <option value="French">Français</option>
+                        <option value="Japanese">日本語</option>
+                        <option value="Korean">한국어</option>
+                    </select>
+                </div>
             </div>
 
             <div class="main-content">
@@ -121,6 +133,26 @@
                 <span id="recording-indicator" class="recording-indicator" style="display: none;">🔴 Recording in
                     <strong id="recording-session-name"></strong></span>
                 <span id="duration">Duration: 0:00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyword Explanation Modal -->
+    <div id="keywordExplanationModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="keywordExplanationTitle">Keyword Explanation</h3>
+                <button class="modal-close-btn"
+                    onclick="document.getElementById('keywordExplanationModal').style.display='none'">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="keywordExplanationContent" class="explanation-content">
+                    <p class="placeholder">Loading...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary"
+                    onclick="document.getElementById('keywordExplanationModal').style.display='none'">Close</button>
             </div>
         </div>
     </div>

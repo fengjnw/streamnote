@@ -14,6 +14,9 @@ class KeywordExtractor {
         this.currentKeywords = [];
         this.allCollectedKeywords = [];  // 保存所有收集到的关键词
 
+        // 解释 API
+        this.explanationApiUrl = config.explanationApiUrl || "http://localhost:5001/api/explain-keyword";
+
         console.log("[KeywordExtractor] Initialized", config);
     }
 
@@ -113,9 +116,9 @@ class KeywordExtractor {
             <div class="keywords-container">
                 <div class="keywords-list">
                     ${uniqueKeywords.map(kw => `
-                        <span class="keyword-badge" title="${kw}">
-                            ${kw}
-                            <button class="keyword-delete-btn" onclick="window.streamNoteInstance.deleteKeyword('${kw.replace(/'/g, "\\'")}')">×</button>
+                        <span class="keyword-badge" title="Click to see explanation" style="cursor: pointer;" onclick="window.keywordExtractorInstance.showExplanation('${kw.replace(/'/g, "\\'")}')" >
+                            <span class="keyword-text">${kw}</span>
+                            <button class="keyword-delete-btn" onclick="event.stopPropagation(); window.streamNoteInstance.deleteKeyword('${kw.replace(/'/g, "\\'")}')">×</button>
                         </span>
                     `).join('')}
                 </div>
@@ -123,6 +126,59 @@ class KeywordExtractor {
         `;
 
         element.innerHTML = html;
+    }
+
+    /**
+     * 显示关键词的解释
+     * @param {string} keyword - 关键词
+     */
+    async showExplanation(keyword) {
+        const modal = document.getElementById('keywordExplanationModal');
+        const titleElement = document.getElementById('keywordExplanationTitle');
+        const contentElement = document.getElementById('keywordExplanationContent');
+
+        if (!modal || !titleElement || !contentElement) {
+            console.error("[KeywordExtractor] Modal elements not found");
+            return;
+        }
+
+        // 显示加载状态
+        titleElement.textContent = `${keyword}`;
+        contentElement.innerHTML = '<p class="placeholder">Loading explanation...</p>';
+        modal.style.display = 'flex';
+
+        try {
+            // 获取解释语言（从全局 StreamNote 实例）
+            const explanationLanguage = window.streamNoteInstance?.keywordExplanationLanguage || "original";
+
+            console.log(`[KeywordExtractor] Fetching explanation for "${keyword}" in ${explanationLanguage}`);
+
+            const response = await fetch(this.explanationApiUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    keyword: keyword,
+                    language: explanationLanguage
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            const explanation = data.explanation || "No explanation available";
+
+            console.log(`[KeywordExtractor] Got explanation: ${explanation.substring(0, 50)}...`);
+
+            // 显示解释
+            contentElement.innerHTML = `<p>${explanation}</p>`;
+        } catch (error) {
+            console.error("[KeywordExtractor] Error fetching explanation:", error);
+            contentElement.innerHTML = `<p class="error">Failed to load explanation: ${error.message}</p>`;
+        }
     }
 
     /**

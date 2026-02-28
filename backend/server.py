@@ -166,6 +166,63 @@ Format: ["translation1", "translation2", "translation3", ...]"""
         traceback.print_exc()
         return {"error": str(e)}, 500
 
+
+@app.route("/api/explain-keyword", methods=["POST"])
+def explain_keyword():
+    """
+    生成关键词解释 API (AI 驱动 - OpenAI)
+    """
+    try:
+        data = request.json
+        keyword = data.get("keyword", "").strip()
+        language = data.get("language", "original")  # original 表示英文解释
+        
+        if not keyword:
+            return jsonify({"explanation": ""})
+        
+        print(f"[EXPLAIN KEYWORD] keyword='{keyword}', language='{language}'")
+        
+        if language == "original":
+            # 英文解释
+            system_message = f"""You are an expert educator. Provide a clear, concise explanation of the following keyword/term.
+Format: One paragraph (2-3 sentences maximum), explain what this term means and its context.
+Keep it simple and suitable for students."""
+            user_message = f"Explain this keyword: {keyword}"
+        else:
+            # 其他语言的解释
+            system_message = f"""You are an expert educator who speaks {language}. 
+Provide a clear, concise explanation of the following keyword/term in {language}.
+Format: One paragraph (2-3 sentences maximum), explain what this term means and its context.
+Keep it simple and suitable for students."""
+            user_message = f"Explain this keyword in {language}: {keyword}"
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_message
+                },
+                {
+                    "role": "user",
+                    "content": user_message
+                }
+            ],
+            temperature=0.7,
+            max_tokens=150
+        )
+        
+        explanation = response.choices[0].message.content.strip()
+        print(f"[EXPLAIN KEYWORD] Generated explanation: {explanation[:80]}")
+        
+        return jsonify({"explanation": explanation})
+        
+    except Exception as e:
+        print(f"[ERROR] Keyword explanation: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}, 500
+
 @app.route("/health", methods=["GET"])
 def health_check():
     return {"status": "ok"}
