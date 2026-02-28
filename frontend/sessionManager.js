@@ -93,7 +93,7 @@ class SessionManager {
      */
     createNewSession(name = null) {
         const id = Date.now().toString();
-        
+
         // Generate default name using ISO 8601 format (YYYY-MM-DD HH:MM:SS)
         let defaultName = name;
         if (!defaultName) {
@@ -444,7 +444,7 @@ class SessionManager {
 
         const togglePanel = () => {
             sessionPanel.classList.toggle('expanded');
-            
+
             // Update button active state
             const isExpanded = sessionPanel.classList.contains('expanded');
             if (isExpanded) {
@@ -488,36 +488,14 @@ class SessionManager {
             });
         }
 
-        // 管理按钮
-        const manageBtn = document.getElementById('manageSessionBtn');
-        const manageMenu = document.getElementById('manageMenu');
-
-        if (manageBtn && manageMenu) {
-            manageBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                manageMenu.style.display = manageMenu.style.display === 'none' ? 'block' : 'none';
-            });
-
-            // 点击外部关闭菜单
-            document.addEventListener('click', () => {
-                manageMenu.style.display = 'none';
-            });
-
-            manageMenu.addEventListener('click', (e) => {
-                e.stopPropagation();
-            });
-        }
-
         // 导出当前 session
         document.getElementById('exportCurrentBtn')?.addEventListener('click', () => {
             this.exportCurrentSession();
-            manageMenu.style.display = 'none';
         });
 
         // 导出所有 sessions
         document.getElementById('exportAllBtn')?.addEventListener('click', () => {
             this.exportAllSessions();
-            manageMenu.style.display = 'none';
         });
 
         // 导入
@@ -526,7 +504,6 @@ class SessionManager {
 
         importBtn?.addEventListener('click', () => {
             importInput.click();
-            manageMenu.style.display = 'none';
         });
 
         importInput?.addEventListener('change', (e) => {
@@ -540,7 +517,6 @@ class SessionManager {
         // 清空所有数据
         document.getElementById('clearAllBtn')?.addEventListener('click', () => {
             this.clearAllSessions();
-            manageMenu.style.display = 'none';
         });
 
         this.renderSessionList();
