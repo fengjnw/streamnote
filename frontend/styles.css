@@ -441,6 +441,7 @@ header h1 {
     flex-shrink: 0;
     gap: 8px;
     border-bottom: none;
+    min-height: 48px;
 }
 
 .text-panel-header h3 {
@@ -454,7 +455,11 @@ header h1 {
     margin-left: auto;
 }
 
-.text-panel-header .language-selector {
+.text-panel-header .language-selector,
+.side-panel-header .language-selector {
+    height: 28px !important;
+    padding: 4px 6px !important;
+    font-size: 0.85em !important;
     margin-right: 8px;
 }
 
@@ -710,6 +715,7 @@ header h1 {
     flex-shrink: 0;
     gap: 8px;
     border-bottom: none;
+    min-height: 48px;
 }
 
 .side-panel-header h3 {
