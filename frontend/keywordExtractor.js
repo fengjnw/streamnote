@@ -20,6 +20,11 @@ class KeywordExtractor {
         // 解释缓存: {"keyword|language": "explanation", ...}
         this.explanationCache = {};
 
+        // 查询历史: [term1, term2, ...] (保持查询顺序，新的在前)
+        this.queryHistory = [];
+        this.maxHistorySize = 20;  // 最多保留20条历史
+        this.historyElement = config.historyElement || document.getElementById("query-history-list");
+
         console.log("[KeywordExtractor] Initialized", config);
     }
 
@@ -163,6 +168,7 @@ class KeywordExtractor {
             if (this.explanationCache[cacheKey]) {
                 console.log(`[KeywordExtractor] Using cached explanation for "${keyword}"`);
                 contentElement.innerHTML = `<p>${this.explanationCache[cacheKey]}</p>`;
+                this.addToQueryHistory(keyword);
                 return;
             }
 
@@ -191,10 +197,87 @@ class KeywordExtractor {
 
             // 显示解释
             contentElement.innerHTML = `<p>${explanation}</p>`;
+
+            // 添加到查询历史
+            this.addToQueryHistory(keyword);
         } catch (error) {
             console.error("[KeywordExtractor] Error fetching explanation:", error);
             contentElement.innerHTML = `<p class="error">Failed to load explanation: ${error.message}</p>`;
         }
+    }
+
+    /**
+     * 添加项目到查询历史
+     * @param {string} term - 查询词
+     */
+    addToQueryHistory(term) {
+        term = term.trim();
+        if (!term) return;
+
+        console.log(`[KeywordExtractor] Adding to history: "${term}"`);
+
+        // 如果已经在历史中，先删除（将其移到最前）
+        this.queryHistory = this.queryHistory.filter(t => t !== term);
+
+        // 添加到最前
+        this.queryHistory.unshift(term);
+
+        // 限制历史大小
+        if (this.queryHistory.length > this.maxHistorySize) {
+            this.queryHistory = this.queryHistory.slice(0, this.maxHistorySize);
+        }
+
+        // 更新显示
+        this.displayQueryHistory();
+
+        // 保存到 session
+        if (window.streamNoteInstance) {
+            window.streamNoteInstance.saveSettingsToSession();
+        }
+    }
+
+    /**
+     * 删除查询历史中的项
+     * @param {string} term - 要删除的词
+     */
+    removeFromQueryHistory(term) {
+        console.log(`[KeywordExtractor] Removing from history: "${term}"`);
+        this.queryHistory = this.queryHistory.filter(t => t !== term);
+        this.displayQueryHistory();
+
+        // 保存到 session
+        if (window.streamNoteInstance) {
+            window.streamNoteInstance.saveSettingsToSession();
+        }
+    }
+
+    /**
+     * 显示查询历史
+     */
+    displayQueryHistory() {
+        if (!this.historyElement) {
+            return;
+        }
+
+        if (this.queryHistory.length === 0) {
+            this.historyElement.innerHTML = '<p class="placeholder">No queries yet</p>';
+            return;
+        }
+
+        const html = `
+            <div class="history-items">
+                ${this.queryHistory.map((term, index) => `
+                    <div class="history-item">
+                        <span class="history-term" onclick="window.keywordExtractorInstance.showExplanation('${term.replace(/'/g, "\\'")}')" style="cursor: pointer; flex: 1;">
+                            ${term}
+                        </span>
+                        <button class="history-delete-btn" onclick="window.keywordExtractorInstance.removeFromQueryHistory('${term.replace(/'/g, "\\'")}')" title="Remove">×</button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        this.historyElement.innerHTML = html;
     }
 
     /**
