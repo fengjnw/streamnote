@@ -32,7 +32,7 @@ class StreamNote {
         this.targetLanguage = "Chinese";
 
         // 关键词解释功能
-        this.keywordExplanationLanguage = "original";
+        this.keywordExplanationLanguage = "English";
 
         // 全局转录状态（跨 session）
         this.recordingSessionId = null;  // 记录当前正在转录的 session
@@ -130,7 +130,7 @@ class StreamNote {
         if (session.settings) {
             this.translationEnabled = session.settings.translationEnabled;
             this.targetLanguage = session.settings.targetLanguage;
-            this.keywordExplanationLanguage = session.settings.keywordExplanationLanguage || "original";
+            this.keywordExplanationLanguage = session.settings.keywordExplanationLanguage || "English";
 
             // 更新 UI 控件状态
             const languageSelector = document.getElementById("target-language");
@@ -141,11 +141,6 @@ class StreamNote {
             const explanationLanguageSelector = document.getElementById("keyword-explanation-language");
             if (explanationLanguageSelector) {
                 explanationLanguageSelector.value = this.keywordExplanationLanguage;
-            }
-
-            const keywordToggle = document.getElementById("keyword-toggle");
-            if (keywordToggle) {
-                keywordToggle.checked = session.settings.keywordEnabled;
             }
 
             const intensitySlider = document.getElementById("keyword-intensity");
@@ -411,49 +406,6 @@ class StreamNote {
         // 使 KeywordExtractor 全局可访问
         window.keywordExtractorInstance = this.keywordExtractor;
 
-        // 绑定开关
-        const toggleCheckbox = document.getElementById("keyword-toggle");
-        if (toggleCheckbox) {
-            toggleCheckbox.addEventListener("change", (e) => {
-                this.keywordExtractor.setEnabled(e.target.checked);
-
-                // 显示/隐藏关键词区域
-                const keywordsSection = document.querySelector(".keywords-section");
-                if (keywordsSection) {
-                    keywordsSection.style.display = e.target.checked ? 'flex' : 'none';
-                }
-
-                if (e.target.checked) {
-                    // 重新打开时，恢复已有的关键词显示和高亮
-                    const keywordsDisplay = document.getElementById("keywords-display");
-                    if (this.keywordExtractor.allCollectedKeywords.length > 0) {
-                        // 恢复关键词显示
-                        if (keywordsDisplay) {
-                            this.keywordExtractor.displayKeywordsList(
-                                this.keywordExtractor.allCollectedKeywords,
-                                keywordsDisplay
-                            );
-                        }
-                        // 恢复高亮
-                        // 高亮功能已删除
-
-                        // 恢复译文关键词（如果翻译功能开启）如果没有禁用，也保留这个调用
-                        // 但我们已经删除了高亮，所以可以删除这一行
-                        // 实际上这个代码段应该也被删掉，但让我检查一下上下文
-                        // 重新看一遍第292行
-                    } else {
-                        // 如果没有缓存的关键词，显示占位文本
-                        if (keywordsDisplay) {
-                            keywordsDisplay.innerHTML = '<p class="placeholder">Keywords will appear here...</p>';
-                        }
-                    }
-                }
-
-                // 保存设置到 session
-                this.saveSettingsToSession();
-            });
-        }
-
         // 绑定强度滑块
         const intensitySlider = document.getElementById("keyword-intensity");
         const intensityValue = document.getElementById("intensity-value");
@@ -569,8 +521,8 @@ class StreamNote {
         const autoExtractKeywordsBtn = document.getElementById("autoExtractKeywordsBtn");
         if (autoExtractKeywordsBtn) {
             autoExtractKeywordsBtn.addEventListener("click", async () => {
-                if (!this.keywordExtractor || !this.keywordExtractor.enabled) {
-                    this.showStatusMessage("Enable keywords first", 2000);
+                if (!this.keywordExtractor) {
+                    this.showStatusMessage("Keyword extractor not initialized", 2000);
                     return;
                 }
 
@@ -622,6 +574,16 @@ class StreamNote {
             hideAllContent();
             contentEl.classList.add("active");
             sidePanelTitle.textContent = title;
+
+            // Show/hide auto extract keywords button and explanation language selector based on active tab
+            const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
+            const explanationLangSelector = document.getElementById("keyword-explanation-language");
+            if (autoExtractBtn) {
+                autoExtractBtn.style.display = contentEl === keywordsContent ? 'block' : 'none';
+            }
+            if (explanationLangSelector) {
+                explanationLangSelector.style.display = (contentEl === keywordsContent || contentEl === historyContent) ? 'block' : 'none';
+            }
 
             // Set flag to prevent resize-induced scroll from closing autoScroll
             this.isSyncingScroll = true;

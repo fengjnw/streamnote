@@ -175,14 +175,14 @@ def explain_keyword():
     try:
         data = request.json
         keyword = data.get("keyword", "").strip()
-        language = data.get("language", "original")  # original 表示英文解释
+        language = data.get("language", "English")  # English 表示英文解释
         
         if not keyword:
             return jsonify({"explanation": ""})
         
         print(f"[EXPLAIN KEYWORD] keyword='{keyword}', language='{language}'")
         
-        if language == "original":
+        if language == "English":
             # 英文解释
             system_message = f"""You are an expert educator. Provide a clear, concise explanation of the following keyword/term.
 Format: One paragraph (2-3 sentences maximum), explain what this term means and its context.

@@ -218,7 +218,7 @@ class KeywordExtractor {
 
         try {
             // 获取解释语言（从全局 StreamNote 实例）
-            const explanationLanguage = window.streamNoteInstance?.keywordExplanationLanguage || "original";
+            const explanationLanguage = window.streamNoteInstance?.keywordExplanationLanguage || "English";
 
             // 生成缓存 key
             const cacheKey = `${keyword}|${explanationLanguage}`;

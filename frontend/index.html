@@ -125,6 +125,14 @@
                         <!-- Panel Header -->
                         <div class="text-panel-header">
                             <h3>Translation</h3>
+                            <select id="target-language" class="language-selector" style="height: 32px; padding: 4px 8px; font-size: 0.9em;">
+                                <option value="Chinese">中文</option>
+                                <option value="English">English</option>
+                                <option value="Spanish">Español</option>
+                                <option value="French">Français</option>
+                                <option value="Japanese">日本語</option>
+                                <option value="Korean">한국어</option>
+                            </select>
                             <button id="closeTranslationPanelBtn" class="btn-icon toggle-btn"
                                 title="Close Panel">✕</button>
                         </div>
@@ -147,6 +155,16 @@
                     <!-- Side Panel Header -->
                     <div class="side-panel-header">
                         <h3 id="sidePanelTitle">Keywords</h3>
+                        <button id="autoExtractKeywordsBtn" class="btn-icon" title="Auto extract keywords">🔄</button>
+                        <select id="keyword-explanation-language" class="language-selector"
+                            style="height: 32px; padding: 4px 8px; font-size: 0.9em;">
+                            <option value="English">English</option>
+                            <option value="Chinese">中文</option>
+                            <option value="Spanish">Español</option>
+                            <option value="French">Français</option>
+                            <option value="Japanese">日本語</option>
+                            <option value="Korean">한국어</option>
+                        </select>
                         <button id="closeSidePanelBtn" class="btn-icon toggle-btn" title="Close Panel">✕</button>
                     </div>
 
@@ -154,11 +172,6 @@
                     <div id="keywordsContent" class="panel-content active">
                         <div id="keywords-display" class="keywords-display">
                             <p class="placeholder">Select text to add keywords...</p>
-                        </div>
-                        <div
-                            style="padding: 8px 12px; background: #f8f9fa; border-top: 1px solid #e9ecef; margin-top: auto;">
-                            <button id="autoExtractKeywordsBtn" class="btn-icon"
-                                title="Auto extract keywords">🔄</button>
                         </div>
                     </div>
 
@@ -172,13 +185,6 @@
                     <!-- Settings Content -->
                     <div id="settingsContent" class="panel-content">
                         <div class="settings-group">
-                            <label class="settings-label">
-                                <input type="checkbox" id="keyword-toggle" checked>
-                                <span>Enable Keywords</span>
-                            </label>
-                        </div>
-
-                        <div class="settings-group">
                             <label class="settings-label" for="keyword-intensity">Keyword Intensity:</label>
                             <div class="slider-container">
                                 <input type="range" id="keyword-intensity" min="1" max="10" value="5"
@@ -187,32 +193,7 @@
                             </div>
                         </div>
 
-                        <div class="settings-group">
-                            <label class="settings-label" for="target-language">Target Language:</label>
-                            <select id="target-language" class="language-selector">
-                                <option value="Chinese">中文</option>
-                                <option value="English">English</option>
-                                <option value="Spanish">Español</option>
-                                <option value="French">Français</option>
-                                <option value="Japanese">日本語</option>
-                                <option value="Korean">한국어</option>
-                            </select>
-                        </div>
-
                         <div class="settings-divider"></div>
-
-                        <div class="settings-group">
-                            <label class="settings-label" for="keyword-explanation-language">Keyword Explanation
-                                Language:</label>
-                            <select id="keyword-explanation-language" class="language-selector">
-                                <option value="original">Original (English)</option>
-                                <option value="Chinese">中文</option>
-                                <option value="Spanish">Español</option>
-                                <option value="French">Français</option>
-                                <option value="Japanese">日本語</option>
-                                <option value="Korean">한국어</option>
-                            </select>
-                        </div>
                     </div>
                 </div>
             </div>

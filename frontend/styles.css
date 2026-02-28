@@ -433,7 +433,7 @@ header h1 {
 /* Panel Header */
 .text-panel-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     padding: 12px 15px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -447,6 +447,15 @@ header h1 {
     margin: 0;
     font-size: 1em;
     font-weight: 600;
+    flex-shrink: 0;
+}
+
+.text-panel-header > :nth-child(2) {
+    margin-left: auto;
+}
+
+.text-panel-header .language-selector {
+    margin-right: 8px;
 }
 
 /* Panel Content */
