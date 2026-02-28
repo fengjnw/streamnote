@@ -93,7 +93,24 @@ class SessionManager {
      */
     createNewSession(name = null) {
         const id = Date.now().toString();
-        const defaultName = name || `Session ${Object.keys(this.sessions).length + 1}`;
+        
+        // Generate default name using current date and time
+        let defaultName = name;
+        if (!defaultName) {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+            const timeStr = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            defaultName = `${dateStr} ${timeStr}`;
+        }
 
         this.sessions[id] = {
             id: id,
