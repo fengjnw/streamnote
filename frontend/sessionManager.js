@@ -435,6 +435,14 @@ class SessionManager {
             const isCollapsed = sessionPanel.classList.toggle('collapsed');
             mainWrapper.classList.toggle('session-panel-collapsed');
 
+            // Set flag to prevent resize-induced scroll from affecting auto-scroll/content
+            if (window.streamNoteInstance) {
+                window.streamNoteInstance.isSyncingScroll = true;
+                setTimeout(() => {
+                    window.streamNoteInstance.isSyncingScroll = false;
+                }, 350); // Match the 0.3s transition + buffer
+            }
+
             if (toggleBtn) {
                 toggleBtn.textContent = isCollapsed ? '▶' : '◀';
             }
