@@ -68,20 +68,51 @@ header h1 {
 
 /* ================ Session 管理面板 ================ */
 .session-panel {
-    width: 200px;
+    width: 0;
     background: white;
     border-right: 1px solid #e9ecef;
     display: flex;
     flex-direction: column;
-    transition: all 0.3s ease;
+    transition: width 0.3s ease;
     overflow: hidden;
 }
 
-.session-panel.collapsed {
-    width: 0;
-    border-right: none;
+.session-panel.expanded {
+    width: 320px;
 }
 
+/* Session Panel Header - 统一表现 */
+.session-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    flex-shrink: 0;
+    gap: 8px;
+    border-bottom: none;
+}
+
+.session-panel-header h3 {
+    margin: 0;
+    font-size: 1em;
+    font-weight: 600;
+    flex: 1;
+}
+
+/* Session Panel Content - 统一表现 */
+.session-panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* 保留旧的session-header和session-header h3用于兼容性 */
 .session-header {
     display: flex;
     align-items: center;
@@ -123,35 +154,12 @@ header h1 {
     transform: scale(1.08);
 }
 
-.open-session-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white !important;
-    border: none;
-    border-radius: 6px;
-    padding: 10px 20px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    cursor: pointer;
-    font-size: 1em;
-    font-weight: 600;
-    transition: all 0.3s;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-    white-space: nowrap;
-}
-
-.open-session-btn:hover {
-    background: linear-gradient(135deg, #5568d3 0%, #653a91 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.5);
-}
-
 .session-list {
     flex: 1;
     overflow-y: auto;
-    padding: 12px 15px;
+    padding: 12px 12px;
     background: white;
+    margin-bottom: auto;
 }
 
 .session-item {
@@ -241,6 +249,7 @@ header h1 {
     padding: 12px 15px;
     background: #f8f9fa;
     border-top: 1px solid #e9ecef;
+    flex-shrink: 0;
 }
 
 .current-session-info input {
