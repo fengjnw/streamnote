@@ -205,19 +205,13 @@ class StreamNote {
 
             // 如果关键词功能开启且有保存的关键词，恢复它们
             if (session.settings.keywordEnabled && session.keywords && session.keywords.length > 0) {
-                this.keywordExtractor.allCollectedKeywords = [...session.keywords];
-
-                // 显示关键词
-                const keywordsDisplay = document.getElementById("keywords-display");
-                if (keywordsDisplay) {
-                    this.keywordExtractor.displayKeywordsList(session.keywords, keywordsDisplay);
-                }
+                // 向后兼容：旧数据中没有来源标记，假设都是自动提取的
+                this.keywordExtractor.autoKeywords = [...session.keywords];
+                this.keywordExtractor.manualKeywords = [];
+                this.keywordExtractor.updateAllKeywordDisplays();
             } else {
                 // 没有关键词，清空显示
-                const keywordsDisplay = document.getElementById("keywords-display");
-                if (keywordsDisplay) {
-                    keywordsDisplay.innerHTML = '<p class="placeholder">Keywords will appear here...</p>';
-                }
+                this.keywordExtractor.updateAllKeywordDisplays();
             }
         }
 
@@ -747,6 +741,49 @@ class StreamNote {
             // Set initial state
             this.updateAutoScrollButton();
         }
+
+        // 初始化关键词标签页切换
+        this.initKeywordsTabSwitcher();
+    }
+
+    /**
+     * 初始化关键词标签页切换功能
+     */
+    initKeywordsTabSwitcher() {
+        const tabBtns = document.querySelectorAll(".keywords-tab-btn");
+        const tabContents = document.querySelectorAll(".keywords-tab-content");
+        const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
+
+        if (!tabBtns.length) return;
+
+        // 设置初始状态：刷新按钮禁用（因为默认显示手动标签页）
+        if (autoExtractBtn) {
+            autoExtractBtn.style.opacity = "0.3";
+            autoExtractBtn.style.pointerEvents = "none";
+        }
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const tabName = btn.getAttribute("data-tab");
+
+                // 移除所有活跃状态
+                tabBtns.forEach(b => b.classList.remove("active"));
+                tabContents.forEach(c => c.classList.remove("active"));
+
+                // 激活当前标签页
+                btn.classList.add("active");
+                const activeContent = document.getElementById(`${tabName}-keywords-display`);
+                if (activeContent) {
+                    activeContent.classList.add("active");
+                }
+
+                // 根据标签页控制刷新按钮显示
+                if (autoExtractBtn) {
+                    autoExtractBtn.style.opacity = tabName === "auto" ? "1" : "0.3";
+                    autoExtractBtn.style.pointerEvents = tabName === "auto" ? "auto" : "none";
+                }
+            });
+        });
     }
 
     /**
@@ -877,23 +914,18 @@ class StreamNote {
 
         const keyword = this.selectedText.trim();
 
-        // 检查是否已存在
-        if (this.keywordExtractor.allCollectedKeywords.includes(keyword)) {
+        // 检查是否已存在（手动或自动）
+        const allKeywords = [...this.keywordExtractor.manualKeywords, ...this.keywordExtractor.autoKeywords];
+        if (allKeywords.includes(keyword)) {
             this.showStatusMessage("This keyword already exists", 1500);
             return;
         }
 
-        // 添加关键词
-        this.keywordExtractor.allCollectedKeywords.push(keyword);
+        // 添加到手动关键词
+        this.keywordExtractor.manualKeywords.push(keyword);
 
-        // 更新显示
-        const keywordsOriginalDisplay = document.getElementById("keywords-display");
-        if (keywordsOriginalDisplay) {
-            this.keywordExtractor.displayKeywordsList(
-                this.keywordExtractor.allCollectedKeywords,
-                keywordsOriginalDisplay
-            );
-        }
+        // 更新所有显示
+        this.keywordExtractor.updateAllKeywordDisplays();
 
         // 保存到 session
         this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
@@ -1524,16 +1556,8 @@ class StreamNote {
             // 基于整个文本提取关键词
             await this.keywordExtractor.processText(this.currentTranscriptText);
 
-            // 显示原文关键词
-            const keywordsOriginalDisplay = document.getElementById("keywords-display");
-            if (keywordsOriginalDisplay && this.keywordExtractor.allCollectedKeywords.length > 0) {
-                this.keywordExtractor.displayKeywordsList(this.keywordExtractor.allCollectedKeywords, keywordsOriginalDisplay);
-            }
-
-            // 翻译并显示译文关键词
-            if (this.translationEnabled && this.keywordExtractor.allCollectedKeywords.length > 0) {
-                // 关键词翻译已删除
-            }
+            // 更新所有显示
+            this.keywordExtractor.updateAllKeywordDisplays();
         }
     }
 
@@ -1551,22 +1575,14 @@ class StreamNote {
         if (this.currentTranscriptText.length > 10) {
             console.log(`[StreamNote] Reprocessing keywords with new intensity: ${this.keywordExtractor.intensity}`);
 
-            // 清空旧的关键词
-            this.keywordExtractor.allCollectedKeywords = [];
+            // 清空自动提取的关键词（保留手动添加的）
+            this.keywordExtractor.autoKeywords = [];
 
             // 重新提取
             await this.keywordExtractor.processText(this.currentTranscriptText);
 
-            // 显示原文关键词
-            const keywordsOriginalDisplay = document.getElementById("keywords-display");
-            if (keywordsOriginalDisplay && this.keywordExtractor.allCollectedKeywords.length > 0) {
-                this.keywordExtractor.displayKeywordsList(this.keywordExtractor.allCollectedKeywords, keywordsOriginalDisplay);
-            }
-
-            // 翻译并显示译文关键词（缓存已清除，会重新翻译）
-            if (this.translationEnabled && this.keywordExtractor.allCollectedKeywords.length > 0) {
-                // 关键词翻译已删除
-            }
+            // 更新所有显示
+            this.keywordExtractor.updateAllKeywordDisplays();
         }
     }
 
@@ -1781,24 +1797,25 @@ class StreamNote {
     deleteKeyword(keyword) {
         if (!this.keywordExtractor) return;
 
-        const index = this.keywordExtractor.allCollectedKeywords.indexOf(keyword);
-        if (index > -1) {
-            this.keywordExtractor.allCollectedKeywords.splice(index, 1);
+        // 从手动或自动关键词中删除
+        const manualIndex = this.keywordExtractor.manualKeywords.indexOf(keyword);
+        const autoIndex = this.keywordExtractor.autoKeywords.indexOf(keyword);
 
-            // 更新显示
-            const keywordsDisplay = document.getElementById("keywords-display");
-            if (keywordsDisplay) {
-                this.keywordExtractor.displayKeywordsList(
-                    this.keywordExtractor.allCollectedKeywords,
-                    keywordsDisplay
-                );
-            }
-
-            // 保存到 session
-            this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
-
-            this.showStatusMessage(`✓ Removed "${keyword}"`, 1200);
+        if (manualIndex > -1) {
+            this.keywordExtractor.manualKeywords.splice(manualIndex, 1);
+        } else if (autoIndex > -1) {
+            this.keywordExtractor.autoKeywords.splice(autoIndex, 1);
+        } else {
+            return;  // 关键词不存在
         }
+
+        // 更新所有显示
+        this.keywordExtractor.updateAllKeywordDisplays();
+
+        // 保存到 session
+        this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
+
+        this.showStatusMessage(`✓ Removed "${keyword}"`, 1200);
     }
 }
 

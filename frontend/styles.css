@@ -1410,3 +1410,57 @@ header h1 {
     background: #ffebee;
     border-color: #d32f2f;
 }
+
+/* ==================== Keywords Tab Navigation ==================== */
+.keywords-tab-nav {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid #e0e0e0;
+    margin: -12px -15px 12px -15px;
+    padding: 0 15px;
+    background: #fafafa;
+}
+
+.keywords-tab-btn {
+    background: none;
+    border: none;
+    padding: 10px 12px;
+    font-size: 0.95em;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+}
+
+.keywords-tab-btn:hover {
+    color: #333;
+}
+
+.keywords-tab-btn.active {
+    color: #5a7c99;
+    font-weight: 600;
+}
+
+.keywords-tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #5a7c99;
+}
+
+/* Keywords Tab Content */
+.keywords-tab-content {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+}
+
+.keywords-tab-content.active {
+    display: flex;
+}

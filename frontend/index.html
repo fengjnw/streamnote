@@ -165,8 +165,24 @@
 
                     <!-- Keywords Content -->
                     <div id="keywordsContent" class="panel-content active">
-                        <div id="keywords-display" class="keywords-display">
+                        <!-- Keywords Tab Navigation -->
+                        <div class="keywords-tab-nav">
+                            <button class="keywords-tab-btn active" data-tab="manual" title="Manual Keywords">
+                                🔖 Manual
+                            </button>
+                            <button class="keywords-tab-btn" data-tab="auto" title="Auto-extracted Keywords">
+                                🤖 Auto-extracted
+                            </button>
+                        </div>
+
+                        <!-- Manual Keywords Section -->
+                        <div id="manual-keywords-display" class="keywords-tab-content active">
                             <p class="placeholder">Select text to add keywords...</p>
+                        </div>
+
+                        <!-- Auto-extracted Keywords Section -->
+                        <div id="auto-keywords-display" class="keywords-tab-content">
+                            <p class="placeholder">Click 🔄 to extract keywords...</p>
                         </div>
                     </div>
 

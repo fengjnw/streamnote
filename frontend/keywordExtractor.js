@@ -12,7 +12,11 @@ class KeywordExtractor {
         this.intensity = 5;   // 强度等级 (1-10)，表示关键词相对比例
 
         this.currentKeywords = [];
-        this.allCollectedKeywords = [];  // 保存所有收集到的关键词
+        this.allCollectedKeywords = [];  // 保存所有收集到的关键词（向后兼容）
+
+        // 分类存储
+        this.manualKeywords = [];    // 手动添加的关键词
+        this.autoKeywords = [];      // 自动提取的关键词
 
         // 解释 API
         this.explanationApiUrl = config.explanationApiUrl || "http://localhost:5001/api/explain-keyword";
@@ -157,6 +161,37 @@ class KeywordExtractor {
         const element = targetElement || this.keywordElement;
         const uniqueKeywords = [...new Set(keywords)];
         this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "No keywords detected");
+    }
+
+    /**
+     * 显示手动关键词列表
+     */
+    displayManualKeywords() {
+        const element = document.getElementById("manual-keywords-display");
+        if (!element) return;
+        const uniqueKeywords = [...new Set(this.manualKeywords)];
+        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "No manual keywords yet");
+    }
+
+    /**
+     * 显示自动提取的关键词列表
+     */
+    displayAutoKeywords() {
+        const element = document.getElementById("auto-keywords-display");
+        if (!element) return;
+        const uniqueKeywords = [...new Set(this.autoKeywords)];
+        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "No auto-extracted keywords yet");
+    }
+
+    /**
+     * 同时更新所有关键词列表（手动 + 自动）
+     */
+    updateAllKeywordDisplays() {
+        this.displayManualKeywords();
+        this.displayAutoKeywords();
+
+        // 保持向后兼容：更新 allCollectedKeywords
+        this.allCollectedKeywords = [...this.manualKeywords, ...this.autoKeywords];
     }
 
     /**
@@ -342,11 +377,9 @@ class KeywordExtractor {
         const keywords = await this.extractKeywords(text);
 
         if (keywords.length > 0) {
-            // 合并新关键词到收集的关键词集合
-            this.allCollectedKeywords = [...new Set([...this.allCollectedKeywords, ...keywords])];
-            console.log(`[KeywordExtractor] All collected keywords: ${this.allCollectedKeywords.join(', ')}`);
-
-            this.displayKeywordsList(this.allCollectedKeywords);
+            // 将新关键词添加到自动提取的关键词，避免重复
+            this.autoKeywords = [...new Set([...this.autoKeywords, ...keywords])];
+            console.log(`[KeywordExtractor] Auto keywords: ${this.autoKeywords.join(', ')}`);
         }
 
         return keywords;
@@ -389,6 +422,8 @@ class KeywordExtractor {
     reset() {
         this.currentKeywords = [];
         this.allCollectedKeywords = [];
+        this.manualKeywords = [];
+        this.autoKeywords = [];
         if (this.keywordElement) {
             this.keywordElement.innerHTML = '';
         }
