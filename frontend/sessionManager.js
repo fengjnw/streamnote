@@ -284,6 +284,8 @@ class SessionManager {
             }
 
             return true;
+        }
+    }
 
     /**
      * 导出当前 session 为 JSON 文件
@@ -404,6 +406,8 @@ class SessionManager {
             } else {
                 // 没有 session 了，创建新的
                 this.createNewSession("Default Session");
+            }
+        }
     }
 
     /**
