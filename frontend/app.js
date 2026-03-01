@@ -6,7 +6,6 @@ class StreamNote {
         this.chunkIndex = 0;
         this.startTime = null;
         this.audioChunks = [];
-        this.durationInterval = null;
         this.statsUpdateInterval = null;
 
         // 停顿检测
@@ -278,27 +277,6 @@ class StreamNote {
             const seconds = String(date.getSeconds()).padStart(2, '0');
             const dateStr = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
             dateDisplay.textContent = dateStr;
-        }
-
-        // 计算会话时长
-        const duration = Math.floor((Date.now() - startTime) / 1000);
-        const minutes = Math.floor(duration / 60);
-        const seconds = duration % 60;
-        const durationDisplay = document.getElementById('sessionDurationDisplay');
-        if (durationDisplay) {
-            durationDisplay.textContent = `${minutes}:${String(seconds).padStart(2, '0')}`;
-        }
-
-        // 计算转录字数
-        let totalChars = 0;
-        if (session.transcripts) {
-            Object.values(session.transcripts).forEach(text => {
-                totalChars += (text || '').length;
-            });
-        }
-        const charCountDisplay = document.getElementById('sessionCharCountDisplay');
-        if (charCountDisplay) {
-            charCountDisplay.textContent = totalChars.toLocaleString();
         }
 
         // 计算 items 数量
@@ -1137,7 +1115,6 @@ class StreamNote {
             document.getElementById("startBtn").disabled = true;
             document.getElementById("stopBtn").disabled = false;
             this.updateStatus("Recording...");
-            this.startDurationUpdate();
 
             // 每秒更新 session 统计信息
             if (this.statsUpdateInterval) clearInterval(this.statsUpdateInterval);
@@ -1184,10 +1161,6 @@ class StreamNote {
 
             // 停止时更新一次统计信息
             this.updateSessionStats();
-
-            if (this.durationInterval) {
-                clearInterval(this.durationInterval);
-            }
         }
     }
 
@@ -1960,17 +1933,7 @@ class StreamNote {
         });
     }
 
-    startDurationUpdate() {
-        this.durationInterval = setInterval(() => {
-            if (this.isRecording) {
-                const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
-                const minutes = Math.floor(elapsed / 60);
-                const seconds = elapsed % 60;
-                document.getElementById("duration").textContent =
-                    `Duration: ${minutes}:${seconds.toString().padStart(2, "0")}`;
-            }
-        }, 1000);
-    }
+
     /**
      * 删除关键词
      */
