@@ -34,6 +34,9 @@ class StreamNote {
         // 关键词解释功能
         this.keywordExplanationLanguage = "English";
 
+        // 总结缓存
+        this.summaryCache = {};
+
         // 全局转录状态（跨 session）
         this.recordingSessionId = null;  // 记录当前正在转录的 session
         this.displaySessionId = null;    // 当前显示的 session（用户看到的）
@@ -197,6 +200,12 @@ class StreamNote {
                     this.keywordExtractor.queryHistory = [];
                     this.keywordExtractor.displayQueryHistory();
                 }
+
+                // 恢复总结缓存
+                this.summaryCache = session.settings.summaryCache ? { ...session.settings.summaryCache } : {};
+                if (session.settings.summaryCache) {
+                    console.log(`[StreamNote] Restored ${Object.keys(this.summaryCache).length} cached summaries`);
+                }
             }
         }
 
@@ -216,7 +225,13 @@ class StreamNote {
         // 清空 Summary 显示
         const summaryDisplay = document.getElementById("summary-display");
         if (summaryDisplay) {
-            summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
+            // 检查当前语言是否有缓存，有就直接显示
+            if (this.summaryCache && this.summaryCache[this.keywordExplanationLanguage]) {
+                const cachedSummary = this.summaryCache[this.keywordExplanationLanguage];
+                summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
+            } else {
+                summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
+            }
         }
 
         this.updateDisplay();
@@ -384,7 +399,8 @@ class StreamNote {
             keywordIntensity: this.keywordExtractor ? this.keywordExtractor.intensity : 5,
             keywordExplanationLanguage: this.keywordExplanationLanguage,
             explanationCache: this.keywordExtractor ? this.keywordExtractor.explanationCache : {},
-            queryHistory: this.keywordExtractor ? this.keywordExtractor.queryHistory : []
+            queryHistory: this.keywordExtractor ? this.keywordExtractor.queryHistory : [],
+            summaryCache: this.summaryCache
         };
         this.sessionManager.updateCurrentSettings(settings);
     }
@@ -402,7 +418,8 @@ class StreamNote {
             keywordIntensity: this.keywordExtractor ? this.keywordExtractor.intensity : 5,
             keywordExplanationLanguage: this.keywordExplanationLanguage,
             explanationCache: this.keywordExtractor ? this.keywordExtractor.explanationCache : {},
-            queryHistory: this.keywordExtractor ? this.keywordExtractor.queryHistory : []
+            queryHistory: this.keywordExtractor ? this.keywordExtractor.queryHistory : [],
+            summaryCache: this.summaryCache
         };
         this.sessionManager.updateCurrentSettings(settings);
     }
@@ -557,6 +574,18 @@ class StreamNote {
             explanationLanguageSelector.addEventListener("change", (e) => {
                 this.keywordExplanationLanguage = e.target.value;
                 console.log(`[KEYWORD EXPLANATION] Language changed to ${this.keywordExplanationLanguage}`);
+                
+                // 更新 Summary 显示
+                const summaryDisplay = document.getElementById("summary-display");
+                if (summaryDisplay) {
+                    if (this.summaryCache && this.summaryCache[this.keywordExplanationLanguage]) {
+                        const cachedSummary = this.summaryCache[this.keywordExplanationLanguage];
+                        summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
+                    } else {
+                        summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
+                    }
+                }
+                
                 this.saveSettingsToSession();
             });
         }
@@ -1554,7 +1583,14 @@ class StreamNote {
         }
 
         try {
-            console.log(`[SUMMARIZE] Summarizing (text_len=${text.length}, language=${this.keywordExplanationLanguage})`);
+            const language = this.keywordExplanationLanguage;
+            console.log(`[SUMMARIZE] Summarizing (text_len=${text.length}, language=${language})`);
+
+            // 检查该语言的缓存
+            if (this.summaryCache[language]) {
+                console.log("[SUMMARIZE] Using cached summary");
+                return this.summaryCache[language];
+            }
 
             const response = await fetch("http://localhost:5001/api/summarize", {
                 method: "POST",
@@ -1563,7 +1599,7 @@ class StreamNote {
                 },
                 body: JSON.stringify({
                     text: text,
-                    language: this.keywordExplanationLanguage
+                    language: language
                 })
             });
 
@@ -1577,6 +1613,10 @@ class StreamNote {
 
             if (summary) {
                 console.log("[SUMMARIZE] Success:", summary.substring(0, 80));
+                // 按语言缓存结果
+                this.summaryCache[language] = summary;
+                // 立即保存到session
+                this.saveSettingsToSession();
                 return summary;
             }
 
