@@ -1,0 +1,12 @@
+# <type>(<scope>): <subject>
+#
+# <body>
+#
+# <footer>
+
+# Type: feat, fix, docs, style, refactor, perf, test, chore, ci
+# Scope: Optional. Include scope to describe what is being modified (e.g., keywords, layout, api, auth)
+# Subject: Concise description in present tense, max 50 characters
+
+# Body: Explain what and why, not how. Wrap at 72 characters.
+# Footer: Reference issues (Closes #123) or breaking changes (BREAKING CHANGE: ...)
