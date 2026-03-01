@@ -82,18 +82,33 @@ class StreamNote {
         const toggleTranslationPanelBtn = document.getElementById("toggleTranslationPanel");
 
         if (transcriptPanel) {
-            transcriptPanel.classList.add("expanded");
-            // Set button active state
-            if (toggleTranscriptPanelBtn) {
-                toggleTranscriptPanelBtn.classList.add("active");
+            // 初始化时设置为展开（或保留现有状态）
+            if (!transcriptPanel.classList.contains("collapsed") && !transcriptPanel.classList.contains("expanded")) {
+                transcriptPanel.classList.add("expanded");
             }
+            // 根据面板的实际状态设置按钮
+            this.updatePanelButtonState(toggleTranscriptPanelBtn, transcriptPanel);
         }
         if (translationPanel) {
-            translationPanel.classList.add("expanded");
-            // Set button active state
-            if (toggleTranslationPanelBtn) {
-                toggleTranslationPanelBtn.classList.add("active");
+            // 初始化时设置为展开（或保留现有状态）
+            if (!translationPanel.classList.contains("collapsed") && !translationPanel.classList.contains("expanded")) {
+                translationPanel.classList.add("expanded");
             }
+            // 根据面板的实际状态设置按钮
+            this.updatePanelButtonState(toggleTranslationPanelBtn, translationPanel);
+        }
+    }
+
+    /**
+     * 根据面板的实际状态（expanded/collapsed）更新按钮状态
+     */
+    updatePanelButtonState(button, panel) {
+        if (!button || !panel) return;
+
+        if (panel.classList.contains("expanded")) {
+            button.classList.add("active");
+        } else {
+            button.classList.remove("active");
         }
     }
 
