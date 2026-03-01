@@ -576,6 +576,19 @@ header h1 {
     scroll-behavior: smooth;
 }
 
+/* Enhanced text selection - highlight selected text with brand color */
+.transcript::selection,
+.translation::selection {
+    background-color: #5a7c99;
+    color: white;
+}
+
+.transcript::-moz-selection,
+.translation::-moz-selection {
+    background-color: #5a7c99;
+    color: white;
+}
+
 .control-btn-danger:hover:not(:disabled) {
     background: #ee5a52;
     transform: scale(1.08);
