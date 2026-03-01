@@ -1,1 +1,1 @@
-web: cd backend && gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT server:app
+web: gunicorn --worker-class eventlet -w 1 --chdir backend --bind 0.0.0.0:$PORT server:app
