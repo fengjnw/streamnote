@@ -1293,8 +1293,6 @@ class StreamNote {
 
         if (formattedLines.length > 0) {
             transcriptDiv.innerHTML = formattedLines.join('');
-        } else {
-            transcriptDiv.innerHTML = '<p class="placeholder">Press "Start Recording" to begin...</p>';
         }
 
         // 更新翻译显示
@@ -1317,8 +1315,6 @@ class StreamNote {
 
         if (translationLines.length > 0) {
             translationDiv.innerHTML = translationLines.join('');
-        } else {
-            translationDiv.innerHTML = '<p class="placeholder">Translation will appear here...</p>';
         }
         // 仅在自动滚动启用时滚动到底部（阻止同步滚动触发）
         // 注意：要滚动外层容器，不是内容 div
@@ -1715,7 +1711,7 @@ class StreamNote {
     setupSyncScroll() {
         const transcript = document.getElementById("transcript");
         const translation = document.getElementById("translation");
-        const SCROLL_OFFSET = 7; // 原文框后移的行数
+        const SCROLL_OFFSET = 8; // 原文框后移的行数
 
         if (!transcript || !translation) {
             console.warn('[StreamNote] Sync scroll elements not found');
