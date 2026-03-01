@@ -379,6 +379,15 @@ header h1 {
     margin-right: 0;
 }
 
+.nav-group-last {
+    border-right: none !important;
+    border-left: 1px solid #dee2e6;
+    padding-right: 0 !important;
+    padding-left: 8px !important;
+    margin-right: 0 !important;
+    margin-left: 8px !important;
+}
+
 /* 新控制按钮 - 图标+文字 */
 .control-btn {
     min-width: 32px;
