@@ -32,44 +32,47 @@
 
     <div class="container">
         <div class="main-wrapper">
-            <div class="control-panel">
-                <button id="openSessionPanel" class="control-btn control-btn-secondary"
-                    title="Open Sessions">📋</button>
-                <button id="startBtn" class="control-btn control-btn-primary" title="Start Recording">🎙️ Start</button>
-                <button id="stopBtn" class="control-btn control-btn-danger" disabled title="Stop Recording">⏹️
-                    Stop</button>
-                <button id="clearBtn" class="control-btn control-btn-secondary" title="Clear">🗑️ Clear</button>
-
-                <div class="control-spacer"></div>
-
-                <!-- Text Selection Tools -->
-                <div class="text-tools">
-                    <button id="floatingExplainBtn" class="control-btn control-btn-secondary" style="display: none;"
-                        title="Explain selected text">💡</button>
-                    <button id="floatingAddKeywordBtn" class="control-btn control-btn-secondary" style="display: none;"
-                        title="Add selected text as keyword">➕</button>
+            <nav class="control-panel">
+                <!-- Group 1: Session Management -->
+                <div class="nav-group">
+                    <button id="openSessionPanel" class="control-btn control-btn-secondary" title="Open Sessions">📋
+                        Sessions</button>
                 </div>
 
-                <!-- Content Area Toggle Buttons -->
-                <div class="panel-controls">
+                <!-- Group 2: Recording Controls -->
+                <div class="nav-group">
+                    <button id="startBtn" class="control-btn control-btn-primary" title="Start Recording">🎙️
+                        Start</button>
+                    <button id="stopBtn" class="control-btn control-btn-danger" disabled title="Stop Recording">⏹️
+                        Stop</button>
+                    <button id="clearBtn" class="control-btn control-btn-secondary" title="Clear">🗑️ Clear</button>
+                </div>
+
+                <!-- Group 3: Content Display -->
+                <div class="nav-group">
                     <button id="toggleTranscriptPanel" class="control-btn control-btn-secondary" title="Transcript">📄
                         Transcript</button>
                     <button id="toggleTranslationPanel" class="control-btn control-btn-secondary" title="Translation">🌍
                         Translation</button>
                 </div>
 
+                <!-- Spacer -->
                 <div class="control-spacer"></div>
 
-                <!-- Quick Access Buttons for Side Panel Tabs -->
-                <div class="panel-controls">
-                    <button id="quickAccessKeywords" class="control-btn control-btn-secondary"
-                        title="Keywords">📌</button>
-                    <button id="quickAccessHistory" class="control-btn control-btn-secondary"
-                        title="History">📜</button>
-                    <button id="quickAccessSettings" class="control-btn control-btn-secondary"
-                        title="Settings">⚙️</button>
+                <!-- Group 5: Quick Access Panels -->
+                <div class="nav-group">
+                    <button id="explainBtn" class="control-btn control-btn-secondary" disabled
+                        title="Explain selected text">💡 Explain</button>
+                    <button id="addKeywordBtn" class="control-btn control-btn-secondary" disabled
+                        title="Add selected text as keyword">➕ Keyword</button>
+                    <button id="quickAccessHistory" class="control-btn control-btn-secondary" title="History">📜
+                        History</button>
+                    <button id="quickAccessKeywords" class="control-btn control-btn-secondary" title="Keywords">📌
+                        Keywords</button>
+                    <button id="quickAccessSettings" class="control-btn control-btn-secondary" title="Settings">⚙️
+                        Settings</button>
                 </div>
-            </div>
+            </nav>
 
             <div class="content-wrapper">
                 <!-- Session Management Panel (Left) -->

@@ -753,11 +753,11 @@ class StreamNote {
      * 初始化文本选中菜单功能
      */
     /**
-     * 初始化浮动按钮功能（替换菜单）
+     * 初始化文本工具功能
      */
     initTextSelectionMenu() {
-        const floatingExplainBtn = document.getElementById("floatingExplainBtn");
-        const floatingAddKeywordBtn = document.getElementById("floatingAddKeywordBtn");
+        const explainBtn = document.getElementById("explainBtn");
+        const addKeywordBtn = document.getElementById("addKeywordBtn");
 
         // 获取侧边栏相关元素
         const sidePanelsContainer = document.querySelector(".side-panels-container");
@@ -766,7 +766,7 @@ class StreamNote {
         const historyContent = document.getElementById("historyContent");
         const settingsContent = document.getElementById("settingsContent");
 
-        if (!floatingExplainBtn || !floatingAddKeywordBtn) return;
+        if (!explainBtn || !addKeywordBtn) return;
 
         // Hide all content
         const hideAllContent = () => {
@@ -781,16 +781,16 @@ class StreamNote {
             const selectedText = selection.toString().trim();
 
             if (!selectedText || selectedText.length === 0) {
-                floatingExplainBtn.style.display = "none";
-                floatingAddKeywordBtn.style.display = "none";
+                explainBtn.disabled = true;
+                addKeywordBtn.disabled = true;
                 return;
             }
 
             // 检查选中内容是否在转录或翻译区域
             const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
             if (!range) {
-                floatingExplainBtn.style.display = "none";
-                floatingAddKeywordBtn.style.display = "none";
+                explainBtn.disabled = true;
+                addKeywordBtn.disabled = true;
                 return;
             }
 
@@ -804,17 +804,17 @@ class StreamNote {
                 this.selectedText = selectedText;
                 this.selectedTextElement = range.commonAncestorContainer;
 
-                // 显示按钮
-                floatingExplainBtn.style.display = "inline-block";
-                floatingAddKeywordBtn.style.display = "inline-block";
+                // 启用按钮
+                explainBtn.disabled = false;
+                addKeywordBtn.disabled = false;
             } else {
-                floatingExplainBtn.style.display = "none";
-                floatingAddKeywordBtn.style.display = "none";
+                explainBtn.disabled = true;
+                addKeywordBtn.disabled = true;
             }
         });
 
         // 解释按钮事件
-        floatingExplainBtn.addEventListener("click", async () => {
+        explainBtn.addEventListener("click", async () => {
             if (this.selectedText.trim()) {
                 const term = this.selectedText.trim();
                 // 如果不在历史中，先加入
@@ -839,14 +839,14 @@ class StreamNote {
                     }, 50);
                 }
 
-                // 隐藏浮动按钮
-                floatingExplainBtn.style.display = "none";
-                floatingAddKeywordBtn.style.display = "none";
+                // 禁用按钮 - 清除选中文本
+                explainBtn.disabled = true;
+                addKeywordBtn.disabled = true;
             }
         });
 
         // 添加关键词按钮事件
-        floatingAddKeywordBtn.addEventListener("click", () => {
+        addKeywordBtn.addEventListener("click", () => {
             if (this.selectedText.trim()) {
                 this.addSelectedTextAsKeyword();
 
@@ -862,9 +862,9 @@ class StreamNote {
                     }, 350);
                 }
 
-                // 隐藏浮动按钮
-                floatingExplainBtn.style.display = "none";
-                floatingAddKeywordBtn.style.display = "none";
+                // 禁用按钮 - 清除选中文本
+                explainBtn.disabled = true;
+                addKeywordBtn.disabled = true;
             }
         });
     }
