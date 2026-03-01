@@ -765,14 +765,11 @@ header h1 {
     display: flex;
 }
 
-#keywordsContent {
-    display: flex !important;
-    flex-direction: column;
+#keywordsContent.active {
     padding: 0;
 }
 
 /* 底部区域（关键词 + 查询历史） - 已移至侧面板 */
-
 .keywords-display {
     display: flex;
     flex-direction: column;
