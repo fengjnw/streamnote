@@ -1574,31 +1574,67 @@ class StreamNote {
     /**
      * 获取视口中心对应的 data-index
      */
-    getCenterLineIndex(container) {
-        const viewportCenterY = container.scrollTop + container.clientHeight / 2;
+    getTopLineNumber(container) {
         const paragraphs = container.querySelectorAll('p[data-index]');
 
         if (paragraphs.length === 0) return null;
 
-        let closestElement = paragraphs[0];
-        let closestDistance = Math.abs(
-            (container.scrollTop + paragraphs[0].getBoundingClientRect().top +
-                paragraphs[0].getBoundingClientRect().height / 2) - viewportCenterY
-        );
-
-        // 找最接近视口中心的元素
-        for (let p of paragraphs) {
+        // 找首个完全或部分在视口内的元素
+        for (let i = 0; i < paragraphs.length; i++) {
+            const p = paragraphs[i];
             const rect = p.getBoundingClientRect();
-            const elementCenter = container.scrollTop + rect.top + rect.height / 2;
-            const distance = Math.abs(elementCenter - viewportCenterY);
-
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                closestElement = p;
+            // 如果元素的底部在视口顶端以下，说明这个元素在视口内或下方
+            if (rect.bottom > 0) {
+                return {
+                    index: p.getAttribute('data-index'),
+                    lineNumber: i
+                };
             }
         }
 
-        return closestElement.getAttribute('data-index');
+        return null;
+    }
+
+    /**
+     * 根据行号和偏移量将指定行滚动到顶端
+     */
+    scrollToLineNumberTop(container, lineNumber, offsetLines = 0) {
+        const paragraphs = container.querySelectorAll('p[data-index]');
+
+        if (paragraphs.length === 0) return;
+
+        // 计算目标行号，应用偏移
+        let targetLineNumber = Math.max(0, Math.min(lineNumber + offsetLines, paragraphs.length - 1));
+
+        const targetElement = paragraphs[targetLineNumber];
+        const rect = targetElement.getBoundingClientRect();
+        // 计算目标元素顶部位置
+        const elementTop = container.scrollTop + rect.top;
+        // 直接滚动使元素顶部对齐视口顶端
+        container.scrollTop = elementTop;
+    }
+
+    /**
+     * 根据行号和偏移量滚动到指定位置
+     */
+    scrollToLineNumberBottom(container, lineNumber, offsetLines = 0) {
+        const paragraphs = container.querySelectorAll('p[data-index]');
+
+        if (paragraphs.length === 0) return;
+
+        // 计算目标行号，应用偏移
+        let targetLineNumber = Math.max(0, Math.min(lineNumber + offsetLines, paragraphs.length - 1));
+
+        const targetElement = paragraphs[targetLineNumber];
+        const rect = targetElement.getBoundingClientRect();
+        // 计算目标元素底部位置
+        const elementBottom = container.scrollTop + rect.bottom;
+        // 计算视口底部位置
+        const viewportBottom = container.scrollTop + container.clientHeight;
+        // 计算需要滚动的距离，使元素底部接近视口底部（留20px边距）
+        const scrollOffset = elementBottom - (viewportBottom - 20);
+
+        container.scrollTop += scrollOffset;
     }
 
     /**
@@ -1648,7 +1684,7 @@ class StreamNote {
     setupSyncScroll() {
         const transcript = document.getElementById("transcript");
         const translation = document.getElementById("translation");
-        const SCROLL_OFFSET = 8; // 原文框后移的行数
+        const SCROLL_OFFSET = 7; // 原文框后移的行数
 
         if (!transcript || !translation) {
             console.warn('[StreamNote] Sync scroll elements not found');
@@ -1675,15 +1711,14 @@ class StreamNote {
             this.scrollTimeout = setTimeout(() => {
                 this.isSyncingScroll = true;
 
-                // 获取原文中心对应的行索引
-                const centerIndex = this.getCenterLineIndex(transcript);
+                // 获取原文顶端对应的行号
+                const topInfo = this.getTopLineNumber(transcript);
 
-                // 在译文中找到同样的行，但向前移SCROLL_OFFSET行
+                // 在译文中找到同样行号，但向前移SCROLL_OFFSET行
                 // 这样原文比译文"后移"了SCROLL_OFFSET行
-                if (centerIndex) {
-                    const offsetIndex = Math.max(0, parseInt(centerIndex) - SCROLL_OFFSET);
+                if (topInfo) {
                     translation.style.scrollBehavior = 'auto';
-                    this.scrollToLineBottom(translation, offsetIndex.toString());
+                    this.scrollToLineNumberTop(translation, topInfo.lineNumber, -SCROLL_OFFSET);
                 }
 
                 setTimeout(() => {
@@ -1712,15 +1747,14 @@ class StreamNote {
             this.scrollTimeout = setTimeout(() => {
                 this.isSyncingScroll = true;
 
-                // 获取译文中心对应的行索引
-                const centerIndex = this.getCenterLineIndex(translation);
+                // 获取译文顶端对应的行号
+                const topInfo = this.getTopLineNumber(translation);
 
-                // 在原文中找到同样的行，但向后移SCROLL_OFFSET行
+                // 在原文中找到同样行号，但向后移SCROLL_OFFSET行
                 // 这样原文比译文"后移"了SCROLL_OFFSET行
-                if (centerIndex) {
-                    const offsetIndex = parseInt(centerIndex) + SCROLL_OFFSET;
+                if (topInfo) {
                     transcript.style.scrollBehavior = 'auto';
-                    this.scrollToLineBottom(transcript, offsetIndex.toString());
+                    this.scrollToLineNumberTop(transcript, topInfo.lineNumber, SCROLL_OFFSET);
                 }
 
                 setTimeout(() => {
