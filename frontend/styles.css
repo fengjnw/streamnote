@@ -86,7 +86,7 @@ header h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 15px;
+    padding: 8px 15px;
     background: #5a7c99;
     color: white;
     flex-shrink: 0;
@@ -96,7 +96,7 @@ header h1 {
 
 .session-panel-header h3 {
     margin: 0;
-    font-size: 1em;
+    font-size: 0.9em;
     font-weight: 600;
     flex: 1;
 }
@@ -117,7 +117,7 @@ header h1 {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 15px;
+    padding: 8px 15px;
     background: #5a7c99;
     color: white;
     gap: 8px;
@@ -128,7 +128,7 @@ header h1 {
 .session-header h3 {
     flex: 1;
     margin: 0;
-    font-size: 1em;
+    font-size: 0.9em;
     font-weight: 600;
 }
 
@@ -462,18 +462,18 @@ header h1 {
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    padding: 12px 15px;
+    padding: 8px 15px;
     background: #5a7c99;
     color: white;
     flex-shrink: 0;
     gap: 8px;
     border-bottom: none;
-    min-height: 48px;
+    min-height: 36px;
 }
 
 .text-panel-header h3 {
     margin: 0;
-    font-size: 1em;
+    font-size: 0.9em;
     font-weight: 600;
     flex-shrink: 0;
 }
@@ -735,18 +735,18 @@ header h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 15px;
+    padding: 8px 15px;
     background: #5a7c99;
     color: white;
     flex-shrink: 0;
     gap: 8px;
     border-bottom: none;
-    min-height: 48px;
+    min-height: 36px;
 }
 
 .side-panel-header h3 {
     margin: 0;
-    font-size: 1em;
+    font-size: 0.9em;
     font-weight: 600;
     flex: 1;
 }
