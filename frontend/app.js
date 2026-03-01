@@ -645,6 +645,7 @@ class StreamNote {
                 // Remove active state from all quick access buttons
                 quickAccessKeywords.classList.remove("active");
                 quickAccessHistory.classList.remove("active");
+                quickAccessSummary.classList.remove("active");
                 quickAccessSettings.classList.remove("active");
                 setTimeout(() => {
                     this.isSyncingScroll = false;
