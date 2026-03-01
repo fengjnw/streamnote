@@ -56,8 +56,7 @@ class SessionManager {
                         session.settings = {
                             translationEnabled: true,
                             targetLanguage: "Chinese",
-                            keywordEnabled: true,
-                            keywordIntensity: 5
+                            keywordEnabled: true
                         };
                     }
                 });
@@ -131,8 +130,7 @@ class SessionManager {
             settings: {
                 translationEnabled: true,
                 targetLanguage: "Chinese",
-                keywordEnabled: true,
-                keywordIntensity: 5
+                keywordEnabled: true
             },
             createdAt: Date.now(),
             lastModified: Date.now()

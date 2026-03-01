@@ -684,18 +684,7 @@ header h1 {
     transform: scale(1.05);
 }
 
-.intensity-slider {
-    width: 80px;
-    height: 5px;
-    cursor: pointer;
-}
 
-#intensity-value {
-    font-weight: bold;
-    color: #5a7c99;
-    min-width: 20px;
-    text-align: center;
-}
 
 .keyword-controls select {
     padding: 8px 12px;
@@ -1382,27 +1371,7 @@ header h1 {
     flex: 1;
 }
 
-.slider-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 8px;
-}
 
-.intensity-slider {
-    flex: 1;
-    height: 5px;
-    cursor: pointer;
-    accent-color: #5a7c99;
-}
-
-#intensity-value {
-    min-width: 25px;
-    text-align: center;
-    font-weight: bold;
-    color: #5a7c99;
-    font-size: 0.9em;
-}
 
 .settings-panel .language-selector {
     width: 100%;

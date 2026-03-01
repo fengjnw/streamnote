@@ -166,19 +166,9 @@ class StreamNote {
                 explanationLanguageSelector.value = this.keywordExplanationLanguage;
             }
 
-            const intensitySlider = document.getElementById("keyword-intensity");
-            const intensityValue = document.getElementById("intensity-value");
-            if (intensitySlider) {
-                intensitySlider.value = session.settings.keywordIntensity;
-            }
-            if (intensityValue) {
-                intensityValue.textContent = session.settings.keywordIntensity;
-            }
-
             // 更新关键词提取器的设置
             if (this.keywordExtractor) {
                 this.keywordExtractor.setEnabled(session.settings.keywordEnabled);
-                this.keywordExtractor.setIntensity(session.settings.keywordIntensity);
 
                 // 恢复解释缓存
                 if (session.settings.explanationCache) {
@@ -391,7 +381,6 @@ class StreamNote {
             translationEnabled: this.translationEnabled,
             targetLanguage: this.targetLanguage,
             keywordEnabled: this.keywordExtractor ? this.keywordExtractor.enabled : true,
-            keywordIntensity: this.keywordExtractor ? this.keywordExtractor.intensity : 5,
             keywordExplanationLanguage: this.keywordExplanationLanguage,
             explanationCache: this.keywordExtractor ? this.keywordExtractor.explanationCache : {},
             queryHistory: this.keywordExtractor ? this.keywordExtractor.queryHistory : [],
@@ -410,7 +399,6 @@ class StreamNote {
             translationEnabled: this.translationEnabled,
             targetLanguage: this.targetLanguage,
             keywordEnabled: this.keywordExtractor ? this.keywordExtractor.enabled : true,
-            keywordIntensity: this.keywordExtractor ? this.keywordExtractor.intensity : 5,
             keywordExplanationLanguage: this.keywordExplanationLanguage,
             explanationCache: this.keywordExtractor ? this.keywordExtractor.explanationCache : {},
             queryHistory: this.keywordExtractor ? this.keywordExtractor.queryHistory : [],
@@ -455,25 +443,7 @@ class StreamNote {
         // 使 KeywordExtractor 全局可访问
         window.keywordExtractorInstance = this.keywordExtractor;
 
-        // 绑定强度滑块
-        const intensitySlider = document.getElementById("keyword-intensity");
-        const intensityValue = document.getElementById("intensity-value");
-        if (intensitySlider) {
-            intensitySlider.addEventListener("input", async (e) => {
-                const intensity = parseInt(e.target.value);
-                this.keywordExtractor.setIntensity(intensity);
-                if (intensityValue) {
-                    intensityValue.textContent = intensity;
-                }
-                // 强度改变时，保持已有的全文，但用新强度重新提取关键词
-                // 不清空 allCollectedKeywords，直接重新处理
-                this.keywordExtractor.clearHighlights(document.getElementById("transcript"));
-                await this.reprocessAllKeywords();
 
-                // 保存设置到 session
-                this.saveSettingsToSession();
-            });
-        }
 
         console.log("[StreamNote] KeywordExtractor initialized");
     }
