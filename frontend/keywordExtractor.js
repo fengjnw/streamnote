@@ -31,8 +31,6 @@ class KeywordExtractor {
         this.queryHistory = [];
         this.maxHistorySize = 20;  // 最多保留20条历史
         this.historyElement = config.historyElement || document.getElementById("query-history-list");
-
-        console.log("[KeywordExtractor] Initialized", config);
     }
 
     /**
@@ -57,7 +55,6 @@ class KeywordExtractor {
         const ratio = (this.intensity - 1) / 9;  // 0 到 1
         const topK = Math.round(minTopK + (maxTopK - minTopK) * ratio);
 
-        console.log(`[KeywordExtractor] Calculated topK: ${topK} (words: ${wordCount}, intensity: ${this.intensity})`);
         return topK;
     }
 
@@ -81,8 +78,6 @@ class KeywordExtractor {
                 top_k: calculatedTopK
             };
 
-            console.log("[KeywordExtractor] Requesting with payload:", payload);
-
             const response = await fetch(this.apiUrl, {
                 method: "POST",
                 headers: {
@@ -96,7 +91,6 @@ class KeywordExtractor {
             }
 
             const data = await response.json();
-            console.log("[KeywordExtractor] Response:", data);
 
             this.currentKeywords = data.keywords || [];
             return this.currentKeywords;
@@ -211,8 +205,6 @@ class KeywordExtractor {
         }
 
         if (!wrapper) {
-            console.error(`[KeywordExtractor] Could not find explanation container for "${keyword}"`);
-            return;
         }
 
         const expandBtn = wrapper.parentElement?.querySelector('.keyword-expand-btn');
@@ -258,11 +250,8 @@ class KeywordExtractor {
             // 生成缓存 key
             const cacheKey = `${keyword}|${explanationLanguage}`;
 
-            console.log(`[KeywordExtractor] Fetching explanation for "${keyword}" in ${explanationLanguage}`);
-
             // 检查缓存
             if (this.explanationCache[cacheKey]) {
-                console.log(`[KeywordExtractor] Using cached explanation for "${keyword}"`);
                 contentElement.innerHTML = `<p>${this.explanationCache[cacheKey]}</p>`;
                 return;
             }
@@ -297,15 +286,12 @@ class KeywordExtractor {
 
                     // 实时更新显示（逐字显示）
                     if (explanation) {
-                        console.log(`[KeywordExtractor] Streaming: ${explanation.substring(0, 50)}...`);
                         contentElement.innerHTML = `<p>${explanation}</p>`;
                     }
                 }
             } finally {
                 reader.releaseLock();
             }
-
-            console.log(`[KeywordExtractor] Got explanation: ${explanation.substring(0, 50)}...`);
 
             // 存入缓存
             this.explanationCache[cacheKey] = explanation;
@@ -327,8 +313,6 @@ class KeywordExtractor {
     addToQueryHistory(term) {
         term = term.trim();
         if (!term) return;
-
-        console.log(`[KeywordExtractor] Adding to history: "${term}"`);
 
         // 如果已经在历史中，先删除（将其移到最前）
         this.queryHistory = this.queryHistory.filter(t => t !== term);
@@ -355,7 +339,6 @@ class KeywordExtractor {
      * @param {string} term - 要删除的词
      */
     removeFromQueryHistory(term) {
-        console.log(`[KeywordExtractor] Removing from history: "${term}"`);
         this.queryHistory = this.queryHistory.filter(t => t !== term);
         this.displayQueryHistory();
 
@@ -388,18 +371,14 @@ class KeywordExtractor {
      */
     async processText(text) {
         if (!this.enabled) {
-            console.log("[KeywordExtractor] Disabled, skipping");
             return [];
         }
-
-        console.log("[KeywordExtractor] Processing text, length:", text.length);
 
         const keywords = await this.extractKeywords(text);
 
         if (keywords.length > 0) {
             // 将新关键词添加到自动提取的关键词，避免重复
             this.autoKeywords = [...new Set([...this.autoKeywords, ...keywords])];
-            console.log(`[KeywordExtractor] Auto keywords: ${this.autoKeywords.join(', ')}`);
         }
 
         return keywords;
@@ -419,7 +398,6 @@ class KeywordExtractor {
      */
     setEnabled(enabled) {
         this.enabled = enabled;
-        console.log("[KeywordExtractor] Enabled:", enabled);
         if (!enabled) {
             if (this.keywordElement) {
                 this.keywordElement.innerHTML = '<p class="placeholder">Keywords disabled</p>';
@@ -433,7 +411,6 @@ class KeywordExtractor {
      */
     setIntensity(intensity) {
         this.intensity = Math.max(1, Math.min(10, intensity));
-        console.log("[KeywordExtractor] Intensity set to:", this.intensity, "(关键词相对比例)");
     }
 
     /**
@@ -447,7 +424,6 @@ class KeywordExtractor {
         if (this.keywordElement) {
             this.keywordElement.innerHTML = '';
         }
-        console.log("[KeywordExtractor] Reset");
     }
 }
 
