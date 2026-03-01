@@ -1,15 +1,28 @@
-from flask import Flask, jsonify, request, Response
+from flask import Flask, jsonify, request, Response, send_from_directory
 from flask_cors import CORS
 from openai import OpenAI
 from config import OPENAI_API_KEY, FLASK_CONFIG
 from keyword_extractor import create_extractor
 import io
 import json
+import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../frontend', static_url_path='')
 CORS(app)
 client = OpenAI(api_key=OPENAI_API_KEY)
 keyword_extractor = create_extractor(OPENAI_API_KEY)
+
+
+@app.route("/", methods=["GET"])
+def index():
+    """Serve the frontend index.html"""
+    return send_from_directory('../frontend', 'index.html')
+
+
+@app.route("/<path:path>", methods=["GET"])
+def serve_static(path):
+    """Serve static files from frontend directory"""
+    return send_from_directory('../frontend', path)
 
 
 @app.route("/api/config", methods=["GET"])
