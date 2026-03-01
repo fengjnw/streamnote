@@ -574,7 +574,7 @@ class StreamNote {
             explanationLanguageSelector.addEventListener("change", (e) => {
                 this.keywordExplanationLanguage = e.target.value;
                 console.log(`[KEYWORD EXPLANATION] Language changed to ${this.keywordExplanationLanguage}`);
-                
+
                 // 更新 Summary 显示
                 const summaryDisplay = document.getElementById("summary-display");
                 if (summaryDisplay) {
@@ -585,7 +585,7 @@ class StreamNote {
                         summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
                     }
                 }
-                
+
                 this.saveSettingsToSession();
             });
         }
@@ -812,7 +812,7 @@ class StreamNote {
                 copySummaryBtn.disabled = true;
 
                 try {
-                    const summary = await this.summarizeText(textToSummarize);
+                    const summary = await this.summarizeText(textToSummarize, true);  // forceRefresh=true
                     if (summary) {
                         summaryDisplay.innerHTML = `<p>${summary.replace(/\n/g, '<br>')}</p>`;
                         copySummaryBtn.disabled = false;
@@ -824,7 +824,7 @@ class StreamNote {
                     summaryDisplay.innerHTML = `<p class="placeholder">Error: ${error.message}</p>`;
                 } finally {
                     generateSummaryBtn.disabled = false;
-                    generateSummaryBtn.title = "Generate Summary";
+                    generateSummaryBtn.title = "Refresh Summary";
                 }
             });
         }
@@ -1576,7 +1576,7 @@ class StreamNote {
     /**
      * 总结文本（使用用户选择的语言）
      */
-    async summarizeText(text) {
+    async summarizeText(text, forceRefresh = false) {
         if (!text || text.trim().length < 50) {
             console.warn("[SUMMARIZE] Text too short to summarize");
             return null;
@@ -1584,10 +1584,10 @@ class StreamNote {
 
         try {
             const language = this.keywordExplanationLanguage;
-            console.log(`[SUMMARIZE] Summarizing (text_len=${text.length}, language=${language})`);
+            console.log(`[SUMMARIZE] Summarizing (text_len=${text.length}, language=${language}, forceRefresh=${forceRefresh})`);
 
-            // 检查该语言的缓存
-            if (this.summaryCache[language]) {
+            // 检查该语言的缓存（除非强制刷新）
+            if (!forceRefresh && this.summaryCache[language]) {
                 console.log("[SUMMARIZE] Using cached summary");
                 return this.summaryCache[language];
             }

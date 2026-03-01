@@ -183,14 +183,14 @@ def summarize():
         
         print(f"[SUMMARIZE] text_len={len(text)}, language='{language}'")
         
-        system_message = f"""You are a professional note summarizer.
-Summarize the given text in 2-3 sentences in {language}.
-- Keep key points only
-- Remove redundancy
-- Maintain clarity
+        system_message = f"""You are a professional note summariser.
+Summarise the given text in {language}.
+- Aim for 100-150 words
+- Keep key points, remove redundancy
+- Maintain clarity and structure
 - Return plain text only, no prefix or explanation"""
         
-        user_message = f"Summarize this text:\n{text}"
+        user_message = f"Summarise this text:\n{text}"
         
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -205,7 +205,7 @@ Summarize the given text in 2-3 sentences in {language}.
                 }
             ],
             temperature=0.3,
-            max_tokens=200
+            max_tokens=250
         )
         
         summary = response.choices[0].message.content.strip()
