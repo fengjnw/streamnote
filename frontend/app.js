@@ -78,32 +78,27 @@ class StreamNote {
      * 初始化显示/隐藏状态
      */
     initializeVisibility() {
-        // 文本面板默认都显示，由用户通过面板切换按钮控制
-        const transcriptPanel = document.querySelector(".transcript-panel");
-        const translationPanel = document.querySelector(".translation-panel");
-        const toggleTranscriptPanelBtn = document.getElementById("toggleTranscriptPanel");
-        const toggleTranslationPanelBtn = document.getElementById("toggleTranslationPanel");
-
-        if (transcriptPanel) {
-            // 初始化时设置为展开（或保留现有状态）
-            if (!transcriptPanel.classList.contains("collapsed") && !transcriptPanel.classList.contains("expanded")) {
-                transcriptPanel.classList.add("expanded");
-            }
-            // 根据面板的实际状态设置按钮
-            this.updatePanelButtonState(toggleTranscriptPanelBtn, transcriptPanel);
-        }
-        if (translationPanel) {
-            // 初始化时设置为展开（或保留现有状态）
-            if (!translationPanel.classList.contains("collapsed") && !translationPanel.classList.contains("expanded")) {
-                translationPanel.classList.add("expanded");
-            }
-            // 根据面板的实际状态设置按钮
-            this.updatePanelButtonState(toggleTranslationPanelBtn, translationPanel);
-        }
+        // 加载保存的布局偏好或使用默认的split view
+        this.loadPanelState();
     }
 
     /**
-     * 根据面板的实际状态（expanded/collapsed）更新按钮状态
+     * 根据选定的布局应用相应的CSS类
+     */
+    setLayout(layoutType) {
+        const mainContent = document.querySelector(".main-content");
+        if (!mainContent) return;
+
+        // 移除所有布局类
+        mainContent.classList.remove("layout-full-transcript", "layout-split", "layout-full-translation");
+        // 添加新的布局类
+        mainContent.classList.add(`layout-${layoutType}`);
+        // 保存偏好
+        this.savePanelState();
+    }
+
+    /**
+     * 根据面板的实际状态（expanded/collapsed）更新按钮状态 (deprecated: 已被布局选择器替代)
      */
     updatePanelButtonState(button, panel) {
         if (!button || !panel) return;
@@ -425,14 +420,25 @@ class StreamNote {
     }
 
     /**
-     * 保存面板展开/收缩状态（当前不持久化，用户刷新后重置）
+     * 保存布局选择状态
      */
     savePanelState() {
-        // 可以在这里添加本地存储逻辑，如需持久化面板状态
-        // localStorage.setItem('panelState', JSON.stringify({
-        //     transcriptExpanded: document.querySelector(".transcript-panel").classList.contains("expanded"),
-        //     translationExpanded: document.querySelector(".translation-panel").classList.contains("expanded")
-        // }));
+        const layoutSelector = document.getElementById("layoutSelector");
+        if (layoutSelector) {
+            localStorage.setItem('layoutPreference', layoutSelector.value);
+        }
+    }
+
+    /**
+     * 加载布局选择状态
+     */
+    loadPanelState() {
+        const layoutPreference = localStorage.getItem('layoutPreference') || 'split';
+        const layoutSelector = document.getElementById("layoutSelector");
+        if (layoutSelector) {
+            layoutSelector.value = layoutPreference;
+            this.setLayout(layoutPreference);
+        }
     }
 
     /**
@@ -477,70 +483,36 @@ class StreamNote {
         document.getElementById("stopBtn").addEventListener("click", () => this.stop());
         document.getElementById("clearBtn").addEventListener("click", () => this.clear());
 
-        // 文本面板切换按钮
-        const toggleTranscriptPanelBtn = document.getElementById("toggleTranscriptPanel");
-        const toggleTranslationPanelBtn = document.getElementById("toggleTranslationPanel");
+        // 布局选择器
+        const layoutSelector = document.getElementById("layoutSelector");
+        if (layoutSelector) {
+            layoutSelector.addEventListener("change", (e) => {
+                this.setLayout(e.target.value);
+            });
+        }
+
+        // 关闭面板按钮（保留这些用于边框上的关闭按钮）
         const closeTranscriptPanelBtn = document.getElementById("closeTranscriptPanelBtn");
         const closeTranslationPanelBtn = document.getElementById("closeTranslationPanelBtn");
 
-        if (toggleTranscriptPanelBtn) {
-            toggleTranscriptPanelBtn.addEventListener("click", () => {
-                const transcriptPanel = document.querySelector(".transcript-panel");
-                if (transcriptPanel) {
-                    transcriptPanel.classList.toggle("collapsed");
-                    transcriptPanel.classList.toggle("expanded");
-                    // Update button state
-                    const isExpanded = transcriptPanel.classList.contains("expanded");
-                    if (isExpanded) {
-                        toggleTranscriptPanelBtn.classList.add("active");
-                    } else {
-                        toggleTranscriptPanelBtn.classList.remove("active");
-                    }
-                    this.savePanelState();
-                }
-            });
-        }
-
-        if (toggleTranslationPanelBtn) {
-            toggleTranslationPanelBtn.addEventListener("click", () => {
-                const translationPanel = document.querySelector(".translation-panel");
-                if (translationPanel) {
-                    translationPanel.classList.toggle("collapsed");
-                    translationPanel.classList.toggle("expanded");
-                    // Update button state
-                    const isExpanded = translationPanel.classList.contains("expanded");
-                    if (isExpanded) {
-                        toggleTranslationPanelBtn.classList.add("active");
-                    } else {
-                        toggleTranslationPanelBtn.classList.remove("active");
-                    }
-                    this.savePanelState();
-                }
-            });
-        }
-
         if (closeTranscriptPanelBtn) {
             closeTranscriptPanelBtn.addEventListener("click", () => {
-                const transcriptPanel = document.querySelector(".transcript-panel");
-                if (transcriptPanel) {
-                    transcriptPanel.classList.add("collapsed");
-                    transcriptPanel.classList.remove("expanded");
-                    // Update button state
-                    toggleTranscriptPanelBtn.classList.remove("active");
-                    this.savePanelState();
+                // 点击关闭时切换到全译文布局
+                const layoutSelector = document.getElementById("layoutSelector");
+                if (layoutSelector) {
+                    layoutSelector.value = "full-translation";
+                    this.setLayout("full-translation");
                 }
             });
         }
 
         if (closeTranslationPanelBtn) {
             closeTranslationPanelBtn.addEventListener("click", () => {
-                const translationPanel = document.querySelector(".translation-panel");
-                if (translationPanel) {
-                    translationPanel.classList.add("collapsed");
-                    translationPanel.classList.remove("expanded");
-                    // Update button state
-                    toggleTranslationPanelBtn.classList.remove("active");
-                    this.savePanelState();
+                // 点击关闭时切换到全原文布局
+                const layoutSelector = document.getElementById("layoutSelector");
+                if (layoutSelector) {
+                    layoutSelector.value = "full-transcript";
+                    this.setLayout("full-transcript");
                 }
             });
         }

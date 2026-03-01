@@ -50,10 +50,11 @@
 
                 <!-- Group 3: Content Display -->
                 <div class="nav-group">
-                    <button id="toggleTranscriptPanel" class="control-btn control-btn-secondary" title="Transcript">📄
-                        Transcript</button>
-                    <button id="toggleTranslationPanel" class="control-btn control-btn-secondary" title="Translation">🌍
-                        Translation</button>
+                    <select id="layoutSelector" class="layout-selector" title="Select Layout">
+                        <option value="full-transcript">📄 Transcript Only</option>
+                        <option value="split" selected>📄 Split View</option>
+                        <option value="full-translation">🌍 Translation Only</option>
+                    </select>
                 </div>
 
                 <!-- Spacer -->
@@ -101,7 +102,7 @@
 
                 <input type="file" id="importFileInput" accept=".json" style="display: none;" />
 
-                <div class="main-content">
+                <div class="main-content layout-split">
                     <!-- Transcript Panel (Left) -->
                     <div class="text-panel transcript-panel expanded">
                         <!-- Panel Header -->
