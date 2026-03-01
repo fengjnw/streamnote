@@ -270,45 +270,43 @@ class StreamNote {
             dateDisplay.textContent = dateStr;
         }
 
-        }
-
         // 计算 items 数量
         let itemCount = 0;
-        if (session.transcripts) {
-            itemCount = Object.keys(session.transcripts).length;
-        }
-        const itemCountDisplay = document.getElementById('sessionItemCountDisplay');
-        if (itemCountDisplay) {
-            itemCountDisplay.textContent = itemCount;
-        }
+if (session.transcripts) {
+    itemCount = Object.keys(session.transcripts).length;
+}
+const itemCountDisplay = document.getElementById('sessionItemCountDisplay');
+if (itemCountDisplay) {
+    itemCountDisplay.textContent = itemCount;
+}
 
-        // 计算关键词数
-        let keywordCount = 0;
-        if (session.keywords && Array.isArray(session.keywords)) {
-            keywordCount = session.keywords.length;
-        }
-        const keywordCountDisplay = document.getElementById('sessionKeywordCountDisplay');
-        if (keywordCountDisplay) {
-            keywordCountDisplay.textContent = keywordCount;
-        }
+// 计算关键词数
+let keywordCount = 0;
+if (session.keywords && Array.isArray(session.keywords)) {
+    keywordCount = session.keywords.length;
+}
+const keywordCountDisplay = document.getElementById('sessionKeywordCountDisplay');
+if (keywordCountDisplay) {
+    keywordCountDisplay.textContent = keywordCount;
+}
 
-        // 显示翻译语言
-        if (this.translationEnabled && this.targetLanguage) {
-            const translationStatusDisplay = document.getElementById('translationStatusDisplay');
-            const translationLangDisplay = document.getElementById('translationLangDisplay');
-            if (translationStatusDisplay) {
-                translationStatusDisplay.style.display = 'flex';
-            }
-            if (translationLangDisplay) {
-                const langNames = {
-                    'Chinese': '中文',
-                    'English': 'English',
-                    'Spanish': 'Español',
-                    'French': 'Français',
-                    'Japanese': '日本語',
-                    'Korean': '한국어'
-                };
-                translationLangDisplay.textContent = langNames[this.targetLanguage] || this.targetLanguage;
+// 显示翻译语言
+if (this.translationEnabled && this.targetLanguage) {
+    const translationStatusDisplay = document.getElementById('translationStatusDisplay');
+    const translationLangDisplay = document.getElementById('translationLangDisplay');
+    if (translationStatusDisplay) {
+        translationStatusDisplay.style.display = 'flex';
+    }
+    if (translationLangDisplay) {
+        const langNames = {
+            'Chinese': '中文',
+            'English': 'English',
+            'Spanish': 'Español',
+            'French': 'Français',
+            'Japanese': '日本語',
+            'Korean': '한국어'
+        };
+        translationLangDisplay.textContent = langNames[this.targetLanguage] || this.targetLanguage;
             }
         } else {
             const translationStatusDisplay = document.getElementById('translationStatusDisplay');
@@ -318,772 +316,751 @@ class StreamNote {
         }
     }
 
-    /**
-     * 保存当前数据到 session
-     */
-    saveToSession(targetSessionId = null) {
-        if (!this.sessionManager) return;
+/**
+ * 保存当前数据到 session
+ */
+saveToSession(targetSessionId = null) {
+    if (!this.sessionManager) return;
 
-        // 如果没有指定目标session，则使用当前session
-        // 如果正在录制，优先保存到录制中的session
-        const sessionId = targetSessionId || this.recordingSessionId || this.sessionManager.currentSessionId;
-        const session = this.sessionManager.getSession(sessionId);
+    // 如果没有指定目标session，则使用当前session
+    // 如果正在录制，优先保存到录制中的session
+    const sessionId = targetSessionId || this.recordingSessionId || this.sessionManager.currentSessionId;
+    const session = this.sessionManager.getSession(sessionId);
 
-        if (!session) {
-            console.error(`[ERROR] Session ${sessionId} not found`);
-            return;
-        }
-
-        // 保存转录内容
-        this.sessionManager.updateTranscriptsForSession(sessionId, this.preciseResults);
-
-        // 保存关键词
-        if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords) {
-            this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
-        }
-
-        // 保存翻译（按当前语言保存）
-        if (this.translationResults) {
-            this.sessionManager.updateCurrentTranslations(this.translationResults, this.targetLanguage);
-        }
-
-        // 保存功能设置
-        const settings = {
-            translationEnabled: this.translationEnabled,
-            targetLanguage: this.targetLanguage,
-            keywordEnabled: this.keywordExtractor ? this.keywordExtractor.enabled : true,
-            keywordExplanationLanguage: this.keywordExplanationLanguage,
-            explanationCache: this.keywordExtractor ? this.keywordExtractor.explanationCache : {},
-            queryHistory: this.keywordExtractor ? this.keywordExtractor.queryHistory : [],
-            summaryCache: this.summaryCache
-        };
-        this.sessionManager.updateCurrentSettings(settings);
+    if (!session) {
+        console.error(`[ERROR] Session ${sessionId} not found`);
+        return;
     }
 
-    /**
-     * 单独保存设置到 session（用于UI控件修改时）
-     */
-    saveSettingsToSession() {
-        if (!this.sessionManager) return;
+    // 保存转录内容
+    this.sessionManager.updateTranscriptsForSession(sessionId, this.preciseResults);
 
-        const settings = {
-            translationEnabled: this.translationEnabled,
-            targetLanguage: this.targetLanguage,
-            keywordEnabled: this.keywordExtractor ? this.keywordExtractor.enabled : true,
-            keywordExplanationLanguage: this.keywordExplanationLanguage,
-            explanationCache: this.keywordExtractor ? this.keywordExtractor.explanationCache : {},
-            queryHistory: this.keywordExtractor ? this.keywordExtractor.queryHistory : [],
-            summaryCache: this.summaryCache
-        };
-        this.sessionManager.updateCurrentSettings(settings);
+    // 保存关键词
+    if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords) {
+        this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
     }
 
-    /**
-     * 保存布局选择状态
-     */
-    savePanelState() {
-        const layoutSelector = document.getElementById("layoutSelector");
-        if (layoutSelector) {
-            localStorage.setItem('layoutPreference', layoutSelector.value);
-        }
+    // 保存翻译（按当前语言保存）
+    if (this.translationResults) {
+        this.sessionManager.updateCurrentTranslations(this.translationResults, this.targetLanguage);
     }
 
-    /**
-     * 加载布局选择状态
-     */
-    loadPanelState() {
-        const layoutPreference = localStorage.getItem('layoutPreference') || 'split';
-        const layoutSelector = document.getElementById("layoutSelector");
-        if (layoutSelector) {
-            layoutSelector.value = layoutPreference;
-            this.setLayout(layoutPreference);
-        }
-    }
+    // 保存功能设置
+    const settings = {
+        translationEnabled: this.translationEnabled,
+        targetLanguage: this.targetLanguage,
+        keywordEnabled: this.keywordExtractor ? this.keywordExtractor.enabled : true,
+        keywordExplanationLanguage: this.keywordExplanationLanguage,
+        explanationCache: this.keywordExtractor ? this.keywordExtractor.explanationCache : {},
+        queryHistory: this.keywordExtractor ? this.keywordExtractor.queryHistory : [],
+        summaryCache: this.summaryCache
+    };
+    this.sessionManager.updateCurrentSettings(settings);
+}
 
-    /**
-     * 初始化关键词提取器
-     */
-    initKeywordExtractor() {
-        this.keywordExtractor = new KeywordExtractor({
-            apiUrl: "/api/extract-keywords",
-            transcriptElement: document.getElementById("transcript"),
-            keywordElement: document.getElementById("keywords-display"),
-            topK: 5
+/**
+ * 单独保存设置到 session（用于UI控件修改时）
+ */
+saveSettingsToSession() {
+    if (!this.sessionManager) return;
+
+    const settings = {
+        translationEnabled: this.translationEnabled,
+        targetLanguage: this.targetLanguage,
+        keywordEnabled: this.keywordExtractor ? this.keywordExtractor.enabled : true,
+        keywordExplanationLanguage: this.keywordExplanationLanguage,
+        explanationCache: this.keywordExtractor ? this.keywordExtractor.explanationCache : {},
+        queryHistory: this.keywordExtractor ? this.keywordExtractor.queryHistory : [],
+        summaryCache: this.summaryCache
+    };
+    this.sessionManager.updateCurrentSettings(settings);
+}
+
+/**
+ * 保存布局选择状态
+ */
+savePanelState() {
+    const layoutSelector = document.getElementById("layoutSelector");
+    if (layoutSelector) {
+        localStorage.setItem('layoutPreference', layoutSelector.value);
+    }
+}
+
+/**
+ * 加载布局选择状态
+ */
+loadPanelState() {
+    const layoutPreference = localStorage.getItem('layoutPreference') || 'split';
+    const layoutSelector = document.getElementById("layoutSelector");
+    if (layoutSelector) {
+        layoutSelector.value = layoutPreference;
+        this.setLayout(layoutPreference);
+    }
+}
+
+/**
+ * 初始化关键词提取器
+ */
+initKeywordExtractor() {
+    this.keywordExtractor = new KeywordExtractor({
+        apiUrl: "/api/extract-keywords",
+        transcriptElement: document.getElementById("transcript"),
+        keywordElement: document.getElementById("keywords-display"),
+        topK: 5
+    });
+
+    // 使 KeywordExtractor 全局可访问
+    window.keywordExtractorInstance = this.keywordExtractor;
+
+
+
+}
+
+setupUIListeners() {
+    document.getElementById("startBtn").addEventListener("click", () => this.start());
+    document.getElementById("stopBtn").addEventListener("click", () => this.stop());
+    document.getElementById("clearBtn").addEventListener("click", () => this.clear());
+
+    // 布局选择器
+    const layoutSelector = document.getElementById("layoutSelector");
+    if (layoutSelector) {
+        layoutSelector.addEventListener("change", (e) => {
+            this.setLayout(e.target.value);
         });
-
-        // 使 KeywordExtractor 全局可访问
-        window.keywordExtractorInstance = this.keywordExtractor;
-
-
-
     }
 
-    setupUIListeners() {
-        document.getElementById("startBtn").addEventListener("click", () => this.start());
-        document.getElementById("stopBtn").addEventListener("click", () => this.stop());
-        document.getElementById("clearBtn").addEventListener("click", () => this.clear());
+    // 关闭面板按钮（保留这些用于边框上的关闭按钮）
+    const closeTranscriptPanelBtn = document.getElementById("closeTranscriptPanelBtn");
+    const closeTranslationPanelBtn = document.getElementById("closeTranslationPanelBtn");
 
-        // 布局选择器
-        const layoutSelector = document.getElementById("layoutSelector");
-        if (layoutSelector) {
-            layoutSelector.addEventListener("change", (e) => {
-                this.setLayout(e.target.value);
-            });
-        }
+    if (closeTranscriptPanelBtn) {
+        closeTranscriptPanelBtn.addEventListener("click", () => {
+            // 点击关闭时切换到全译文布局
+            const layoutSelector = document.getElementById("layoutSelector");
+            if (layoutSelector) {
+                layoutSelector.value = "full-translation";
+                this.setLayout("full-translation");
+            }
+        });
+    }
 
-        // 关闭面板按钮（保留这些用于边框上的关闭按钮）
-        const closeTranscriptPanelBtn = document.getElementById("closeTranscriptPanelBtn");
-        const closeTranslationPanelBtn = document.getElementById("closeTranslationPanelBtn");
+    if (closeTranslationPanelBtn) {
+        closeTranslationPanelBtn.addEventListener("click", () => {
+            // 点击关闭时切换到全原文布局
+            const layoutSelector = document.getElementById("layoutSelector");
+            if (layoutSelector) {
+                layoutSelector.value = "full-transcript";
+                this.setLayout("full-transcript");
+            }
+        });
+    }
 
-        if (closeTranscriptPanelBtn) {
-            closeTranscriptPanelBtn.addEventListener("click", () => {
-                // 点击关闭时切换到全译文布局
-                const layoutSelector = document.getElementById("layoutSelector");
-                if (layoutSelector) {
-                    layoutSelector.value = "full-translation";
-                    this.setLayout("full-translation");
+    // 添加语言选择
+    const languageSelector = document.getElementById("target-language");
+    if (languageSelector) {
+        languageSelector.addEventListener("change", async (e) => {
+            const oldLanguage = this.targetLanguage;
+            this.targetLanguage = e.target.value;
+
+
+            // 语言改变，重新翻译全部
+            if (this.translationEnabled) {
+                // 如果正在录制，提示用户
+                if (this.isRecording) {
                 }
-            });
-        }
-
-        if (closeTranslationPanelBtn) {
-            closeTranslationPanelBtn.addEventListener("click", () => {
-                // 点击关闭时切换到全原文布局
-                const layoutSelector = document.getElementById("layoutSelector");
-                if (layoutSelector) {
-                    layoutSelector.value = "full-transcript";
-                    this.setLayout("full-transcript");
-                }
-            });
-        }
-
-        // 添加语言选择
-        const languageSelector = document.getElementById("target-language");
-        if (languageSelector) {
-            languageSelector.addEventListener("change", async (e) => {
-                const oldLanguage = this.targetLanguage;
-                this.targetLanguage = e.target.value;
-
-
-                // 语言改变，重新翻译全部
-                if (this.translationEnabled) {
-                    // 如果正在录制，提示用户
-                    if (this.isRecording) {
-                    }
-                    await this.retranslateAll();
-                }
-
-                // 保存设置到 session
-                this.saveSettingsToSession();
-            });
-        }
-
-        // 添加关键词解释语言选择
-        const explanationLanguageSelector = document.getElementById("keyword-explanation-language");
-        if (explanationLanguageSelector) {
-            explanationLanguageSelector.addEventListener("change", (e) => {
-                this.keywordExplanationLanguage = e.target.value;
-
-                // 更新 Summary 显示
-                const summaryDisplay = document.getElementById("summary-display");
-                if (summaryDisplay) {
-                    if (this.summaryCache && this.summaryCache[this.keywordExplanationLanguage]) {
-                        const cachedSummary = this.summaryCache[this.keywordExplanationLanguage];
-                        summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
-                    } else {
-                        summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
-                    }
-                }
-
-                this.saveSettingsToSession();
-            });
-        }
-
-        // 自动提取关键词按钮（在Keywords面板中）
-        const autoExtractKeywordsBtn = document.getElementById("autoExtractKeywordsBtn");
-        if (autoExtractKeywordsBtn) {
-            autoExtractKeywordsBtn.addEventListener("click", async () => {
-                if (!this.keywordExtractor) {
-                    this.showStatusMessage("Keyword extractor not initialized", 2000);
-                    return;
-                }
-
-                if (Object.keys(this.preciseResults).length === 0) {
-                    this.showStatusMessage("No transcript available to extract keywords from", 2000);
-                    return;
-                }
-
-                autoExtractKeywordsBtn.disabled = true;
-                const originalTitle = autoExtractKeywordsBtn.title;
-                autoExtractKeywordsBtn.title = "Extracting...";
-
-                try {
-                    await this.processKeywords(this.recordingSessionId || this.sessionManager.currentSessionId);
-                    this.showStatusMessage("✓ Keywords extracted", 1500);
-                } catch (error) {
-                    console.error("[StreamNote] Error extracting keywords:", error);
-                    this.showStatusMessage("✗ Failed to extract keywords", 2000);
-                } finally {
-                    autoExtractKeywordsBtn.disabled = false;
-                    autoExtractKeywordsBtn.title = originalTitle;
-                }
-            });
-        }
-
-        // 初始化文本选中菜单功能
-        this.initTextSelectionMenu();
-
-        // ===== Simplified Side Panel Control =====
-        const sidePanelsContainer = document.querySelector(".side-panels-container");
-        const closeSidePanelBtn = document.getElementById("closeSidePanelBtn");
-        const sidePanelTitle = document.getElementById("sidePanelTitle");
-        const keywordsContent = document.getElementById("keywordsContent");
-        const summaryContent = document.getElementById("summaryContent");
-        const historyContent = document.getElementById("historyContent");
-        const settingsContent = document.getElementById("settingsContent");
-        const quickAccessKeywords = document.getElementById("quickAccessKeywords");
-        const quickAccessSummary = document.getElementById("quickAccessSummary");
-        const quickAccessHistory = document.getElementById("quickAccessHistory");
-        const quickAccessSettings = document.getElementById("quickAccessSettings");
-
-        // Hide all content
-        const hideAllContent = () => {
-            keywordsContent.classList.remove("active");
-            summaryContent.classList.remove("active");
-            historyContent.classList.remove("active");
-            settingsContent.classList.remove("active");
-            // Clear active state from all quick access buttons
-            quickAccessKeywords.classList.remove("active");
-            quickAccessSummary.classList.remove("active");
-            quickAccessHistory.classList.remove("active");
-            quickAccessSettings.classList.remove("active");
-        };
-
-        // Show specific content
-        const showContent = (contentEl, title) => {
-            hideAllContent();
-            contentEl.classList.add("active");
-            sidePanelTitle.textContent = title;
-
-            // Update corresponding button active state
-            if (contentEl === keywordsContent) {
-                quickAccessKeywords.classList.add("active");
-            } else if (contentEl === summaryContent) {
-                quickAccessSummary.classList.add("active");
-            } else if (contentEl === historyContent) {
-                quickAccessHistory.classList.add("active");
-            } else if (contentEl === settingsContent) {
-                quickAccessSettings.classList.add("active");
+                await this.retranslateAll();
             }
 
-            // Show/hide auto extract keywords button and explanation language selector based on active tab
-            const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
-            const generateSummaryBtn = document.getElementById("generateSummaryBtn");
-            const copySummaryBtn = document.getElementById("copySummaryBtn");
-            const explanationLangSelector = document.getElementById("keyword-explanation-language");
+            // 保存设置到 session
+            this.saveSettingsToSession();
+        });
+    }
 
-            if (autoExtractBtn) {
-                autoExtractBtn.style.display = contentEl === keywordsContent ? 'block' : 'none';
-            }
-            if (generateSummaryBtn) {
-                generateSummaryBtn.style.display = contentEl === summaryContent ? 'block' : 'none';
-            }
-            if (copySummaryBtn) {
-                copySummaryBtn.style.display = contentEl === summaryContent ? 'block' : 'none';
-            }
-            if (explanationLangSelector) {
-                explanationLangSelector.style.display = (contentEl === keywordsContent || contentEl === historyContent || contentEl === summaryContent) ? 'block' : 'none';
+    // 添加关键词解释语言选择
+    const explanationLanguageSelector = document.getElementById("keyword-explanation-language");
+    if (explanationLanguageSelector) {
+        explanationLanguageSelector.addEventListener("change", (e) => {
+            this.keywordExplanationLanguage = e.target.value;
+
+            // 更新 Summary 显示
+            const summaryDisplay = document.getElementById("summary-display");
+            if (summaryDisplay) {
+                if (this.summaryCache && this.summaryCache[this.keywordExplanationLanguage]) {
+                    const cachedSummary = this.summaryCache[this.keywordExplanationLanguage];
+                    summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
+                } else {
+                    summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
+                }
             }
 
+            this.saveSettingsToSession();
+        });
+    }
+
+    // 自动提取关键词按钮（在Keywords面板中）
+    const autoExtractKeywordsBtn = document.getElementById("autoExtractKeywordsBtn");
+    if (autoExtractKeywordsBtn) {
+        autoExtractKeywordsBtn.addEventListener("click", async () => {
+            if (!this.keywordExtractor) {
+                this.showStatusMessage("Keyword extractor not initialized", 2000);
+                return;
+            }
+
+            if (Object.keys(this.preciseResults).length === 0) {
+                this.showStatusMessage("No transcript available to extract keywords from", 2000);
+                return;
+            }
+
+            autoExtractKeywordsBtn.disabled = true;
+            const originalTitle = autoExtractKeywordsBtn.title;
+            autoExtractKeywordsBtn.title = "Extracting...";
+
+            try {
+                await this.processKeywords(this.recordingSessionId || this.sessionManager.currentSessionId);
+                this.showStatusMessage("✓ Keywords extracted", 1500);
+            } catch (error) {
+                console.error("[StreamNote] Error extracting keywords:", error);
+                this.showStatusMessage("✗ Failed to extract keywords", 2000);
+            } finally {
+                autoExtractKeywordsBtn.disabled = false;
+                autoExtractKeywordsBtn.title = originalTitle;
+            }
+        });
+    }
+
+    // 初始化文本选中菜单功能
+    this.initTextSelectionMenu();
+
+    // ===== Simplified Side Panel Control =====
+    const sidePanelsContainer = document.querySelector(".side-panels-container");
+    const closeSidePanelBtn = document.getElementById("closeSidePanelBtn");
+    const sidePanelTitle = document.getElementById("sidePanelTitle");
+    const keywordsContent = document.getElementById("keywordsContent");
+    const summaryContent = document.getElementById("summaryContent");
+    const historyContent = document.getElementById("historyContent");
+    const settingsContent = document.getElementById("settingsContent");
+    const quickAccessKeywords = document.getElementById("quickAccessKeywords");
+    const quickAccessSummary = document.getElementById("quickAccessSummary");
+    const quickAccessHistory = document.getElementById("quickAccessHistory");
+    const quickAccessSettings = document.getElementById("quickAccessSettings");
+
+    // Hide all content
+    const hideAllContent = () => {
+        keywordsContent.classList.remove("active");
+        summaryContent.classList.remove("active");
+        historyContent.classList.remove("active");
+        settingsContent.classList.remove("active");
+        // Clear active state from all quick access buttons
+        quickAccessKeywords.classList.remove("active");
+        quickAccessSummary.classList.remove("active");
+        quickAccessHistory.classList.remove("active");
+        quickAccessSettings.classList.remove("active");
+    };
+
+    // Show specific content
+    const showContent = (contentEl, title) => {
+        hideAllContent();
+        contentEl.classList.add("active");
+        sidePanelTitle.textContent = title;
+
+        // Update corresponding button active state
+        if (contentEl === keywordsContent) {
+            quickAccessKeywords.classList.add("active");
+        } else if (contentEl === summaryContent) {
+            quickAccessSummary.classList.add("active");
+        } else if (contentEl === historyContent) {
+            quickAccessHistory.classList.add("active");
+        } else if (contentEl === settingsContent) {
+            quickAccessSettings.classList.add("active");
+        }
+
+        // Show/hide auto extract keywords button and explanation language selector based on active tab
+        const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
+        const generateSummaryBtn = document.getElementById("generateSummaryBtn");
+        const copySummaryBtn = document.getElementById("copySummaryBtn");
+        const explanationLangSelector = document.getElementById("keyword-explanation-language");
+
+        if (autoExtractBtn) {
+            autoExtractBtn.style.display = contentEl === keywordsContent ? 'block' : 'none';
+        }
+        if (generateSummaryBtn) {
+            generateSummaryBtn.style.display = contentEl === summaryContent ? 'block' : 'none';
+        }
+        if (copySummaryBtn) {
+            copySummaryBtn.style.display = contentEl === summaryContent ? 'block' : 'none';
+        }
+        if (explanationLangSelector) {
+            explanationLangSelector.style.display = (contentEl === keywordsContent || contentEl === historyContent || contentEl === summaryContent) ? 'block' : 'none';
+        }
+
+        // Set flag to prevent resize-induced scroll from closing autoScroll
+        this.isSyncingScroll = true;
+        sidePanelsContainer.classList.add("expanded");
+        setTimeout(() => {
+            this.isSyncingScroll = false;
+        }, 350); // Match the 0.3s transition + buffer
+    };
+
+    // Close panel button
+    if (closeSidePanelBtn) {
+        closeSidePanelBtn.addEventListener("click", () => {
             // Set flag to prevent resize-induced scroll from closing autoScroll
             this.isSyncingScroll = true;
-            sidePanelsContainer.classList.add("expanded");
+            sidePanelsContainer.classList.remove("expanded");
+            // Remove active state from all quick access buttons
+            quickAccessKeywords.classList.remove("active");
+            quickAccessHistory.classList.remove("active");
+            quickAccessSummary.classList.remove("active");
+            quickAccessSettings.classList.remove("active");
             setTimeout(() => {
                 this.isSyncingScroll = false;
             }, 350); // Match the 0.3s transition + buffer
-        };
+        });
+    }
 
-        // Close panel button
-        if (closeSidePanelBtn) {
-            closeSidePanelBtn.addEventListener("click", () => {
-                // Set flag to prevent resize-induced scroll from closing autoScroll
+    // Quick access buttons
+    if (quickAccessKeywords) {
+        quickAccessKeywords.addEventListener("click", () => {
+            const isOpen = sidePanelsContainer.classList.contains("expanded");
+            const isActive = keywordsContent.classList.contains("active");
+
+            if (isOpen && isActive) {
                 this.isSyncingScroll = true;
                 sidePanelsContainer.classList.remove("expanded");
-                // Remove active state from all quick access buttons
                 quickAccessKeywords.classList.remove("active");
+                setTimeout(() => {
+                    this.isSyncingScroll = false;
+                }, 350);
+            } else {
+                showContent(keywordsContent, "Keywords");
+            }
+        });
+    }
+
+    if (quickAccessHistory) {
+        quickAccessHistory.addEventListener("click", () => {
+            const isOpen = sidePanelsContainer.classList.contains("expanded");
+            const isActive = historyContent.classList.contains("active");
+
+            if (isOpen && isActive) {
+                this.isSyncingScroll = true;
+                sidePanelsContainer.classList.remove("expanded");
                 quickAccessHistory.classList.remove("active");
+                setTimeout(() => {
+                    this.isSyncingScroll = false;
+                }, 350);
+            } else {
+                showContent(historyContent, "History");
+            }
+        });
+    }
+
+    if (quickAccessSummary) {
+        quickAccessSummary.addEventListener("click", () => {
+            const isOpen = sidePanelsContainer.classList.contains("expanded");
+            const isActive = summaryContent.classList.contains("active");
+
+            if (isOpen && isActive) {
+                this.isSyncingScroll = true;
+                sidePanelsContainer.classList.remove("expanded");
                 quickAccessSummary.classList.remove("active");
+                setTimeout(() => {
+                    this.isSyncingScroll = false;
+                }, 350);
+            } else {
+                showContent(summaryContent, "Summary");
+            }
+        });
+    }
+
+    if (quickAccessSettings) {
+        quickAccessSettings.addEventListener("click", () => {
+            const isOpen = sidePanelsContainer.classList.contains("expanded");
+            const isActive = settingsContent.classList.contains("active");
+
+            if (isOpen && isActive) {
+                this.isSyncingScroll = true;
+                sidePanelsContainer.classList.remove("expanded");
                 quickAccessSettings.classList.remove("active");
                 setTimeout(() => {
                     this.isSyncingScroll = false;
-                }, 350); // Match the 0.3s transition + buffer
-            });
-        }
-
-        // Quick access buttons
-        if (quickAccessKeywords) {
-            quickAccessKeywords.addEventListener("click", () => {
-                const isOpen = sidePanelsContainer.classList.contains("expanded");
-                const isActive = keywordsContent.classList.contains("active");
-
-                if (isOpen && isActive) {
-                    this.isSyncingScroll = true;
-                    sidePanelsContainer.classList.remove("expanded");
-                    quickAccessKeywords.classList.remove("active");
-                    setTimeout(() => {
-                        this.isSyncingScroll = false;
-                    }, 350);
-                } else {
-                    showContent(keywordsContent, "Keywords");
-                }
-            });
-        }
-
-        if (quickAccessHistory) {
-            quickAccessHistory.addEventListener("click", () => {
-                const isOpen = sidePanelsContainer.classList.contains("expanded");
-                const isActive = historyContent.classList.contains("active");
-
-                if (isOpen && isActive) {
-                    this.isSyncingScroll = true;
-                    sidePanelsContainer.classList.remove("expanded");
-                    quickAccessHistory.classList.remove("active");
-                    setTimeout(() => {
-                        this.isSyncingScroll = false;
-                    }, 350);
-                } else {
-                    showContent(historyContent, "History");
-                }
-            });
-        }
-
-        if (quickAccessSummary) {
-            quickAccessSummary.addEventListener("click", () => {
-                const isOpen = sidePanelsContainer.classList.contains("expanded");
-                const isActive = summaryContent.classList.contains("active");
-
-                if (isOpen && isActive) {
-                    this.isSyncingScroll = true;
-                    sidePanelsContainer.classList.remove("expanded");
-                    quickAccessSummary.classList.remove("active");
-                    setTimeout(() => {
-                        this.isSyncingScroll = false;
-                    }, 350);
-                } else {
-                    showContent(summaryContent, "Summary");
-                }
-            });
-        }
-
-        if (quickAccessSettings) {
-            quickAccessSettings.addEventListener("click", () => {
-                const isOpen = sidePanelsContainer.classList.contains("expanded");
-                const isActive = settingsContent.classList.contains("active");
-
-                if (isOpen && isActive) {
-                    this.isSyncingScroll = true;
-                    sidePanelsContainer.classList.remove("expanded");
-                    quickAccessSettings.classList.remove("active");
-                    setTimeout(() => {
-                        this.isSyncingScroll = false;
-                    }, 350);
-                } else {
-                    showContent(settingsContent, "Settings");
-                }
-            });
-        }
-
-        // ===== Summary Feature =====
-        const generateSummaryBtn = document.getElementById("generateSummaryBtn");
-        const copySummaryBtn = document.getElementById("copySummaryBtn");
-        const summaryDisplay = document.getElementById("summary-display");
-
-        if (generateSummaryBtn) {
-            generateSummaryBtn.addEventListener("click", async () => {
-                // 从当前session获取转录文本
-                const session = this.sessionManager.getCurrentSession();
-                let textToSummarize = "";
-
-                if (session && session.transcripts) {
-                    // session.transcripts 是一个对象，key 是 chunk index，value 是 {text, timestamp} 等
-                    textToSummarize = Object.values(session.transcripts)
-                        .map(item => item && item.text ? item.text : "")
-                        .filter(text => text.trim().length > 0)
-                        .join(" ");
-                }
-
-                if (!textToSummarize || textToSummarize.trim().length === 0) {
-                    alert("No transcript text to summarize");
-                    return;
-                }
-
-                generateSummaryBtn.disabled = true;
-                generateSummaryBtn.title = "Generating...";
-                copySummaryBtn.disabled = true;
-
-                try {
-                    const summary = await this.summarizeText(textToSummarize, true);  // forceRefresh=true
-                    if (summary) {
-                        summaryDisplay.innerHTML = `<p>${summary.replace(/\n/g, '<br>')}</p>`;
-                        copySummaryBtn.disabled = false;
-                    } else {
-                        summaryDisplay.innerHTML = '<p class="placeholder">Failed to generate summary</p>';
-                    }
-                } catch (error) {
-                    console.error("[SUMMARY] Error:", error);
-                    summaryDisplay.innerHTML = `<p class="placeholder">Error: ${error.message}</p>`;
-                } finally {
-                    generateSummaryBtn.disabled = false;
-                    generateSummaryBtn.title = "Refresh Summary";
-                }
-            });
-        }
-
-        if (copySummaryBtn) {
-            copySummaryBtn.addEventListener("click", () => {
-                const summaryText = summaryDisplay.innerText;
-                if (summaryText && summaryText !== "Click the button to generate summary") {
-                    navigator.clipboard.writeText(summaryText).then(() => {
-                        alert("Summary copied to clipboard!");
-                    }).catch(err => {
-                        console.error("Failed to copy:", err);
-                    });
-                }
-            });
-        }
-
-        // Auto Scroll Toggle Button (Floating)
-        const floatingAutoScrollBtn = document.getElementById("floatingAutoScrollBtn");
-        if (floatingAutoScrollBtn) {
-            floatingAutoScrollBtn.addEventListener("click", () => {
-                // Enable Auto Scroll
-                if (!this.autoScroll) {
-                    this.autoScroll = true;
-
-                    // Scroll to bottom immediately
-                    this.isTogglingAutoScroll = true;
-                    this.isSyncingScroll = true;  // 防止scroll事件触发同步逻辑
-                    const transcript = document.getElementById("transcript");
-                    const translation = document.getElementById("translation");
-
-                    // 获取最后一行的索引并滚动到底部
-                    const keys = Object.keys(this.preciseResults);
-                    if (keys.length > 0) {
-                        const lastIndex = keys[keys.length - 1];
-
-                        if (transcript) {
-                            transcript.style.scrollBehavior = 'auto';
-                            this.scrollToLineBottom(transcript, lastIndex);
-                            transcript.style.scrollBehavior = 'smooth';
-                        }
-                        if (translation) {
-                            translation.style.scrollBehavior = 'auto';
-                            this.scrollToLineBottom(translation, lastIndex);
-                            translation.style.scrollBehavior = 'smooth';
-                        }
-                    }
-
-                    setTimeout(() => {
-                        this.isTogglingAutoScroll = false;
-                        this.isSyncingScroll = false;
-                    }, 200);
-                }
-
-                this.updateAutoScrollButton();
-            });
-            // Set initial state
-            this.updateAutoScrollButton();
-        }
-
-        // 初始化关键词标签页切换
-        this.initKeywordsTabSwitcher();
-    }
-
-    /**
-     * 初始化关键词标签页切换功能
-     */
-    initKeywordsTabSwitcher() {
-        const tabBtns = document.querySelectorAll(".keywords-tab-btn");
-        const tabContents = document.querySelectorAll(".keywords-tab-content");
-        const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
-
-        if (!tabBtns.length) return;
-
-        // 设置初始状态：刷新按钮禁用（因为默认显示手动标签页）
-        if (autoExtractBtn) {
-            autoExtractBtn.style.opacity = "0.3";
-            autoExtractBtn.style.pointerEvents = "none";
-        }
-
-        tabBtns.forEach(btn => {
-            btn.addEventListener("click", () => {
-                const tabName = btn.getAttribute("data-tab");
-
-                // 移除所有活跃状态
-                tabBtns.forEach(b => b.classList.remove("active"));
-                tabContents.forEach(c => c.classList.remove("active"));
-
-                // 激活当前标签页
-                btn.classList.add("active");
-                const activeContent = document.getElementById(`${tabName}-keywords-display`);
-                if (activeContent) {
-                    activeContent.classList.add("active");
-                }
-
-                // 根据标签页控制刷新按钮显示
-                if (autoExtractBtn) {
-                    autoExtractBtn.style.opacity = tabName === "auto" ? "1" : "0.3";
-                    autoExtractBtn.style.pointerEvents = tabName === "auto" ? "auto" : "none";
-                }
-            });
-        });
-    }
-
-    /**
-     * 初始化文本选中菜单功能
-     */
-    /**
-     * 初始化文本工具功能
-     */
-    initTextSelectionMenu() {
-        const explainBtn = document.getElementById("explainBtn");
-        const addKeywordBtn = document.getElementById("addKeywordBtn");
-
-        // 获取侧边栏相关元素
-        const sidePanelsContainer = document.querySelector(".side-panels-container");
-        const sidePanelTitle = document.getElementById("sidePanelTitle");
-        const keywordsContent = document.getElementById("keywordsContent");
-        const historyContent = document.getElementById("historyContent");
-        const settingsContent = document.getElementById("settingsContent");
-
-        if (!explainBtn || !addKeywordBtn) return;
-
-        // Hide all content
-        const hideAllContent = () => {
-            keywordsContent.classList.remove("active");
-            historyContent.classList.remove("active");
-            settingsContent.classList.remove("active");
-        };
-
-        // 监听选中事件
-        document.addEventListener("selectionchange", () => {
-            const selection = window.getSelection();
-            const selectedText = selection.toString().trim();
-
-            if (!selectedText || selectedText.length === 0) {
-                explainBtn.disabled = true;
-                addKeywordBtn.disabled = true;
-                return;
-            }
-
-            // 检查选中内容是否在转录或翻译区域
-            const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-            if (!range) {
-                explainBtn.disabled = true;
-                addKeywordBtn.disabled = true;
-                return;
-            }
-
-            const transcriptDiv = document.getElementById("transcript");
-            const translationDiv = document.getElementById("translation");
-
-            const inTranscript = transcriptDiv?.contains(range.commonAncestorContainer);
-            const inTranslation = translationDiv?.contains(range.commonAncestorContainer);
-
-            if (inTranscript || inTranslation) {
-                this.selectedText = selectedText;
-                this.selectedTextElement = range.commonAncestorContainer;
-
-                // 启用按钮
-                explainBtn.disabled = false;
-                addKeywordBtn.disabled = false;
+                }, 350);
             } else {
-                explainBtn.disabled = true;
-                addKeywordBtn.disabled = true;
-            }
-        });
-
-        // 解释按钮事件
-        explainBtn.addEventListener("click", async () => {
-            if (this.selectedText.trim()) {
-                const term = this.selectedText.trim();
-                // 如果不在历史中，先加入
-                if (!this.keywordExtractor.queryHistory.includes(term)) {
-                    this.keywordExtractor.addToQueryHistory(term);
-                }
-
-                // 打开 History 面板
-                if (historyContent && sidePanelTitle && sidePanelsContainer) {
-                    hideAllContent();
-                    historyContent.classList.add("active");
-                    sidePanelTitle.textContent = "History";
-                    this.isSyncingScroll = true;
-                    sidePanelsContainer.classList.add("expanded");
-                    setTimeout(() => {
-                        this.isSyncingScroll = false;
-                    }, 350);
-
-                    // 等待 DOM 更新后再展开
-                    setTimeout(() => {
-                        this.keywordExtractor.toggleExplanation(term);
-                    }, 50);
-                }
-
-                // 禁用按钮 - 清除选中文本
-                explainBtn.disabled = true;
-                addKeywordBtn.disabled = true;
-            }
-        });
-
-        // 添加关键词按钮事件
-        addKeywordBtn.addEventListener("click", () => {
-            if (this.selectedText.trim()) {
-                this.addSelectedTextAsKeyword();
-
-                // 打开 Keywords 面板
-                if (keywordsContent && sidePanelTitle && sidePanelsContainer) {
-                    hideAllContent();
-                    keywordsContent.classList.add("active");
-                    sidePanelTitle.textContent = "Keywords";
-                    this.isSyncingScroll = true;
-                    sidePanelsContainer.classList.add("expanded");
-                    setTimeout(() => {
-                        this.isSyncingScroll = false;
-                    }, 350);
-                }
-
-                // 禁用按钮 - 清除选中文本
-                explainBtn.disabled = true;
-                addKeywordBtn.disabled = true;
+                showContent(settingsContent, "Settings");
             }
         });
     }
 
-    /**
-     * 将选中的文本添加为关键词
-     */
-    addSelectedTextAsKeyword() {
-        if (!this.selectedText || !this.keywordExtractor) return;
+    // ===== Summary Feature =====
+    const generateSummaryBtn = document.getElementById("generateSummaryBtn");
+    const copySummaryBtn = document.getElementById("copySummaryBtn");
+    const summaryDisplay = document.getElementById("summary-display");
 
-        const keyword = this.selectedText.trim();
+    if (generateSummaryBtn) {
+        generateSummaryBtn.addEventListener("click", async () => {
+            // 从当前session获取转录文本
+            const session = this.sessionManager.getCurrentSession();
+            let textToSummarize = "";
 
-        // 检查是否已存在（手动或自动）
-        const allKeywords = [...this.keywordExtractor.manualKeywords, ...this.keywordExtractor.autoKeywords];
-        if (allKeywords.includes(keyword)) {
-            this.showStatusMessage("This keyword already exists", 1500);
+            if (session && session.transcripts) {
+                // session.transcripts 是一个对象，key 是 chunk index，value 是 {text, timestamp} 等
+                textToSummarize = Object.values(session.transcripts)
+                    .map(item => item && item.text ? item.text : "")
+                    .filter(text => text.trim().length > 0)
+                    .join(" ");
+            }
+
+            if (!textToSummarize || textToSummarize.trim().length === 0) {
+                alert("No transcript text to summarize");
+                return;
+            }
+
+            generateSummaryBtn.disabled = true;
+            generateSummaryBtn.title = "Generating...";
+            copySummaryBtn.disabled = true;
+
+            try {
+                const summary = await this.summarizeText(textToSummarize, true);  // forceRefresh=true
+                if (summary) {
+                    summaryDisplay.innerHTML = `<p>${summary.replace(/\n/g, '<br>')}</p>`;
+                    copySummaryBtn.disabled = false;
+                } else {
+                    summaryDisplay.innerHTML = '<p class="placeholder">Failed to generate summary</p>';
+                }
+            } catch (error) {
+                console.error("[SUMMARY] Error:", error);
+                summaryDisplay.innerHTML = `<p class="placeholder">Error: ${error.message}</p>`;
+            } finally {
+                generateSummaryBtn.disabled = false;
+                generateSummaryBtn.title = "Refresh Summary";
+            }
+        });
+    }
+
+    if (copySummaryBtn) {
+        copySummaryBtn.addEventListener("click", () => {
+            const summaryText = summaryDisplay.innerText;
+            if (summaryText && summaryText !== "Click the button to generate summary") {
+                navigator.clipboard.writeText(summaryText).then(() => {
+                    alert("Summary copied to clipboard!");
+                }).catch(err => {
+                    console.error("Failed to copy:", err);
+                });
+            }
+        });
+    }
+
+    // Auto Scroll Toggle Button (Floating)
+    const floatingAutoScrollBtn = document.getElementById("floatingAutoScrollBtn");
+    if (floatingAutoScrollBtn) {
+        floatingAutoScrollBtn.addEventListener("click", () => {
+            // Enable Auto Scroll
+            if (!this.autoScroll) {
+                this.autoScroll = true;
+
+                // Scroll to bottom immediately
+                this.isTogglingAutoScroll = true;
+                this.isSyncingScroll = true;  // 防止scroll事件触发同步逻辑
+                const transcript = document.getElementById("transcript");
+                const translation = document.getElementById("translation");
+
+                // 获取最后一行的索引并滚动到底部
+                const keys = Object.keys(this.preciseResults);
+                if (keys.length > 0) {
+                    const lastIndex = keys[keys.length - 1];
+
+                    if (transcript) {
+                        transcript.style.scrollBehavior = 'auto';
+                        this.scrollToLineBottom(transcript, lastIndex);
+                        transcript.style.scrollBehavior = 'smooth';
+                    }
+                    if (translation) {
+                        translation.style.scrollBehavior = 'auto';
+                        this.scrollToLineBottom(translation, lastIndex);
+                        translation.style.scrollBehavior = 'smooth';
+                    }
+                }
+
+                setTimeout(() => {
+                    this.isTogglingAutoScroll = false;
+                    this.isSyncingScroll = false;
+                }, 200);
+            }
+
+            this.updateAutoScrollButton();
+        });
+        // Set initial state
+        this.updateAutoScrollButton();
+    }
+
+    // 初始化关键词标签页切换
+    this.initKeywordsTabSwitcher();
+}
+
+/**
+ * 初始化关键词标签页切换功能
+ */
+initKeywordsTabSwitcher() {
+    const tabBtns = document.querySelectorAll(".keywords-tab-btn");
+    const tabContents = document.querySelectorAll(".keywords-tab-content");
+    const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
+
+    if (!tabBtns.length) return;
+
+    // 设置初始状态：刷新按钮禁用（因为默认显示手动标签页）
+    if (autoExtractBtn) {
+        autoExtractBtn.style.opacity = "0.3";
+        autoExtractBtn.style.pointerEvents = "none";
+    }
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const tabName = btn.getAttribute("data-tab");
+
+            // 移除所有活跃状态
+            tabBtns.forEach(b => b.classList.remove("active"));
+            tabContents.forEach(c => c.classList.remove("active"));
+
+            // 激活当前标签页
+            btn.classList.add("active");
+            const activeContent = document.getElementById(`${tabName}-keywords-display`);
+            if (activeContent) {
+                activeContent.classList.add("active");
+            }
+
+            // 根据标签页控制刷新按钮显示
+            if (autoExtractBtn) {
+                autoExtractBtn.style.opacity = tabName === "auto" ? "1" : "0.3";
+                autoExtractBtn.style.pointerEvents = tabName === "auto" ? "auto" : "none";
+            }
+        });
+    });
+}
+
+/**
+ * 初始化文本选中菜单功能
+ */
+/**
+ * 初始化文本工具功能
+ */
+initTextSelectionMenu() {
+    const explainBtn = document.getElementById("explainBtn");
+    const addKeywordBtn = document.getElementById("addKeywordBtn");
+
+    // 获取侧边栏相关元素
+    const sidePanelsContainer = document.querySelector(".side-panels-container");
+    const sidePanelTitle = document.getElementById("sidePanelTitle");
+    const keywordsContent = document.getElementById("keywordsContent");
+    const historyContent = document.getElementById("historyContent");
+    const settingsContent = document.getElementById("settingsContent");
+
+    if (!explainBtn || !addKeywordBtn) return;
+
+    // Hide all content
+    const hideAllContent = () => {
+        keywordsContent.classList.remove("active");
+        historyContent.classList.remove("active");
+        settingsContent.classList.remove("active");
+    };
+
+    // 监听选中事件
+    document.addEventListener("selectionchange", () => {
+        const selection = window.getSelection();
+        const selectedText = selection.toString().trim();
+
+        if (!selectedText || selectedText.length === 0) {
+            explainBtn.disabled = true;
+            addKeywordBtn.disabled = true;
             return;
         }
 
-        // 添加到手动关键词
-        this.keywordExtractor.manualKeywords.push(keyword);
+        // 检查选中内容是否在转录或翻译区域
+        const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+        if (!range) {
+            explainBtn.disabled = true;
+            addKeywordBtn.disabled = true;
+            return;
+        }
 
-        // 更新所有显示
-        this.keywordExtractor.updateAllKeywordDisplays();
+        const transcriptDiv = document.getElementById("transcript");
+        const translationDiv = document.getElementById("translation");
 
-        // 保存到 session
-        this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
+        const inTranscript = transcriptDiv?.contains(range.commonAncestorContainer);
+        const inTranslation = translationDiv?.contains(range.commonAncestorContainer);
 
-        this.showStatusMessage(`✓ Added "${keyword}" to keywords`, 1500);
-        this.selectedText = "";
+        if (inTranscript || inTranslation) {
+            this.selectedText = selectedText;
+            this.selectedTextElement = range.commonAncestorContainer;
+
+            // 启用按钮
+            explainBtn.disabled = false;
+            addKeywordBtn.disabled = false;
+        } else {
+            explainBtn.disabled = true;
+            addKeywordBtn.disabled = true;
+        }
+    });
+
+    // 解释按钮事件
+    explainBtn.addEventListener("click", async () => {
+        if (this.selectedText.trim()) {
+            const term = this.selectedText.trim();
+            // 如果不在历史中，先加入
+            if (!this.keywordExtractor.queryHistory.includes(term)) {
+                this.keywordExtractor.addToQueryHistory(term);
+            }
+
+            // 打开 History 面板
+            if (historyContent && sidePanelTitle && sidePanelsContainer) {
+                hideAllContent();
+                historyContent.classList.add("active");
+                sidePanelTitle.textContent = "History";
+                this.isSyncingScroll = true;
+                sidePanelsContainer.classList.add("expanded");
+                setTimeout(() => {
+                    this.isSyncingScroll = false;
+                }, 350);
+
+                // 等待 DOM 更新后再展开
+                setTimeout(() => {
+                    this.keywordExtractor.toggleExplanation(term);
+                }, 50);
+            }
+
+            // 禁用按钮 - 清除选中文本
+            explainBtn.disabled = true;
+            addKeywordBtn.disabled = true;
+        }
+    });
+
+    // 添加关键词按钮事件
+    addKeywordBtn.addEventListener("click", () => {
+        if (this.selectedText.trim()) {
+            this.addSelectedTextAsKeyword();
+
+            // 打开 Keywords 面板
+            if (keywordsContent && sidePanelTitle && sidePanelsContainer) {
+                hideAllContent();
+                keywordsContent.classList.add("active");
+                sidePanelTitle.textContent = "Keywords";
+                this.isSyncingScroll = true;
+                sidePanelsContainer.classList.add("expanded");
+                setTimeout(() => {
+                    this.isSyncingScroll = false;
+                }, 350);
+            }
+
+            // 禁用按钮 - 清除选中文本
+            explainBtn.disabled = true;
+            addKeywordBtn.disabled = true;
+        }
+    });
+}
+
+/**
+ * 将选中的文本添加为关键词
+ */
+addSelectedTextAsKeyword() {
+    if (!this.selectedText || !this.keywordExtractor) return;
+
+    const keyword = this.selectedText.trim();
+
+    // 检查是否已存在（手动或自动）
+    const allKeywords = [...this.keywordExtractor.manualKeywords, ...this.keywordExtractor.autoKeywords];
+    if (allKeywords.includes(keyword)) {
+        this.showStatusMessage("This keyword already exists", 1500);
+        return;
     }
 
+    // 添加到手动关键词
+    this.keywordExtractor.manualKeywords.push(keyword);
+
+    // 更新所有显示
+    this.keywordExtractor.updateAllKeywordDisplays();
+
+    // 保存到 session
+    this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
+
+    this.showStatusMessage(`✓ Added "${keyword}" to keywords`, 1500);
+    this.selectedText = "";
+}
+
     async start() {
-        try {
-            // 检查是否已有其他 session 在录制
-            if (this.recordingSessionId !== null && this.recordingSessionId !== this.sessionManager.currentSessionId) {
-                const recordingSession = this.sessionManager.getSession(this.recordingSessionId);
-                const recordingSessionName = recordingSession ? recordingSession.name : "Unknown";
-                this.showStatusMessage(`⚠️ Stop recording in "${recordingSessionName}" first!`, 3000);
-                return;
+    try {
+        // 检查是否已有其他 session 在录制
+        if (this.recordingSessionId !== null && this.recordingSessionId !== this.sessionManager.currentSessionId) {
+            const recordingSession = this.sessionManager.getSession(this.recordingSessionId);
+            const recordingSessionName = recordingSession ? recordingSession.name : "Unknown";
+            this.showStatusMessage(`⚠️ Stop recording in "${recordingSessionName}" first!`, 3000);
+            return;
+        }
+
+        // 设置全局录制状态
+        this.recordingSessionId = this.sessionManager.currentSessionId;
+        this.updateRecordingIndicator();
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        // 设置音量检测
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.analyser = this.audioContext.createAnalyser();
+        const source = this.audioContext.createMediaStreamSource(stream);
+        source.connect(this.analyser);
+        this.analyser.fftSize = 2048;
+
+        this.mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+        this.startTime = Date.now();
+        this.lastSendTime = Date.now();
+        this.recordingStartTime = Date.now();
+        // 只在第一次或清空后重置 chunkIndex，继续录制时保留
+        if (Object.keys(this.preciseResults).length === 0) {
+            this.chunkIndex = 0;
+        } else {
+            // 继续录制：chunkIndex 继续从上次结束的地方开始
+            this.chunkIndex = Math.max(...Object.keys(this.preciseResults).map(Number)) + 1;
+        }
+        this.isRecording = true;
+        this.audioChunks = [];
+        this.silenceStart = null;
+        this.voiceStart = null;
+        this.hasVoice = false;
+
+        this.mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                this.audioChunks.push(event.data);
+                // 立即发送这个完整的音频块
+                this.sendToWhisper();
+                this.audioChunks = [];
             }
+        };
 
-            // 设置全局录制状态
-            this.recordingSessionId = this.sessionManager.currentSessionId;
-            this.updateRecordingIndicator();
-
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-            // 设置音量检测
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            this.analyser = this.audioContext.createAnalyser();
-            const source = this.audioContext.createMediaStreamSource(stream);
-            source.connect(this.analyser);
-            this.analyser.fftSize = 2048;
-
-            this.mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-            this.startTime = Date.now();
-            this.lastSendTime = Date.now();
-            this.recordingStartTime = Date.now();
-            // 只在第一次或清空后重置 chunkIndex，继续录制时保留
-            if (Object.keys(this.preciseResults).length === 0) {
-                this.chunkIndex = 0;
-            } else {
-                // 继续录制：chunkIndex 继续从上次结束的地方开始
-                this.chunkIndex = Math.max(...Object.keys(this.preciseResults).map(Number)) + 1;
+        this.mediaRecorder.onstop = () => {
+            // 停止时直接丢弃最后一段（通常是静音）
+            if (!this.isRecording) {
+                this.audioChunks = [];
             }
-            this.isRecording = true;
-            this.audioChunks = [];
-            this.silenceStart = null;
-            this.voiceStart = null;
-            this.hasVoice = false;
+        };
 
-            this.mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    this.audioChunks.push(event.data);
-                    // 立即发送这个完整的音频块
-                    this.sendToWhisper();
-                    this.audioChunks = [];
-                }
-            };
+        // 开始录制
+        this.mediaRecorder.start();
 
-            this.mediaRecorder.onstop = () => {
-                // 停止时直接丢弃最后一段（通常是静音）
-                if (!this.isRecording) {
-                    this.audioChunks = [];
-                }
-            };
+        // 每 100ms 检测音量，停顿 600ms 或超过 10秒 就发送
+        this.checkInterval = setInterval(() => {
+            if (!this.isRecording) return;
 
-            // 开始录制
-            this.mediaRecorder.start();
-
-            // 每 100ms 检测音量，停顿 600ms 或超过 10秒 就发送
-            this.checkInterval = setInterval(() => {
-                if (!this.isRecording) return;
-
-                const volume = this.getVolume();
-                const now = Date.now();
-                const timeSinceLastSend = now - this.lastSendTime;
-                const recordingDuration = now - this.recordingStartTime;
+            const volume = this.getVolume();
+            const now = Date.now();
+            const timeSinceLastSend = now - this.lastSendTime;
+            const recordingDuration = now - this.recordingStartTime;
 
 
-                if (volume < 0.015) {  // 沉默（降低阈值，避免噪音干扰）
-                    this.voiceStart = null;
+            if (volume < 0.015) {  // 沉默（降低阈值，避免噪音干扰）
+                this.voiceStart = null;
 
-                    if (!this.silenceStart) {
-                        this.silenceStart = now;
-                    } else if (now - this.silenceStart > 600 && recordingDuration > 1000 && this.hasVoice) {
-                        // 沉默 >600ms + 录制 >1s + 有真实语音 → 发送
-                        this.mediaRecorder.stop();
-                        this.mediaRecorder.start();
-                        this.recordingStartTime = Date.now();
-                        this.lastSendTime = Date.now();
-                        this.hasVoice = false;
-                        this.voiceStart = null;
-                        this.silenceStart = null;
-                    }
-                } else {  // 有声音
-                    this.silenceStart = null;
-
-                    if (!this.voiceStart) {
-                        this.voiceStart = now;
-                    } else if (!this.hasVoice && now - this.voiceStart > 600) {
-                        // 持续声音 >600ms → 确认为真实语音
-                        this.hasVoice = true;
-                    }
-                }
-
-                // 超过 10秒 + 有真实语音 → 强制发送
-                if (timeSinceLastSend > 10000 && this.hasVoice) {
+                if (!this.silenceStart) {
+                    this.silenceStart = now;
+                } else if (now - this.silenceStart > 600 && recordingDuration > 1000 && this.hasVoice) {
+                    // 沉默 >600ms + 录制 >1s + 有真实语音 → 发送
                     this.mediaRecorder.stop();
                     this.mediaRecorder.start();
                     this.recordingStartTime = Date.now();
@@ -1092,841 +1069,862 @@ class StreamNote {
                     this.voiceStart = null;
                     this.silenceStart = null;
                 }
-            }, 100);
+            } else {  // 有声音
+                this.silenceStart = null;
 
-            document.getElementById("startBtn").disabled = true;
-            document.getElementById("stopBtn").disabled = false;
-            this.updateStatus("Recording...");
+                if (!this.voiceStart) {
+                    this.voiceStart = now;
+                } else if (!this.hasVoice && now - this.voiceStart > 600) {
+                    // 持续声音 >600ms → 确认为真实语音
+                    this.hasVoice = true;
+                }
+            }
 
-            // 每秒更新 session 统计信息
-            if (this.statsUpdateInterval) clearInterval(this.statsUpdateInterval);
-            this.statsUpdateInterval = setInterval(() => this.updateSessionStats(), 1000);
+            // 超过 10秒 + 有真实语音 → 强制发送
+            if (timeSinceLastSend > 10000 && this.hasVoice) {
+                this.mediaRecorder.stop();
+                this.mediaRecorder.start();
+                this.recordingStartTime = Date.now();
+                this.lastSendTime = Date.now();
+                this.hasVoice = false;
+                this.voiceStart = null;
+                this.silenceStart = null;
+            }
+        }, 100);
 
-        } catch (error) {
-            console.error("[ERROR] Microphone access:", error);
-            this.updateStatus("Microphone access denied");
-        }
+        document.getElementById("startBtn").disabled = true;
+        document.getElementById("stopBtn").disabled = false;
+        this.updateStatus("Recording...");
+
+        // 每秒更新 session 统计信息
+        if (this.statsUpdateInterval) clearInterval(this.statsUpdateInterval);
+        this.statsUpdateInterval = setInterval(() => this.updateSessionStats(), 1000);
+
+    } catch (error) {
+        console.error("[ERROR] Microphone access:", error);
+        this.updateStatus("Microphone access denied");
     }
+}
 
-    stop() {
-        if (this.mediaRecorder && this.isRecording) {
-            this.isRecording = false;
+stop() {
+    if (this.mediaRecorder && this.isRecording) {
+        this.isRecording = false;
 
-            // 清除全局录制状态
-            this.recordingSessionId = null;
-            this.updateRecordingIndicator();
+        // 清除全局录制状态
+        this.recordingSessionId = null;
+        this.updateRecordingIndicator();
 
-            if (this.checkInterval) {
-                clearInterval(this.checkInterval);
-                this.checkInterval = null;
-            }
-
-            // 清除 stats 更新定时器
-            if (this.statsUpdateInterval) {
-                clearInterval(this.statsUpdateInterval);
-                this.statsUpdateInterval = null;
-            }
-
-            if (this.audioContext) {
-                this.audioContext.close();
-            }
-
-            this.mediaRecorder.stop();
-
-            if (this.mediaRecorder.stream) {
-                this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
-            }
-
-            document.getElementById("startBtn").disabled = false;
-            document.getElementById("stopBtn").disabled = true;
-            this.updateStatus("Stopped");
-
-            // 停止时更新一次统计信息
-            this.updateSessionStats();
-        }
-    }
-
-    clear() {
-        this.preciseResults = {};
-        this.translationResults = {};
-        this.chunkIndex = 0;
-        this.currentTranscriptText = "";
-        this.updateDisplay();
-        if (this.keywordExtractor) {
-            this.keywordExtractor.reset();
+        if (this.checkInterval) {
+            clearInterval(this.checkInterval);
+            this.checkInterval = null;
         }
 
-        this.updateStatus("Cleared");
+        // 清除 stats 更新定时器
+        if (this.statsUpdateInterval) {
+            clearInterval(this.statsUpdateInterval);
+            this.statsUpdateInterval = null;
+        }
+
+        if (this.audioContext) {
+            this.audioContext.close();
+        }
+
+        this.mediaRecorder.stop();
+
+        if (this.mediaRecorder.stream) {
+            this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        }
+
+        document.getElementById("startBtn").disabled = false;
+        document.getElementById("stopBtn").disabled = true;
+        this.updateStatus("Stopped");
+
+        // 停止时更新一次统计信息
         this.updateSessionStats();
+    }
+}
 
-        // 保存到当前 session
-        this.saveToSession();
+clear() {
+    this.preciseResults = {};
+    this.translationResults = {};
+    this.chunkIndex = 0;
+    this.currentTranscriptText = "";
+    this.updateDisplay();
+    if (this.keywordExtractor) {
+        this.keywordExtractor.reset();
     }
 
-    toggleAutoScroll() {
-        this.autoScroll = !this.autoScroll;
-        this.updateAutoScrollButton();
-        // 如果开启自动滚动，立即滚动到底部
+    this.updateStatus("Cleared");
+    this.updateSessionStats();
+
+    // 保存到当前 session
+    this.saveToSession();
+}
+
+toggleAutoScroll() {
+    this.autoScroll = !this.autoScroll;
+    this.updateAutoScrollButton();
+    // 如果开启自动滚动，立即滚动到底部
+    if (this.autoScroll) {
+        // 设置标志，防止滚动事件认为这是用户手动滚动
+        this.isTogglingAutoScroll = true;
+        this.isSyncingScroll = true;  // 防止scroll事件触发同步逻辑
+        const transcript = document.getElementById("transcript");
+        const translation = document.getElementById("translation");
+
+        // 获取最后一行的索引并滚动到底部
+        const keys = Object.keys(this.preciseResults);
+        if (keys.length > 0) {
+            const lastIndex = keys[keys.length - 1];
+
+            // 临时改为 auto（直接跳转到底部）
+            if (transcript) {
+                transcript.style.scrollBehavior = 'auto';
+                this.scrollToLineBottom(transcript, lastIndex);
+                transcript.style.scrollBehavior = 'smooth';
+            }
+            if (translation) {
+                translation.style.scrollBehavior = 'auto';
+                this.scrollToLineBottom(translation, lastIndex);
+                translation.style.scrollBehavior = 'smooth';
+            }
+        }
+
+        // 200ms 后清除标志，足够长的时间来避免防抖和同步滚动的冲突
+        setTimeout(() => {
+            this.isTogglingAutoScroll = false;
+            this.isSyncingScroll = false;
+        }, 200);
+    }
+}
+
+updateAutoScrollButton() {
+    const floatingAutoScrollBtn = document.getElementById("floatingAutoScrollBtn");
+    if (floatingAutoScrollBtn) {
         if (this.autoScroll) {
-            // 设置标志，防止滚动事件认为这是用户手动滚动
-            this.isTogglingAutoScroll = true;
-            this.isSyncingScroll = true;  // 防止scroll事件触发同步逻辑
-            const transcript = document.getElementById("transcript");
-            const translation = document.getElementById("translation");
-
-            // 获取最后一行的索引并滚动到底部
-            const keys = Object.keys(this.preciseResults);
-            if (keys.length > 0) {
-                const lastIndex = keys[keys.length - 1];
-
-                // 临时改为 auto（直接跳转到底部）
-                if (transcript) {
-                    transcript.style.scrollBehavior = 'auto';
-                    this.scrollToLineBottom(transcript, lastIndex);
-                    transcript.style.scrollBehavior = 'smooth';
-                }
-                if (translation) {
-                    translation.style.scrollBehavior = 'auto';
-                    this.scrollToLineBottom(translation, lastIndex);
-                    translation.style.scrollBehavior = 'smooth';
-                }
-            }
-
-            // 200ms 后清除标志，足够长的时间来避免防抖和同步滚动的冲突
-            setTimeout(() => {
-                this.isTogglingAutoScroll = false;
-                this.isSyncingScroll = false;
-            }, 200);
+            // Hide button when auto scroll is ON
+            floatingAutoScrollBtn.classList.add("hidden");
+        } else {
+            // Show button when auto scroll is OFF
+            floatingAutoScrollBtn.classList.remove("hidden");
         }
     }
+}
 
-    updateAutoScrollButton() {
-        const floatingAutoScrollBtn = document.getElementById("floatingAutoScrollBtn");
-        if (floatingAutoScrollBtn) {
-            if (this.autoScroll) {
-                // Hide button when auto scroll is ON
-                floatingAutoScrollBtn.classList.add("hidden");
-            } else {
-                // Show button when auto scroll is OFF
-                floatingAutoScrollBtn.classList.remove("hidden");
-            }
-        }
+getVolume() {
+    if (!this.analyser) return 0;
+    const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+    this.analyser.getByteTimeDomainData(dataArray);
+    let sum = 0;
+    for (let i = 0; i < dataArray.length; i++) {
+        const normalized = (dataArray[i] - 128) / 128;
+        sum += normalized * normalized;
     }
-
-    getVolume() {
-        if (!this.analyser) return 0;
-        const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-        this.analyser.getByteTimeDomainData(dataArray);
-        let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) {
-            const normalized = (dataArray[i] - 128) / 128;
-            sum += normalized * normalized;
-        }
-        return Math.sqrt(sum / dataArray.length);
-    }
+    return Math.sqrt(sum / dataArray.length);
+}
 
     async sendToWhisper() {
-        if (this.audioChunks.length === 0) {
+    if (this.audioChunks.length === 0) {
+        return;
+    }
+
+    this.lastSendTime = Date.now();
+    const audioBlob = new Blob(this.audioChunks, { type: "audio/webm" });
+    const formData = new FormData();
+    formData.append("file", audioBlob, "audio.webm");
+
+    // 记录请求时的 sessionId，用于后续保存到正确的 session
+    // 如果正在录制，使用录制中的 session；否则使用当前显示的 session
+    const sessionIdAtRequest = this.recordingSessionId || this.sessionManager.currentSessionId;
+    const currentChunkIndex = this.chunkIndex;
+
+    try {
+        const response = await fetch("/api/transcribe", {
+            method: "POST",
+            body: formData,
+        });
+
+        if (!response.ok) {
+            console.error(`[ERROR] API error: ${response.status}`);
             return;
         }
 
-        this.lastSendTime = Date.now();
-        const audioBlob = new Blob(this.audioChunks, { type: "audio/webm" });
-        const formData = new FormData();
-        formData.append("file", audioBlob, "audio.webm");
+        const result = await response.json();
+        const text = result.text.trim();
 
-        // 记录请求时的 sessionId，用于后续保存到正确的 session
-        // 如果正在录制，使用录制中的 session；否则使用当前显示的 session
-        const sessionIdAtRequest = this.recordingSessionId || this.sessionManager.currentSessionId;
-        const currentChunkIndex = this.chunkIndex;
-
-        try {
-            const response = await fetch("/api/transcribe", {
-                method: "POST",
-                body: formData,
+        if (text) {
+            const timestamp = new Date().toLocaleTimeString('zh-CN', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
             });
 
-            if (!response.ok) {
-                console.error(`[ERROR] API error: ${response.status}`);
-                return;
-            }
+            // 直接保存到请求时的 session
+            const transcriptData = { [currentChunkIndex]: { text, timestamp } };
+            const saved = this.sessionManager.updateTranscriptsForSession(sessionIdAtRequest, transcriptData);
 
-            const result = await response.json();
-            const text = result.text.trim();
+            if (saved) {
+                this.chunkIndex += 1;
 
-            if (text) {
-                const timestamp = new Date().toLocaleTimeString('zh-CN', {
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
+                // 只有在仍然在同一个 session 时，才更新本地显示
+                if (this.sessionManager.currentSessionId === sessionIdAtRequest) {
+                    this.preciseResults[currentChunkIndex] = { text, timestamp };
+                    this.updateDisplay();
 
-                // 直接保存到请求时的 session
-                const transcriptData = { [currentChunkIndex]: { text, timestamp } };
-                const saved = this.sessionManager.updateTranscriptsForSession(sessionIdAtRequest, transcriptData);
-
-                if (saved) {
-                    this.chunkIndex += 1;
-
-                    // 只有在仍然在同一个 session 时，才更新本地显示
-                    if (this.sessionManager.currentSessionId === sessionIdAtRequest) {
-                        this.preciseResults[currentChunkIndex] = { text, timestamp };
-                        this.updateDisplay();
-
-                        // 自动翻译（保存到原来的录制session）
-                        if (this.translationEnabled) {
-                            this.translateText(text, currentChunkIndex, sessionIdAtRequest);
-                        }
-
-                        // 关键词提取改为手动触发，注释掉自动调用
-                        // this.processKeywords(sessionIdAtRequest);
-                    } else {
-                        // 如果已切换到其他 session，仅记录日志
+                    // 自动翻译（保存到原来的录制session）
+                    if (this.translationEnabled) {
+                        this.translateText(text, currentChunkIndex, sessionIdAtRequest);
                     }
+
+                    // 关键词提取改为手动触发，注释掉自动调用
+                    // this.processKeywords(sessionIdAtRequest);
+                } else {
+                    // 如果已切换到其他 session，仅记录日志
                 }
             }
-
-        } catch (error) {
-            console.error("[ERROR] Whisper request failed:", error);
         }
+
+    } catch (error) {
+        console.error("[ERROR] Whisper request failed:", error);
+    }
+}
+
+updateDisplay() {
+    // 更新 session 统计信息
+    this.updateSessionStats();
+
+    const transcriptDiv = document.getElementById("transcript");
+    const translationDiv = document.getElementById("translation");
+
+    // 更新转录显示
+    const formattedLines = Object.keys(this.preciseResults).map(key => {
+        const item = this.preciseResults[key];
+        if (!item || !item.text) return null;
+
+        const text = item.text.trim();
+        const timestamp = item.timestamp || new Date().toLocaleTimeString('zh-CN', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+
+        return `<p data-index="${key}">[${timestamp}] ${text}</p>`;
+    }).filter(line => line !== null);
+
+    if (formattedLines.length > 0) {
+        transcriptDiv.innerHTML = formattedLines.join('');
+    } else {
+        transcriptDiv.innerHTML = '<p class="placeholder">Click "Start" to begin transcription</p>';
     }
 
-    updateDisplay() {
-        // 更新 session 统计信息
-        this.updateSessionStats();
+    // 更新翻译显示
+    const translationLines = Object.keys(this.preciseResults).map(key => {
+        const item = this.preciseResults[key];
+        if (!item || !item.text) return null;
 
-        const transcriptDiv = document.getElementById("transcript");
-        const translationDiv = document.getElementById("translation");
+        const timestamp = item.timestamp || new Date().toLocaleTimeString('zh-CN', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
 
-        // 更新转录显示
-        const formattedLines = Object.keys(this.preciseResults).map(key => {
-            const item = this.preciseResults[key];
-            if (!item || !item.text) return null;
+        const translation = this.translationResults[key];
+        const translationText = translation || '<span class="placeholder">Translating...</span>';
 
-            const text = item.text.trim();
-            const timestamp = item.timestamp || new Date().toLocaleTimeString('zh-CN', {
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
+        return `<p data-index="${key}">[${timestamp}] ${translationText}</p>`;
+    }).filter(line => line !== null);
 
-            return `<p data-index="${key}">[${timestamp}] ${text}</p>`;
-        }).filter(line => line !== null);
+    if (translationLines.length > 0) {
+        translationDiv.innerHTML = translationLines.join('');
+    } else {
+        translationDiv.innerHTML = '<p class="placeholder">Click "Start" to begin translation</p>';
+    }
+    // 仅在自动滚动启用时滚动到底部（阻止同步滚动触发）
+    // 注意：要滚动外层容器，不是内容 div
+    if (this.autoScroll) {
+        this.isSyncingScroll = true;
+        const transcript = document.getElementById("transcript");
+        const translation = document.getElementById("translation");
 
-        if (formattedLines.length > 0) {
-            transcriptDiv.innerHTML = formattedLines.join('');
-        } else {
-            transcriptDiv.innerHTML = '<p class="placeholder">Click "Start" to begin transcription</p>';
-        }
+        // 获取最后一行的索引，用于对齐滚动
+        const keys = Object.keys(this.preciseResults);
+        if (keys.length > 0) {
+            const lastIndex = keys[keys.length - 1];
 
-        // 更新翻译显示
-        const translationLines = Object.keys(this.preciseResults).map(key => {
-            const item = this.preciseResults[key];
-            if (!item || !item.text) return null;
-
-            const timestamp = item.timestamp || new Date().toLocaleTimeString('zh-CN', {
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-
-            const translation = this.translationResults[key];
-            const translationText = translation || '<span class="placeholder">Translating...</span>';
-
-            return `<p data-index="${key}">[${timestamp}] ${translationText}</p>`;
-        }).filter(line => line !== null);
-
-        if (translationLines.length > 0) {
-            translationDiv.innerHTML = translationLines.join('');
-        } else {
-            translationDiv.innerHTML = '<p class="placeholder">Click "Start" to begin translation</p>';
-        }
-        // 仅在自动滚动启用时滚动到底部（阻止同步滚动触发）
-        // 注意：要滚动外层容器，不是内容 div
-        if (this.autoScroll) {
-            this.isSyncingScroll = true;
-            const transcript = document.getElementById("transcript");
-            const translation = document.getElementById("translation");
-
-            // 获取最后一行的索引，用于对齐滚动
-            const keys = Object.keys(this.preciseResults);
-            if (keys.length > 0) {
-                const lastIndex = keys[keys.length - 1];
-
-                // 使用 scrollToLineBottom 确保两个容器同步滚动到同一行
-                if (transcript) {
-                    transcript.style.scrollBehavior = 'auto';
-                    this.scrollToLineBottom(transcript, lastIndex);
-                }
-                if (translation) {
-                    translation.style.scrollBehavior = 'auto';
-                    this.scrollToLineBottom(translation, lastIndex);
-                }
+            // 使用 scrollToLineBottom 确保两个容器同步滚动到同一行
+            if (transcript) {
+                transcript.style.scrollBehavior = 'auto';
+                this.scrollToLineBottom(transcript, lastIndex);
             }
-
-            setTimeout(() => {
-                this.isSyncingScroll = false;
-            }, 100);
+            if (translation) {
+                translation.style.scrollBehavior = 'auto';
+                this.scrollToLineBottom(translation, lastIndex);
+            }
         }
-    }
-
-    updateStatus(text) {
-        document.getElementById("status").textContent = text;
-    }
-
-    /**
-     * 显示临时状态消息（自动消失）
-     * @param {String} message - 消息内容
-     * @param {Number} duration - 消息显示时长（毫秒），默认 3000
-     */
-    showStatusMessage(message, duration = 3000) {
-        const statusEl = document.getElementById("status");
-        const originalText = statusEl.textContent;
-        statusEl.textContent = message;
 
         setTimeout(() => {
-            if (statusEl.textContent === message) {
-                statusEl.textContent = originalText;
-            }
-        }, duration);
+            this.isSyncingScroll = false;
+        }, 100);
     }
+}
 
-    /**
-     * 更新录制指示器UI
-     * 显示当前正在录制的session，并高亮session列表
-     */
-    updateRecordingIndicator() {
-        const indicator = document.getElementById("recording-indicator");
-        const sessionNameEl = document.getElementById("recording-session-name");
+updateStatus(text) {
+    document.getElementById("status").textContent = text;
+}
 
-        if (this.recordingSessionId !== null) {
-            // 显示录制指示器
-            const recordingSession = this.sessionManager.getSession(this.recordingSessionId);
-            const recordingSessionName = recordingSession ? recordingSession.name : "Unknown";
-            sessionNameEl.textContent = recordingSessionName;
-            indicator.style.display = "inline-block";
+/**
+ * 显示临时状态消息（自动消失）
+ * @param {String} message - 消息内容
+ * @param {Number} duration - 消息显示时长（毫秒），默认 3000
+ */
+showStatusMessage(message, duration = 3000) {
+    const statusEl = document.getElementById("status");
+    const originalText = statusEl.textContent;
+    statusEl.textContent = message;
 
-            // 高亮session列表中正在录制的session
-            const sessionItems = document.querySelectorAll(".session-item");
-            sessionItems.forEach(item => {
-                if (item.dataset.sessionId === this.recordingSessionId) {
-                    item.classList.add("recording");
-                } else {
-                    item.classList.remove("recording");
-                }
-            });
-        } else {
-            // 隐藏录制指示器
-            indicator.style.display = "none";
-
-            // 移除所有session的录制高亮
-            const sessionItems = document.querySelectorAll(".session-item");
-            sessionItems.forEach(item => {
-                item.classList.remove("recording");
-            });
+    setTimeout(() => {
+        if (statusEl.textContent === message) {
+            statusEl.textContent = originalText;
         }
+    }, duration);
+}
+
+/**
+ * 更新录制指示器UI
+ * 显示当前正在录制的session，并高亮session列表
+ */
+updateRecordingIndicator() {
+    const indicator = document.getElementById("recording-indicator");
+    const sessionNameEl = document.getElementById("recording-session-name");
+
+    if (this.recordingSessionId !== null) {
+        // 显示录制指示器
+        const recordingSession = this.sessionManager.getSession(this.recordingSessionId);
+        const recordingSessionName = recordingSession ? recordingSession.name : "Unknown";
+        sessionNameEl.textContent = recordingSessionName;
+        indicator.style.display = "inline-block";
+
+        // 高亮session列表中正在录制的session
+        const sessionItems = document.querySelectorAll(".session-item");
+        sessionItems.forEach(item => {
+            if (item.dataset.sessionId === this.recordingSessionId) {
+                item.classList.add("recording");
+            } else {
+                item.classList.remove("recording");
+            }
+        });
+    } else {
+        // 隐藏录制指示器
+        indicator.style.display = "none";
+
+        // 移除所有session的录制高亮
+        const sessionItems = document.querySelectorAll(".session-item");
+        sessionItems.forEach(item => {
+            item.classList.remove("recording");
+        });
     }
+}
 
     /**
      * 翻译文本 - 流式版本
      */
     async translateText(text, index, targetSessionId = null) {
-        if (!text || !this.translationEnabled) return;
+    if (!text || !this.translationEnabled) return;
+
+    try {
+        const response = await fetch("/api/translate", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                text: text,
+                target_lang: this.targetLanguage
+            })
+        });
+
+        if (!response.ok) {
+            console.error(`[ERROR] Translation API error: ${response.status}`);
+            return;
+        }
+
+        // 处理流式响应
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let translation = "";
 
         try {
-            const response = await fetch("/api/translate", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    text: text,
-                    target_lang: this.targetLanguage
-                })
-            });
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
 
-            if (!response.ok) {
-                console.error(`[ERROR] Translation API error: ${response.status}`);
-                return;
-            }
+                const chunk = decoder.decode(value, { stream: true });
+                translation += chunk;
 
-            // 处理流式响应
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let translation = "";
-
-            try {
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    const chunk = decoder.decode(value, { stream: true });
-                    translation += chunk;
-
-                    // 实时更新显示
-                    if (translation) {
-                        this.translationResults[index] = translation;
-                        this.updateDisplay();
-                        // 保存翻译到正确的session（录制中的session或当前session）
-                        this.saveToSession(targetSessionId);
-                    }
+                // 实时更新显示
+                if (translation) {
+                    this.translationResults[index] = translation;
+                    this.updateDisplay();
+                    // 保存翻译到正确的session（录制中的session或当前session）
+                    this.saveToSession(targetSessionId);
                 }
-            } finally {
-                reader.releaseLock();
             }
-
-        } catch (error) {
-            console.error("[ERROR] Translation request failed:", error);
+        } finally {
+            reader.releaseLock();
         }
+
+    } catch (error) {
+        console.error("[ERROR] Translation request failed:", error);
     }
+}
 
     /**
      * 总结文本（使用用户选择的语言） - 流式版本
      */
     async summarizeText(text, forceRefresh = false) {
-        if (!text || text.trim().length < 50) {
+    if (!text || text.trim().length < 50) {
+        return null;
+    }
+
+    try {
+        const language = this.keywordExplanationLanguage;
+
+        // 检查该语言的缓存（除非强制刷新）
+        if (!forceRefresh && this.summaryCache[language]) {
+            return this.summaryCache[language];
+        }
+
+        const response = await fetch("/api/summarize", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                text: text,
+                language: language
+            })
+        });
+
+        if (!response.ok) {
+            console.error(`[ERROR] Summarization API error: ${response.status}`);
             return null;
         }
+
+        // 处理流式响应
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let summary = "";
 
         try {
-            const language = this.keywordExplanationLanguage;
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
 
-            // 检查该语言的缓存（除非强制刷新）
-            if (!forceRefresh && this.summaryCache[language]) {
-                return this.summaryCache[language];
-            }
+                const chunk = decoder.decode(value, { stream: true });
+                summary += chunk;
 
-            const response = await fetch("/api/summarize", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    text: text,
-                    language: language
-                })
-            });
-
-            if (!response.ok) {
-                console.error(`[ERROR] Summarization API error: ${response.status}`);
-                return null;
-            }
-
-            // 处理流式响应
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let summary = "";
-
-            try {
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    const chunk = decoder.decode(value, { stream: true });
-                    summary += chunk;
-
+                // 实时更新显示
+                if (summary) {
+                    // 按语言缓存结果
+                    this.summaryCache[language] = summary;
+                    // 立即保存到session
+                    this.saveSettingsToSession();
                     // 实时更新显示
-                    if (summary) {
-                        // 按语言缓存结果
-                        this.summaryCache[language] = summary;
-                        // 立即保存到session
-                        this.saveSettingsToSession();
-                        // 实时更新显示
-                        const summaryDisplay = document.getElementById("summary-display");
-                        if (summaryDisplay) {
-                            summaryDisplay.innerHTML = `<p>${summary.replace(/\n/g, '<br>')}</p>`;
-                        }
+                    const summaryDisplay = document.getElementById("summary-display");
+                    if (summaryDisplay) {
+                        summaryDisplay.innerHTML = `<p>${summary.replace(/\n/g, '<br>')}</p>`;
                     }
                 }
-            } finally {
-                reader.releaseLock();
             }
-
-            if (summary) {
-                return summary;
-            }
-
-            return null;
-
-        } catch (error) {
-            console.error("[ERROR] Summarization request failed:", error);
-            throw error;
+        } finally {
+            reader.releaseLock();
         }
+
+        if (summary) {
+            return summary;
+        }
+
+        return null;
+
+    } catch (error) {
+        console.error("[ERROR] Summarization request failed:", error);
+        throw error;
     }
+}
 
     /**
      * 重新翻译所有内容（仅在语言切换或强制刷新时使用）
      */
     async retranslateAll() {
-        const session = this.sessionManager.getCurrentSession();
-        if (!session) return;
+    const session = this.sessionManager.getCurrentSession();
+    if (!session) return;
 
-        // 检查当前语言的缓存是否完整
-        const currentLangCache = session.translations[this.targetLanguage] || {};
-        let hasMissingTranslations = false;
+    // 检查当前语言的缓存是否完整
+    const currentLangCache = session.translations[this.targetLanguage] || {};
+    let hasMissingTranslations = false;
 
-        // 检查是否所有转录都已翻译
-        const totalSegments = Object.keys(this.preciseResults).length;
-        const cachedSegments = Object.keys(currentLangCache).length;
-        const missingSegments = [];
+    // 检查是否所有转录都已翻译
+    const totalSegments = Object.keys(this.preciseResults).length;
+    const cachedSegments = Object.keys(currentLangCache).length;
+    const missingSegments = [];
 
-        for (const index of Object.keys(this.preciseResults)) {
-            if (!currentLangCache[index]) {
-                hasMissingTranslations = true;
-                missingSegments.push(index);
-            }
+    for (const index of Object.keys(this.preciseResults)) {
+        if (!currentLangCache[index]) {
+            hasMissingTranslations = true;
+            missingSegments.push(index);
         }
+    }
 
-        if (!hasMissingTranslations && cachedSegments > 0) {
-            // 缓存完整，直接使用
-            this.translationResults = { ...currentLangCache };
-            this.updateDisplay();
-
-            // 恢复或翻译关键词
-            if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
-                // 关键词翻译已删除
-            }
-            return;
-        }
-
-        // 缓存不完整，只翻译缺失的部分
-        const missingCount = missingSegments.length;
-
-        // 显示翻译进度提示
-        if (missingCount > 5) {
-            this.updateStatus(`Translating to ${this.targetLanguage}... (${missingCount} segments)`);
-        }
-
-        this.translationResults = { ...currentLangCache };  // 保留已有的翻译
+    if (!hasMissingTranslations && cachedSegments > 0) {
+        // 缓存完整，直接使用
+        this.translationResults = { ...currentLangCache };
         this.updateDisplay();
 
-        // 翻译缺失的部分
-        let translated = 0;
-        for (const [index, item] of Object.entries(this.preciseResults)) {
-            if (item && item.text && !this.translationResults[index]) {
-                await this.translateText(item.text, index);
-                translated++;
-
-                // 更新进度（避免过于频繁）
-                if (missingCount > 5 && translated % 5 === 0) {
-                    this.updateStatus(`Translating... ${translated}/${missingCount}`);
-                }
-            }
-        }
-
-        // 翻译完成提示
-        if (missingCount > 5) {
-            this.updateStatus(`Translation complete (${this.targetLanguage})`);
-            setTimeout(() => {
-                if (!this.isRecording) {
-                    this.updateStatus("Ready");
-                }
-            }, 2000);
-        }
-
-        // 重新翻译关键词（保存到当前session）
+        // 恢复或翻译关键词
         if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
             // 关键词翻译已删除
         }
+        return;
     }
+
+    // 缓存不完整，只翻译缺失的部分
+    const missingCount = missingSegments.length;
+
+    // 显示翻译进度提示
+    if (missingCount > 5) {
+        this.updateStatus(`Translating to ${this.targetLanguage}... (${missingCount} segments)`);
+    }
+
+    this.translationResults = { ...currentLangCache };  // 保留已有的翻译
+    this.updateDisplay();
+
+    // 翻译缺失的部分
+    let translated = 0;
+    for (const [index, item] of Object.entries(this.preciseResults)) {
+        if (item && item.text && !this.translationResults[index]) {
+            await this.translateText(item.text, index);
+            translated++;
+
+            // 更新进度（避免过于频繁）
+            if (missingCount > 5 && translated % 5 === 0) {
+                this.updateStatus(`Translating... ${translated}/${missingCount}`);
+            }
+        }
+    }
+
+    // 翻译完成提示
+    if (missingCount > 5) {
+        this.updateStatus(`Translation complete (${this.targetLanguage})`);
+        setTimeout(() => {
+            if (!this.isRecording) {
+                this.updateStatus("Ready");
+            }
+        }, 2000);
+    }
+
+    // 重新翻译关键词（保存到当前session）
+    if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
+        // 关键词翻译已删除
+    }
+}
 
     /**
      * 只翻译缺失的内容（用于翻译开关重新打开时）
      */
     async translateMissingContent() {
-        const session = this.sessionManager.getCurrentSession();
-        if (!session) return;
+    const session = this.sessionManager.getCurrentSession();
+    if (!session) return;
 
-        // 加载当前语言的缓存
-        const currentLangCache = session.translations[this.targetLanguage] || {};
-        this.translationResults = { ...currentLangCache };
+    // 加载当前语言的缓存
+    const currentLangCache = session.translations[this.targetLanguage] || {};
+    this.translationResults = { ...currentLangCache };
 
-        // 检查是否有未翻译的内容
-        let hasUntranslated = false;
-        for (const [index, item] of Object.entries(this.preciseResults)) {
-            if (item && item.text && !this.translationResults[index]) {
-                hasUntranslated = true;
-                await this.translateText(item.text, index);
-            }
-        }
-
-        // 如果没有未翻译的内容，只需要更新显示即可
-        if (!hasUntranslated) {
-            this.updateDisplay();
-        }
-
-        // 翻译并显示关键词（如果有）
-        if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
-            // 关键词翻译已删除
+    // 检查是否有未翻译的内容
+    let hasUntranslated = false;
+    for (const [index, item] of Object.entries(this.preciseResults)) {
+        if (item && item.text && !this.translationResults[index]) {
+            hasUntranslated = true;
+            await this.translateText(item.text, index);
         }
     }
+
+    // 如果没有未翻译的内容，只需要更新显示即可
+    if (!hasUntranslated) {
+        this.updateDisplay();
+    }
+
+    // 翻译并显示关键词（如果有）
+    if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
+        // 关键词翻译已删除
+    }
+}
 
     /**
      * 处理关键词提取 - 基于整个转录文本
      */
     async processKeywords(targetSessionId = null) {
-        if (!this.keywordExtractor || !this.keywordExtractor.enabled) return;
+    if (!this.keywordExtractor || !this.keywordExtractor.enabled) return;
 
-        // 收集所有转录文本（保证准确率）
-        this.currentTranscriptText = Object.values(this.preciseResults)
-            .map(item => item && item.text ? item.text : "")
-            .join(" ");
+    // 收集所有转录文本（保证准确率）
+    this.currentTranscriptText = Object.values(this.preciseResults)
+        .map(item => item && item.text ? item.text : "")
+        .join(" ");
 
-        if (this.currentTranscriptText.length > 10) {
+    if (this.currentTranscriptText.length > 10) {
 
-            // 基于整个文本提取关键词
-            await this.keywordExtractor.processText(this.currentTranscriptText);
+        // 基于整个文本提取关键词
+        await this.keywordExtractor.processText(this.currentTranscriptText);
 
-            // 更新所有显示
-            this.keywordExtractor.updateAllKeywordDisplays();
-        }
+        // 更新所有显示
+        this.keywordExtractor.updateAllKeywordDisplays();
     }
+}
 
     /**
      * 重新处理所有关键词（强度改变时使用）
      */
     async reprocessAllKeywords() {
-        if (!this.keywordExtractor || !this.keywordExtractor.enabled) return;
+    if (!this.keywordExtractor || !this.keywordExtractor.enabled) return;
 
-        // 获取当前的全文
-        this.currentTranscriptText = Object.values(this.preciseResults)
-            .map(item => item && item.text ? item.text : "")
-            .join(" ");
+    // 获取当前的全文
+    this.currentTranscriptText = Object.values(this.preciseResults)
+        .map(item => item && item.text ? item.text : "")
+        .join(" ");
 
-        if (this.currentTranscriptText.length > 10) {
+    if (this.currentTranscriptText.length > 10) {
 
-            // 清空自动提取的关键词（保留手动添加的）
-            this.keywordExtractor.autoKeywords = [];
+        // 清空自动提取的关键词（保留手动添加的）
+        this.keywordExtractor.autoKeywords = [];
 
-            // 重新提取
-            await this.keywordExtractor.processText(this.currentTranscriptText);
-
-            // 更新所有显示
-            this.keywordExtractor.updateAllKeywordDisplays();
-        }
-    }
-
-
-    /**
-     * 获取视口中心对应的 data-index
-     */
-    getTopLineNumber(container) {
-        const paragraphs = container.querySelectorAll('p[data-index]');
-
-        if (paragraphs.length === 0) return null;
-
-        // 找首个完全或部分在视口内的元素
-        for (let i = 0; i < paragraphs.length; i++) {
-            const p = paragraphs[i];
-            const rect = p.getBoundingClientRect();
-            // 如果元素的底部在视口顶端以下，说明这个元素在视口内或下方
-            if (rect.bottom > 0) {
-                return {
-                    index: p.getAttribute('data-index'),
-                    lineNumber: i
-                };
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * 根据行号和偏移量将指定行滚动到顶端
-     */
-    scrollToLineNumberTop(container, lineNumber, offsetLines = 0) {
-        const paragraphs = container.querySelectorAll('p[data-index]');
-
-        if (paragraphs.length === 0) return;
-
-        // 计算目标行号，应用偏移
-        let targetLineNumber = Math.max(0, Math.min(lineNumber + offsetLines, paragraphs.length - 1));
-
-        const targetElement = paragraphs[targetLineNumber];
-        const rect = targetElement.getBoundingClientRect();
-        // 计算目标元素顶部位置
-        const elementTop = container.scrollTop + rect.top;
-        // 直接滚动使元素顶部对齐视口顶端
-        container.scrollTop = elementTop;
-    }
-
-    /**
-     * 根据行号和偏移量滚动到指定位置
-     */
-    scrollToLineNumberBottom(container, lineNumber, offsetLines = 0) {
-        const paragraphs = container.querySelectorAll('p[data-index]');
-
-        if (paragraphs.length === 0) return;
-
-        // 计算目标行号，应用偏移
-        let targetLineNumber = Math.max(0, Math.min(lineNumber + offsetLines, paragraphs.length - 1));
-
-        const targetElement = paragraphs[targetLineNumber];
-        const rect = targetElement.getBoundingClientRect();
-        // 计算目标元素底部位置
-        const elementBottom = container.scrollTop + rect.bottom;
-        // 计算视口底部位置
-        const viewportBottom = container.scrollTop + container.clientHeight;
-        // 计算需要滚动的距离，使元素底部接近视口底部（留20px边距）
-        const scrollOffset = elementBottom - (viewportBottom - 20);
-
-        container.scrollTop += scrollOffset;
-    }
-
-    /**
-     * 滚动容器使指定 data-index 的元素居中
-     */
-    scrollToLineCenter(container, targetIndex) {
-        const targetElement = container.querySelector(`p[data-index="${targetIndex}"]`);
-        if (!targetElement) return;
-
-        const rect = targetElement.getBoundingClientRect();
-        const elementCenter = container.scrollTop + rect.top + rect.height / 2;
-        const viewportCenter = container.scrollTop + container.clientHeight / 2;
-        const scrollOffset = elementCenter - viewportCenter;
-
-        container.scrollTop += scrollOffset;
-    }
-
-    /**
-     * 滚动容器使指定 data-index 的元素靠近底部
-     * 用于自动滚动模式，使最新内容总是显示在视口底部
-     */
-    scrollToLineBottom(container, targetIndex) {
-        const targetElement = container.querySelector(`p[data-index="${targetIndex}"]`);
-        if (!targetElement) return;
-
-        const rect = targetElement.getBoundingClientRect();
-        // 计算目标元素底部位置
-        const elementBottom = container.scrollTop + rect.bottom;
-        // 计算视口底部位置
-        const viewportBottom = container.scrollTop + container.clientHeight;
-        // 计算需要滚动的距离，使元素底部接近视口底部（留20px边距）
-        const scrollOffset = elementBottom - (viewportBottom - 20);
-
-        container.scrollTop += scrollOffset;
-    }
-
-    /**
-     * 设置同步滚动 - 基于中心行对齐，原文框后移8个index
-     */
-    /**
-     * 检测容器是否滑到底部
-     */
-    isScrolledToBottom(container, threshold = 10) {
-        return container.scrollTop + container.clientHeight >= container.scrollHeight - threshold;
-    }
-
-    setupSyncScroll() {
-        const transcript = document.getElementById("transcript");
-        const translation = document.getElementById("translation");
-        const SCROLL_OFFSET = 8; // 原文框后移的行数
-
-        if (!transcript || !translation) {
-            return;
-        }
-
-        // 原文容器滚动时，同步译文容器
-        transcript.addEventListener('scroll', () => {
-            // 如果是用户手动滚动，关闭自动滚动
-            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
-                this.autoScroll = false;
-                this.updateAutoScrollButton();
-            }
-
-            // 如果用户滑到底部，自动启用自动滚动
-            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(transcript)) {
-                this.autoScroll = true;
-                this.updateAutoScrollButton();
-            }
-
-            if (this.isSyncingScroll) return;
-
-            clearTimeout(this.scrollTimeout);
-            this.scrollTimeout = setTimeout(() => {
-                this.isSyncingScroll = true;
-
-                // 获取原文顶端对应的行号
-                const topInfo = this.getTopLineNumber(transcript);
-
-                // 在译文中找到同样行号，但向前移SCROLL_OFFSET行
-                // 这样原文比译文"后移"了SCROLL_OFFSET行
-                if (topInfo) {
-                    translation.style.scrollBehavior = 'auto';
-                    this.scrollToLineNumberTop(translation, topInfo.lineNumber, -SCROLL_OFFSET);
-                }
-
-                setTimeout(() => {
-                    this.isSyncingScroll = false;
-                }, 50);
-            }, 300); // 防抖 300ms
-        });
-
-        // 译文容器滚动时，同步原文容器
-        translation.addEventListener('scroll', () => {
-            // 如果是用户手动滚动，关闭自动滚动
-            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
-                this.autoScroll = false;
-                this.updateAutoScrollButton();
-            }
-
-            // 如果用户滑到底部，自动启用自动滚动
-            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(translation)) {
-                this.autoScroll = true;
-                this.updateAutoScrollButton();
-            }
-
-            if (this.isSyncingScroll) return;
-
-            clearTimeout(this.scrollTimeout);
-            this.scrollTimeout = setTimeout(() => {
-                this.isSyncingScroll = true;
-
-                // 获取译文顶端对应的行号
-                const topInfo = this.getTopLineNumber(translation);
-
-                // 在原文中找到同样行号，但向后移SCROLL_OFFSET行
-                // 这样原文比译文"后移"了SCROLL_OFFSET行
-                if (topInfo) {
-                    transcript.style.scrollBehavior = 'auto';
-                    this.scrollToLineNumberTop(transcript, topInfo.lineNumber, SCROLL_OFFSET);
-                }
-
-                setTimeout(() => {
-                    this.isSyncingScroll = false;
-                }, 50);
-            }, 300); // 防抖 300ms
-        });
-    }
-    /**
-     * 删除关键词
-     */
-    deleteKeyword(keyword) {
-        if (!this.keywordExtractor) return;
-
-        // 从手动或自动关键词中删除
-        const manualIndex = this.keywordExtractor.manualKeywords.indexOf(keyword);
-        const autoIndex = this.keywordExtractor.autoKeywords.indexOf(keyword);
-
-        if (manualIndex > -1) {
-            this.keywordExtractor.manualKeywords.splice(manualIndex, 1);
-        } else if (autoIndex > -1) {
-            this.keywordExtractor.autoKeywords.splice(autoIndex, 1);
-        } else {
-            return;  // 关键词不存在
-        }
+        // 重新提取
+        await this.keywordExtractor.processText(this.currentTranscriptText);
 
         // 更新所有显示
         this.keywordExtractor.updateAllKeywordDisplays();
-
-        // 保存到 session
-        this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
-
-        this.showStatusMessage(`✓ Removed "${keyword}"`, 1200);
     }
+}
+
+
+/**
+ * 获取视口中心对应的 data-index
+ */
+getTopLineNumber(container) {
+    const paragraphs = container.querySelectorAll('p[data-index]');
+
+    if (paragraphs.length === 0) return null;
+
+    // 找首个完全或部分在视口内的元素
+    for (let i = 0; i < paragraphs.length; i++) {
+        const p = paragraphs[i];
+        const rect = p.getBoundingClientRect();
+        // 如果元素的底部在视口顶端以下，说明这个元素在视口内或下方
+        if (rect.bottom > 0) {
+            return {
+                index: p.getAttribute('data-index'),
+                lineNumber: i
+            };
+        }
+    }
+
+    return null;
+}
+
+/**
+ * 根据行号和偏移量将指定行滚动到顶端
+ */
+scrollToLineNumberTop(container, lineNumber, offsetLines = 0) {
+    const paragraphs = container.querySelectorAll('p[data-index]');
+
+    if (paragraphs.length === 0) return;
+
+    // 计算目标行号，应用偏移
+    let targetLineNumber = Math.max(0, Math.min(lineNumber + offsetLines, paragraphs.length - 1));
+
+    const targetElement = paragraphs[targetLineNumber];
+    const rect = targetElement.getBoundingClientRect();
+    // 计算目标元素顶部位置
+    const elementTop = container.scrollTop + rect.top;
+    // 直接滚动使元素顶部对齐视口顶端
+    container.scrollTop = elementTop;
+}
+
+/**
+ * 根据行号和偏移量滚动到指定位置
+ */
+scrollToLineNumberBottom(container, lineNumber, offsetLines = 0) {
+    const paragraphs = container.querySelectorAll('p[data-index]');
+
+    if (paragraphs.length === 0) return;
+
+    // 计算目标行号，应用偏移
+    let targetLineNumber = Math.max(0, Math.min(lineNumber + offsetLines, paragraphs.length - 1));
+
+    const targetElement = paragraphs[targetLineNumber];
+    const rect = targetElement.getBoundingClientRect();
+    // 计算目标元素底部位置
+    const elementBottom = container.scrollTop + rect.bottom;
+    // 计算视口底部位置
+    const viewportBottom = container.scrollTop + container.clientHeight;
+    // 计算需要滚动的距离，使元素底部接近视口底部（留20px边距）
+    const scrollOffset = elementBottom - (viewportBottom - 20);
+
+    container.scrollTop += scrollOffset;
+}
+
+/**
+ * 滚动容器使指定 data-index 的元素居中
+ */
+scrollToLineCenter(container, targetIndex) {
+    const targetElement = container.querySelector(`p[data-index="${targetIndex}"]`);
+    if (!targetElement) return;
+
+    const rect = targetElement.getBoundingClientRect();
+    const elementCenter = container.scrollTop + rect.top + rect.height / 2;
+    const viewportCenter = container.scrollTop + container.clientHeight / 2;
+    const scrollOffset = elementCenter - viewportCenter;
+
+    container.scrollTop += scrollOffset;
+}
+
+/**
+ * 滚动容器使指定 data-index 的元素靠近底部
+ * 用于自动滚动模式，使最新内容总是显示在视口底部
+ */
+scrollToLineBottom(container, targetIndex) {
+    const targetElement = container.querySelector(`p[data-index="${targetIndex}"]`);
+    if (!targetElement) return;
+
+    const rect = targetElement.getBoundingClientRect();
+    // 计算目标元素底部位置
+    const elementBottom = container.scrollTop + rect.bottom;
+    // 计算视口底部位置
+    const viewportBottom = container.scrollTop + container.clientHeight;
+    // 计算需要滚动的距离，使元素底部接近视口底部（留20px边距）
+    const scrollOffset = elementBottom - (viewportBottom - 20);
+
+    container.scrollTop += scrollOffset;
+}
+
+/**
+ * 设置同步滚动 - 基于中心行对齐，原文框后移8个index
+ */
+/**
+ * 检测容器是否滑到底部
+ */
+isScrolledToBottom(container, threshold = 10) {
+    return container.scrollTop + container.clientHeight >= container.scrollHeight - threshold;
+}
+
+setupSyncScroll() {
+    const transcript = document.getElementById("transcript");
+    const translation = document.getElementById("translation");
+    const SCROLL_OFFSET = 8; // 原文框后移的行数
+
+    if (!transcript || !translation) {
+        return;
+    }
+
+    // 原文容器滚动时，同步译文容器
+    transcript.addEventListener('scroll', () => {
+        // 如果是用户手动滚动，关闭自动滚动
+        if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
+            this.autoScroll = false;
+            this.updateAutoScrollButton();
+        }
+
+        // 如果用户滑到底部，自动启用自动滚动
+        if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(transcript)) {
+            this.autoScroll = true;
+            this.updateAutoScrollButton();
+        }
+
+        if (this.isSyncingScroll) return;
+
+        clearTimeout(this.scrollTimeout);
+        this.scrollTimeout = setTimeout(() => {
+            this.isSyncingScroll = true;
+
+            // 获取原文顶端对应的行号
+            const topInfo = this.getTopLineNumber(transcript);
+
+            // 在译文中找到同样行号，但向前移SCROLL_OFFSET行
+            // 这样原文比译文"后移"了SCROLL_OFFSET行
+            if (topInfo) {
+                translation.style.scrollBehavior = 'auto';
+                this.scrollToLineNumberTop(translation, topInfo.lineNumber, -SCROLL_OFFSET);
+            }
+
+            setTimeout(() => {
+                this.isSyncingScroll = false;
+            }, 50);
+        }, 300); // 防抖 300ms
+    });
+
+    // 译文容器滚动时，同步原文容器
+    translation.addEventListener('scroll', () => {
+        // 如果是用户手动滚动，关闭自动滚动
+        if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
+            this.autoScroll = false;
+            this.updateAutoScrollButton();
+        }
+
+        // 如果用户滑到底部，自动启用自动滚动
+        if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(translation)) {
+            this.autoScroll = true;
+            this.updateAutoScrollButton();
+        }
+
+        if (this.isSyncingScroll) return;
+
+        clearTimeout(this.scrollTimeout);
+        this.scrollTimeout = setTimeout(() => {
+            this.isSyncingScroll = true;
+
+            // 获取译文顶端对应的行号
+            const topInfo = this.getTopLineNumber(translation);
+
+            // 在原文中找到同样行号，但向后移SCROLL_OFFSET行
+            // 这样原文比译文"后移"了SCROLL_OFFSET行
+            if (topInfo) {
+                transcript.style.scrollBehavior = 'auto';
+                this.scrollToLineNumberTop(transcript, topInfo.lineNumber, SCROLL_OFFSET);
+            }
+
+            setTimeout(() => {
+                this.isSyncingScroll = false;
+            }, 50);
+        }, 300); // 防抖 300ms
+    });
+}
+/**
+ * 删除关键词
+ */
+deleteKeyword(keyword) {
+    if (!this.keywordExtractor) return;
+
+    // 从手动或自动关键词中删除
+    const manualIndex = this.keywordExtractor.manualKeywords.indexOf(keyword);
+    const autoIndex = this.keywordExtractor.autoKeywords.indexOf(keyword);
+
+    if (manualIndex > -1) {
+        this.keywordExtractor.manualKeywords.splice(manualIndex, 1);
+    } else if (autoIndex > -1) {
+        this.keywordExtractor.autoKeywords.splice(autoIndex, 1);
+    } else {
+        return;  // 关键词不存在
+    }
+
+    // 更新所有显示
+    this.keywordExtractor.updateAllKeywordDisplays();
+
+    // 保存到 session
+    this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
+
+    this.showStatusMessage(`✓ Removed "${keyword}"`, 1200);
+}
 }
 
 document.addEventListener("DOMContentLoaded", () => {
