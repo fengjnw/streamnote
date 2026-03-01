@@ -19,7 +19,7 @@ class KeywordExtractor {
         this.autoKeywords = [];      // 自动提取的关键词
 
         // 解释 API
-        this.explanationApiUrl = config.explanationApiUrl || "http://localhost:5001/api/explain-keyword";
+        this.explanationApiUrl = config.explanationApiUrl || "/api/explain-keyword";
 
         // 解释缓存: {"keyword|language": "explanation", ...}
         this.explanationCache = {};
