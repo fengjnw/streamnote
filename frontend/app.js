@@ -434,7 +434,7 @@ class StreamNote {
      */
     initKeywordExtractor() {
         this.keywordExtractor = new KeywordExtractor({
-            apiUrl: "http://localhost:5001/api/extract-keywords",
+            apiUrl: "/api/extract-keywords",
             transcriptElement: document.getElementById("transcript"),
             keywordElement: document.getElementById("keywords-display"),
             topK: 5
@@ -1286,7 +1286,7 @@ class StreamNote {
         const currentChunkIndex = this.chunkIndex;
 
         try {
-            const response = await fetch("http://localhost:5001/api/transcribe", {
+            const response = await fetch("/api/transcribe", {
                 method: "POST",
                 body: formData,
             });
@@ -1484,7 +1484,7 @@ class StreamNote {
         if (!text || !this.translationEnabled) return;
 
         try {
-            const response = await fetch("http://localhost:5001/api/translate", {
+            const response = await fetch("/api/translate", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -1550,7 +1550,7 @@ class StreamNote {
                 return this.summaryCache[language];
             }
 
-            const response = await fetch("http://localhost:5001/api/summarize", {
+            const response = await fetch("/api/summarize", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
