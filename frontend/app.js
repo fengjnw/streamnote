@@ -212,13 +212,13 @@ class StreamNote {
 
         // 更新显示（会应用当前的翻译开关状态）
         this.initializeVisibility();
-        
+
         // 清空 Summary 显示
         const summaryDisplay = document.getElementById("summary-display");
         if (summaryDisplay) {
             summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
         }
-        
+
         this.updateDisplay();
 
         // 重置并恢复关键词
@@ -643,7 +643,7 @@ class StreamNote {
             const generateSummaryBtn = document.getElementById("generateSummaryBtn");
             const copySummaryBtn = document.getElementById("copySummaryBtn");
             const explanationLangSelector = document.getElementById("keyword-explanation-language");
-            
+
             if (autoExtractBtn) {
                 autoExtractBtn.style.display = contentEl === keywordsContent ? 'block' : 'none';
             }
@@ -764,10 +764,12 @@ class StreamNote {
                 // 从当前session获取转录文本
                 const session = this.sessionManager.getCurrentSession();
                 let textToSummarize = "";
-                
-                if (session && session.items && session.items.length > 0) {
-                    textToSummarize = session.items
-                        .map(item => item.text || "")
+
+                if (session && session.transcripts) {
+                    // session.transcripts 是一个对象，key 是 chunk index，value 是 {text, timestamp} 等
+                    textToSummarize = Object.values(session.transcripts)
+                        .map(item => item && item.text ? item.text : "")
+                        .filter(text => text.trim().length > 0)
                         .join(" ");
                 }
 
@@ -1553,7 +1555,7 @@ class StreamNote {
 
         try {
             console.log(`[SUMMARIZE] Summarizing (text_len=${text.length}, language=${this.keywordExplanationLanguage})`);
-            
+
             const response = await fetch("http://localhost:5001/api/summarize", {
                 method: "POST",
                 headers: {
