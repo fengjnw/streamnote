@@ -530,7 +530,6 @@ header h1 {
     background: #5a7c99 !important;
     color: white !important;
     box-shadow: 0 4px 12px rgba(90, 124, 153, 0.4) !important;
-    font-weight: 600;
 }
 
 .control-btn.active:hover:not(:disabled),
