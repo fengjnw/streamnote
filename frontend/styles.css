@@ -408,6 +408,19 @@ header h1 {
     white-space: nowrap;
 }
 
+/* Icon-only buttons - 仅显示emoji */
+.control-btn.icon-only {
+    padding: 0;
+    min-width: 32px;
+    width: 32px;
+    font-size: 1.1em;
+}
+
+.control-btn.icon-only::after {
+    content: attr(title);
+    display: none;
+}
+
 .control-btn-primary {
     background: #5a7c99;
     color: white;
