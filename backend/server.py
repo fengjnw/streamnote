@@ -167,6 +167,59 @@ Format: ["translation1", "translation2", "translation3", ...]"""
         return {"error": str(e)}, 500
 
 
+@app.route("/api/summarize", methods=["POST"])
+def summarize():
+    """
+    生成文本总结 API (AI 驱动 - OpenAI)
+    支持指定语言的总结
+    """
+    try:
+        data = request.json
+        text = data.get("text", "").strip()
+        language = data.get("language", "English")  # 用户选择的语言
+        
+        if not text or len(text) < 50:
+            return jsonify({"summary": ""})
+        
+        print(f"[SUMMARIZE] text_len={len(text)}, language='{language}'")
+        
+        system_message = f"""You are a professional note summarizer.
+Summarize the given text in 2-3 sentences in {language}.
+- Keep key points only
+- Remove redundancy
+- Maintain clarity
+- Return plain text only, no prefix or explanation"""
+        
+        user_message = f"Summarize this text:\n{text}"
+        
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_message
+                },
+                {
+                    "role": "user",
+                    "content": user_message
+                }
+            ],
+            temperature=0.3,
+            max_tokens=200
+        )
+        
+        summary = response.choices[0].message.content.strip()
+        print(f"[SUMMARIZE] Success: {summary[:80]}")
+        
+        return jsonify({"summary": summary})
+        
+    except Exception as e:
+        print(f"[ERROR] Summarization: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}, 500
+
+
 @app.route("/api/explain-keyword", methods=["POST"])
 def explain_keyword():
     """

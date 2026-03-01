@@ -65,6 +65,8 @@
                         title="Explain selected text">💡 Explain</button>
                     <button id="addKeywordBtn" class="control-btn control-btn-secondary" disabled
                         title="Add selected text as keyword">➕ Keyword</button>
+                    <button id="quickAccessSummary" class="control-btn control-btn-secondary" title="Summary">✨
+                        Summary</button>
                     <button id="quickAccessHistory" class="control-btn control-btn-secondary" title="History">📜
                         History</button>
                     <button id="quickAccessKeywords" class="control-btn control-btn-secondary" title="Keywords">📌
@@ -183,6 +185,17 @@
                         <!-- Auto-extracted Keywords Section -->
                         <div id="auto-keywords-display" class="keywords-tab-content">
                             <p class="placeholder">Click 🔄 to extract keywords...</p>
+                        </div>
+                    </div>
+
+                    <!-- Summary Content -->
+                    <div id="summaryContent" class="panel-content">
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                            <button id="generateSummaryBtn" class="btn-icon" title="Generate Summary">✨ Generate</button>
+                            <button id="copySummaryBtn" class="btn-icon" disabled title="Copy Summary">📋 Copy</button>
+                        </div>
+                        <div id="summary-display" class="summary-text" style="overflow-y: auto; height: 100%; min-height: 200px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em; line-height: 1.6;">
+                            <p class="placeholder">Click the button to generate summary</p>
                         </div>
                     </div>
 

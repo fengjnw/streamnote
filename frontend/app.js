@@ -593,19 +593,23 @@ class StreamNote {
         const closeSidePanelBtn = document.getElementById("closeSidePanelBtn");
         const sidePanelTitle = document.getElementById("sidePanelTitle");
         const keywordsContent = document.getElementById("keywordsContent");
+        const summaryContent = document.getElementById("summaryContent");
         const historyContent = document.getElementById("historyContent");
         const settingsContent = document.getElementById("settingsContent");
         const quickAccessKeywords = document.getElementById("quickAccessKeywords");
+        const quickAccessSummary = document.getElementById("quickAccessSummary");
         const quickAccessHistory = document.getElementById("quickAccessHistory");
         const quickAccessSettings = document.getElementById("quickAccessSettings");
 
         // Hide all content
         const hideAllContent = () => {
             keywordsContent.classList.remove("active");
+            summaryContent.classList.remove("active");
             historyContent.classList.remove("active");
             settingsContent.classList.remove("active");
             // Clear active state from all quick access buttons
             quickAccessKeywords.classList.remove("active");
+            quickAccessSummary.classList.remove("active");
             quickAccessHistory.classList.remove("active");
             quickAccessSettings.classList.remove("active");
         };
@@ -619,6 +623,8 @@ class StreamNote {
             // Update corresponding button active state
             if (contentEl === keywordsContent) {
                 quickAccessKeywords.classList.add("active");
+            } else if (contentEl === summaryContent) {
+                quickAccessSummary.classList.add("active");
             } else if (contentEl === historyContent) {
                 quickAccessHistory.classList.add("active");
             } else if (contentEl === settingsContent) {
@@ -632,7 +638,7 @@ class StreamNote {
                 autoExtractBtn.style.display = contentEl === keywordsContent ? 'block' : 'none';
             }
             if (explanationLangSelector) {
-                explanationLangSelector.style.display = (contentEl === keywordsContent || contentEl === historyContent) ? 'block' : 'none';
+                explanationLangSelector.style.display = (contentEl === keywordsContent || contentEl === historyContent || contentEl === summaryContent) ? 'block' : 'none';
             }
 
             // Set flag to prevent resize-induced scroll from closing autoScroll
@@ -696,6 +702,24 @@ class StreamNote {
             });
         }
 
+        if (quickAccessSummary) {
+            quickAccessSummary.addEventListener("click", () => {
+                const isOpen = sidePanelsContainer.classList.contains("expanded");
+                const isActive = summaryContent.classList.contains("active");
+
+                if (isOpen && isActive) {
+                    this.isSyncingScroll = true;
+                    sidePanelsContainer.classList.remove("expanded");
+                    quickAccessSummary.classList.remove("active");
+                    setTimeout(() => {
+                        this.isSyncingScroll = false;
+                    }, 350);
+                } else {
+                    showContent(summaryContent, "Summary");
+                }
+            });
+        }
+
         if (quickAccessSettings) {
             quickAccessSettings.addEventListener("click", () => {
                 const isOpen = sidePanelsContainer.classList.contains("expanded");
@@ -710,6 +734,63 @@ class StreamNote {
                     }, 350);
                 } else {
                     showContent(settingsContent, "Settings");
+                }
+            });
+        }
+
+        // ===== Summary Feature =====
+        const generateSummaryBtn = document.getElementById("generateSummaryBtn");
+        const copySummaryBtn = document.getElementById("copySummaryBtn");
+        const summaryDisplay = document.getElementById("summary-display");
+
+        if (generateSummaryBtn) {
+            generateSummaryBtn.addEventListener("click", async () => {
+                // 从当前session获取转录文本
+                const session = this.sessionManager.getCurrentSession();
+                let textToSummarize = "";
+                
+                if (session && session.items && session.items.length > 0) {
+                    textToSummarize = session.items
+                        .map(item => item.text || "")
+                        .join(" ");
+                }
+
+                if (!textToSummarize || textToSummarize.trim().length === 0) {
+                    alert("No transcript text to summarize");
+                    return;
+                }
+
+                generateSummaryBtn.disabled = true;
+                generateSummaryBtn.textContent = "⏳ Generating...";
+                copySummaryBtn.disabled = true;
+
+                try {
+                    const summary = await this.summarizeText(textToSummarize);
+                    if (summary) {
+                        summaryDisplay.innerHTML = `<p>${summary.replace(/\n/g, '<br>')}</p>`;
+                        copySummaryBtn.disabled = false;
+                    } else {
+                        summaryDisplay.innerHTML = '<p class="placeholder">Failed to generate summary</p>';
+                    }
+                } catch (error) {
+                    console.error("[SUMMARY] Error:", error);
+                    summaryDisplay.innerHTML = `<p class="placeholder">Error: ${error.message}</p>`;
+                } finally {
+                    generateSummaryBtn.disabled = false;
+                    generateSummaryBtn.textContent = "✨ Generate";
+                }
+            });
+        }
+
+        if (copySummaryBtn) {
+            copySummaryBtn.addEventListener("click", () => {
+                const summaryText = summaryDisplay.innerText;
+                if (summaryText && summaryText !== "Click the button to generate summary") {
+                    navigator.clipboard.writeText(summaryText).then(() => {
+                        alert("Summary copied to clipboard!");
+                    }).catch(err => {
+                        console.error("Failed to copy:", err);
+                    });
                 }
             });
         }
@@ -1438,6 +1519,50 @@ class StreamNote {
 
         } catch (error) {
             console.error("[ERROR] Translation request failed:", error);
+        }
+    }
+
+    /**
+     * 总结文本（使用用户选择的语言）
+     */
+    async summarizeText(text) {
+        if (!text || text.trim().length < 50) {
+            console.warn("[SUMMARIZE] Text too short to summarize");
+            return null;
+        }
+
+        try {
+            console.log(`[SUMMARIZE] Summarizing (text_len=${text.length}, language=${this.keywordExplanationLanguage})`);
+            
+            const response = await fetch("http://localhost:5001/api/summarize", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    text: text,
+                    language: this.keywordExplanationLanguage
+                })
+            });
+
+            if (!response.ok) {
+                console.error(`[ERROR] Summarization API error: ${response.status}`);
+                return null;
+            }
+
+            const result = await response.json();
+            const summary = result.summary.trim();
+
+            if (summary) {
+                console.log("[SUMMARIZE] Success:", summary.substring(0, 80));
+                return summary;
+            }
+
+            return null;
+
+        } catch (error) {
+            console.error("[ERROR] Summarization request failed:", error);
+            throw error;
         }
     }
 
