@@ -1,9 +1,10 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
 from openai import OpenAI
 from config import OPENAI_API_KEY, FLASK_CONFIG
 from keyword_extractor import create_extractor
 import io
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -83,9 +84,9 @@ def extract_keywords():
 @app.route("/api/translate", methods=["POST"])
 def translate():
     """
-    翻译 API (GPT 驱动)
+    翻译 API (GPT 驱动) - 流式响应版本
     支持两种模式：
-    1. 普通文本翻译：返回 {"translation": "翻译结果"}
+    1. 普通文本翻译：流式返回翻译结果
     2. 关键词列表翻译：返回 {"keywords": ["翻译1", "翻译2", ...]}
     """
     try:
@@ -98,7 +99,7 @@ def translate():
             if is_keywords_mode:
                 return jsonify({"keywords": []})
             else:
-                return jsonify({"translation": ""})
+                return Response('', mimetype='text/plain')
         
         print(f"[TRANSLATE] Translating to {target_lang} (text_len={len(text)}, is_keywords={is_keywords_mode})")
         
@@ -119,46 +120,33 @@ Format: ["translation1", "translation2", "translation3", ...]"""
             system_message = f"You are a professional translator. Translate the following text to {target_lang}. Only provide the translation, no explanations."
             user_message = text
         
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": system_message
-                },
-                {
-                    "role": "user",
-                    "content": user_message
-                }
-            ],
-            temperature=0.3
-        )
-        
-        result_text = response.choices[0].message.content.strip()
-        print(f"[TRANSLATE] Raw response: {result_text[:100]}")
-        
-        if is_keywords_mode:
-            # 尝试解析 JSON 数组
+        # 使用流式响应
+        def generate():
             try:
-                import json
-                translated_keywords = json.loads(result_text)
-                if not isinstance(translated_keywords, list):
-                    # 如果不是数组，尝试从文本中提取
-                    raise ValueError("Response is not a JSON array")
-                print(f"[TRANSLATE] Parsed {len(translated_keywords)} keywords")
-                return jsonify({"keywords": translated_keywords})
-            except (json.JSONDecodeError, ValueError) as e:
-                # 降级：尝试从文本中分割
-                print(f"[TRANSLATE] JSON parse failed: {e}, falling back to text parsing")
-                # 尝试多种分隔符分割（Python正则表达式）
-                import re
-                keywords = [kw.strip() for kw in 
-                           re.split(r'[,，、]', result_text.replace('"', '').replace('[', '').replace(']', ''))
-                           if kw.strip()]
-                print(f"[TRANSLATE] Fallback: parsed {len(keywords)} keywords")
-                return jsonify({"keywords": keywords})
-        else:
-            return jsonify({"translation": result_text})
+                stream = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": system_message
+                        },
+                        {
+                            "role": "user",
+                            "content": user_message
+                        }
+                    ],
+                    temperature=0.3,
+                    stream=True
+                )
+                
+                for chunk in stream:
+                    if chunk.choices[0].delta.content:
+                        yield chunk.choices[0].delta.content
+            except Exception as e:
+                print(f"[ERROR] Stream error: {e}")
+                yield f"[ERROR] {str(e)}"
+        
+        return Response(generate(), mimetype='text/plain')
         
     except Exception as e:
         print(f"[ERROR] Translation: {e}")
@@ -170,7 +158,7 @@ Format: ["translation1", "translation2", "translation3", ...]"""
 @app.route("/api/summarize", methods=["POST"])
 def summarize():
     """
-    生成文本总结 API (AI 驱动 - OpenAI)
+    生成文本总结 API (AI 驱动 - OpenAI) - 流式响应版本
     支持指定语言的总结
     """
     try:
@@ -179,7 +167,7 @@ def summarize():
         language = data.get("language", "English")  # 用户选择的语言
         
         if not text or len(text) < 50:
-            return jsonify({"summary": ""})
+            return Response('', mimetype='text/plain')
         
         print(f"[SUMMARIZE] text_len={len(text)}, language='{language}'")
         
@@ -192,26 +180,33 @@ Summarise the given text in {language}.
         
         user_message = f"Summarise this text:\n{text}"
         
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": system_message
-                },
-                {
-                    "role": "user",
-                    "content": user_message
-                }
-            ],
-            temperature=0.3,
-            max_tokens=250
-        )
+        def generate():
+            try:
+                stream = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": system_message
+                        },
+                        {
+                            "role": "user",
+                            "content": user_message
+                        }
+                    ],
+                    temperature=0.3,
+                    max_tokens=250,
+                    stream=True
+                )
+                
+                for chunk in stream:
+                    if chunk.choices[0].delta.content:
+                        yield chunk.choices[0].delta.content
+            except Exception as e:
+                print(f"[ERROR] Stream error: {e}")
+                yield f"[ERROR] {str(e)}"
         
-        summary = response.choices[0].message.content.strip()
-        print(f"[SUMMARIZE] Success: {summary[:80]}")
-        
-        return jsonify({"summary": summary})
+        return Response(generate(), mimetype='text/plain')
         
     except Exception as e:
         print(f"[ERROR] Summarization: {e}")
@@ -223,7 +218,7 @@ Summarise the given text in {language}.
 @app.route("/api/explain-keyword", methods=["POST"])
 def explain_keyword():
     """
-    生成关键词解释 API (AI 驱动 - OpenAI)
+    生成关键词解释 API (AI 驱动 - OpenAI) - 流式响应版本
     """
     try:
         data = request.json
@@ -231,7 +226,7 @@ def explain_keyword():
         language = data.get("language", "English")  # English 表示英文解释
         
         if not keyword:
-            return jsonify({"explanation": ""})
+            return Response('', mimetype='text/plain')
         
         print(f"[EXPLAIN KEYWORD] keyword='{keyword}', language='{language}'")
         
@@ -249,26 +244,33 @@ Format: One paragraph (2-3 sentences maximum), explain what this term means and 
 Keep it simple and suitable for students."""
             user_message = f"Explain this keyword in {language}: {keyword}"
         
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": system_message
-                },
-                {
-                    "role": "user",
-                    "content": user_message
-                }
-            ],
-            temperature=0.7,
-            max_tokens=150
-        )
+        def generate():
+            try:
+                stream = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": system_message
+                        },
+                        {
+                            "role": "user",
+                            "content": user_message
+                        }
+                    ],
+                    temperature=0.7,
+                    max_tokens=150,
+                    stream=True
+                )
+                
+                for chunk in stream:
+                    if chunk.choices[0].delta.content:
+                        yield chunk.choices[0].delta.content
+            except Exception as e:
+                print(f"[ERROR] Stream error: {e}")
+                yield f"[ERROR] {str(e)}"
         
-        explanation = response.choices[0].message.content.strip()
-        print(f"[EXPLAIN KEYWORD] Generated explanation: {explanation[:80]}")
-        
-        return jsonify({"explanation": explanation})
+        return Response(generate(), mimetype='text/plain')
         
     except Exception as e:
         print(f"[ERROR] Keyword explanation: {e}")

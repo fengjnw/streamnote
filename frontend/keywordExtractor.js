@@ -239,7 +239,7 @@ class KeywordExtractor {
     }
 
     /**
-     * 获取并显示关键词的解释
+     * 获取并显示关键词的解释 - 流式版本
      * @param {string} keyword - 关键词
      * @param {HTMLElement} container - 显示容器
      */
@@ -282,15 +282,35 @@ class KeywordExtractor {
                 throw new Error(`HTTP ${response.status}`);
             }
 
-            const data = await response.json();
-            const explanation = data.explanation || "No explanation available";
+            // 处理流式响应
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let explanation = "";
+
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    explanation += chunk;
+
+                    // 实时更新显示（逐字显示）
+                    if (explanation) {
+                        console.log(`[KeywordExtractor] Streaming: ${explanation.substring(0, 50)}...`);
+                        contentElement.innerHTML = `<p>${explanation}</p>`;
+                    }
+                }
+            } finally {
+                reader.releaseLock();
+            }
 
             console.log(`[KeywordExtractor] Got explanation: ${explanation.substring(0, 50)}...`);
 
             // 存入缓存
             this.explanationCache[cacheKey] = explanation;
 
-            // 显示解释
+            // 最终显示
             contentElement.innerHTML = `<p>${explanation}</p>`;
         } catch (error) {
             console.error("[KeywordExtractor] Error fetching explanation:", error);

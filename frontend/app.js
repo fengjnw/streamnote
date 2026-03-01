@@ -1535,7 +1535,7 @@ class StreamNote {
     }
 
     /**
-     * 翻译文本
+     * 翻译文本 - 流式版本
      */
     async translateText(text, index, targetSessionId = null) {
         if (!text || !this.translationEnabled) return;
@@ -1557,15 +1557,30 @@ class StreamNote {
                 return;
             }
 
-            const result = await response.json();
-            const translation = result.translation.trim();
+            // 处理流式响应
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let translation = "";
 
-            if (translation) {
-                console.log("[TRANSLATE]", translation);
-                this.translationResults[index] = translation;
-                this.updateDisplay();
-                // 保存翻译到正确的session（录制中的session或当前session）
-                this.saveToSession(targetSessionId);
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    translation += chunk;
+
+                    // 实时更新显示
+                    if (translation) {
+                        console.log("[TRANSLATE] Streaming:", translation);
+                        this.translationResults[index] = translation;
+                        this.updateDisplay();
+                        // 保存翻译到正确的session（录制中的session或当前session）
+                        this.saveToSession(targetSessionId);
+                    }
+                }
+            } finally {
+                reader.releaseLock();
             }
 
         } catch (error) {
@@ -1574,7 +1589,7 @@ class StreamNote {
     }
 
     /**
-     * 总结文本（使用用户选择的语言）
+     * 总结文本（使用用户选择的语言） - 流式版本
      */
     async summarizeText(text, forceRefresh = false) {
         if (!text || text.trim().length < 50) {
@@ -1608,15 +1623,39 @@ class StreamNote {
                 return null;
             }
 
-            const result = await response.json();
-            const summary = result.summary.trim();
+            // 处理流式响应
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let summary = "";
+
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    summary += chunk;
+
+                    // 实时更新显示
+                    if (summary) {
+                        console.log("[SUMMARIZE] Streaming:", summary.substring(0, 50));
+                        // 按语言缓存结果
+                        this.summaryCache[language] = summary;
+                        // 立即保存到session
+                        this.saveSettingsToSession();
+                        // 实时更新显示
+                        const summaryDisplay = document.getElementById("summary-display");
+                        if (summaryDisplay) {
+                            summaryDisplay.innerHTML = `<p>${summary.replace(/\n/g, '<br>')}</p>`;
+                        }
+                    }
+                }
+            } finally {
+                reader.releaseLock();
+            }
 
             if (summary) {
-                console.log("[SUMMARIZE] Success:", summary.substring(0, 80));
-                // 按语言缓存结果
-                this.summaryCache[language] = summary;
-                // 立即保存到session
-                this.saveSettingsToSession();
+                console.log("[SUMMARIZE] Complete:", summary.substring(0, 80));
                 return summary;
             }
 
