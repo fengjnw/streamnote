@@ -212,6 +212,13 @@ class StreamNote {
 
         // 更新显示（会应用当前的翻译开关状态）
         this.initializeVisibility();
+        
+        // 清空 Summary 显示
+        const summaryDisplay = document.getElementById("summary-display");
+        if (summaryDisplay) {
+            summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
+        }
+        
         this.updateDisplay();
 
         // 重置并恢复关键词
@@ -633,9 +640,18 @@ class StreamNote {
 
             // Show/hide auto extract keywords button and explanation language selector based on active tab
             const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
+            const generateSummaryBtn = document.getElementById("generateSummaryBtn");
+            const copySummaryBtn = document.getElementById("copySummaryBtn");
             const explanationLangSelector = document.getElementById("keyword-explanation-language");
+            
             if (autoExtractBtn) {
                 autoExtractBtn.style.display = contentEl === keywordsContent ? 'block' : 'none';
+            }
+            if (generateSummaryBtn) {
+                generateSummaryBtn.style.display = contentEl === summaryContent ? 'block' : 'none';
+            }
+            if (copySummaryBtn) {
+                copySummaryBtn.style.display = contentEl === summaryContent ? 'block' : 'none';
             }
             if (explanationLangSelector) {
                 explanationLangSelector.style.display = (contentEl === keywordsContent || contentEl === historyContent || contentEl === summaryContent) ? 'block' : 'none';
@@ -761,7 +777,7 @@ class StreamNote {
                 }
 
                 generateSummaryBtn.disabled = true;
-                generateSummaryBtn.textContent = "⏳ Generating...";
+                generateSummaryBtn.title = "Generating...";
                 copySummaryBtn.disabled = true;
 
                 try {
@@ -777,7 +793,7 @@ class StreamNote {
                     summaryDisplay.innerHTML = `<p class="placeholder">Error: ${error.message}</p>`;
                 } finally {
                     generateSummaryBtn.disabled = false;
-                    generateSummaryBtn.textContent = "✨ Generate";
+                    generateSummaryBtn.title = "Generate Summary";
                 }
             });
         }
@@ -1374,6 +1390,8 @@ class StreamNote {
 
         if (formattedLines.length > 0) {
             transcriptDiv.innerHTML = formattedLines.join('');
+        } else {
+            transcriptDiv.innerHTML = '<p class="placeholder">Click "Start" to begin transcription</p>';
         }
 
         // 更新翻译显示
@@ -1396,6 +1414,8 @@ class StreamNote {
 
         if (translationLines.length > 0) {
             translationDiv.innerHTML = translationLines.join('');
+        } else {
+            translationDiv.innerHTML = '<p class="placeholder">Click "Start" to begin translation</p>';
         }
         // 仅在自动滚动启用时滚动到底部（阻止同步滚动触发）
         // 注意：要滚动外层容器，不是内容 div
