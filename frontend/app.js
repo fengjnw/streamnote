@@ -590,7 +590,13 @@ class StreamNote {
             const explanationLangSelector = document.getElementById("keyword-explanation-language");
 
             if (autoExtractBtn) {
-                autoExtractBtn.style.display = contentEl === keywordsContent ? 'block' : 'none';
+                if (contentEl === keywordsContent) {
+                    autoExtractBtn.style.display = 'block';
+                    autoExtractBtn.style.opacity = '1';
+                    autoExtractBtn.style.pointerEvents = 'auto';
+                } else {
+                    autoExtractBtn.style.display = 'none';
+                }
             }
             if (generateSummaryBtn) {
                 generateSummaryBtn.style.display = contentEl === summaryContent ? 'block' : 'none';
@@ -981,6 +987,8 @@ class StreamNote {
 
                     if (autoExtractBtn) {
                         autoExtractBtn.style.display = 'block';
+                        autoExtractBtn.style.opacity = '1';
+                        autoExtractBtn.style.pointerEvents = 'auto';
                     }
                     if (generateSummaryBtn) {
                         generateSummaryBtn.style.display = 'none';
