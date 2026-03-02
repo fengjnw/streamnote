@@ -40,9 +40,10 @@ class StreamNote {
         this.recordingSessionId = null;  // 记录当前正在转录的 session
         this.displaySessionId = null;    // 当前显示的 session（用户看到的）
 
-        // 同步滚动 - 使用全局标志防止双向同步
+        // 同步滚动 - 使用全局标志防止双向同步，各容器单独防抖
         this.isSyncingScroll = false;  // 正在执行同步滚动
-        this.scrollDebounceTimeout = null;  // 防抖超时
+        this.transcriptDebounceTimeout = null;  // transcript 防抖超时
+        this.translationDebounceTimeout = null;  // translation 防抖超时
 
         // 防止UI更新期间的滚动干扰
         this.isUpdatingUI = false;
@@ -1888,7 +1889,7 @@ class StreamNote {
             if (this.isSyncingScroll) return;
 
             // 这是用户的手动滚动，清除之前的防抖
-            clearTimeout(this.scrollDebounceTimeout);
+            clearTimeout(this.transcriptDebounceTimeout);
 
             // 如果自动滚动启用且不是用户手动切换，关闭自动滚动
             if (!this.isTogglingAutoScroll && this.autoScroll) {
@@ -1903,7 +1904,7 @@ class StreamNote {
             }
 
             // 防抖：延迟执行同步
-            this.scrollDebounceTimeout = setTimeout(() => {
+            this.transcriptDebounceTimeout = setTimeout(() => {
                 // 标记正在同步滚动
                 this.isSyncingScroll = true;
 
@@ -1932,7 +1933,7 @@ class StreamNote {
             if (this.isSyncingScroll) return;
 
             // 这是用户的手动滚动，清除之前的防抖
-            clearTimeout(this.scrollDebounceTimeout);
+            clearTimeout(this.translationDebounceTimeout);
 
             // 如果自动滚动启用且不是用户手动切换，关闭自动滚动
             if (!this.isTogglingAutoScroll && this.autoScroll) {
@@ -1947,7 +1948,7 @@ class StreamNote {
             }
 
             // 防抖：延迟执行同步
-            this.scrollDebounceTimeout = setTimeout(() => {
+            this.translationDebounceTimeout = setTimeout(() => {
                 // 标记正在同步滚动
                 this.isSyncingScroll = true;
 
