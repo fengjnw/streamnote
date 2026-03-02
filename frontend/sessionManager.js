@@ -138,7 +138,6 @@ class SessionManager {
 
         this.saveSessions();
         this.switchSession(id);
-        console.log(`[SessionManager] Created session: ${defaultName}`);
         return id;
     }
 
@@ -181,7 +180,6 @@ class SessionManager {
             detail: { sessionId: sessionId }
         }));
 
-        console.log(`[SessionManager] Switched to: ${this.sessions[sessionId].name}`);
         return true;
     }
 
@@ -203,7 +201,6 @@ class SessionManager {
     updateTranscriptsForSession(sessionId, transcripts) {
         // 检查该 session 是否还存在
         if (!this.sessions[sessionId]) {
-            console.warn(`[SessionManager] Session ${sessionId} not found, discarding results`);
             return false;
         }
 
@@ -286,7 +283,7 @@ class SessionManager {
                 sessionNameDisplay.textContent = session.name;
             }
 
-            console.log(`[SessionManager] Renamed to: ${newName}`);
+            return true;
         }
     }
 
@@ -304,7 +301,6 @@ class SessionManager {
         };
 
         this.downloadJSON(data, `StreamNote_${session.name}_${this.formatDate()}.json`);
-        console.log('[SessionManager] Exported current session');
     }
 
     /**
@@ -318,7 +314,6 @@ class SessionManager {
         };
 
         this.downloadJSON(data, `StreamNote_All_Sessions_${this.formatDate()}.json`);
-        console.log('[SessionManager] Exported all sessions');
     }
 
     /**
@@ -371,7 +366,6 @@ class SessionManager {
                 localStorage.removeItem(this.CURRENT_SESSION_KEY);
                 this.createNewSession('Default Session');
                 alert('All data cleared');
-                console.log('[SessionManager] All sessions cleared');
             }
         }
     }
@@ -402,8 +396,6 @@ class SessionManager {
      */
     deleteSession(sessionId) {
         if (!this.sessions[sessionId]) return;
-
-        const sessionName = this.sessions[sessionId].name;
         delete this.sessions[sessionId];
 
         // 如果删除的是当前 session，切换到其他 session
@@ -415,12 +407,7 @@ class SessionManager {
                 // 没有 session 了，创建新的
                 this.createNewSession("Default Session");
             }
-        } else {
-            this.saveSessions();
-            this.renderSessionList();
         }
-
-        console.log(`[SessionManager] Deleted session: ${sessionName}`);
     }
 
     /**

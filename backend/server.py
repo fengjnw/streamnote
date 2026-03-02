@@ -40,11 +40,9 @@ def transcribe():
             return {"error": "No audio file"}, 400
 
         audio_data = audio_file.read()
-        print(f"[TRANSCRIBE] Received {len(audio_data)} bytes")
 
-        # 后端兜底：只过滤明显异常的音频
+        # 后端兆井：只过滤明昺异常的音频
         if len(audio_data) < 10000:
-            print(f"[WARNING] Audio too short, skipping")
             return {"text": ""}, 200
 
         audio_buffer = io.BytesIO(audio_data)
@@ -56,11 +54,9 @@ def transcribe():
         )
 
         text = result.text.strip()
-        print(f"[TRANSCRIBE] Success: {text[:60]}")
         return jsonify({"text": text})
 
     except Exception as e:
-        print(f"[ERROR] Transcription: {e}")
         import traceback
         traceback.print_exc()
         return {"error": str(e)}, 500
@@ -79,16 +75,11 @@ def extract_keywords():
         if not text or len(text) < 10:
             return jsonify({"keywords": []})
         
-        print(f"[KEYWORDS] Extracting (text_len={len(text)})")
-        
         keywords = keyword_extractor.extract_smart(text, top_k=top_k)
-        result = {"keywords": keywords}
         
-        print(f"[KEYWORDS] Success: {result}")
-        return jsonify(result)
+        return jsonify({"keywords": keywords})
         
     except Exception as e:
-        print(f"[ERROR] Keyword extraction: {e}")
         import traceback
         traceback.print_exc()
         return {"error": str(e)}, 500
@@ -114,12 +105,10 @@ def translate():
             else:
                 return Response('', mimetype='text/plain')
         
-        print(f"[TRANSLATE] Translating to {target_lang} (text_len={len(text)}, is_keywords={is_keywords_mode})")
-        
         if is_keywords_mode:
             # 关键词翻译模式：发送关键词列表，要求逐个翻译，返回JSON数组
             keywords_list = [kw.strip() for kw in text.split(',') if kw.strip()]
-            print(f"[TRANSLATE] Keywords mode: {len(keywords_list)} keywords detected")
+
             
             system_message = f"""You are a professional translator. You will receive a list of keywords/terms, one per line or comma-separated.
 Your task: Translate EACH keyword/term to {target_lang}. 
@@ -162,7 +151,6 @@ Format: ["translation1", "translation2", "translation3", ...]"""
         return Response(generate(), mimetype='text/plain')
         
     except Exception as e:
-        print(f"[ERROR] Translation: {e}")
         import traceback
         traceback.print_exc()
         return {"error": str(e)}, 500
@@ -181,8 +169,6 @@ def summarize():
         
         if not text or len(text) < 50:
             return Response('', mimetype='text/plain')
-        
-        print(f"[SUMMARIZE] text_len={len(text)}, language='{language}'")
         
         system_message = f"""You are a professional note summariser.
 Summarise the given text in {language}.
@@ -222,7 +208,6 @@ Summarise the given text in {language}.
         return Response(generate(), mimetype='text/plain')
         
     except Exception as e:
-        print(f"[ERROR] Summarization: {e}")
         import traceback
         traceback.print_exc()
         return {"error": str(e)}, 500
@@ -240,8 +225,6 @@ def explain_keyword():
         
         if not keyword:
             return Response('', mimetype='text/plain')
-        
-        print(f"[EXPLAIN KEYWORD] keyword='{keyword}', language='{language}'")
         
         if language == "English":
             # 英文解释
@@ -286,7 +269,7 @@ Keep it simple and suitable for students."""
         return Response(generate(), mimetype='text/plain')
         
     except Exception as e:
-        print(f"[ERROR] Keyword explanation: {e}")
+
         import traceback
         traceback.print_exc()
         return {"error": str(e)}, 500
@@ -297,8 +280,6 @@ def health_check():
 
 
 if __name__ == "__main__":
-    print("[START] StreamNote Backend")
-    print(f"[INFO] http://{FLASK_CONFIG['host']}:{FLASK_CONFIG['port']}")
     app.run(host=FLASK_CONFIG["host"], 
             port=FLASK_CONFIG["port"], 
             debug=FLASK_CONFIG["debug"])

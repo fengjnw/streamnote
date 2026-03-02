@@ -30,8 +30,8 @@ class StreamNote {
         this.translationEnabled = true;
         this.targetLanguage = "Chinese";
 
-        // 关键词解释功能
-        this.keywordExplanationLanguage = "English";
+        // 关键词解释功能 - 默认语言改为中文
+        this.keywordExplanationLanguage = "Chinese";
 
         // 总结缓存
         this.summaryCache = {};
@@ -40,9 +40,17 @@ class StreamNote {
         this.recordingSessionId = null;  // 记录当前正在转录的 session
         this.displaySessionId = null;    // 当前显示的 session（用户看到的）
 
-        // 同步滚动
-        this.isSyncingScroll = false;
-        this.scrollTimeout = null;
+        // 同步滚动 - 为每个容器单独管理
+        this.transcriptSyncState = {
+            isSyncing: false,
+            debounceTimeout: null
+        };
+        this.translationSyncState = {
+            isSyncing: false,
+            debounceTimeout: null
+        };
+        // 防止UI更新期间的滚动干扰
+        this.isUpdatingUI = false;
 
         // 自动滚动开关
         this.autoScroll = true;
@@ -51,6 +59,7 @@ class StreamNote {
         // 文本选中菜单
         this.selectedText = "";
         this.selectedTextElement = null;
+
 
         this.initSessionManager();
         this.setupUIListeners();
@@ -117,11 +126,8 @@ class StreamNote {
 
         // 监听 session 切换事件
         window.addEventListener('sessionChanged', (e) => {
-            console.log('[StreamNote] Session changed:', e.detail.sessionId);
             this.loadCurrentSession();
         });
-
-        console.log('[StreamNote] SessionManager initialized');
     }
 
     /**
@@ -172,13 +178,11 @@ class StreamNote {
                 // 恢复解释缓存
                 if (session.settings.explanationCache) {
                     this.keywordExtractor.explanationCache = { ...session.settings.explanationCache };
-                    console.log(`[StreamNote] Restored ${Object.keys(this.keywordExtractor.explanationCache).length} cached explanations`);
                 }
 
                 // 恢复查询历史
                 if (session.settings.queryHistory && Array.isArray(session.settings.queryHistory)) {
                     this.keywordExtractor.queryHistory = [...session.settings.queryHistory];
-                    console.log(`[StreamNote] Restored ${this.keywordExtractor.queryHistory.length} query history items`);
                     this.keywordExtractor.displayQueryHistory();
                 } else {
                     this.keywordExtractor.queryHistory = [];
@@ -187,9 +191,6 @@ class StreamNote {
 
                 // 恢复总结缓存
                 this.summaryCache = session.settings.summaryCache ? { ...session.settings.summaryCache } : {};
-                if (session.settings.summaryCache) {
-                    console.log(`[StreamNote] Restored ${Object.keys(this.summaryCache).length} cached summaries`);
-                }
             }
         }
 
@@ -236,7 +237,6 @@ class StreamNote {
             }
         }
 
-        console.log(`[StreamNote] Loaded session: ${session.name}`, session.settings);
         this.updateStatus(`Loaded: ${session.name}`);
     }
 
@@ -423,7 +423,6 @@ class StreamNote {
 
 
 
-        console.log("[StreamNote] KeywordExtractor initialized");
     }
 
     setupUIListeners() {
@@ -472,13 +471,11 @@ class StreamNote {
                 const oldLanguage = this.targetLanguage;
                 this.targetLanguage = e.target.value;
 
-                console.log(`[LANGUAGE] Switching from ${oldLanguage} to ${this.targetLanguage}`);
 
                 // 语言改变，重新翻译全部
                 if (this.translationEnabled) {
                     // 如果正在录制，提示用户
                     if (this.isRecording) {
-                        console.log(`[LANGUAGE] Recording in progress, translations will load in background`);
                     }
                     await this.retranslateAll();
                 }
@@ -493,7 +490,6 @@ class StreamNote {
         if (explanationLanguageSelector) {
             explanationLanguageSelector.addEventListener("change", (e) => {
                 this.keywordExplanationLanguage = e.target.value;
-                console.log(`[KEYWORD EXPLANATION] Language changed to ${this.keywordExplanationLanguage}`);
 
                 // 更新 Summary 显示
                 const summaryDisplay = document.getElementById("summary-display");
@@ -607,10 +603,10 @@ class StreamNote {
             }
 
             // Set flag to prevent resize-induced scroll from closing autoScroll
-            this.isSyncingScroll = true;
+            this.isUpdatingUI = true;
             sidePanelsContainer.classList.add("expanded");
             setTimeout(() => {
-                this.isSyncingScroll = false;
+                this.isUpdatingUI = false;
             }, 350); // Match the 0.3s transition + buffer
         };
 
@@ -618,7 +614,7 @@ class StreamNote {
         if (closeSidePanelBtn) {
             closeSidePanelBtn.addEventListener("click", () => {
                 // Set flag to prevent resize-induced scroll from closing autoScroll
-                this.isSyncingScroll = true;
+                this.isUpdatingUI = true;
                 sidePanelsContainer.classList.remove("expanded");
                 // Remove active state from all quick access buttons
                 quickAccessKeywords.classList.remove("active");
@@ -626,7 +622,7 @@ class StreamNote {
                 quickAccessSummary.classList.remove("active");
                 quickAccessSettings.classList.remove("active");
                 setTimeout(() => {
-                    this.isSyncingScroll = false;
+                    this.isUpdatingUI = false;
                 }, 350); // Match the 0.3s transition + buffer
             });
         }
@@ -638,11 +634,11 @@ class StreamNote {
                 const isActive = keywordsContent.classList.contains("active");
 
                 if (isOpen && isActive) {
-                    this.isSyncingScroll = true;
+                    this.isUpdatingUI = true;
                     sidePanelsContainer.classList.remove("expanded");
                     quickAccessKeywords.classList.remove("active");
                     setTimeout(() => {
-                        this.isSyncingScroll = false;
+                        this.isUpdatingUI = false;
                     }, 350);
                 } else {
                     showContent(keywordsContent, "Keywords");
@@ -656,11 +652,11 @@ class StreamNote {
                 const isActive = historyContent.classList.contains("active");
 
                 if (isOpen && isActive) {
-                    this.isSyncingScroll = true;
+                    this.isUpdatingUI = true;
                     sidePanelsContainer.classList.remove("expanded");
                     quickAccessHistory.classList.remove("active");
                     setTimeout(() => {
-                        this.isSyncingScroll = false;
+                        this.isUpdatingUI = false;
                     }, 350);
                 } else {
                     showContent(historyContent, "History");
@@ -674,11 +670,11 @@ class StreamNote {
                 const isActive = summaryContent.classList.contains("active");
 
                 if (isOpen && isActive) {
-                    this.isSyncingScroll = true;
+                    this.isUpdatingUI = true;
                     sidePanelsContainer.classList.remove("expanded");
                     quickAccessSummary.classList.remove("active");
                     setTimeout(() => {
-                        this.isSyncingScroll = false;
+                        this.isUpdatingUI = false;
                     }, 350);
                 } else {
                     showContent(summaryContent, "Summary");
@@ -692,11 +688,11 @@ class StreamNote {
                 const isActive = settingsContent.classList.contains("active");
 
                 if (isOpen && isActive) {
-                    this.isSyncingScroll = true;
+                    this.isUpdatingUI = true;
                     sidePanelsContainer.classList.remove("expanded");
                     quickAccessSettings.classList.remove("active");
                     setTimeout(() => {
-                        this.isSyncingScroll = false;
+                        this.isUpdatingUI = false;
                     }, 350);
                 } else {
                     showContent(settingsContent, "Settings");
@@ -773,7 +769,7 @@ class StreamNote {
 
                     // Scroll to bottom immediately
                     this.isTogglingAutoScroll = true;
-                    this.isSyncingScroll = true;  // 防止scroll事件触发同步逻辑
+                    this.isUpdatingUI = true;  // 防止scroll事件触发同步逻辑
                     const transcript = document.getElementById("transcript");
                     const translation = document.getElementById("translation");
 
@@ -796,7 +792,7 @@ class StreamNote {
 
                     setTimeout(() => {
                         this.isTogglingAutoScroll = false;
-                        this.isSyncingScroll = false;
+                        this.isUpdatingUI = false;
                     }, 200);
                 }
 
@@ -923,15 +919,35 @@ class StreamNote {
                     this.keywordExtractor.addToQueryHistory(term);
                 }
 
-                // 打开 History 面板
+                // 打开 History 面板并显示/隐藏按钮
                 if (historyContent && sidePanelTitle && sidePanelsContainer) {
                     hideAllContent();
                     historyContent.classList.add("active");
                     sidePanelTitle.textContent = "History";
-                    this.isSyncingScroll = true;
+
+                    // 更新按钮显示状态
+                    const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
+                    const generateSummaryBtn = document.getElementById("generateSummaryBtn");
+                    const copySummaryBtn = document.getElementById("copySummaryBtn");
+                    const explanationLangSelector = document.getElementById("keyword-explanation-language");
+
+                    if (autoExtractBtn) {
+                        autoExtractBtn.style.display = 'none';
+                    }
+                    if (generateSummaryBtn) {
+                        generateSummaryBtn.style.display = 'none';
+                    }
+                    if (copySummaryBtn) {
+                        copySummaryBtn.style.display = 'none';
+                    }
+                    if (explanationLangSelector) {
+                        explanationLangSelector.style.display = 'block';
+                    }
+
+                    this.isUpdatingUI = true;
                     sidePanelsContainer.classList.add("expanded");
                     setTimeout(() => {
-                        this.isSyncingScroll = false;
+                        this.isUpdatingUI = false;
                     }, 350);
 
                     // 等待 DOM 更新后再展开
@@ -951,15 +967,35 @@ class StreamNote {
             if (this.selectedText.trim()) {
                 this.addSelectedTextAsKeyword();
 
-                // 打开 Keywords 面板
+                // 打开 Keywords 面板并显示/隐藏按钮
                 if (keywordsContent && sidePanelTitle && sidePanelsContainer) {
                     hideAllContent();
                     keywordsContent.classList.add("active");
                     sidePanelTitle.textContent = "Keywords";
-                    this.isSyncingScroll = true;
+
+                    // 更新按钮显示状态
+                    const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
+                    const generateSummaryBtn = document.getElementById("generateSummaryBtn");
+                    const copySummaryBtn = document.getElementById("copySummaryBtn");
+                    const explanationLangSelector = document.getElementById("keyword-explanation-language");
+
+                    if (autoExtractBtn) {
+                        autoExtractBtn.style.display = 'block';
+                    }
+                    if (generateSummaryBtn) {
+                        generateSummaryBtn.style.display = 'none';
+                    }
+                    if (copySummaryBtn) {
+                        copySummaryBtn.style.display = 'none';
+                    }
+                    if (explanationLangSelector) {
+                        explanationLangSelector.style.display = 'block';
+                    }
+
+                    this.isUpdatingUI = true;
                     sidePanelsContainer.classList.add("expanded");
                     setTimeout(() => {
-                        this.isSyncingScroll = false;
+                        this.isUpdatingUI = false;
                     }, 350);
                 }
 
@@ -1050,7 +1086,6 @@ class StreamNote {
             this.mediaRecorder.onstop = () => {
                 // 停止时直接丢弃最后一段（通常是静音）
                 if (!this.isRecording) {
-                    console.log('[STOP] Discarding final chunk');
                     this.audioChunks = [];
                 }
             };
@@ -1067,17 +1102,14 @@ class StreamNote {
                 const timeSinceLastSend = now - this.lastSendTime;
                 const recordingDuration = now - this.recordingStartTime;
 
-                console.log(`[VOLUME] ${volume.toFixed(3)} | Duration: ${(recordingDuration / 1000).toFixed(1)}s | HasVoice: ${this.hasVoice}`);
 
                 if (volume < 0.015) {  // 沉默（降低阈值，避免噪音干扰）
                     this.voiceStart = null;
 
                     if (!this.silenceStart) {
                         this.silenceStart = now;
-                        console.log('[SILENCE] Started');
                     } else if (now - this.silenceStart > 600 && recordingDuration > 1000 && this.hasVoice) {
                         // 沉默 >600ms + 录制 >1s + 有真实语音 → 发送
-                        console.log('[SILENCE] 600ms detected with voice, sending...');
                         this.mediaRecorder.stop();
                         this.mediaRecorder.start();
                         this.recordingStartTime = Date.now();
@@ -1091,17 +1123,14 @@ class StreamNote {
 
                     if (!this.voiceStart) {
                         this.voiceStart = now;
-                        console.log('[VOICE] Start detecting...');
                     } else if (!this.hasVoice && now - this.voiceStart > 600) {
                         // 持续声音 >600ms → 确认为真实语音
                         this.hasVoice = true;
-                        console.log('[VOICE] Confirmed! (>600ms)');
                     }
                 }
 
                 // 超过 10秒 + 有真实语音 → 强制发送
                 if (timeSinceLastSend > 10000 && this.hasVoice) {
-                    console.log('[TIMEOUT] 10s reached with voice, force sending...');
                     this.mediaRecorder.stop();
                     this.mediaRecorder.start();
                     this.recordingStartTime = Date.now();
@@ -1188,7 +1217,7 @@ class StreamNote {
         if (this.autoScroll) {
             // 设置标志，防止滚动事件认为这是用户手动滚动
             this.isTogglingAutoScroll = true;
-            this.isSyncingScroll = true;  // 防止scroll事件触发同步逻辑
+            this.isUpdatingUI = true;  // 防止scroll事件触发同步逻辑
             const transcript = document.getElementById("transcript");
             const translation = document.getElementById("translation");
 
@@ -1213,7 +1242,7 @@ class StreamNote {
             // 200ms 后清除标志，足够长的时间来避免防抖和同步滚动的冲突
             setTimeout(() => {
                 this.isTogglingAutoScroll = false;
-                this.isSyncingScroll = false;
+                this.isUpdatingUI = false;
             }, 200);
         }
     }
@@ -1273,7 +1302,6 @@ class StreamNote {
             const text = result.text.trim();
 
             if (text) {
-                console.log("[WHISPER]", text);
                 const timestamp = new Date().toLocaleTimeString('zh-CN', {
                     hour12: false,
                     hour: '2-digit',
@@ -1302,7 +1330,6 @@ class StreamNote {
                         // this.processKeywords(sessionIdAtRequest);
                     } else {
                         // 如果已切换到其他 session，仅记录日志
-                        console.log(`[TRANSCRIBE] Saved to session ${sessionIdAtRequest}, but user is now in session ${this.sessionManager.currentSessionId}`);
                     }
                 }
             }
@@ -1367,7 +1394,7 @@ class StreamNote {
         // 仅在自动滚动启用时滚动到底部（阻止同步滚动触发）
         // 注意：要滚动外层容器，不是内容 div
         if (this.autoScroll) {
-            this.isSyncingScroll = true;
+            this.isUpdatingUI = true;
             const transcript = document.getElementById("transcript");
             const translation = document.getElementById("translation");
 
@@ -1388,7 +1415,7 @@ class StreamNote {
             }
 
             setTimeout(() => {
-                this.isSyncingScroll = false;
+                this.isUpdatingUI = false;
             }, 100);
         }
     }
@@ -1488,7 +1515,6 @@ class StreamNote {
 
                     // 实时更新显示
                     if (translation) {
-                        console.log("[TRANSLATE] Streaming:", translation);
                         this.translationResults[index] = translation;
                         this.updateDisplay();
                         // 保存翻译到正确的session（录制中的session或当前session）
@@ -1509,17 +1535,14 @@ class StreamNote {
      */
     async summarizeText(text, forceRefresh = false) {
         if (!text || text.trim().length < 50) {
-            console.warn("[SUMMARIZE] Text too short to summarize");
             return null;
         }
 
         try {
             const language = this.keywordExplanationLanguage;
-            console.log(`[SUMMARIZE] Summarizing (text_len=${text.length}, language=${language}, forceRefresh=${forceRefresh})`);
 
             // 检查该语言的缓存（除非强制刷新）
             if (!forceRefresh && this.summaryCache[language]) {
-                console.log("[SUMMARIZE] Using cached summary");
                 return this.summaryCache[language];
             }
 
@@ -1554,7 +1577,6 @@ class StreamNote {
 
                     // 实时更新显示
                     if (summary) {
-                        console.log("[SUMMARIZE] Streaming:", summary.substring(0, 50));
                         // 按语言缓存结果
                         this.summaryCache[language] = summary;
                         // 立即保存到session
@@ -1571,7 +1593,6 @@ class StreamNote {
             }
 
             if (summary) {
-                console.log("[SUMMARIZE] Complete:", summary.substring(0, 80));
                 return summary;
             }
 
@@ -1608,7 +1629,6 @@ class StreamNote {
 
         if (!hasMissingTranslations && cachedSegments > 0) {
             // 缓存完整，直接使用
-            console.log(`[TRANSLATE] Using cached translations for ${this.targetLanguage} (${cachedSegments} segments)`);
             this.translationResults = { ...currentLangCache };
             this.updateDisplay();
 
@@ -1621,7 +1641,6 @@ class StreamNote {
 
         // 缓存不完整，只翻译缺失的部分
         const missingCount = missingSegments.length;
-        console.log(`[TRANSLATE] Translating ${missingCount}/${totalSegments} segments to ${this.targetLanguage}`);
 
         // 显示翻译进度提示
         if (missingCount > 5) {
@@ -1704,7 +1723,6 @@ class StreamNote {
             .join(" ");
 
         if (this.currentTranscriptText.length > 10) {
-            console.log(`[StreamNote] Processing full text for keywords: "${this.currentTranscriptText.substring(0, 50)}..."`);
 
             // 基于整个文本提取关键词
             await this.keywordExtractor.processText(this.currentTranscriptText);
@@ -1726,7 +1744,6 @@ class StreamNote {
             .join(" ");
 
         if (this.currentTranscriptText.length > 10) {
-            console.log(`[StreamNote] Reprocessing keywords with new intensity: ${this.keywordExtractor.intensity}`);
 
             // 清空自动提取的关键词（保留手动添加的）
             this.keywordExtractor.autoKeywords = [];
@@ -1856,29 +1873,31 @@ class StreamNote {
         const SCROLL_OFFSET = 8; // 原文框后移的行数
 
         if (!transcript || !translation) {
-            console.warn('[StreamNote] Sync scroll elements not found');
             return;
         }
 
         // 原文容器滚动时，同步译文容器
         transcript.addEventListener('scroll', () => {
+            // 忽略 UI 更新期间的滚动事件
+            if (this.isUpdatingUI) return;
+
             // 如果是用户手动滚动，关闭自动滚动
-            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
+            if (!this.transcriptSyncState.isSyncing && !this.isTogglingAutoScroll && this.autoScroll) {
                 this.autoScroll = false;
                 this.updateAutoScrollButton();
             }
 
             // 如果用户滑到底部，自动启用自动滚动
-            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(transcript)) {
+            if (!this.transcriptSyncState.isSyncing && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(transcript)) {
                 this.autoScroll = true;
                 this.updateAutoScrollButton();
             }
 
-            if (this.isSyncingScroll) return;
+            if (this.transcriptSyncState.isSyncing) return;
 
-            clearTimeout(this.scrollTimeout);
-            this.scrollTimeout = setTimeout(() => {
-                this.isSyncingScroll = true;
+            clearTimeout(this.transcriptSyncState.debounceTimeout);
+            this.transcriptSyncState.debounceTimeout = setTimeout(() => {
+                this.transcriptSyncState.isSyncing = true;
 
                 // 获取原文顶端对应的行号
                 const topInfo = this.getTopLineNumber(transcript);
@@ -1891,30 +1910,33 @@ class StreamNote {
                 }
 
                 setTimeout(() => {
-                    this.isSyncingScroll = false;
+                    this.transcriptSyncState.isSyncing = false;
                 }, 50);
             }, 300); // 防抖 300ms
         });
 
         // 译文容器滚动时，同步原文容器
         translation.addEventListener('scroll', () => {
+            // 忽略 UI 更新期间的滚动事件
+            if (this.isUpdatingUI) return;
+
             // 如果是用户手动滚动，关闭自动滚动
-            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
+            if (!this.translationSyncState.isSyncing && !this.isTogglingAutoScroll && this.autoScroll) {
                 this.autoScroll = false;
                 this.updateAutoScrollButton();
             }
 
             // 如果用户滑到底部，自动启用自动滚动
-            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(translation)) {
+            if (!this.translationSyncState.isSyncing && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(translation)) {
                 this.autoScroll = true;
                 this.updateAutoScrollButton();
             }
 
-            if (this.isSyncingScroll) return;
+            if (this.translationSyncState.isSyncing) return;
 
-            clearTimeout(this.scrollTimeout);
-            this.scrollTimeout = setTimeout(() => {
-                this.isSyncingScroll = true;
+            clearTimeout(this.translationSyncState.debounceTimeout);
+            this.translationSyncState.debounceTimeout = setTimeout(() => {
+                this.translationSyncState.isSyncing = true;
 
                 // 获取译文顶端对应的行号
                 const topInfo = this.getTopLineNumber(translation);
@@ -1927,13 +1949,11 @@ class StreamNote {
                 }
 
                 setTimeout(() => {
-                    this.isSyncingScroll = false;
+                    this.translationSyncState.isSyncing = false;
                 }, 50);
             }, 300); // 防抖 300ms
         });
     }
-
-
     /**
      * 删除关键词
      */
