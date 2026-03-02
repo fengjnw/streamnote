@@ -1911,8 +1911,8 @@ class StreamNote {
 
                 setTimeout(() => {
                     this.isSyncingScroll = false;
-                }, 50);
-            }, 300); // 防抖 300ms
+                }, 200);
+            }, 400); // 防抖 400ms
         });
 
         // 译文容器滚动时，同步原文容器
@@ -1947,8 +1947,8 @@ class StreamNote {
 
                 setTimeout(() => {
                     this.isSyncingScroll = false;
-                }, 50);
-            }, 300); // 防抖 300ms
+                }, 200);
+            }, 400); // 防抖 400ms
         });
     }
     /**
