@@ -40,15 +40,10 @@ class StreamNote {
         this.recordingSessionId = null;  // 记录当前正在转录的 session
         this.displaySessionId = null;    // 当前显示的 session（用户看到的）
 
-        // 同步滚动 - 为每个容器单独管理
-        this.transcriptSyncState = {
-            isSyncing: false,
-            debounceTimeout: null
-        };
-        this.translationSyncState = {
-            isSyncing: false,
-            debounceTimeout: null
-        };
+        // 同步滚动 - 使用全局标志防止双向同步
+        this.isSyncingScroll = false;  // 正在执行同步滚动
+        this.scrollDebounceTimeout = null;  // 防抖超时
+
         // 防止UI更新期间的滚动干扰
         this.isUpdatingUI = false;
 
@@ -1889,36 +1884,41 @@ class StreamNote {
             // 忽略 UI 更新期间的滚动事件
             if (this.isUpdatingUI) return;
 
-            // 如果是用户手动滚动，关闭自动滚动
-            if (!this.transcriptSyncState.isSyncing && !this.isTogglingAutoScroll && this.autoScroll) {
+            // 如果当前正在执行同步滚动，说明这是由另一个容器的同步引起的，忽略
+            if (this.isSyncingScroll) return;
+
+            // 这是用户的手动滚动，清除之前的防抖
+            clearTimeout(this.scrollDebounceTimeout);
+
+            // 如果自动滚动启用且不是用户手动切换，关闭自动滚动
+            if (!this.isTogglingAutoScroll && this.autoScroll) {
                 this.autoScroll = false;
                 this.updateAutoScrollButton();
             }
 
             // 如果用户滑到底部，自动启用自动滚动
-            if (!this.transcriptSyncState.isSyncing && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(transcript)) {
+            if (!this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(transcript)) {
                 this.autoScroll = true;
                 this.updateAutoScrollButton();
             }
 
-            if (this.transcriptSyncState.isSyncing) return;
-
-            clearTimeout(this.transcriptSyncState.debounceTimeout);
-            this.transcriptSyncState.debounceTimeout = setTimeout(() => {
-                this.transcriptSyncState.isSyncing = true;
+            // 防抖：延迟执行同步
+            this.scrollDebounceTimeout = setTimeout(() => {
+                // 标记正在同步滚动
+                this.isSyncingScroll = true;
 
                 // 获取原文顶端对应的行号
                 const topInfo = this.getTopLineNumber(transcript);
 
                 // 在译文中找到同样行号，但向前移SCROLL_OFFSET行
-                // 这样原文比译文"后移"了SCROLL_OFFSET行
                 if (topInfo) {
                     translation.style.scrollBehavior = 'auto';
                     this.scrollToLineNumberTop(translation, topInfo.lineNumber, -SCROLL_OFFSET);
                 }
 
+                // 短暂延迟后清除同步标志
                 setTimeout(() => {
-                    this.transcriptSyncState.isSyncing = false;
+                    this.isSyncingScroll = false;
                 }, 50);
             }, 300); // 防抖 300ms
         });
@@ -1928,36 +1928,41 @@ class StreamNote {
             // 忽略 UI 更新期间的滚动事件
             if (this.isUpdatingUI) return;
 
-            // 如果是用户手动滚动，关闭自动滚动
-            if (!this.translationSyncState.isSyncing && !this.isTogglingAutoScroll && this.autoScroll) {
+            // 如果当前正在执行同步滚动，说明这是由另一个容器的同步引起的，忽略
+            if (this.isSyncingScroll) return;
+
+            // 这是用户的手动滚动，清除之前的防抖
+            clearTimeout(this.scrollDebounceTimeout);
+
+            // 如果自动滚动启用且不是用户手动切换，关闭自动滚动
+            if (!this.isTogglingAutoScroll && this.autoScroll) {
                 this.autoScroll = false;
                 this.updateAutoScrollButton();
             }
 
             // 如果用户滑到底部，自动启用自动滚动
-            if (!this.translationSyncState.isSyncing && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(translation)) {
+            if (!this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(translation)) {
                 this.autoScroll = true;
                 this.updateAutoScrollButton();
             }
 
-            if (this.translationSyncState.isSyncing) return;
-
-            clearTimeout(this.translationSyncState.debounceTimeout);
-            this.translationSyncState.debounceTimeout = setTimeout(() => {
-                this.translationSyncState.isSyncing = true;
+            // 防抖：延迟执行同步
+            this.scrollDebounceTimeout = setTimeout(() => {
+                // 标记正在同步滚动
+                this.isSyncingScroll = true;
 
                 // 获取译文顶端对应的行号
                 const topInfo = this.getTopLineNumber(translation);
 
                 // 在原文中找到同样行号，但向后移SCROLL_OFFSET行
-                // 这样原文比译文"后移"了SCROLL_OFFSET行
                 if (topInfo) {
                     transcript.style.scrollBehavior = 'auto';
                     this.scrollToLineNumberTop(transcript, topInfo.lineNumber, SCROLL_OFFSET);
                 }
 
+                // 短暂延迟后清除同步标志
                 setTimeout(() => {
-                    this.translationSyncState.isSyncing = false;
+                    this.isSyncingScroll = false;
                 }, 50);
             }, 300); // 防抖 300ms
         });
