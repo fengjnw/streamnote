@@ -40,10 +40,9 @@ class StreamNote {
         this.recordingSessionId = null;  // 记录当前正在转录的 session
         this.displaySessionId = null;    // 当前显示的 session（用户看到的）
 
-        // 同步滚动 - 使用全局标志防止双向同步，各容器单独防抖
-        this.isSyncingScroll = false;  // 正在执行同步滚动
-        this.transcriptDebounceTimeout = null;  // transcript 防抖超时
-        this.translationDebounceTimeout = null;  // translation 防抖超时
+        // 同步滚动
+        this.isSyncingScroll = false;
+        this.scrollTimeout = null;
 
         // 防止UI更新期间的滚动干扰
         this.isUpdatingUI = false;
@@ -1885,39 +1884,34 @@ class StreamNote {
             // 忽略 UI 更新期间的滚动事件
             if (this.isUpdatingUI) return;
 
-            // 如果当前正在执行同步滚动，说明这是由另一个容器的同步引起的，忽略
-            if (this.isSyncingScroll) return;
-
-            // 这是用户的手动滚动，清除之前的防抖
-            clearTimeout(this.transcriptDebounceTimeout);
-
-            // 如果自动滚动启用且不是用户手动切换，关闭自动滚动
-            if (!this.isTogglingAutoScroll && this.autoScroll) {
+            // 如果是用户手动滚动，关闭自动滚动
+            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
                 this.autoScroll = false;
                 this.updateAutoScrollButton();
             }
 
             // 如果用户滑到底部，自动启用自动滚动
-            if (!this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(transcript)) {
+            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(transcript)) {
                 this.autoScroll = true;
                 this.updateAutoScrollButton();
             }
 
-            // 防抖：延迟执行同步
-            this.transcriptDebounceTimeout = setTimeout(() => {
-                // 标记正在同步滚动
+            if (this.isSyncingScroll) return;
+
+            clearTimeout(this.scrollTimeout);
+            this.scrollTimeout = setTimeout(() => {
                 this.isSyncingScroll = true;
 
                 // 获取原文顶端对应的行号
                 const topInfo = this.getTopLineNumber(transcript);
 
                 // 在译文中找到同样行号，但向前移SCROLL_OFFSET行
+                // 这样原文比译文"后移"了SCROLL_OFFSET行
                 if (topInfo) {
                     translation.style.scrollBehavior = 'auto';
                     this.scrollToLineNumberTop(translation, topInfo.lineNumber, -SCROLL_OFFSET);
                 }
 
-                // 短暂延迟后清除同步标志
                 setTimeout(() => {
                     this.isSyncingScroll = false;
                 }, 50);
@@ -1929,39 +1923,34 @@ class StreamNote {
             // 忽略 UI 更新期间的滚动事件
             if (this.isUpdatingUI) return;
 
-            // 如果当前正在执行同步滚动，说明这是由另一个容器的同步引起的，忽略
-            if (this.isSyncingScroll) return;
-
-            // 这是用户的手动滚动，清除之前的防抖
-            clearTimeout(this.translationDebounceTimeout);
-
-            // 如果自动滚动启用且不是用户手动切换，关闭自动滚动
-            if (!this.isTogglingAutoScroll && this.autoScroll) {
+            // 如果是用户手动滚动，关闭自动滚动
+            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
                 this.autoScroll = false;
                 this.updateAutoScrollButton();
             }
 
             // 如果用户滑到底部，自动启用自动滚动
-            if (!this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(translation)) {
+            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(translation)) {
                 this.autoScroll = true;
                 this.updateAutoScrollButton();
             }
 
-            // 防抖：延迟执行同步
-            this.translationDebounceTimeout = setTimeout(() => {
-                // 标记正在同步滚动
+            if (this.isSyncingScroll) return;
+
+            clearTimeout(this.scrollTimeout);
+            this.scrollTimeout = setTimeout(() => {
                 this.isSyncingScroll = true;
 
                 // 获取译文顶端对应的行号
                 const topInfo = this.getTopLineNumber(translation);
 
                 // 在原文中找到同样行号，但向后移SCROLL_OFFSET行
+                // 这样原文比译文"后移"了SCROLL_OFFSET行
                 if (topInfo) {
                     transcript.style.scrollBehavior = 'auto';
                     this.scrollToLineNumberTop(transcript, topInfo.lineNumber, SCROLL_OFFSET);
                 }
 
-                // 短暂延迟后清除同步标志
                 setTimeout(() => {
                     this.isSyncingScroll = false;
                 }, 50);
