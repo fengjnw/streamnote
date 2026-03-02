@@ -1881,17 +1881,14 @@ class StreamNote {
 
         // 原文容器滚动时，同步译文容器
         transcript.addEventListener('scroll', () => {
-            // 忽略 UI 更新期间的滚动事件
-            if (this.isUpdatingUI) return;
-
-            // 如果是用户手动滚动，关闭自动滚动
-            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
+            // 如果是用户手动滚动，关闭自动滚动（但不在 UI 更新期间）
+            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.isUpdatingUI && this.autoScroll) {
                 this.autoScroll = false;
                 this.updateAutoScrollButton();
             }
 
-            // 如果用户滑到底部，自动启用自动滚动
-            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(transcript)) {
+            // 如果用户滑到底部，自动启用自动滚动（但不在 UI 更新期间）
+            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.isUpdatingUI && !this.autoScroll && this.isScrolledToBottom(transcript)) {
                 this.autoScroll = true;
                 this.updateAutoScrollButton();
             }
@@ -1920,17 +1917,14 @@ class StreamNote {
 
         // 译文容器滚动时，同步原文容器
         translation.addEventListener('scroll', () => {
-            // 忽略 UI 更新期间的滚动事件
-            if (this.isUpdatingUI) return;
-
-            // 如果是用户手动滚动，关闭自动滚动
-            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && this.autoScroll) {
+            // 如果是用户手动滚动，关闭自动滚动（但不在 UI 更新期间）
+            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.isUpdatingUI && this.autoScroll) {
                 this.autoScroll = false;
                 this.updateAutoScrollButton();
             }
 
-            // 如果用户滑到底部，自动启用自动滚动
-            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(translation)) {
+            // 如果用户滑到底部，自动启用自动滚动（但不在 UI 更新期间）
+            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.isUpdatingUI && !this.autoScroll && this.isScrolledToBottom(translation)) {
                 this.autoScroll = true;
                 this.updateAutoScrollButton();
             }
