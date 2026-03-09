@@ -40,15 +40,10 @@ class StreamNote {
         this.recordingSessionId = null;  // 记录当前正在转录的 session
         this.displaySessionId = null;    // 当前显示的 session（用户看到的）
 
-        // 同步滚动 - 为每个容器单独管理
-        this.transcriptSyncState = {
-            isSyncing: false,
-            debounceTimeout: null
-        };
-        this.translationSyncState = {
-            isSyncing: false,
-            debounceTimeout: null
-        };
+        // 同步滚动
+        this.isSyncingScroll = false;
+        this.scrollTimeout = null;
+
         // 防止UI更新期间的滚动干扰
         this.isUpdatingUI = false;
 
@@ -590,7 +585,13 @@ class StreamNote {
             const explanationLangSelector = document.getElementById("keyword-explanation-language");
 
             if (autoExtractBtn) {
-                autoExtractBtn.style.display = contentEl === keywordsContent ? 'block' : 'none';
+                if (contentEl === keywordsContent) {
+                    autoExtractBtn.style.display = 'block';
+                    autoExtractBtn.style.opacity = '1';
+                    autoExtractBtn.style.pointerEvents = 'auto';
+                } else {
+                    autoExtractBtn.style.display = 'none';
+                }
             }
             if (generateSummaryBtn) {
                 generateSummaryBtn.style.display = contentEl === summaryContent ? 'block' : 'none';
@@ -981,6 +982,8 @@ class StreamNote {
 
                     if (autoExtractBtn) {
                         autoExtractBtn.style.display = 'block';
+                        autoExtractBtn.style.opacity = '1';
+                        autoExtractBtn.style.pointerEvents = 'auto';
                     }
                     if (generateSummaryBtn) {
                         generateSummaryBtn.style.display = 'none';
@@ -1878,26 +1881,23 @@ class StreamNote {
 
         // 原文容器滚动时，同步译文容器
         transcript.addEventListener('scroll', () => {
-            // 忽略 UI 更新期间的滚动事件
-            if (this.isUpdatingUI) return;
-
-            // 如果是用户手动滚动，关闭自动滚动
-            if (!this.transcriptSyncState.isSyncing && !this.isTogglingAutoScroll && this.autoScroll) {
+            // 如果是用户手动滚动，关闭自动滚动（但不在 UI 更新期间）
+            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.isUpdatingUI && this.autoScroll) {
                 this.autoScroll = false;
                 this.updateAutoScrollButton();
             }
 
-            // 如果用户滑到底部，自动启用自动滚动
-            if (!this.transcriptSyncState.isSyncing && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(transcript)) {
+            // 如果用户滑到底部，自动启用自动滚动（但不在 UI 更新期间）
+            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.isUpdatingUI && !this.autoScroll && this.isScrolledToBottom(transcript)) {
                 this.autoScroll = true;
                 this.updateAutoScrollButton();
             }
 
-            if (this.transcriptSyncState.isSyncing) return;
+            if (this.isSyncingScroll) return;
 
-            clearTimeout(this.transcriptSyncState.debounceTimeout);
-            this.transcriptSyncState.debounceTimeout = setTimeout(() => {
-                this.transcriptSyncState.isSyncing = true;
+            clearTimeout(this.scrollTimeout);
+            this.scrollTimeout = setTimeout(() => {
+                this.isSyncingScroll = true;
 
                 // 获取原文顶端对应的行号
                 const topInfo = this.getTopLineNumber(transcript);
@@ -1910,33 +1910,30 @@ class StreamNote {
                 }
 
                 setTimeout(() => {
-                    this.transcriptSyncState.isSyncing = false;
-                }, 50);
-            }, 300); // 防抖 300ms
+                    this.isSyncingScroll = false;
+                }, 200);
+            }, 400); // 防抖 400ms
         });
 
         // 译文容器滚动时，同步原文容器
         translation.addEventListener('scroll', () => {
-            // 忽略 UI 更新期间的滚动事件
-            if (this.isUpdatingUI) return;
-
-            // 如果是用户手动滚动，关闭自动滚动
-            if (!this.translationSyncState.isSyncing && !this.isTogglingAutoScroll && this.autoScroll) {
+            // 如果是用户手动滚动，关闭自动滚动（但不在 UI 更新期间）
+            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.isUpdatingUI && this.autoScroll) {
                 this.autoScroll = false;
                 this.updateAutoScrollButton();
             }
 
-            // 如果用户滑到底部，自动启用自动滚动
-            if (!this.translationSyncState.isSyncing && !this.isTogglingAutoScroll && !this.autoScroll && this.isScrolledToBottom(translation)) {
+            // 如果用户滑到底部，自动启用自动滚动（但不在 UI 更新期间）
+            if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.isUpdatingUI && !this.autoScroll && this.isScrolledToBottom(translation)) {
                 this.autoScroll = true;
                 this.updateAutoScrollButton();
             }
 
-            if (this.translationSyncState.isSyncing) return;
+            if (this.isSyncingScroll) return;
 
-            clearTimeout(this.translationSyncState.debounceTimeout);
-            this.translationSyncState.debounceTimeout = setTimeout(() => {
-                this.translationSyncState.isSyncing = true;
+            clearTimeout(this.scrollTimeout);
+            this.scrollTimeout = setTimeout(() => {
+                this.isSyncingScroll = true;
 
                 // 获取译文顶端对应的行号
                 const topInfo = this.getTopLineNumber(translation);
@@ -1949,9 +1946,9 @@ class StreamNote {
                 }
 
                 setTimeout(() => {
-                    this.translationSyncState.isSyncing = false;
-                }, 50);
-            }, 300); // 防抖 300ms
+                    this.isSyncingScroll = false;
+                }, 200);
+            }, 400); // 防抖 400ms
         });
     }
     /**

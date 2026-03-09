@@ -6,9 +6,14 @@ from keyword_extractor import create_extractor
 import io
 import json
 import os
+import logging
 
 app = Flask(__name__, static_folder='../frontend', static_url_path='')
 CORS(app)
+
+# 禁用 Werkzeug 的详细日志
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.WARNING)  # 只显示 warning 和 error，不显示 INFO 级别的请求日志
 client = OpenAI(api_key=OPENAI_API_KEY)
 keyword_extractor = create_extractor(OPENAI_API_KEY)
 
