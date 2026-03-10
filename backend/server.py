@@ -3,6 +3,9 @@ from flask_cors import CORS
 from openai import OpenAI
 from config import OPENAI_API_KEY, FLASK_CONFIG
 from keyword_extractor import create_extractor
+from translator import create_translator
+from summarizer import create_summarizer
+from explainer import create_explainer
 import io
 import json
 import os
@@ -11,6 +14,9 @@ app = Flask(__name__, static_folder='../frontend', static_url_path='')
 CORS(app)
 client = OpenAI(api_key=OPENAI_API_KEY)
 keyword_extractor = create_extractor(OPENAI_API_KEY)
+translator = create_translator(OPENAI_API_KEY)
+summarizer = create_summarizer(OPENAI_API_KEY)
+explainer = create_explainer(OPENAI_API_KEY)
 
 
 @app.route("/", methods=["GET"])
@@ -105,49 +111,19 @@ def translate():
                 return Response('', mimetype='text/plain')
         
         if is_keywords_mode:
-            # 关键词翻译模式：发送关键词列表，要求逐个翻译，返回JSON数组
-            keywords_list = [kw.strip() for kw in text.split(',') if kw.strip()]
-
-            
-            system_message = f"""You are a professional translator. You will receive a list of keywords/terms, one per line or comma-separated.
-Your task: Translate EACH keyword/term to {target_lang}. 
-CRITICAL: You must translate EVERY SINGLE keyword. Do not skip any or combine them.
-Return ONLY a JSON array of translated keywords in the EXACT same order, nothing else.
-Format: ["translation1", "translation2", "translation3", ...]"""
-            
-            user_message = ", ".join(keywords_list)
+            # 关键词翻译模式：返回JSON数组
+            keywords_json = translator.translate_keywords(text, target_lang)
+            return Response(keywords_json, mimetype='application/json')
         else:
-            # 普通文本翻译模式
-            system_message = f"You are a professional translator. Translate the following text to {target_lang}. Only provide the translation, no explanations."
-            user_message = text
-        
-        # 使用流式响应
-        def generate():
-            try:
-                stream = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": system_message
-                        },
-                        {
-                            "role": "user",
-                            "content": user_message
-                        }
-                    ],
-                    temperature=0.3,
-                    stream=True
-                )
-                
-                for chunk in stream:
-                    if chunk.choices[0].delta.content:
-                        yield chunk.choices[0].delta.content
-            except Exception as e:
-                print(f"[ERROR] Stream error: {e}")
-                yield f"[ERROR] {str(e)}"
-        
-        return Response(generate(), mimetype='text/plain')
+            # 普通文本翻译模式：使用流式响应
+            def generate():
+                try:
+                    yield from translator.translate_text(text, target_lang)
+                except Exception as e:
+                    print(f"[ERROR] Stream error: {e}")
+                    yield f"[ERROR] {str(e)}"
+            
+            return Response(generate(), mimetype='text/plain')
         
     except Exception as e:
         import traceback
@@ -169,37 +145,9 @@ def summarize():
         if not text or len(text) < 50:
             return Response('', mimetype='text/plain')
         
-        system_message = f"""You are a professional note summariser.
-Summarise the given text in {language}.
-- Aim for 100-150 words
-- Keep key points, remove redundancy
-- Maintain clarity and structure
-- Return plain text only, no prefix or explanation"""
-        
-        user_message = f"Summarise this text:\n{text}"
-        
         def generate():
             try:
-                stream = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": system_message
-                        },
-                        {
-                            "role": "user",
-                            "content": user_message
-                        }
-                    ],
-                    temperature=0.3,
-                    max_tokens=250,
-                    stream=True
-                )
-                
-                for chunk in stream:
-                    if chunk.choices[0].delta.content:
-                        yield chunk.choices[0].delta.content
+                yield from summarizer.summarize(text, language)
             except Exception as e:
                 print(f"[ERROR] Stream error: {e}")
                 yield f"[ERROR] {str(e)}"
@@ -225,42 +173,9 @@ def explain_keyword():
         if not keyword:
             return Response('', mimetype='text/plain')
         
-        if language == "English":
-            # 英文解释
-            system_message = f"""You are an expert educator. Provide a clear, concise explanation of the following keyword/term.
-Format: One paragraph (2-3 sentences maximum), explain what this term means and its context.
-Keep it simple and suitable for students."""
-            user_message = f"Explain this keyword: {keyword}"
-        else:
-            # 其他语言的解释
-            system_message = f"""You are an expert educator who speaks {language}. 
-Provide a clear, concise explanation of the following keyword/term in {language}.
-Format: One paragraph (2-3 sentences maximum), explain what this term means and its context.
-Keep it simple and suitable for students."""
-            user_message = f"Explain this keyword in {language}: {keyword}"
-        
         def generate():
             try:
-                stream = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": system_message
-                        },
-                        {
-                            "role": "user",
-                            "content": user_message
-                        }
-                    ],
-                    temperature=0.7,
-                    max_tokens=150,
-                    stream=True
-                )
-                
-                for chunk in stream:
-                    if chunk.choices[0].delta.content:
-                        yield chunk.choices[0].delta.content
+                yield from explainer.explain(keyword, language)
             except Exception as e:
                 print(f"[ERROR] Stream error: {e}")
                 yield f"[ERROR] {str(e)}"
@@ -268,7 +183,6 @@ Keep it simple and suitable for students."""
         return Response(generate(), mimetype='text/plain')
         
     except Exception as e:
-
         import traceback
         traceback.print_exc()
         return {"error": str(e)}, 500
