@@ -70,12 +70,11 @@ def extract_keywords():
     try:
         data = request.json
         text = data.get("text", "")
-        top_k = data.get("top_k", 5)
         
         if not text or len(text) < 10:
             return jsonify({"keywords": []})
         
-        keywords = keyword_extractor.extract_smart(text, top_k=top_k)
+        keywords = keyword_extractor.extract_smart(text)
         
         return jsonify({"keywords": keywords})
         

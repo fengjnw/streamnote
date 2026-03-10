@@ -19,14 +19,12 @@ class KeywordExtractor:
         """
         self.openai_client = OpenAI(api_key=openai_api_key) if openai_api_key else None
 
-    def extract_smart(self, text: str, context: Optional[str] = None, top_k: int = 5) -> List[str]:
+    def extract_smart(self, text: str) -> List[str]:
         """
         使用OpenAI进行智能关键词识别
         
         Args:
             text: 输入文本
-            context: 上下文信息（如学科、主题）
-            top_k: 返回前k个关键词
             
         Returns:
             关键词列表
@@ -36,10 +34,16 @@ class KeywordExtractor:
             return []
 
         try:
-            prompt = f"Extract at most {top_k} most important keywords or key concepts from the following text, separated by English commas. Return only keywords without any other content.\n\n{text}"
-            
-            if context:
-                prompt = f"Context: {context}\n\n" + prompt
+            prompt = """Extract the most important keywords, phrases, or concepts from the following text.
+
+Requirements:
+1. Prioritize domain-specific terms, unique concepts, and specific entities
+2. Avoid generic words (is, are, important, different, etc.)
+3. Return only truly essential content, don't list irrelevant items just to reach a number
+4. Can be single words, phrases, or short sentences
+5. Return format: comma-separated list, keywords only, no other content
+
+Text:\n""" + text
 
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -48,51 +52,13 @@ class KeywordExtractor:
                     "content": prompt
                 }],
                 temperature=0.3,
-                max_tokens=150
+                max_tokens=200
             )
             
             keywords_text = response.choices[0].message.content.strip()
-            raw_keywords = [kw.strip() for kw in keywords_text.split(",") if kw.strip()]
+            keywords = [kw.strip() for kw in keywords_text.split(",") if kw.strip()]
             
-            print(f"[KEYWORDS] Raw OpenAI response: {raw_keywords}")
-            
-            # 验证关键词并规范化大小写
-            text_lower = text.lower()
-            verified_keywords = []
-            
-            for kw in raw_keywords:
-                kw_lower = kw.lower()
-                
-                # 方法1：尝试作为完整单词匹配（带词边界）
-                match = re.search(rf'\b{re.escape(kw_lower)}\b', text_lower)
-                if match:
-                    # 使用文本中的实际大小写形式
-                    actual_form = text[match.start():match.end()]
-                    verified_keywords.append(actual_form)
-                    continue
-                
-                # 方法2：如果是多词短语，允许不严格的匹配
-                if ' ' in kw_lower:
-                    match = text_lower.find(kw_lower)
-                    if match != -1:
-                        actual_form = text[match:match + len(kw_lower)]
-                        verified_keywords.append(actual_form)
-                        continue
-                
-                # 方法3：作为子字符串检查（最后的保险）
-                match = text_lower.find(kw_lower)
-                if match != -1:
-                    actual_form = text[match:match + len(kw_lower)]
-                    verified_keywords.append(actual_form)
-            
-            # 如果验证后没有关键词，返回空列表
-            if not verified_keywords:
-                print(f"[WARNING] No keywords verified in text")
-                return []
-            
-            result = verified_keywords[:top_k]
-            print(f"[KEYWORDS] Smart extraction (verified {len(verified_keywords)}/{len(raw_keywords)}): {result}")
-            return result
+            return keywords
             
         except Exception as e:
             print(f"[ERROR] Smart extraction failed: {e}")

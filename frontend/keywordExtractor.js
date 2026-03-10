@@ -9,7 +9,6 @@ class KeywordExtractor {
         this.keywordElement = config.keywordElement || document.getElementById("keywords-display");
 
         this.enabled = true;  // 是否启用关键词提取
-        this.intensity = 5;   // 强度等级 (1-10)，表示关键词相对比例
 
         this.currentKeywords = [];
         this.allCollectedKeywords = [];  // 保存所有收集到的关键词（向后兼容）
@@ -34,48 +33,18 @@ class KeywordExtractor {
     }
 
     /**
-     * 根据文本长度和强度计算最优的 top_k
-     * @param {string} text - 输入文本
-     * @returns {number} 计算出的 top_k 值
-     */
-    calculateTopK(text) {
-        // 估算单词数（简单分割）
-        const wordCount = text.trim().split(/\s+/).length;
-
-        // 根据文本长度确定范围
-        // 最少：每100个单词提1个关键词
-        // 最多：每15个单词提1个关键词
-        const minTopK = Math.max(1, Math.ceil(wordCount / 100));
-        const maxTopK = Math.max(2, Math.ceil(wordCount / 15));
-
-        // 强度 (1-10) 映射到 min-max 范围
-        // 强度 1: 接近 minTopK（提取最少关键词）
-        // 强度 5: 中间值
-        // 强度 10: 接近 maxTopK（提取最多关键词）
-        const ratio = (this.intensity - 1) / 9;  // 0 到 1
-        const topK = Math.round(minTopK + (maxTopK - minTopK) * ratio);
-
-        return topK;
-    }
-
-    /**
      * 提取关键词 (AI 驱动)
      * @param {string} text - 输入文本
-     * @param {number} topK - 可选的 top_k 值，不提供则根据文本长度动态计算
      * @returns {Promise<Array>} 关键词列表
      */
-    async extractKeywords(text, topK = null) {
+    async extractKeywords(text) {
         if (!text || text.length < 10) {
             return [];
         }
 
-        // 如果未指定 top_k，根据文本长度和强度动态计算
-        const calculatedTopK = topK || this.calculateTopK(text);
-
         try {
             const payload = {
-                text: text,
-                top_k: calculatedTopK
+                text: text
             };
 
             const response = await fetch(this.apiUrl, {
