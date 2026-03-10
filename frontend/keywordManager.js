@@ -1,9 +1,9 @@
 /**
- * 关键词提取器 - 前端模块
- * 负责与后端通信、高亮关键词、显示关键词
+ * 关键词管理器 - 前端模块
+ * 负责关键词的存储、分类、显示、解释、以及查询历史管理
  */
 
-class KeywordExtractor {
+class KeywordManager {
     constructor(config = {}) {
         this.apiUrl = config.apiUrl || "/api/extract-keywords";
         this.keywordElement = config.keywordElement || document.getElementById("keywords-display");
@@ -65,7 +65,7 @@ class KeywordExtractor {
             return this.currentKeywords;
 
         } catch (error) {
-            console.error("[KeywordExtractor] Error:", error);
+            console.error("[KeywordManager] Error:", error);
             return [];
         }
     }
@@ -92,15 +92,15 @@ class KeywordExtractor {
                 ${items.map(item => `
                     <div class="keyword-item-wrapper">
                         <div class="keyword-item">
-                            <button class="keyword-expand-btn" onclick="window.keywordExtractorInstance.toggleExplanation('${item.replace(/'/g, "\\'")}')"
+                            <button class="keyword-expand-btn" onclick="window.keywordManagerInstance.toggleExplanation('${item.replace(/'/g, "\\'")}')"
                                 title="Click to expand/collapse explanation">
                                 <span class="expand-icon">▸</span>
                             </button>
-                            <span class="keyword-text" onclick="window.keywordExtractorInstance.toggleExplanation('${item.replace(/'/g, "\\'")}')"
+                            <span class="keyword-text" onclick="window.keywordManagerInstance.toggleExplanation('${item.replace(/'/g, "\\'")}')"
                                 style="cursor: pointer; flex: 1;">
                                 ${item}
                             </span>
-                            <button class="keyword-delete-btn" onclick="window.keywordExtractorInstance.${deleteHandlerName}('${item.replace(/'/g, "\\'")}')">×</button>
+                            <button class="keyword-delete-btn" onclick="window.keywordManagerInstance.${deleteHandlerName}('${item.replace(/'/g, "\\'")}')">×</button>
                         </div>
                         <div class="keyword-explanation" data-keyword="${item}" style="display: none;">
                             <div class="explanation-content">
@@ -208,7 +208,7 @@ class KeywordExtractor {
         const contentElement = container.querySelector('.explanation-content');
 
         if (!contentElement) {
-            console.error("[KeywordExtractor] Content element not found");
+            console.error("[KeywordManager] Content element not found");
             return;
         }
 
@@ -274,7 +274,7 @@ class KeywordExtractor {
             // 最终显示
             contentElement.innerHTML = `<p>${explanation}</p>`;
         } catch (error) {
-            console.error("[KeywordExtractor] Error fetching explanation:", error);
+            console.error("[KeywordManager] Error fetching explanation:", error);
             contentElement.innerHTML = `<p class="error">Failed to load explanation: ${error.message}</p>`;
         }
     }
@@ -403,4 +403,4 @@ class KeywordExtractor {
 }
 
 // 导出为全局对象
-window.KeywordExtractor = KeywordExtractor;
+window.KeywordManager = KeywordManager;

@@ -18,8 +18,8 @@ class StreamNote {
         this.hasVoice = false;
         this.checkInterval = null;
 
-        // 关键词提取器
-        this.keywordExtractor = null;
+        // 关键词管理器
+        this.keywordManager = null;
         this.currentTranscriptText = "";
 
         // Session 管理器
@@ -58,7 +58,7 @@ class StreamNote {
 
         this.initSessionManager();
         this.setupUIListeners();
-        this.initKeywordExtractor();
+        this.initKeywordManager();
         this.loadCurrentSession();
 
         // 延迟设置同步滚动，确保元素已加载
@@ -167,21 +167,21 @@ class StreamNote {
             }
 
             // 更新关键词提取器的设置
-            if (this.keywordExtractor) {
-                this.keywordExtractor.setEnabled(session.settings.keywordEnabled);
+            if (this.keywordManager) {
+                this.keywordManager.setEnabled(session.settings.keywordEnabled);
 
                 // 恢复解释缓存
                 if (session.settings.explanationCache) {
-                    this.keywordExtractor.explanationCache = { ...session.settings.explanationCache };
+                    this.keywordManager.explanationCache = { ...session.settings.explanationCache };
                 }
 
                 // 恢复查询历史
                 if (session.settings.queryHistory && Array.isArray(session.settings.queryHistory)) {
-                    this.keywordExtractor.queryHistory = [...session.settings.queryHistory];
-                    this.keywordExtractor.displayQueryHistory();
+                    this.keywordManager.queryHistory = [...session.settings.queryHistory];
+                    this.keywordManager.displayQueryHistory();
                 } else {
-                    this.keywordExtractor.queryHistory = [];
-                    this.keywordExtractor.displayQueryHistory();
+                    this.keywordManager.queryHistory = [];
+                    this.keywordManager.displayQueryHistory();
                 }
 
                 // 恢复总结缓存
@@ -217,18 +217,18 @@ class StreamNote {
         this.updateDisplay();
 
         // 重置并恢复关键词
-        if (this.keywordExtractor) {
-            this.keywordExtractor.reset();
+        if (this.keywordManager) {
+            this.keywordManager.reset();
 
             // 如果关键词功能开启且有保存的关键词，恢复它们
             if (session.settings.keywordEnabled && session.keywords && session.keywords.length > 0) {
                 // 向后兼容：旧数据中没有来源标记，假设都是自动提取的
-                this.keywordExtractor.autoKeywords = [...session.keywords];
-                this.keywordExtractor.manualKeywords = [];
-                this.keywordExtractor.updateAllKeywordDisplays();
+                this.keywordManager.autoKeywords = [...session.keywords];
+                this.keywordManager.manualKeywords = [];
+                this.keywordManager.updateAllKeywordDisplays();
             } else {
                 // 没有关键词，清空显示
-                this.keywordExtractor.updateAllKeywordDisplays();
+                this.keywordManager.updateAllKeywordDisplays();
             }
         }
 
@@ -340,8 +340,8 @@ class StreamNote {
         this.sessionManager.updateTranscriptsForSession(sessionId, this.preciseResults);
 
         // 保存关键词
-        if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords) {
-            this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
+        if (this.keywordManager && this.keywordManager.allCollectedKeywords) {
+            this.sessionManager.updateCurrentKeywords(this.keywordManager.allCollectedKeywords);
         }
 
         // 保存翻译（按当前语言保存）
@@ -353,10 +353,10 @@ class StreamNote {
         const settings = {
             translationEnabled: this.translationEnabled,
             targetLanguage: this.targetLanguage,
-            keywordEnabled: this.keywordExtractor ? this.keywordExtractor.enabled : true,
+            keywordEnabled: this.keywordManager ? this.keywordManager.enabled : true,
             keywordExplanationLanguage: this.keywordExplanationLanguage,
-            explanationCache: this.keywordExtractor ? this.keywordExtractor.explanationCache : {},
-            queryHistory: this.keywordExtractor ? this.keywordExtractor.queryHistory : [],
+            explanationCache: this.keywordManager ? this.keywordManager.explanationCache : {},
+            queryHistory: this.keywordManager ? this.keywordManager.queryHistory : [],
             summaryCache: this.summaryCache
         };
         this.sessionManager.updateCurrentSettings(settings);
@@ -371,10 +371,10 @@ class StreamNote {
         const settings = {
             translationEnabled: this.translationEnabled,
             targetLanguage: this.targetLanguage,
-            keywordEnabled: this.keywordExtractor ? this.keywordExtractor.enabled : true,
+            keywordEnabled: this.keywordManager ? this.keywordManager.enabled : true,
             keywordExplanationLanguage: this.keywordExplanationLanguage,
-            explanationCache: this.keywordExtractor ? this.keywordExtractor.explanationCache : {},
-            queryHistory: this.keywordExtractor ? this.keywordExtractor.queryHistory : [],
+            explanationCache: this.keywordManager ? this.keywordManager.explanationCache : {},
+            queryHistory: this.keywordManager ? this.keywordManager.queryHistory : [],
             summaryCache: this.summaryCache
         };
         this.sessionManager.updateCurrentSettings(settings);
@@ -405,16 +405,16 @@ class StreamNote {
     /**
      * 初始化关键词提取器
      */
-    initKeywordExtractor() {
-        this.keywordExtractor = new KeywordExtractor({
+    initKeywordManager() {
+        this.keywordManager = new KeywordManager({
             apiUrl: "/api/extract-keywords",
             transcriptElement: document.getElementById("transcript"),
             keywordElement: document.getElementById("keywords-display"),
             topK: 5
         });
 
-        // 使 KeywordExtractor 全局可访问
-        window.keywordExtractorInstance = this.keywordExtractor;
+        // 使 KeywordManager 全局可访问
+        window.keywordManagerInstance = this.keywordManager;
 
 
 
@@ -505,7 +505,7 @@ class StreamNote {
         const autoExtractKeywordsBtn = document.getElementById("autoExtractKeywordsBtn");
         if (autoExtractKeywordsBtn) {
             autoExtractKeywordsBtn.addEventListener("click", async () => {
-                if (!this.keywordExtractor) {
+                if (!this.keywordManager) {
                     this.showStatusMessage("Keyword extractor not initialized", 2000);
                     return;
                 }
@@ -916,8 +916,8 @@ class StreamNote {
             if (this.selectedText.trim()) {
                 const term = this.selectedText.trim();
                 // 如果不在历史中，先加入
-                if (!this.keywordExtractor.queryHistory.includes(term)) {
-                    this.keywordExtractor.addToQueryHistory(term);
+                if (!this.keywordManager.queryHistory.includes(term)) {
+                    this.keywordManager.addToQueryHistory(term);
                 }
 
                 // 打开 History 面板并显示/隐藏按钮
@@ -953,7 +953,7 @@ class StreamNote {
 
                     // 等待 DOM 更新后再展开
                     setTimeout(() => {
-                        this.keywordExtractor.toggleExplanation(term);
+                        this.keywordManager.toggleExplanation(term);
                     }, 50);
                 }
 
@@ -1013,25 +1013,25 @@ class StreamNote {
      * 将选中的文本添加为关键词
      */
     addSelectedTextAsKeyword() {
-        if (!this.selectedText || !this.keywordExtractor) return;
+        if (!this.selectedText || !this.keywordManager) return;
 
         const keyword = this.selectedText.trim();
 
         // 检查是否已存在（手动或自动）
-        const allKeywords = [...this.keywordExtractor.manualKeywords, ...this.keywordExtractor.autoKeywords];
+        const allKeywords = [...this.keywordManager.manualKeywords, ...this.keywordManager.autoKeywords];
         if (allKeywords.includes(keyword)) {
             this.showStatusMessage("This keyword already exists", 1500);
             return;
         }
 
         // 添加到手动关键词
-        this.keywordExtractor.manualKeywords.push(keyword);
+        this.keywordManager.manualKeywords.push(keyword);
 
         // 更新所有显示
-        this.keywordExtractor.updateAllKeywordDisplays();
+        this.keywordManager.updateAllKeywordDisplays();
 
         // 保存到 session
-        this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
+        this.sessionManager.updateCurrentKeywords(this.keywordManager.allCollectedKeywords);
 
         this.showStatusMessage(`✓ Added "${keyword}" to keywords`, 1500);
         this.selectedText = "";
@@ -1202,8 +1202,8 @@ class StreamNote {
         this.chunkIndex = 0;
         this.currentTranscriptText = "";
         this.updateDisplay();
-        if (this.keywordExtractor) {
-            this.keywordExtractor.reset();
+        if (this.keywordManager) {
+            this.keywordManager.reset();
         }
 
         this.updateStatus("Cleared");
@@ -1658,7 +1658,7 @@ class StreamNote {
             this.updateDisplay();
 
             // 恢复或翻译关键词
-            if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
+            if (this.keywordManager && this.keywordManager.allCollectedKeywords.length > 0) {
                 // 关键词翻译已删除
             }
             return;
@@ -1700,7 +1700,7 @@ class StreamNote {
         }
 
         // 重新翻译关键词（保存到当前session）
-        if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
+        if (this.keywordManager && this.keywordManager.allCollectedKeywords.length > 0) {
             // 关键词翻译已删除
         }
     }
@@ -1731,7 +1731,7 @@ class StreamNote {
         }
 
         // 翻译并显示关键词（如果有）
-        if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
+        if (this.keywordManager && this.keywordManager.allCollectedKeywords.length > 0) {
             // 关键词翻译已删除
         }
     }
@@ -1740,7 +1740,7 @@ class StreamNote {
      * 处理关键词提取 - 基于整个转录文本
      */
     async processKeywords(targetSessionId = null) {
-        if (!this.keywordExtractor || !this.keywordExtractor.enabled) return;
+        if (!this.keywordManager || !this.keywordManager.enabled) return;
 
         // 收集所有转录文本（保证准确率）
         this.currentTranscriptText = Object.values(this.preciseResults)
@@ -1750,10 +1750,10 @@ class StreamNote {
         if (this.currentTranscriptText.length > 10) {
 
             // 基于整个文本提取关键词
-            await this.keywordExtractor.processText(this.currentTranscriptText);
+            await this.keywordManager.processText(this.currentTranscriptText);
 
             // 更新所有显示
-            this.keywordExtractor.updateAllKeywordDisplays();
+            this.keywordManager.updateAllKeywordDisplays();
         }
     }
 
@@ -1761,7 +1761,7 @@ class StreamNote {
      * 重新处理所有关键词（强度改变时使用）
      */
     async reprocessAllKeywords() {
-        if (!this.keywordExtractor || !this.keywordExtractor.enabled) return;
+        if (!this.keywordManager || !this.keywordManager.enabled) return;
 
         // 获取当前的全文
         this.currentTranscriptText = Object.values(this.preciseResults)
@@ -1771,13 +1771,13 @@ class StreamNote {
         if (this.currentTranscriptText.length > 10) {
 
             // 清空自动提取的关键词（保留手动添加的）
-            this.keywordExtractor.autoKeywords = [];
+            this.keywordManager.autoKeywords = [];
 
             // 重新提取
-            await this.keywordExtractor.processText(this.currentTranscriptText);
+            await this.keywordManager.processText(this.currentTranscriptText);
 
             // 更新所有显示
-            this.keywordExtractor.updateAllKeywordDisplays();
+            this.keywordManager.updateAllKeywordDisplays();
         }
     }
 
@@ -1977,25 +1977,25 @@ class StreamNote {
      * 删除关键词
      */
     deleteKeyword(keyword) {
-        if (!this.keywordExtractor) return;
+        if (!this.keywordManager) return;
 
         // 从手动或自动关键词中删除
-        const manualIndex = this.keywordExtractor.manualKeywords.indexOf(keyword);
-        const autoIndex = this.keywordExtractor.autoKeywords.indexOf(keyword);
+        const manualIndex = this.keywordManager.manualKeywords.indexOf(keyword);
+        const autoIndex = this.keywordManager.autoKeywords.indexOf(keyword);
 
         if (manualIndex > -1) {
-            this.keywordExtractor.manualKeywords.splice(manualIndex, 1);
+            this.keywordManager.manualKeywords.splice(manualIndex, 1);
         } else if (autoIndex > -1) {
-            this.keywordExtractor.autoKeywords.splice(autoIndex, 1);
+            this.keywordManager.autoKeywords.splice(autoIndex, 1);
         } else {
             return;  // 关键词不存在
         }
 
         // 更新所有显示
-        this.keywordExtractor.updateAllKeywordDisplays();
+        this.keywordManager.updateAllKeywordDisplays();
 
         // 保存到 session
-        this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
+        this.sessionManager.updateCurrentKeywords(this.keywordManager.allCollectedKeywords);
 
         this.showStatusMessage(`✓ Removed "${keyword}"`, 1200);
     }
