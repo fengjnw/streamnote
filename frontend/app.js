@@ -1111,8 +1111,8 @@ class StreamNote {
 
                     if (!this.silenceStart) {
                         this.silenceStart = now;
-                    } else if (now - this.silenceStart > 600 && recordingDuration > 1000 && this.hasVoice) {
-                        // 沉默 >600ms + 录制 >1s + 有真实语音 → 发送
+                    } else if (now - this.silenceStart > 600 && recordingDuration > 100 && this.hasVoice) {
+                        // 沉默 >600ms + 录制 >100ms + 有真实语音 → 发送
                         this.mediaRecorder.stop();
                         this.mediaRecorder.start();
                         this.recordingStartTime = Date.now();
@@ -1126,8 +1126,8 @@ class StreamNote {
 
                     if (!this.voiceStart) {
                         this.voiceStart = now;
-                    } else if (!this.hasVoice && now - this.voiceStart > 600) {
-                        // 持续声音 >600ms → 确认为真实语音
+                    } else if (!this.hasVoice && now - this.voiceStart > 150) {
+                        // 持续声音 >150ms → 确认为真实语音（改为150ms以捕捉短句话）
                         this.hasVoice = true;
                     }
                 }
@@ -1524,6 +1524,14 @@ class StreamNote {
                         this.saveToSession(targetSessionId);
                     }
                 }
+                // 刷新解码器缓冲区，获取最后的字符
+                const finalChunk = decoder.decode();
+                translation += finalChunk;
+                if (finalChunk) {
+                    this.translationResults[index] = translation;
+                    this.updateDisplay();
+                    this.saveToSession(targetSessionId);
+                }
             } finally {
                 reader.releaseLock();
             }
@@ -1589,6 +1597,20 @@ class StreamNote {
                         if (summaryDisplay) {
                             summaryDisplay.innerHTML = `<p>${summary.replace(/\n/g, '<br>')}</p>`;
                         }
+                    }
+                }
+                // 刷新解码器缓冲区，获取最后的字符
+                const finalChunk = decoder.decode();
+                summary += finalChunk;
+                if (finalChunk) {
+                    // 按语言缓存结果
+                    this.summaryCache[language] = summary;
+                    // 立即保存到session
+                    this.saveSettingsToSession();
+                    // 实时更新显示
+                    const summaryDisplay = document.getElementById("summary-display");
+                    if (summaryDisplay) {
+                        summaryDisplay.innerHTML = `<p>${summary.replace(/\n/g, '<br>')}</p>`;
                     }
                 }
             } finally {

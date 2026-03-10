@@ -258,6 +258,12 @@ class KeywordExtractor {
                         contentElement.innerHTML = `<p>${explanation}</p>`;
                     }
                 }
+                // 刷新解码器缓冲区，获取最后的字符
+                const finalChunk = decoder.decode();
+                explanation += finalChunk;
+                if (finalChunk) {
+                    contentElement.innerHTML = `<p>${explanation}</p>`;
+                }
             } finally {
                 reader.releaseLock();
             }

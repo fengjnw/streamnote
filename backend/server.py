@@ -41,7 +41,7 @@ def transcribe():
 
         audio_data = audio_file.read()
 
-        # 后端兆井：只过滤明昺异常的音频
+        # 后端处理：只过滤明显异常的音频
         if len(audio_data) < 10000:
             return {"text": ""}, 200
 
