@@ -5,7 +5,7 @@
 
 class KeywordExtractor {
     constructor(config = {}) {
-        this.apiUrl = config.apiUrl || "http://localhost:5000/api/extract-keywords";
+        this.apiUrl = config.apiUrl || "/api/extract-keywords";
         this.keywordElement = config.keywordElement || document.getElementById("keywords-display");
 
         this.enabled = true;  // 是否启用关键词提取
