@@ -55,6 +55,9 @@ class StreamNote {
         this.selectedText = "";
         this.selectedTextElement = null;
 
+        // 用户选择状态管理
+        this.hasActiveSelection = false;
+        this.pendingUpdates = false;
 
         this.initSessionManager();
         this.setupUIListeners();
@@ -805,6 +808,18 @@ class StreamNote {
 
         // 初始化关键词标签页切换
         this.initKeywordsTabSwitcher();
+
+        // 监听用户选择变化
+        document.addEventListener('selectionchange', () => {
+            const selection = window.getSelection();
+            this.hasActiveSelection = selection.toString().length > 0;
+
+            // 当选择被取消且有待更新，立即刷新显示
+            if (!this.hasActiveSelection && this.pendingUpdates) {
+                this.pendingUpdates = false;
+                this.updateDisplay();
+            }
+        });
     }
 
     /**
@@ -1343,6 +1358,15 @@ class StreamNote {
     }
 
     updateDisplay() {
+        // 如果用户有活动选择，暂停更新（后台数据仍在更新）
+        if (this.hasActiveSelection) {
+            this.pendingUpdates = true;
+            return;
+        }
+
+        // 重置待更新标志
+        this.pendingUpdates = false;
+
         // 更新 session 统计信息
         this.updateSessionStats();
 
