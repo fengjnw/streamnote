@@ -2,10 +2,9 @@ from flask import Flask, jsonify, request, Response, send_from_directory
 from flask_cors import CORS
 from openai import OpenAI
 from config import OPENAI_API_KEY, FLASK_CONFIG
-from keyword_extractor import create_extractor
+from keyword_manager import create_keyword_manager
 from translator import create_translator
 from summarizer import create_summarizer
-from explainer import create_explainer
 import io
 import json
 import os
@@ -13,10 +12,9 @@ import os
 app = Flask(__name__, static_folder='../frontend', static_url_path='')
 CORS(app)
 client = OpenAI(api_key=OPENAI_API_KEY)
-keyword_extractor = create_extractor(OPENAI_API_KEY)
+keyword_manager = create_keyword_manager(OPENAI_API_KEY)
 translator = create_translator(OPENAI_API_KEY)
 summarizer = create_summarizer(OPENAI_API_KEY)
-explainer = create_explainer(OPENAI_API_KEY)
 
 
 @app.route("/", methods=["GET"])
@@ -80,7 +78,7 @@ def extract_keywords():
         if not text or len(text) < 10:
             return jsonify({"keywords": []})
         
-        keywords = keyword_extractor.extract_smart(text)
+        keywords = keyword_manager.extract_smart(text)
         
         return jsonify({"keywords": keywords})
         
@@ -175,7 +173,7 @@ def explain_keyword():
         
         def generate():
             try:
-                yield from explainer.explain(keyword, language)
+                yield from keyword_manager.explain(keyword, language)
             except Exception as e:
                 print(f"[ERROR] Stream error: {e}")
                 yield f"[ERROR] {str(e)}"
