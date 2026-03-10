@@ -57,14 +57,16 @@ Text:\n""" + text
     def explain(
         self,
         keyword: str,
-        language: str = "English"
+        language: str = "English",
+        context: Optional[str] = None
     ) -> Generator[str, None, None]:
         """
-        流式生成关键词解释
+        流式生成关键词解释（支持基于context的解释）
         
         Args:
             keyword: 要解释的关键词
             language: 解释的语言
+            context: 关键词在原文中的前后文本上下文（可选）
             
         Yields:
             流式解释结果
@@ -79,14 +81,30 @@ Text:\n""" + text
             system_message = """You are an expert educator. Provide a clear, concise explanation of the following keyword/term.
 Format: One paragraph (2-3 sentences maximum), explain what this term means and its context.
 Keep it simple and suitable for students."""
-            user_message = f"Explain this keyword: {keyword}"
+            
+            if context:
+                user_message = f"""Based on this context from a document:
+
+\"{context}\"
+
+Please explain the keyword: {keyword}"""
+            else:
+                user_message = f"Explain this keyword: {keyword}"
         else:
             # 其他语言的解释
             system_message = f"""You are an expert educator who speaks {language}. 
 Provide a clear, concise explanation of the following keyword/term in {language}.
 Format: One paragraph (2-3 sentences maximum), explain what this term means and its context.
 Keep it simple and suitable for students."""
-            user_message = f"Explain this keyword in {language}: {keyword}"
+            
+            if context:
+                user_message = f"""基于以下文档中的上下文：
+
+\"{context}\"
+
+请用{language}解释这个关键词：{keyword}"""
+            else:
+                user_message = f"用{language}解释这个关键词：{keyword}"
         
         yield from self.stream_chat(
             system_message=system_message,

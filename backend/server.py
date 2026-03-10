@@ -129,6 +129,36 @@ def translate():
         return {"error": str(e)}, 500
 
 
+@app.route("/api/explain-keyword", methods=["POST"])
+def explain_keyword():
+    """
+    解释关键词 API (AI 驱动 - OpenAI) - 流式响应版本
+    支持基于上下文的解释
+    """
+    try:
+        data = request.json
+        keyword = data.get("keyword", "").strip()
+        language = data.get("language", "English")
+        context = data.get("context", "").strip()  # 关键词的前后文本上下文
+        
+        if not keyword:
+            return Response('', mimetype='text/plain')
+        
+        def generate():
+            try:
+                yield from keyword_manager.explain(keyword, language, context)
+            except Exception as e:
+                print(f"[ERROR] Stream error: {e}")
+                yield f"[ERROR] {str(e)}"
+        
+        return Response(generate(), mimetype='text/plain')
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}, 500
+
+
 @app.route("/api/summarize", methods=["POST"])
 def summarize():
     """
@@ -157,33 +187,6 @@ def summarize():
         traceback.print_exc()
         return {"error": str(e)}, 500
 
-
-@app.route("/api/explain-keyword", methods=["POST"])
-def explain_keyword():
-    """
-    生成关键词解释 API (AI 驱动 - OpenAI) - 流式响应版本
-    """
-    try:
-        data = request.json
-        keyword = data.get("keyword", "").strip()
-        language = data.get("language", "English")  # English 表示英文解释
-        
-        if not keyword:
-            return Response('', mimetype='text/plain')
-        
-        def generate():
-            try:
-                yield from keyword_manager.explain(keyword, language)
-            except Exception as e:
-                print(f"[ERROR] Stream error: {e}")
-                yield f"[ERROR] {str(e)}"
-        
-        return Response(generate(), mimetype='text/plain')
-        
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return {"error": str(e)}, 500
 
 @app.route("/health", methods=["GET"])
 def health_check():

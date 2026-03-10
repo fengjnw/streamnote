@@ -200,7 +200,43 @@ class KeywordManager {
     }
 
     /**
-     * 获取并显示关键词的解释 - 流式版本
+     * 从当前笔记文本中提取关键词的上下文
+     * @param {string} keyword - 关键词
+     * @param {string} fullText - 完整笔记文本
+     * @param {number} contextLength - 前后各取多少字符（默认100）
+     * @returns {string} 包含关键词的上下文
+     */
+    extractKeywordContext(keyword, fullText, contextLength = 100) {
+        if (!keyword || !fullText) return "";
+
+        // 查找关键词在文本中的位置（不区分大小写）
+        const lowerText = fullText.toLowerCase();
+        const lowerKeyword = keyword.toLowerCase();
+        const index = lowerText.indexOf(lowerKeyword);
+
+        if (index === -1) return "";  // 关键词不在文本中
+
+        // 计算context的起始和结束位置
+        const contextStart = Math.max(0, index - contextLength);
+        const contextEnd = Math.min(fullText.length, index + keyword.length + contextLength);
+
+        let context = fullText.substring(contextStart, contextEnd);
+
+        // 如果不是从文本开头开始，添加省略号
+        if (contextStart > 0) {
+            context = "..." + context;
+        }
+
+        // 如果不是到文本末尾，添加省略号
+        if (contextEnd < fullText.length) {
+            context = context + "...";
+        }
+
+        return context.trim();
+    }
+
+    /**
+     * 获取并显示关键词的解释 - 流式版本，支持基于上下文
      * @param {string} keyword - 关键词
      * @param {HTMLElement} container - 显示容器
      */
@@ -225,6 +261,10 @@ class KeywordManager {
                 return;
             }
 
+            // 从当前笔记文本中提取上下文
+            const currentText = window.streamNoteInstance?.currentTranscriptText || "";
+            const context = this.extractKeywordContext(keyword, currentText, 100);
+
             const response = await fetch(this.explanationApiUrl, {
                 method: "POST",
                 headers: {
@@ -232,7 +272,8 @@ class KeywordManager {
                 },
                 body: JSON.stringify({
                     keyword: keyword,
-                    language: explanationLanguage
+                    language: explanationLanguage,
+                    context: context  // 添加上下文
                 })
             });
 
