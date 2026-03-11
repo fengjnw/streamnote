@@ -101,6 +101,10 @@ class StreamNote {
         mainContent.classList.remove("layout-full-transcript", "layout-split", "layout-full-translation");
         // 添加新的布局类
         mainContent.classList.add(`layout-${layoutType}`);
+        
+        // 根据布局类型更新translationEnabled
+        this.translationEnabled = layoutType !== "full-transcript";
+        
         // 保存偏好
         this.savePanelState();
     }
@@ -154,15 +158,24 @@ class StreamNote {
         // 更新录制指示器UI
         this.updateRecordingIndicator();
 
-        // 恢复功能设置
-        if (session.settings) {
-            this.language = session.settings.language || "Chinese";
+        // 恢复功能设置，如果没有的话使用全局默认设置
+        const defaultSettings = this.sessionManager.getDefaultSettings();
+        if (session.settings && session.settings.language) {
+            this.language = session.settings.language;
+        } else {
+            this.language = defaultSettings.defaultLanguage || "Chinese";
+        }
 
-            // 更新 UI 控件状态
-            const languageSelector = document.getElementById("target-language");
-            if (languageSelector) {
-                languageSelector.value = this.language;
-            }
+        // 更新 UI 控件状态
+        const languageSelector = document.getElementById("target-language");
+        if (languageSelector) {
+            languageSelector.value = this.language;
+        }
+
+        // 同时更新关键词解释部分的语言选择器
+        const keywordExplanationLangSelector = document.getElementById("keyword-explanation-language");
+        if (keywordExplanationLangSelector) {
+            keywordExplanationLangSelector.value = this.language;
         }
 
         // 加载转录内容
@@ -231,9 +244,9 @@ class StreamNote {
             const defaultSettings = this.sessionManager.getDefaultSettings();
             layoutToApply = defaultSettings.defaultLayout || "split";
         }
-        
+
         this.setLayout(layoutToApply);
-        
+
         // 更新布局选择器的值
         const layoutSelector = document.getElementById("layoutSelector");
         if (layoutSelector) {
@@ -401,7 +414,6 @@ class StreamNote {
         if (!this.sessionManager) return;
 
         const settings = {
-            translationEnabled: this.translationEnabled,
             language: this.language
         };
         this.sessionManager.updateCurrentSettings(settings);
@@ -496,11 +508,50 @@ class StreamNote {
             languageSelector.addEventListener("change", async (e) => {
                 this.language = e.target.value;
 
+                // 同时更新关键词解释部分的语言选择器
+                const keywordExplanationLangSelector = document.getElementById("keyword-explanation-language");
+                if (keywordExplanationLangSelector) {
+                    keywordExplanationLangSelector.value = this.language;
+                }
+
                 // 语言改变，重新翻译全部
                 if (this.translationEnabled) {
                     // 如果正在录制，提示用户
                     if (this.isRecording) {
                     }
+                    await this.retranslateAll();
+                }
+
+                // 更新 Summary 显示
+                const summaryDisplay = document.getElementById("summary-display");
+                if (summaryDisplay) {
+                    if (this.summaryCache && this.summaryCache[this.language]) {
+                        const cachedSummary = this.summaryCache[this.language];
+                        summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
+                    } else {
+                        summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
+                    }
+                }
+
+                // 保存设置到 session
+                this.saveSettingsToSession();
+            });
+        }
+
+        // 添加关键词解释语言选择
+        const keywordExplanationLangSelector = document.getElementById("keyword-explanation-language");
+        if (keywordExplanationLangSelector) {
+            keywordExplanationLangSelector.addEventListener("change", async (e) => {
+                this.language = e.target.value;
+
+                // 同时更新翻译面板的语言选择器
+                const languageSelector = document.getElementById("target-language");
+                if (languageSelector) {
+                    languageSelector.value = this.language;
+                }
+
+                // 语言改变，重新翻译全部
+                if (this.translationEnabled) {
                     await this.retranslateAll();
                 }
 
@@ -878,7 +929,7 @@ class StreamNote {
 
         // 从 sessionManager 获取当前默认设置
         const defaultSettings = this.sessionManager.getDefaultSettings();
-        
+
         // 设置当前值
         defaultLanguageSelect.value = defaultSettings.defaultLanguage || "Chinese";
         defaultLayoutSelect.value = defaultSettings.defaultLayout || "split";

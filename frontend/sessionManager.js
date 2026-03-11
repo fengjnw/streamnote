@@ -108,13 +108,13 @@ class SessionManager {
                             session.settings.language = session.settings.targetLanguage;
                         }
                         delete session.settings.targetLanguage;
-                        
+
                         // 迁移 translationEnabled 到 layout
                         if (session.settings.translationEnabled !== undefined && !session.settings.layout) {
                             session.settings.layout = session.settings.translationEnabled ? "split" : "full-transcript";
                         }
                         delete session.settings.translationEnabled;
-                        
+
                         delete session.settings.keywordEnabled;
                         delete session.settings.keywordExplanationLanguage;
                         delete session.settings.explanationCache;
