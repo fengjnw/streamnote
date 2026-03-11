@@ -393,6 +393,25 @@ class PanelManager {
             sidePanelTitle.textContent = title;
         }
 
+        // 管理标题栏按钮的显隐
+        const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
+        const generateSummaryBtn = document.getElementById("generateSummaryBtn");
+        const copySummaryBtn = document.getElementById("copySummaryBtn");
+        const explanationLangSelector = document.getElementById("keyword-explanation-language");
+
+        if (autoExtractBtn) {
+            autoExtractBtn.style.display = contentElement === keywordsContent ? 'block' : 'none';
+        }
+        if (generateSummaryBtn) {
+            generateSummaryBtn.style.display = contentElement === summaryContent ? 'block' : 'none';
+        }
+        if (copySummaryBtn) {
+            copySummaryBtn.style.display = contentElement === summaryContent ? 'block' : 'none';
+        }
+        if (explanationLangSelector) {
+            explanationLangSelector.style.display = (contentElement === keywordsContent || contentElement === historyContent || contentElement === highlightsContent || contentElement === summaryContent) ? 'block' : 'none';
+        }
+
         // 更新 UI 状态
         this.isUpdatingUI = true;
         sidePanelsContainer.classList.add("expanded");

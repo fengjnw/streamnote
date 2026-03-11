@@ -176,6 +176,8 @@ class KeywordManager {
         }
 
         if (!wrapper) {
+            console.warn(`[KeywordManager] Wrapper not found for keyword: ${keyword}`);
+            return;
         }
 
         const expandBtn = wrapper.parentElement?.querySelector('.keyword-expand-btn');
@@ -252,7 +254,7 @@ class KeywordManager {
 
         try {
             // 获取解释语言（从全局 StreamNote 实例）
-            const explanationLanguage = window.streamNoteInstance?.language || "English";
+            const explanationLanguage = window.streamNoteInstance?.explanationLanguage || "English";
 
             // 生成缓存 key
             const cacheKey = `${keyword}|${explanationLanguage}`;
@@ -381,6 +383,24 @@ class KeywordManager {
      */
     displayExplanations() {
         this.displayItemList(this.explanations, this.historyElement, "removeFromExplanations", "No explanations yet");
+        // 重新生成 HTML 后，恢复之前展开的项目的显示状态
+        this.restoreExpandedStates();
+    }
+
+    /**
+     * 恢复展开状态 - 在 HTML 重新生成后调用
+     */
+    restoreExpandedStates() {
+        for (const keyword of this.expandedKeywords) {
+            const wrapper = document.querySelector(`[data-keyword="${keyword}"]`);
+            if (wrapper) {
+                wrapper.style.display = 'block';
+                const expandBtn = wrapper.parentElement?.querySelector('.keyword-expand-btn');
+                if (expandBtn) {
+                    expandBtn.classList.add('expanded');
+                }
+            }
+        }
     }
 
     /**
@@ -416,10 +436,10 @@ class KeywordManager {
                 // 显示解释面板，标题为 "Explanation"
                 this.panelManager.showSidePanelContent(historyContent, "Explanation");
 
-                // 展开该词条的解释
+                // 等待面板转换完成（与 panelManager 的转换时间保持一致）后再展开
                 setTimeout(() => {
                     this.toggleExplanation(term);
-                }, 50);
+                }, 350);
             }
         }
     }
