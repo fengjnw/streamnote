@@ -38,8 +38,8 @@ class HighlightManager {
             return;
         }
 
-        // 检查是否已存在（手动或自动）
-        const allKeywords = [...this.keywordManager.manualKeywords, ...this.keywordManager.autoKeywords];
+        // 检查是否已存在（高亮或自动提取）
+        const allKeywords = [...this.keywordManager.highlights, ...this.keywordManager.extracts];
         if (allKeywords.includes(highlightText)) {
             this.onStatusMessage("This highlight already exists", 1500);
             return;
@@ -48,8 +48,8 @@ class HighlightManager {
         // 生成唯一的高亮ID
         const highlightId = "hl-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
 
-        // 添加到手动关键词（实际上是高亮内容）
-        this.keywordManager.manualKeywords.push(highlightText);
+        // 添加到高亮内容
+        this.keywordManager.highlights.push(highlightText);
 
         // 存储高亮ID映射（用于后续删除）
         this.highlightIdMap[highlightText] = highlightId;
@@ -61,8 +61,8 @@ class HighlightManager {
         this.highlightTextInTranscript(highlightText, highlightId);
 
         // 同时保存高亮和关键词
-        this.sessionManager.updateCurrentHighlights(this.keywordManager.manualKeywords);
-        this.sessionManager.updateCurrentKeywords(this.keywordManager.autoKeywords);
+        this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
+        this.sessionManager.updateCurrentKeywords(this.keywordManager.extracts);
 
         this.onStatusMessage(`✓ Highlighted "${highlightText}"`, 1500);
 
@@ -89,7 +89,7 @@ class HighlightManager {
         }
 
         // 检查是否已存在
-        const allKeywords = [...this.keywordManager.manualKeywords, ...this.keywordManager.autoKeywords];
+        const allKeywords = [...this.keywordManager.highlights, ...this.keywordManager.extracts];
         if (allKeywords.includes(highlightText)) {
             this.onStatusMessage("This highlight already exists", 1500);
             return;
@@ -99,7 +99,7 @@ class HighlightManager {
         const highlightId = "hl-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
 
         // 添加到列表
-        this.keywordManager.manualKeywords.push(highlightText);
+        this.keywordManager.highlights.push(highlightText);
 
         // 存储高亮ID映射
         this.highlightIdMap[highlightText] = highlightId;
@@ -112,8 +112,8 @@ class HighlightManager {
 
         // 更新显示和保存
         this.keywordManager.updateAllKeywordDisplays();
-        this.sessionManager.updateCurrentHighlights(this.keywordManager.manualKeywords);
-        this.sessionManager.updateCurrentKeywords(this.keywordManager.autoKeywords);
+        this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
+        this.sessionManager.updateCurrentKeywords(this.keywordManager.extracts);
 
         this.onStatusMessage(`✓ Highlighted "${highlightText}"`, 1500);
 
@@ -561,14 +561,14 @@ class HighlightManager {
         }
 
         // 生成缺失的ID
-        this.keywordManager.manualKeywords.forEach(text => {
+        this.keywordManager.highlights.forEach(text => {
             if (!this.highlightIdMap[text]) {
                 this.highlightIdMap[text] = "hl-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
             }
         });
 
-        // 重新应用所有手动关键词的高亮（在原文和翻译）
-        this.keywordManager.manualKeywords.forEach(text => {
+        // 重新应用所有高亮词的高亮（在原文和翻译）
+        this.keywordManager.highlights.forEach(text => {
             this.highlightTextInTranscript(text, this.highlightIdMap[text]);
             this.highlightTextInTranslation(text, this.highlightIdMap[text]);
         });

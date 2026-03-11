@@ -274,14 +274,14 @@ class StreamNote {
 
             // 恢复自动提取的关键词
             if (session.keywords && session.keywords.length > 0) {
-                this.keywordManager.autoKeywords = [...session.keywords];
+                this.keywordManager.extracts = [...session.keywords];
             }
 
-            // 恢复手动高亮的关键词
+            // 恢复用户高亮的关键词
             if (session.highlights && session.highlights.length > 0) {
-                this.keywordManager.manualKeywords = [...session.highlights];
+                this.keywordManager.highlights = [...session.highlights];
             } else {
-                this.keywordManager.manualKeywords = [];
+                this.keywordManager.highlights = [];
             }
 
             // 恢复在解释面板查询过的词
@@ -292,15 +292,15 @@ class StreamNote {
             }
 
             // 恢复三个解释缓存
-            this.keywordManager.keywordCache = session.keywordCache ? { ...session.keywordCache } : {};
+            this.keywordManager.extractsCache = session.keywordCache ? { ...session.keywordCache } : {};
             this.keywordManager.highlightCache = session.highlightCache ? { ...session.highlightCache } : {};
             this.keywordManager.explanationCache = session.explanationCache ? { ...session.explanationCache } : {};
 
-            // 为所有手动关键词生成highlightId（如果还没有）
+            // 为所有高亮词生成highlightId（如果还没有）
             if (this.highlightIdMap === undefined) {
                 this.highlightIdMap = {};
             }
-            this.keywordManager.manualKeywords.forEach(text => {
+            this.keywordManager.highlights.forEach(text => {
                 if (!this.highlightIdMap[text]) {
                     this.highlightIdMap[text] = "hl-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
                 }
@@ -460,12 +460,12 @@ class StreamNote {
 
         // 分别保存词列表和缓存
         if (this.keywordManager) {
-            this.sessionManager.updateCurrentKeywords(this.keywordManager.autoKeywords);
-            this.sessionManager.updateCurrentHighlights(this.keywordManager.manualKeywords);
+            this.sessionManager.updateCurrentKeywords(this.keywordManager.extracts);
+            this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
             this.sessionManager.updateCurrentExplanations(this.keywordManager.explanations);
 
             // 保存缓存
-            this.sessionManager.updateCurrentKeywordCache(this.keywordManager.keywordCache);
+            this.sessionManager.updateCurrentKeywordCache(this.keywordManager.extractsCache);
             this.sessionManager.updateCurrentHighlightCache(this.keywordManager.highlightCache);
             this.sessionManager.updateCurrentExplanationCache(this.keywordManager.explanationCache);
         }
@@ -1607,8 +1607,8 @@ class StreamNote {
 
         if (this.currentTranscriptText.length > 10) {
 
-            // 清空自动提取的关键词（保留手动添加的）
-            this.keywordManager.autoKeywords = [];
+            // 清空自动提取的关键词（保留高亮的）
+            this.keywordManager.extracts = [];
 
             // 重新提取
             await this.keywordManager.processText(this.currentTranscriptText);
@@ -1816,16 +1816,16 @@ class StreamNote {
     deleteKeyword(keyword) {
         if (!this.keywordManager) return;
 
-        // 从手动或自动关键词中删除
-        const manualIndex = this.keywordManager.manualKeywords.indexOf(keyword);
-        const autoIndex = this.keywordManager.autoKeywords.indexOf(keyword);
+        // 从高亮或自动提取的关键词中删除
+        const highlightIndex = this.keywordManager.highlights.indexOf(keyword);
+        const extractIndex = this.keywordManager.extracts.indexOf(keyword);
 
-        if (manualIndex > -1) {
-            this.keywordManager.manualKeywords.splice(manualIndex, 1);
-            // 如果是手动关键词（高亮），移除其高亮显示
+        if (highlightIndex > -1) {
+            this.keywordManager.highlights.splice(highlightIndex, 1);
+            // 如果是高亮词，移除其高亮显示
             this.highlightManager.removeHighlightFromTranscript(keyword);
-        } else if (autoIndex > -1) {
-            this.keywordManager.autoKeywords.splice(autoIndex, 1);
+        } else if (extractIndex > -1) {
+            this.keywordManager.extracts.splice(extractIndex, 1);
         } else {
             return;  // 关键词不存在
         }
@@ -1834,8 +1834,8 @@ class StreamNote {
         this.keywordManager.updateAllKeywordDisplays();
 
         // 分别保存高亮和关键词
-        this.sessionManager.updateCurrentHighlights(this.keywordManager.manualKeywords);
-        this.sessionManager.updateCurrentKeywords(this.keywordManager.autoKeywords);
+        this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
+        this.sessionManager.updateCurrentKeywords(this.keywordManager.extracts);
 
         this.showStatusMessage(`✓ Removed "${keyword}"`, 1200);
     }

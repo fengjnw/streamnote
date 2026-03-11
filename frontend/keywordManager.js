@@ -12,17 +12,17 @@ class KeywordManager {
         this.allCollectedKeywords = [];  // 保存所有收集到的关键词（向后兼容）
 
         // 分类存储
-        this.manualKeywords = [];    // 手动添加的关键词
-        this.autoKeywords = [];      // 自动提取的关键词
-        this.explanations = [];      // 面板中搜索的解释词
+        this.highlights = [];        // 用户高亮的词
+        this.extracts = [];          // 自动提取的关键词
+        this.explanations = [];      // 即时解释面板的词
 
         // 解释 API
         this.explanationApiUrl = config.explanationApiUrl || "/api/explain-keyword";
 
         // 三个缓存: {"keyword|language": "explanation", ...}
-        this.keywordCache = {};      // 自动提取关键词的解释缓存
-        this.highlightCache = {};    // 手动高亮的解释缓存
-        this.explanationCache = {};  // 面板搜索词的解释缓存
+        this.extractsCache = {};      // 自动提取关键词的解释缓存
+        this.highlightCache = {};    // 用户高亮词的解释缓存
+        this.explanationCache = {};  // 即时解释词的解释缓存
 
         // 跟踪展开状态的关键词
         this.expandedKeywords = new Set();
@@ -126,34 +126,34 @@ class KeywordManager {
     }
 
     /**
-     * 显示高亮列表
+     * 显示用户高亮的词
      */
-    displayManualKeywords() {
+    displayHighlights() {
         const element = document.getElementById("manual-keywords-display");
         if (!element) return;
-        const uniqueKeywords = [...new Set(this.manualKeywords)];
+        const uniqueKeywords = [...new Set(this.highlights)];
         this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "No highlights yet");
     }
 
     /**
      * 显示自动提取的关键词列表
      */
-    displayAutoKeywords() {
+    displayExtracts() {
         const element = document.getElementById("auto-keywords-display");
         if (!element) return;
-        const uniqueKeywords = [...new Set(this.autoKeywords)];
+        const uniqueKeywords = [...new Set(this.extracts)];
         this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "No auto-extracted keywords yet");
     }
 
     /**
-     * 同时更新所有关键词列表（手动 + 自动）
+     * 同时更新所有关键词列表（高亮 + 自动提取）
      */
     updateAllKeywordDisplays() {
-        this.displayManualKeywords();
-        this.displayAutoKeywords();
+        this.displayHighlights();
+        this.displayExtracts();
 
         // 保持向后兼容：更新 allCollectedKeywords
-        this.allCollectedKeywords = [...this.manualKeywords, ...this.autoKeywords];
+        this.allCollectedKeywords = [...this.highlights, ...this.extracts];
     }
 
     /**
@@ -389,7 +389,7 @@ class KeywordManager {
 
         if (keywords.length > 0) {
             // 将新关键词添加到自动提取的关键词，避免重复
-            this.autoKeywords = [...new Set([...this.autoKeywords, ...keywords])];
+            this.extracts = [...new Set([...this.extracts, ...keywords])];
         }
 
         return keywords;
@@ -417,8 +417,8 @@ class KeywordManager {
     reset() {
         this.currentKeywords = [];
         this.allCollectedKeywords = [];
-        this.manualKeywords = [];
-        this.autoKeywords = [];
+        this.highlights = [];
+        this.extracts = [];
         if (this.keywordElement) {
             this.keywordElement.innerHTML = '';
         }
