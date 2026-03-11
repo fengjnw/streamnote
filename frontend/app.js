@@ -700,7 +700,7 @@ class StreamNote {
                         this.isUpdatingUI = false;
                     }, 350);
                 } else {
-                    showContent(historyContent, "History");
+                    showContent(historyContent, "Explanation");
                 }
             });
         }
