@@ -39,26 +39,32 @@ class SessionManager {
                         };
                     }
 
-                    // 兼容：将旧的单语言 translatedKeywords 转为多语言结构
-                    if (Array.isArray(session.translatedKeywords)) {
-                        const oldKeywords = [...session.translatedKeywords];
-                        session.translatedKeywords = {
-                            Chinese: oldKeywords,  // 假定旧数据是中文
-                            English: [],
-                            Spanish: [],
-                            French: [],
-                            Japanese: [],
-                            Korean: []
-                        };
-                    }
+                    // 初始化新的数据结构字段（如果缺失）
+                    if (!session.explanations) session.explanations = [];
+                    if (!session.keywordCache) session.keywordCache = {};
+                    if (!session.highlightCache) session.highlightCache = {};
+                    if (!session.explanationCache) session.explanationCache = {};
+                    if (!session.summaryCache) session.summaryCache = {};
+
+                    // 删除旧的冗余字段
+                    delete session.translatedKeywords;
 
                     if (!session.settings) {
                         session.settings = {
                             translationEnabled: true,
-                            targetLanguage: "Chinese",
-                            keywordEnabled: true,
-                            keywordExplanationLanguage: "Chinese"
+                            language: "Chinese"
                         };
+                    } else {
+                        // 迁移旧设置格式
+                        if (session.settings.targetLanguage && !session.settings.language) {
+                            session.settings.language = session.settings.targetLanguage;
+                        }
+                        delete session.settings.targetLanguage;
+                        delete session.settings.keywordEnabled;
+                        delete session.settings.keywordExplanationLanguage;
+                        delete session.settings.explanationCache;
+                        delete session.settings.queryHistory;
+                        delete session.settings.summaryCache;
                     }
                 });
             }
@@ -110,8 +116,10 @@ class SessionManager {
         this.sessions[id] = {
             id: id,
             name: defaultName,
+
+            // 核心内容
             transcripts: {},
-            translations: {  // 改为多语言结构
+            translations: {
                 Chinese: {},
                 English: {},
                 Spanish: {},
@@ -119,22 +127,26 @@ class SessionManager {
                 Japanese: {},
                 Korean: {}
             },
-            keywords: [],
-            highlights: [],  // 手动添加的高亮
-            translatedKeywords: {  // 改为多语言结构
-                Chinese: [],
-                English: [],
-                Spanish: [],
-                French: [],
-                Japanese: [],
-                Korean: []
-            },
+
+            // 词列表（三种）
+            keywords: [],       // 自动提取的关键词
+            highlights: [],     // 手动标记的关键词
+            explanations: [],   // 在解释面板查询过的词
+
+            // 解释缓存（与词列表对应）
+            keywordCache: {},      // { "keyword|language": "explanation", ... }
+            highlightCache: {},    // { "keyword|language": "explanation", ... }
+            explanationCache: {},  // { "keyword|language": "explanation", ... }
+
+            // 总结缓存
+            summaryCache: {},      // { language: "summary", ... }
+
+            // 配置设置（简化）
             settings: {
                 translationEnabled: true,
-                targetLanguage: "Chinese",
-                keywordEnabled: true,
-                keywordExplanationLanguage: "Chinese"
+                language: "Chinese"
             },
+
             createdAt: Date.now(),
             lastModified: Date.now()
         };
@@ -255,15 +267,60 @@ class SessionManager {
     }
 
     /**
-     * 更新当前 session 的译文关键词（指定语言）
+     * 更新当前 session 的解释列表
      */
-    updateCurrentTranslatedKeywords(translatedKeywords, language) {
+    updateCurrentExplanations(explanations) {
         const session = this.getCurrentSession();
         if (session) {
-            if (!session.translatedKeywords[language]) {
-                session.translatedKeywords[language] = [];
-            }
-            session.translatedKeywords[language] = [...translatedKeywords];
+            session.explanations = [...explanations];
+            session.lastModified = Date.now();
+            this.saveSessions();
+        }
+    }
+
+    /**
+     * 更新当前 session 的关键词解释缓存
+     */
+    updateCurrentKeywordCache(cache) {
+        const session = this.getCurrentSession();
+        if (session) {
+            session.keywordCache = { ...session.keywordCache, ...cache };
+            session.lastModified = Date.now();
+            this.saveSessions();
+        }
+    }
+
+    /**
+     * 更新当前 session 的高亮解释缓存
+     */
+    updateCurrentHighlightCache(cache) {
+        const session = this.getCurrentSession();
+        if (session) {
+            session.highlightCache = { ...session.highlightCache, ...cache };
+            session.lastModified = Date.now();
+            this.saveSessions();
+        }
+    }
+
+    /**
+     * 更新当前 session 的解释面板查询词缓存
+     */
+    updateCurrentExplanationCache(cache) {
+        const session = this.getCurrentSession();
+        if (session) {
+            session.explanationCache = { ...session.explanationCache, ...cache };
+            session.lastModified = Date.now();
+            this.saveSessions();
+        }
+    }
+
+    /**
+     * 更新当前 session 的总结缓存
+     */
+    updateCurrentSummaryCache(cache) {
+        const session = this.getCurrentSession();
+        if (session) {
+            session.summaryCache = { ...session.summaryCache, ...cache };
             session.lastModified = Date.now();
             this.saveSessions();
         }

@@ -31,10 +31,9 @@ class StreamNote {
         // 翻译功能
         this.translationResults = {};
         this.translationEnabled = true;
-        this.targetLanguage = "Chinese";
 
-        // 关键词解释功能 - 默认语言改为中文
-        this.keywordExplanationLanguage = "Chinese";
+        // 语言设置（统一用于翻译和解释）
+        this.language = "Chinese";
 
         // 总结缓存
         this.summaryCache = {};
@@ -158,40 +157,12 @@ class StreamNote {
         // 恢复功能设置
         if (session.settings) {
             this.translationEnabled = session.settings.translationEnabled;
-            this.targetLanguage = session.settings.targetLanguage;
-            this.keywordExplanationLanguage = session.settings.keywordExplanationLanguage || "Chinese";
+            this.language = session.settings.language || "Chinese";
 
             // 更新 UI 控件状态
             const languageSelector = document.getElementById("target-language");
             if (languageSelector) {
-                languageSelector.value = this.targetLanguage;
-            }
-
-            const explanationLanguageSelector = document.getElementById("keyword-explanation-language");
-            if (explanationLanguageSelector) {
-                explanationLanguageSelector.value = this.keywordExplanationLanguage;
-            }
-
-            // 更新关键词提取器的设置
-            if (this.keywordManager) {
-                this.keywordManager.setEnabled(session.settings.keywordEnabled);
-
-                // 恢复解释缓存
-                if (session.settings.explanationCache) {
-                    this.keywordManager.explanationCache = { ...session.settings.explanationCache };
-                }
-
-                // 恢复查询历史
-                if (session.settings.queryHistory && Array.isArray(session.settings.queryHistory)) {
-                    this.keywordManager.queryHistory = [...session.settings.queryHistory];
-                    this.keywordManager.displayQueryHistory();
-                } else {
-                    this.keywordManager.queryHistory = [];
-                    this.keywordManager.displayQueryHistory();
-                }
-
-                // 恢复总结缓存
-                this.summaryCache = session.settings.summaryCache ? { ...session.settings.summaryCache } : {};
+                languageSelector.value = this.language;
             }
         }
 
@@ -200,27 +171,40 @@ class StreamNote {
         this.chunkIndex = Object.keys(this.preciseResults).length;
 
         // 加载当前语言的翻译内容
-        const currentLang = this.targetLanguage || "Chinese";
-        this.translationResults = (session.translations && session.translations[currentLang])
-            ? { ...session.translations[currentLang] }
+        this.translationResults = (session.translations && session.translations[this.language])
+            ? { ...session.translations[this.language] }
             : {};
+
+        // 加载缓存数据
+        this.summaryCache = session.summaryCache ? { ...session.summaryCache } : {};
 
         // 重置并恢复关键词和高亮（在updateDisplay之前）
         if (this.keywordManager) {
             this.keywordManager.reset();
 
-            // 如果关键词功能开启且有保存的关键词，恢复它们
-            if (session.settings.keywordEnabled && session.keywords && session.keywords.length > 0) {
-                // 向后兼容：旧数据中没有来源标记，假设都是自动提取的
+            // 恢复自动提取的关键词
+            if (session.keywords && session.keywords.length > 0) {
                 this.keywordManager.autoKeywords = [...session.keywords];
             }
 
-            // 恢复高亮
+            // 恢复手动高亮的关键词
             if (session.highlights && session.highlights.length > 0) {
                 this.keywordManager.manualKeywords = [...session.highlights];
             } else {
                 this.keywordManager.manualKeywords = [];
             }
+
+            // 恢复在解释面板查询过的词
+            if (session.explanations && session.explanations.length > 0) {
+                this.keywordManager.explanations = [...session.explanations];
+            } else {
+                this.keywordManager.explanations = [];
+            }
+
+            // 恢复三个解释缓存
+            this.keywordManager.keywordCache = session.keywordCache ? { ...session.keywordCache } : {};
+            this.keywordManager.highlightCache = session.highlightCache ? { ...session.highlightCache } : {};
+            this.keywordManager.explanationCache = session.explanationCache ? { ...session.explanationCache } : {};
 
             // 为所有手动关键词生成highlightId（如果还没有）
             if (this.highlightIdMap === undefined) {
@@ -231,6 +215,9 @@ class StreamNote {
                     this.highlightIdMap[text] = "hl-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
                 }
             });
+
+            // 更新显示
+            this.keywordManager.displayExplanations();
         }
 
         // 更新显示（会应用当前的翻译开关状态和高亮）
@@ -240,8 +227,8 @@ class StreamNote {
         const summaryDisplay = document.getElementById("summary-display");
         if (summaryDisplay) {
             // 检查当前语言是否有缓存，有就直接显示
-            if (this.summaryCache && this.summaryCache[this.keywordExplanationLanguage]) {
-                const cachedSummary = this.summaryCache[this.keywordExplanationLanguage];
+            if (this.summaryCache && this.summaryCache[this.language]) {
+                const cachedSummary = this.summaryCache[this.language];
                 summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
             } else {
                 summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
@@ -318,7 +305,7 @@ class StreamNote {
         }
 
         // 显示翻译语言
-        if (this.translationEnabled && this.targetLanguage) {
+        if (this.translationEnabled && this.language) {
             const translationStatusDisplay = document.getElementById('translationStatusDisplay');
             const translationLangDisplay = document.getElementById('translationLangDisplay');
             if (translationStatusDisplay) {
@@ -333,7 +320,7 @@ class StreamNote {
                     'Japanese': '日本語',
                     'Korean': '한국어'
                 };
-                translationLangDisplay.textContent = langNames[this.targetLanguage] || this.targetLanguage;
+                translationLangDisplay.textContent = langNames[this.language] || this.language;
             }
         } else {
             const translationStatusDisplay = document.getElementById('translationStatusDisplay');
@@ -362,26 +349,30 @@ class StreamNote {
         // 保存转录内容
         this.sessionManager.updateTranscriptsForSession(sessionId, this.preciseResults);
 
-        // 分别保存高亮和自动提取的关键词
+        // 分别保存词列表和缓存
         if (this.keywordManager) {
-            this.sessionManager.updateCurrentHighlights(this.keywordManager.manualKeywords);
             this.sessionManager.updateCurrentKeywords(this.keywordManager.autoKeywords);
+            this.sessionManager.updateCurrentHighlights(this.keywordManager.manualKeywords);
+            this.sessionManager.updateCurrentExplanations(this.keywordManager.explanations);
+
+            // 保存缓存
+            this.sessionManager.updateCurrentKeywordCache(this.keywordManager.keywordCache);
+            this.sessionManager.updateCurrentHighlightCache(this.keywordManager.highlightCache);
+            this.sessionManager.updateCurrentExplanationCache(this.keywordManager.explanationCache);
         }
 
         // 保存翻译（按当前语言保存）
         if (this.translationResults) {
-            this.sessionManager.updateCurrentTranslations(this.translationResults, this.targetLanguage);
+            this.sessionManager.updateCurrentTranslations(this.translationResults, this.language);
         }
 
-        // 保存功能设置
+        // 保存总结缓存
+        this.sessionManager.updateCurrentSummaryCache(this.summaryCache);
+
+        // 保存设置
         const settings = {
             translationEnabled: this.translationEnabled,
-            targetLanguage: this.targetLanguage,
-            keywordEnabled: this.keywordManager ? this.keywordManager.enabled : true,
-            keywordExplanationLanguage: this.keywordExplanationLanguage,
-            explanationCache: this.keywordManager ? this.keywordManager.explanationCache : {},
-            queryHistory: this.keywordManager ? this.keywordManager.queryHistory : [],
-            summaryCache: this.summaryCache
+            language: this.language
         };
         this.sessionManager.updateCurrentSettings(settings);
     }
@@ -394,12 +385,7 @@ class StreamNote {
 
         const settings = {
             translationEnabled: this.translationEnabled,
-            targetLanguage: this.targetLanguage,
-            keywordEnabled: this.keywordManager ? this.keywordManager.enabled : true,
-            keywordExplanationLanguage: this.keywordExplanationLanguage,
-            explanationCache: this.keywordManager ? this.keywordManager.explanationCache : {},
-            queryHistory: this.keywordManager ? this.keywordManager.queryHistory : [],
-            summaryCache: this.summaryCache
+            language: this.language
         };
         this.sessionManager.updateCurrentSettings(settings);
     }
@@ -487,15 +473,7 @@ class StreamNote {
         const languageSelector = document.getElementById("target-language");
         if (languageSelector) {
             languageSelector.addEventListener("change", async (e) => {
-                const oldLanguage = this.targetLanguage;
-                this.targetLanguage = e.target.value;
-
-                // 同步更新解释/总结语言
-                this.keywordExplanationLanguage = this.targetLanguage;
-                const explanationSelector = document.getElementById("keyword-explanation-language");
-                if (explanationSelector) {
-                    explanationSelector.value = this.targetLanguage;
-                }
+                this.language = e.target.value;
 
                 // 语言改变，重新翻译全部
                 if (this.translationEnabled) {
@@ -508,8 +486,8 @@ class StreamNote {
                 // 更新 Summary 显示
                 const summaryDisplay = document.getElementById("summary-display");
                 if (summaryDisplay) {
-                    if (this.summaryCache && this.summaryCache[this.keywordExplanationLanguage]) {
-                        const cachedSummary = this.summaryCache[this.keywordExplanationLanguage];
+                    if (this.summaryCache && this.summaryCache[this.language]) {
+                        const cachedSummary = this.summaryCache[this.language];
                         summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
                     } else {
                         summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
@@ -521,26 +499,6 @@ class StreamNote {
             });
         }
 
-        // 添加关键词解释语言选择
-        const explanationLanguageSelector = document.getElementById("keyword-explanation-language");
-        if (explanationLanguageSelector) {
-            explanationLanguageSelector.addEventListener("change", (e) => {
-                this.keywordExplanationLanguage = e.target.value;
-
-                // 更新 Summary 显示
-                const summaryDisplay = document.getElementById("summary-display");
-                if (summaryDisplay) {
-                    if (this.summaryCache && this.summaryCache[this.keywordExplanationLanguage]) {
-                        const cachedSummary = this.summaryCache[this.keywordExplanationLanguage];
-                        summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
-                    } else {
-                        summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
-                    }
-                }
-
-                this.saveSettingsToSession();
-            });
-        }
 
         // 自动提取关键词按钮（在Keywords面板中）
         const autoExtractKeywordsBtn = document.getElementById("autoExtractKeywordsBtn");
@@ -993,9 +951,9 @@ class StreamNote {
         explainBtn.addEventListener("click", async () => {
             if (this.selectedText.trim()) {
                 const term = this.selectedText.trim();
-                // 如果不在历史中，先加入
-                if (!this.keywordManager.queryHistory.includes(term)) {
-                    this.keywordManager.addToQueryHistory(term);
+                // 如果不在解释列表中，先加入
+                if (!this.keywordManager.explanations.includes(term)) {
+                    this.keywordManager.addToExplanations(term);
                 }
 
                 // 打开 History 面板并显示/隐藏按钮
@@ -2101,7 +2059,7 @@ class StreamNote {
                 },
                 body: JSON.stringify({
                     text: text,
-                    target_lang: this.targetLanguage
+                    target_lang: this.language
                 })
             });
 
@@ -2157,7 +2115,7 @@ class StreamNote {
         }
 
         try {
-            const language = this.keywordExplanationLanguage;
+            const language = this.language;
 
             // 检查该语言的缓存（除非强制刷新）
             if (!forceRefresh && this.summaryCache[language]) {
@@ -2244,7 +2202,7 @@ class StreamNote {
         if (!session) return;
 
         // 检查当前语言的缓存是否完整
-        const currentLangCache = session.translations[this.targetLanguage] || {};
+        const currentLangCache = session.translations[this.language] || {};
         let hasMissingTranslations = false;
 
         // 检查是否所有转录都已翻译
@@ -2276,7 +2234,7 @@ class StreamNote {
 
         // 显示翻译进度提示
         if (missingCount > 5) {
-            this.updateStatus(`Translating to ${this.targetLanguage}... (${missingCount} segments)`);
+            this.updateStatus(`Translating to ${this.language}... (${missingCount} segments)`);
         }
 
         this.translationResults = { ...currentLangCache };  // 保留已有的翻译
@@ -2298,7 +2256,7 @@ class StreamNote {
 
         // 翻译完成提示
         if (missingCount > 5) {
-            this.updateStatus(`Translation complete (${this.targetLanguage})`);
+            this.updateStatus(`Translation complete (${this.language})`);
             setTimeout(() => {
                 if (!this.isRecording) {
                     this.updateStatus("Ready");
@@ -2320,7 +2278,7 @@ class StreamNote {
         if (!session) return;
 
         // 加载当前语言的缓存
-        const currentLangCache = session.translations[this.targetLanguage] || {};
+        const currentLangCache = session.translations[this.language] || {};
         this.translationResults = { ...currentLangCache };
 
         // 检查是否有未翻译的内容
@@ -2347,7 +2305,7 @@ class StreamNote {
      * 处理关键词提取 - 基于整个转录文本
      */
     async processKeywords(targetSessionId = null) {
-        if (!this.keywordManager || !this.keywordManager.enabled) return;
+        if (!this.keywordManager) return;
 
         // 收集所有转录文本（保证准确率）
         this.currentTranscriptText = Object.values(this.preciseResults)
@@ -2368,7 +2326,7 @@ class StreamNote {
      * 重新处理所有关键词（强度改变时使用）
      */
     async reprocessAllKeywords() {
-        if (!this.keywordManager || !this.keywordManager.enabled) return;
+        if (!this.keywordManager) return;
 
         // 获取当前的全文
         this.currentTranscriptText = Object.values(this.preciseResults)

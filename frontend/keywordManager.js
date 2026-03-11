@@ -8,27 +8,26 @@ class KeywordManager {
         this.apiUrl = config.apiUrl || "/api/extract-keywords";
         this.keywordElement = config.keywordElement || document.getElementById("keywords-display");
 
-        this.enabled = true;  // 是否启用关键词提取
-
         this.currentKeywords = [];
         this.allCollectedKeywords = [];  // 保存所有收集到的关键词（向后兼容）
 
         // 分类存储
         this.manualKeywords = [];    // 手动添加的关键词
         this.autoKeywords = [];      // 自动提取的关键词
+        this.explanations = [];      // 面板中搜索的解释词
 
         // 解释 API
         this.explanationApiUrl = config.explanationApiUrl || "/api/explain-keyword";
 
-        // 解释缓存: {"keyword|language": "explanation", ...}
-        this.explanationCache = {};
+        // 三个缓存: {"keyword|language": "explanation", ...}
+        this.keywordCache = {};      // 自动提取关键词的解释缓存
+        this.highlightCache = {};    // 手动高亮的解释缓存
+        this.explanationCache = {};  // 面板搜索词的解释缓存
 
         // 跟踪展开状态的关键词
         this.expandedKeywords = new Set();
 
-        // 查询历史: [term1, term2, ...] (保持查询顺序，新的在前)
-        this.queryHistory = [];
-        this.maxHistorySize = 20;  // 最多保留20条历史
+        // 解释列表显示元素
         this.historyElement = config.historyElement || document.getElementById("query-history-list");
     }
 
@@ -71,10 +70,10 @@ class KeywordManager {
     }
 
     /**
-     * 通用的列表显示方法（关键词和历史都使用）
+     * 通用的列表显示方法（关键词和解释都使用）
      * @param {Array<string>} items - 要显示的项目列表
      * @param {HTMLElement} containerElement - 容器元素
-     * @param {string} deleteHandlerName - 删除处理函数的名字（"deleteKeywordItem" 或 "removeFromQueryHistory"）
+     * @param {string} deleteHandlerName - 删除处理函数的名字（"deleteKeywordItem" 或 "removeFromExplanations"）
      * @param {string} emptyMessage - 列表为空时的提示信息
      */
     displayItemList(items, containerElement, deleteHandlerName, emptyMessage = "No items") {
@@ -250,7 +249,7 @@ class KeywordManager {
 
         try {
             // 获取解释语言（从全局 StreamNote 实例）
-            const explanationLanguage = window.streamNoteInstance?.keywordExplanationLanguage || "English";
+            const explanationLanguage = window.streamNoteInstance?.language || "English";
 
             // 生成缓存 key
             const cacheKey = `${keyword}|${explanationLanguage}`;
@@ -323,26 +322,26 @@ class KeywordManager {
 
 
     /**
-     * 添加项目到查询历史
+     * 添加项目到解释列表
      * @param {string} term - 查询词
      */
-    addToQueryHistory(term) {
+    addToExplanations(term) {
         term = term.trim();
         if (!term) return;
 
-        // 如果已经在历史中，先删除（将其移到最前）
-        this.queryHistory = this.queryHistory.filter(t => t !== term);
+        // 如果已经在列表中，先删除（将其移到最前）
+        this.explanations = this.explanations.filter(t => t !== term);
 
         // 添加到最前
-        this.queryHistory.unshift(term);
+        this.explanations.unshift(term);
 
-        // 限制历史大小
-        if (this.queryHistory.length > this.maxHistorySize) {
-            this.queryHistory = this.queryHistory.slice(0, this.maxHistorySize);
+        // 限制列表大小（最多保留20条）
+        if (this.explanations.length > 20) {
+            this.explanations = this.explanations.slice(0, 20);
         }
 
         // 更新显示
-        this.displayQueryHistory();
+        this.displayExplanations();
 
         // 保存到 session
         if (window.streamNoteInstance) {
@@ -351,12 +350,12 @@ class KeywordManager {
     }
 
     /**
-     * 删除查询历史中的项
+     * 删除解释列表中的项
      * @param {string} term - 要删除的词
      */
-    removeFromQueryHistory(term) {
-        this.queryHistory = this.queryHistory.filter(t => t !== term);
-        this.displayQueryHistory();
+    removeFromExplanations(term) {
+        this.explanations = this.explanations.filter(t => t !== term);
+        this.displayExplanations();
 
         // 保存到 session
         if (window.streamNoteInstance) {
@@ -375,10 +374,10 @@ class KeywordManager {
     }
 
     /**
-     * 显示查询历史
+     * 显示解释列表
      */
-    displayQueryHistory() {
-        this.displayItemList(this.queryHistory, this.historyElement, "removeFromQueryHistory", "No queries yet");
+    displayExplanations() {
+        this.displayItemList(this.explanations, this.historyElement, "removeFromExplanations", "No explanations yet");
     }
 
     /**
@@ -386,10 +385,6 @@ class KeywordManager {
      * @param {string} text - 输入文本（仅用于提取关键词）
      */
     async processText(text) {
-        if (!this.enabled) {
-            return [];
-        }
-
         const keywords = await this.extractKeywords(text);
 
         if (keywords.length > 0) {
@@ -406,19 +401,6 @@ class KeywordManager {
      */
     getKeywords() {
         return this.currentKeywords;
-    }
-
-    /**
-     * 设置启用状态
-     * @param {boolean} enabled
-     */
-    setEnabled(enabled) {
-        this.enabled = enabled;
-        if (!enabled) {
-            if (this.keywordElement) {
-                this.keywordElement.innerHTML = '<p class="placeholder">Keywords disabled</p>';
-            }
-        }
     }
 
     /**
