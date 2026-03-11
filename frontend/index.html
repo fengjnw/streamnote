@@ -68,6 +68,8 @@
 
                 <!-- Group 5: Quick Access Panels -->
                 <div class="nav-group">
+                    <button id="quickAccessHighlights" class="control-btn control-btn-secondary icon-only"
+                        title="Highlights">✏️</button>
                     <button id="quickAccessHistory" class="control-btn control-btn-secondary icon-only"
                         title="History">📜</button>
                     <button id="quickAccessKeywords" class="control-btn control-btn-secondary icon-only"
@@ -172,25 +174,17 @@
                         <button id="closeSidePanelBtn" class="btn-icon toggle-btn" title="Close Panel">✕</button>
                     </div>
 
-                    <!-- Keywords Content -->
-                    <div id="keywordsContent" class="panel-content active">
-                        <!-- Keywords Tab Navigation -->
-                        <div class="keywords-tab-nav">
-                            <button class="keywords-tab-btn active" data-tab="manual" title="Highlights">
-                                ✏️ Highlights
-                            </button>
-                            <button class="keywords-tab-btn" data-tab="auto" title="Auto-extracted Keywords">
-                                🤖 Auto-extracted
-                            </button>
-                        </div>
-
-                        <!-- Highlights Section -->
-                        <div id="manual-keywords-display" class="keywords-tab-content active">
+                    <!-- Highlights Content -->
+                    <div id="highlightsContent" class="panel-content">
+                        <div id="manual-keywords-display" class="keywords-items">
                             <p class="placeholder">Select text to add highlights...</p>
                         </div>
+                    </div>
 
+                    <!-- Keywords Content -->
+                    <div id="keywordsContent" class="panel-content active">
                         <!-- Auto-extracted Keywords Section -->
-                        <div id="auto-keywords-display" class="keywords-tab-content">
+                        <div id="auto-keywords-display" class="keywords-tab-content active">
                             <p class="placeholder">Click 🔄 to extract keywords...</p>
                         </div>
                     </div>

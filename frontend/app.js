@@ -559,10 +559,12 @@ class StreamNote {
         const summaryContent = document.getElementById("summaryContent");
         const historyContent = document.getElementById("historyContent");
         const settingsContent = document.getElementById("settingsContent");
+        const highlightsContent = document.getElementById("highlightsContent");
         const quickAccessKeywords = document.getElementById("quickAccessKeywords");
         const quickAccessSummary = document.getElementById("quickAccessSummary");
         const quickAccessHistory = document.getElementById("quickAccessHistory");
         const quickAccessSettings = document.getElementById("quickAccessSettings");
+        const quickAccessHighlights = document.getElementById("quickAccessHighlights");
 
         // Hide all content
         const hideAllContent = () => {
@@ -570,11 +572,13 @@ class StreamNote {
             summaryContent.classList.remove("active");
             historyContent.classList.remove("active");
             settingsContent.classList.remove("active");
+            highlightsContent.classList.remove("active");
             // Clear active state from all quick access buttons
             quickAccessKeywords.classList.remove("active");
             quickAccessSummary.classList.remove("active");
             quickAccessHistory.classList.remove("active");
             quickAccessSettings.classList.remove("active");
+            quickAccessHighlights.classList.remove("active");
         };
 
         // Show specific content
@@ -592,6 +596,8 @@ class StreamNote {
                 quickAccessHistory.classList.add("active");
             } else if (contentEl === settingsContent) {
                 quickAccessSettings.classList.add("active");
+            } else if (contentEl === highlightsContent) {
+                quickAccessHighlights.classList.add("active");
             }
 
             // Show/hide auto extract keywords button and explanation language selector based on active tab
@@ -616,7 +622,7 @@ class StreamNote {
                 copySummaryBtn.style.display = contentEl === summaryContent ? 'block' : 'none';
             }
             if (explanationLangSelector) {
-                explanationLangSelector.style.display = (contentEl === keywordsContent || contentEl === historyContent || contentEl === summaryContent) ? 'block' : 'none';
+                explanationLangSelector.style.display = (contentEl === keywordsContent || contentEl === historyContent || contentEl === summaryContent || contentEl === highlightsContent) ? 'block' : 'none';
             }
 
             // Set flag to prevent resize-induced scroll from closing autoScroll
@@ -638,6 +644,7 @@ class StreamNote {
                 quickAccessHistory.classList.remove("active");
                 quickAccessSummary.classList.remove("active");
                 quickAccessSettings.classList.remove("active");
+                quickAccessHighlights.classList.remove("active");
                 setTimeout(() => {
                     this.isUpdatingUI = false;
                 }, 350); // Match the 0.3s transition + buffer
@@ -713,6 +720,24 @@ class StreamNote {
                     }, 350);
                 } else {
                     showContent(settingsContent, "Settings");
+                }
+            });
+        }
+
+        if (quickAccessHighlights) {
+            quickAccessHighlights.addEventListener("click", () => {
+                const isOpen = sidePanelsContainer.classList.contains("expanded");
+                const isActive = highlightsContent.classList.contains("active");
+
+                if (isOpen && isActive) {
+                    this.isUpdatingUI = true;
+                    sidePanelsContainer.classList.remove("expanded");
+                    quickAccessHighlights.classList.remove("active");
+                    setTimeout(() => {
+                        this.isUpdatingUI = false;
+                    }, 350);
+                } else {
+                    showContent(highlightsContent, "Highlights");
                 }
             });
         }
@@ -1010,39 +1035,8 @@ class StreamNote {
 
             this.addSelectedTextAsHighlightWithRange(selectedText, range);
 
-            // 打开 Keywords 面板并显示/隐藏按钮
-            if (keywordsContent && sidePanelTitle && sidePanelsContainer) {
-                hideAllContent();
-                keywordsContent.classList.add("active");
-                sidePanelTitle.textContent = "Highlights";
-
-                // 更新按钮显示状态
-                const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
-                const generateSummaryBtn = document.getElementById("generateSummaryBtn");
-                const copySummaryBtn = document.getElementById("copySummaryBtn");
-                const explanationLangSelector = document.getElementById("keyword-explanation-language");
-
-                if (autoExtractBtn) {
-                    autoExtractBtn.style.display = 'block';
-                    autoExtractBtn.style.opacity = '1';
-                    autoExtractBtn.style.pointerEvents = 'auto';
-                }
-                if (generateSummaryBtn) {
-                    generateSummaryBtn.style.display = 'none';
-                }
-                if (copySummaryBtn) {
-                    copySummaryBtn.style.display = 'none';
-                }
-                if (explanationLangSelector) {
-                    explanationLangSelector.style.display = 'block';
-                }
-
-                this.isUpdatingUI = true;
-                sidePanelsContainer.classList.add("expanded");
-                setTimeout(() => {
-                    this.isUpdatingUI = false;
-                }, 350);
-            }
+            // 使用统一的showContent逻辑打开Highlights面板
+            showContent(highlightsContent, "Highlights");
 
             // 禁用按钮 - 清除选中文本
             explainBtn.disabled = true;

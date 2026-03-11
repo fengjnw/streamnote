@@ -1115,6 +1115,9 @@ header h1 {
     font-weight: 700;
 }
 
+/* ================ Highlights Panel (复用 side-panels-container 样式) ================ */
+/* 高亮面板集成在 side-panels-container 中，完全复用样式和逻辑 */
+
 @keyframes pulse {
 
     0%,
