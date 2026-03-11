@@ -1550,8 +1550,6 @@ header h1 {
 .text-highlight {
     background-color: #fff59d;
     color: inherit;
-    padding: 2px 3px;
-    border-radius: 2px;
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
 }

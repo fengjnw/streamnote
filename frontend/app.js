@@ -1061,7 +1061,7 @@ class StreamNote {
         // 移除选中文本中的所有时间戳（可能有多个）
         // 时间戳格式: [HH:MM:SS]，用全局替换
         highlightText = highlightText.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
-        
+
         // 额外清理：移除多余的空格
         highlightText = highlightText.replace(/\s+/g, ' ').trim();
 
@@ -1163,8 +1163,8 @@ class StreamNote {
         if (!range || !highlightId) return;
 
         // 获取 range 的 common ancestor
-        const rootNode = range.commonAncestorContainer.nodeType === Node.TEXT_NODE 
-            ? range.commonAncestorContainer.parentNode 
+        const rootNode = range.commonAncestorContainer.nodeType === Node.TEXT_NODE
+            ? range.commonAncestorContainer.parentNode
             : range.commonAncestorContainer;
 
         // 收集 range 内的所有 text nodes
@@ -1180,7 +1180,7 @@ class StreamNote {
         while (node = walker.nextNode()) {
             const nodeRange = document.createRange();
             nodeRange.selectNodeContents(node);
-            
+
             // 检查这个 node 是否与 range 有交集
             if (range.compareBoundaryPoints(Range.START_TO_END, nodeRange) > -1 &&
                 range.compareBoundaryPoints(Range.END_TO_START, nodeRange) < 1) {
@@ -1225,7 +1225,7 @@ class StreamNote {
         // 从原始数据构建纯文本版本，item之间用空格连接
         const sortedKeys = Object.keys(this.preciseResults)
             .sort((a, b) => parseInt(a) - parseInt(b));
-        
+
         // 获取并trim每个sourceText
         const sourceTexts = sortedKeys.map(key => {
             const text = this.preciseResults[key]?.text || "";
@@ -1234,7 +1234,7 @@ class StreamNote {
 
         // 构建虚拟全文，item之间用单个空格连接
         let virtualFullText = sourceTexts.join(" ");
-        
+
         // 建立位置映射
         const textPositionMap = []; // [{ startInVirtual, endInVirtual, sourceIndex }, ...]
         let currentPos = 0;
@@ -1380,7 +1380,7 @@ class StreamNote {
         // 通过ID来删除对应的高亮
         if (this.highlightIdMap && this.highlightIdMap[text]) {
             const highlightId = this.highlightIdMap[text];
-            
+
             // 从原文删除
             const transcriptDiv = document.getElementById("transcript");
             if (transcriptDiv) {
@@ -1391,7 +1391,7 @@ class StreamNote {
                 });
                 this.mergeAdjacentTextNodes(transcriptDiv);
             }
-            
+
             // 从翻译删除
             const translationDiv = document.getElementById("translation");
             if (translationDiv) {
