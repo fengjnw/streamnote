@@ -159,7 +159,7 @@ class StreamNote {
         if (session.settings) {
             this.translationEnabled = session.settings.translationEnabled;
             this.targetLanguage = session.settings.targetLanguage;
-            this.keywordExplanationLanguage = session.settings.keywordExplanationLanguage || "English";
+            this.keywordExplanationLanguage = session.settings.keywordExplanationLanguage || "Chinese";
 
             // 更新 UI 控件状态
             const languageSelector = document.getElementById("target-language");
@@ -482,6 +482,12 @@ class StreamNote {
                 const oldLanguage = this.targetLanguage;
                 this.targetLanguage = e.target.value;
 
+                // 同步更新解释/总结语言
+                this.keywordExplanationLanguage = this.targetLanguage;
+                const explanationSelector = document.getElementById("keyword-explanation-language");
+                if (explanationSelector) {
+                    explanationSelector.value = this.targetLanguage;
+                }
 
                 // 语言改变，重新翻译全部
                 if (this.translationEnabled) {
@@ -489,6 +495,17 @@ class StreamNote {
                     if (this.isRecording) {
                     }
                     await this.retranslateAll();
+                }
+
+                // 更新 Summary 显示
+                const summaryDisplay = document.getElementById("summary-display");
+                if (summaryDisplay) {
+                    if (this.summaryCache && this.summaryCache[this.keywordExplanationLanguage]) {
+                        const cachedSummary = this.summaryCache[this.keywordExplanationLanguage];
+                        summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
+                    } else {
+                        summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
+                    }
                 }
 
                 // 保存设置到 session
