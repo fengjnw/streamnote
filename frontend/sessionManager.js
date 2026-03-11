@@ -120,6 +120,7 @@ class SessionManager {
                 Korean: {}
             },
             keywords: [],
+            highlights: [],  // 手动添加的高亮
             translatedKeywords: {  // 改为多语言结构
                 Chinese: [],
                 English: [],
@@ -221,6 +222,18 @@ class SessionManager {
         const session = this.getCurrentSession();
         if (session) {
             session.keywords = [...keywords];
+            session.lastModified = Date.now();
+            this.saveSessions();
+        }
+    }
+
+    /**
+     * 更新当前 session 的高亮
+     */
+    updateCurrentHighlights(highlights) {
+        const session = this.getCurrentSession();
+        if (session) {
+            session.highlights = [...highlights];
             session.lastModified = Date.now();
             this.saveSessions();
         }

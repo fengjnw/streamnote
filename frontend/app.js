@@ -222,7 +222,7 @@ class StreamNote {
 
         this.updateDisplay();
 
-        // 重置并恢复关键词
+        // 重置并恢复关键词和高亮
         if (this.keywordManager) {
             this.keywordManager.reset();
 
@@ -230,12 +230,16 @@ class StreamNote {
             if (session.settings.keywordEnabled && session.keywords && session.keywords.length > 0) {
                 // 向后兼容：旧数据中没有来源标记，假设都是自动提取的
                 this.keywordManager.autoKeywords = [...session.keywords];
-                this.keywordManager.manualKeywords = [];
-                this.keywordManager.updateAllKeywordDisplays();
-            } else {
-                // 没有关键词，清空显示
-                this.keywordManager.updateAllKeywordDisplays();
             }
+
+            // 恢复高亮
+            if (session.highlights && session.highlights.length > 0) {
+                this.keywordManager.manualKeywords = [...session.highlights];
+            } else {
+                this.keywordManager.manualKeywords = [];
+            }
+
+            this.keywordManager.updateAllKeywordDisplays();
 
             // 为所有手动关键词生成highlightId（如果还没有）
             if (this.highlightIdMap === undefined) {
@@ -245,6 +249,8 @@ class StreamNote {
                 if (!this.highlightIdMap[text]) {
                     this.highlightIdMap[text] = "hl-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
                 }
+                // 重新应用高亮到文本中
+                this.highlightTextInTranscript(text, this.highlightIdMap[text]);
             });
         }
 
@@ -355,9 +361,10 @@ class StreamNote {
         // 保存转录内容
         this.sessionManager.updateTranscriptsForSession(sessionId, this.preciseResults);
 
-        // 保存关键词
-        if (this.keywordManager && this.keywordManager.allCollectedKeywords) {
-            this.sessionManager.updateCurrentKeywords(this.keywordManager.allCollectedKeywords);
+        // 分别保存高亮和自动提取的关键词
+        if (this.keywordManager) {
+            this.sessionManager.updateCurrentHighlights(this.keywordManager.manualKeywords);
+            this.sessionManager.updateCurrentKeywords(this.keywordManager.autoKeywords);
         }
 
         // 保存翻译（按当前语言保存）
@@ -1106,8 +1113,9 @@ class StreamNote {
         // 在原文中进行高亮显示
         this.highlightTextInTranscript(highlightText, highlightId);
 
-        // 保存到 session
-        this.sessionManager.updateCurrentKeywords(this.keywordManager.allCollectedKeywords);
+        // 同时保存高亮和关键词
+        this.sessionManager.updateCurrentHighlights(this.keywordManager.manualKeywords);
+        this.sessionManager.updateCurrentKeywords(this.keywordManager.autoKeywords);
 
         this.showStatusMessage(`✓ Highlighted "${highlightText}"`, 1500);
         this.selectedText = "";
@@ -1159,7 +1167,8 @@ class StreamNote {
 
         // 更新显示和保存
         this.keywordManager.updateAllKeywordDisplays();
-        this.sessionManager.updateCurrentKeywords(this.keywordManager.allCollectedKeywords);
+        this.sessionManager.updateCurrentHighlights(this.keywordManager.manualKeywords);
+        this.sessionManager.updateCurrentKeywords(this.keywordManager.autoKeywords);
 
         this.showStatusMessage(`✓ Highlighted "${highlightText}"`, 1500);
         this.selectedText = "";
@@ -2464,8 +2473,9 @@ class StreamNote {
         // 更新所有显示
         this.keywordManager.updateAllKeywordDisplays();
 
-        // 保存到 session
-        this.sessionManager.updateCurrentKeywords(this.keywordManager.allCollectedKeywords);
+        // 分别保存高亮和关键词
+        this.sessionManager.updateCurrentHighlights(this.keywordManager.manualKeywords);
+        this.sessionManager.updateCurrentKeywords(this.keywordManager.autoKeywords);
 
         this.showStatusMessage(`✓ Removed "${keyword}"`, 1200);
     }
