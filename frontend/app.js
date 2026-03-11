@@ -108,6 +108,9 @@ class StreamNote {
             getPreciseResults: () => this.recordingManager.getTranscriptData(),
             saveToSession: (sessionId) => this.saveToSession(sessionId)
         });
+        // 设置初始语言
+        this.translationManager.setLanguage(this.language);
+        this.translationManager.setEnabled(this.translationEnabled);
     }
 
     /**
@@ -233,6 +236,7 @@ class StreamNote {
         const translationsForLanguage = (session.translations && session.translations[this.language])
             ? { ...session.translations[this.language] }
             : {};
+        this.translationManager.setLanguage(this.language);
         this.translationManager.setTranslationData(translationsForLanguage);
         this.translationResults = translationsForLanguage; // 保留兼容性
 
@@ -529,6 +533,7 @@ class StreamNote {
         if (languageSelector) {
             languageSelector.addEventListener("change", async (e) => {
                 this.language = e.target.value;
+                this.translationManager.setLanguage(this.language);
 
                 // 语言改变，重新翻译全部
                 if (this.translationEnabled) {
@@ -1879,6 +1884,7 @@ class StreamNote {
         const transcriptDiv = document.getElementById("transcript");
         const translationDiv = document.getElementById("translation");
         const preciseResults = this.recordingManager.getTranscriptData();
+        const translationData = this.translationManager.getTranslationData();
 
         // 更新转录显示
         const formattedLines = Object.keys(preciseResults).map(key => {
