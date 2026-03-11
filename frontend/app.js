@@ -530,7 +530,8 @@ class StreamNote {
             apiUrl: "/api/extract-keywords",
             transcriptElement: document.getElementById("transcript"),
             keywordElement: document.getElementById("keywords-display"),
-            topK: 5
+            topK: 5,
+            panelManager: this.panelManager
         });
 
         // 使 KeywordManager 全局可访问
@@ -1102,18 +1103,8 @@ class StreamNote {
         explainBtn.addEventListener("click", async () => {
             if (this.selectedText.trim()) {
                 const term = this.selectedText.trim();
-                // 如果不在解释列表中，先加入
-                if (!this.keywordManager.explanations.includes(term)) {
-                    this.keywordManager.addToExplanations(term);
-                }
-
-                // 使用统一的showContent逻辑打开解释面板
-                showContent.call(this, historyContent, "Explanations");
-
-                // 等待 DOM 更新后再展开
-                setTimeout(() => {
-                    this.keywordManager.toggleExplanation(term);
-                }, 50);
+                // 通过 KeywordManager 统一处理显示解释面板的逻辑
+                this.keywordManager.showExplanationPanel(term);
 
                 // 禁用按钮 - 清除选中文本
                 explainBtn.disabled = true;

@@ -29,6 +29,9 @@ class KeywordManager {
 
         // 解释列表显示元素
         this.historyElement = config.historyElement || document.getElementById("query-history-list");
+
+        // 面板管理器引用（用于显示解释面板）
+        this.panelManager = config.panelManager || null;
     }
 
     /**
@@ -378,6 +381,47 @@ class KeywordManager {
      */
     displayExplanations() {
         this.displayItemList(this.explanations, this.historyElement, "removeFromExplanations", "No explanations yet");
+    }
+
+    /**
+     * 设置面板管理器引用
+     * @param {PanelManager} panelManager
+     */
+    setPanelManager(panelManager) {
+        this.panelManager = panelManager;
+    }
+
+    /**
+     * 显示解释面板 - 统一处理词条解释的完整流程
+     * @param {string} term - 要解释的词条
+     */
+    showExplanationPanel(term) {
+        term = term.trim();
+        if (!term) return;
+
+        // 添加到解释列表（如果不存在）
+        if (!this.explanations.includes(term)) {
+            this.addToExplanations(term);
+        } else {
+            // 已存在则刷新显示（确保排序为最新）
+            this.explanations = this.explanations.filter(t => t !== term);
+            this.explanations.unshift(term);
+            this.displayExplanations();
+        }
+
+        // 通过面板管理器显示解释面板
+        if (this.panelManager) {
+            const historyContent = document.getElementById("historyContent");
+            if (historyContent) {
+                // 显示解释面板，标题为 "Explanation"
+                this.panelManager.showSidePanelContent(historyContent, "Explanation");
+
+                // 展开该词条的解释
+                setTimeout(() => {
+                    this.toggleExplanation(term);
+                }, 50);
+            }
+        }
     }
 
     /**
