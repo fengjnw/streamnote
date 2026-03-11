@@ -205,24 +205,7 @@ class StreamNote {
             ? { ...session.translations[currentLang] }
             : {};
 
-        // 更新显示（会应用当前的翻译开关状态）
-        this.initializeVisibility();
-
-        // 清空 Summary 显示
-        const summaryDisplay = document.getElementById("summary-display");
-        if (summaryDisplay) {
-            // 检查当前语言是否有缓存，有就直接显示
-            if (this.summaryCache && this.summaryCache[this.keywordExplanationLanguage]) {
-                const cachedSummary = this.summaryCache[this.keywordExplanationLanguage];
-                summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
-            } else {
-                summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
-            }
-        }
-
-        this.updateDisplay();
-
-        // 重置并恢复关键词和高亮
+        // 重置并恢复关键词和高亮（在updateDisplay之前）
         if (this.keywordManager) {
             this.keywordManager.reset();
 
@@ -239,8 +222,6 @@ class StreamNote {
                 this.keywordManager.manualKeywords = [];
             }
 
-            this.keywordManager.updateAllKeywordDisplays();
-
             // 为所有手动关键词生成highlightId（如果还没有）
             if (this.highlightIdMap === undefined) {
                 this.highlightIdMap = {};
@@ -249,9 +230,29 @@ class StreamNote {
                 if (!this.highlightIdMap[text]) {
                     this.highlightIdMap[text] = "hl-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
                 }
-                // 重新应用高亮到文本中
-                this.highlightTextInTranscript(text, this.highlightIdMap[text]);
             });
+        }
+
+        // 更新显示（会应用当前的翻译开关状态和高亮）
+        this.initializeVisibility();
+
+        // 清空 Summary 显示
+        const summaryDisplay = document.getElementById("summary-display");
+        if (summaryDisplay) {
+            // 检查当前语言是否有缓存，有就直接显示
+            if (this.summaryCache && this.summaryCache[this.keywordExplanationLanguage]) {
+                const cachedSummary = this.summaryCache[this.keywordExplanationLanguage];
+                summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
+            } else {
+                summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
+            }
+        }
+
+        this.updateDisplay();
+
+        // 更新关键词显示（高亮已在updateDisplay内的reapplyAllHighlights中应用）
+        if (this.keywordManager) {
+            this.keywordManager.updateAllKeywordDisplays();
         }
 
         this.updateStatus(`Loaded: ${session.name}`);
@@ -1359,6 +1360,134 @@ class StreamNote {
     }
 
     /**
+     * 在翻译区高亮显示指定的文本（支持跨段）
+     * @param {string} text - 要高亮的文本
+     * @param {string} highlightId - 高亮的唯一ID
+     */
+    highlightTextInTranslation(text, highlightId) {
+        if (!text || !highlightId) return;
+
+        const translationDiv = document.getElementById("translation");
+        if (!translationDiv) return;
+
+        // 从translationResults中构建虚拟全文
+        const sortedKeys = Object.keys(this.preciseResults)
+            .sort((a, b) => parseInt(a) - parseInt(b));
+
+        // 获取每个段落对应的翻译文本
+        const translationTexts = sortedKeys.map(key => {
+            const translation = this.translationResults[key];
+            // 如果没有翻译，返回空字符串，这样段落存在但不会被搜索到
+            return translation ? translation.trim() : "";
+        });
+
+        // 构建虚拟全文
+        let virtualFullText = translationTexts.join(" ");
+
+        // 建立位置映射
+        const textPositionMap = []; // [{ startInVirtual, endInVirtual, sourceIndex }, ...]
+        let currentPos = 0;
+        translationTexts.forEach((translationText, idx) => {
+            const startInVirtual = currentPos;
+            const endInVirtual = currentPos + translationText.length;
+            textPositionMap.push({
+                startInVirtual,
+                endInVirtual,
+                sourceIndex: idx,
+                translationText
+            });
+            currentPos = endInVirtual + 1; // +1 for the space separator
+        });
+
+        // 在虚拟全文中搜索（不区分大小写）
+        const lowerVirtualText = virtualFullText.toLowerCase();
+        const lowerText = text.toLowerCase();
+        const matchPos = lowerVirtualText.indexOf(lowerText);
+
+        if (matchPos === -1) return; // 未找到
+
+        const matchEnd = matchPos + text.length;
+
+        // 根据虚拟位置找到涉及的翻译段落
+        const affectedSources = []; // [{ sourceIndex, startInSource, endInSource }, ...]
+
+        textPositionMap.forEach(mapping => {
+            // 检查是否重叠
+            if (mapping.startInVirtual < matchEnd && mapping.endInVirtual > matchPos) {
+                const startInSource = Math.max(0, matchPos - mapping.startInVirtual);
+                const endInSource = Math.min(mapping.translationText.length, matchEnd - mapping.startInVirtual);
+
+                affectedSources.push({
+                    sourceIndex: mapping.sourceIndex,
+                    startInSource,
+                    endInSource
+                });
+            }
+        });
+
+        // 在DOM中找到这些段落，并进行高亮
+        affectedSources.forEach(source => {
+            const key = sortedKeys[source.sourceIndex];
+            const paragraph = translationDiv.querySelector(`p[data-index="${key}"]`);
+            if (!paragraph) return;
+
+            // 提取段落中的text nodes
+            const textNodes = [];
+            const walker = document.createTreeWalker(
+                paragraph,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+
+            let node;
+            while (node = walker.nextNode()) {
+                textNodes.push(node);
+            }
+
+            if (textNodes.length === 0) return;
+
+            // 在text nodes中应用高亮
+            let currentPos = 0;
+            let matchStartNode = -1;
+            let matchStartIdx = -1;
+            let matchEndNode = -1;
+            let matchEndIdx = -1;
+
+            // 找到起始位置
+            for (let i = 0; i < textNodes.length; i++) {
+                const nodeLength = textNodes[i].textContent.length;
+                if (currentPos + nodeLength > source.startInSource && matchStartNode === -1) {
+                    matchStartNode = i;
+                    matchStartIdx = source.startInSource - currentPos;
+                }
+
+                if (currentPos + nodeLength >= source.endInSource) {
+                    matchEndNode = i;
+                    matchEndIdx = source.endInSource - currentPos;
+                    break;
+                }
+                currentPos += nodeLength;
+            }
+
+            if (matchStartNode === -1 || matchEndNode === -1) return;
+
+            // 进行高亮
+            if (matchStartNode === matchEndNode) {
+                // 同一个node内
+                this._highlightNodePortion(textNodes[matchStartNode], matchStartIdx, matchEndIdx, highlightId);
+            } else {
+                // 跨多个nodes
+                this._highlightNodePortion(textNodes[matchStartNode], matchStartIdx, textNodes[matchStartNode].textContent.length, highlightId);
+                for (let i = matchStartNode + 1; i < matchEndNode; i++) {
+                    this._highlightNodePortion(textNodes[i], 0, textNodes[i].textContent.length, highlightId);
+                }
+                this._highlightNodePortion(textNodes[matchEndNode], 0, matchEndIdx, highlightId);
+            }
+        });
+    }
+
+    /**
      * 高亮text node的某一部分
      * @private
      */
@@ -1495,9 +1624,10 @@ class StreamNote {
             }
         });
 
-        // 重新应用所有手动关键词的高亮（在原文）
+        // 重新应用所有手动关键词的高亮（在原文和翻译）
         this.keywordManager.manualKeywords.forEach(text => {
             this.highlightTextInTranscript(text, this.highlightIdMap[text]);
+            this.highlightTextInTranslation(text, this.highlightIdMap[text]);
         });
     }
 
