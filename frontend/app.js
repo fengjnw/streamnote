@@ -752,7 +752,7 @@ class StreamNote {
                         this.isUpdatingUI = false;
                     }, 350);
                 } else {
-                    showContent(keywordsContent, "Keywords");
+                    showContent(keywordsContent, "Auto Keywords");
                 }
             });
         }
