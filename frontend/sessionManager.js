@@ -8,9 +8,57 @@ class SessionManager {
         this.currentSessionId = null;
         this.STORAGE_KEY = 'streamnote_sessions';
         this.CURRENT_SESSION_KEY = 'streamnote_current_session';
+        this.DEFAULT_SETTINGS_KEY = 'streamnote_default_settings';
 
+        // 全局默认设置（新建session时使用）
+        this.defaultSettings = {
+            defaultLanguage: "Chinese",
+            defaultTranslationEnabled: true
+        };
+
+        this.loadDefaultSettings();
         this.loadSessions();
         this.setupUI();
+    }
+
+    /**
+     * 从 localStorage 加载全局默认设置
+     */
+    loadDefaultSettings() {
+        try {
+            const saved = localStorage.getItem(this.DEFAULT_SETTINGS_KEY);
+            if (saved) {
+                this.defaultSettings = JSON.parse(saved);
+            }
+        } catch (error) {
+            console.error('[SessionManager] Load default settings error:', error);
+        }
+    }
+
+    /**
+     * 保存全局默认设置
+     */
+    saveDefaultSettings() {
+        try {
+            localStorage.setItem(this.DEFAULT_SETTINGS_KEY, JSON.stringify(this.defaultSettings));
+        } catch (error) {
+            console.error('[SessionManager] Save default settings error:', error);
+        }
+    }
+
+    /**
+     * 获取全局默认设置
+     */
+    getDefaultSettings() {
+        return { ...this.defaultSettings };
+    }
+
+    /**
+     * 更新全局默认设置
+     */
+    updateDefaultSettings(settings) {
+        this.defaultSettings = { ...this.defaultSettings, ...settings };
+        this.saveDefaultSettings();
     }
 
     /**
@@ -113,6 +161,9 @@ class SessionManager {
             defaultName = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
         }
 
+        // 使用全局默认设置
+        const defaultSettings = this.getDefaultSettings();
+
         this.sessions[id] = {
             id: id,
             name: defaultName,
@@ -141,10 +192,10 @@ class SessionManager {
             // 总结缓存
             summaryCache: {},      // { language: "summary", ... }
 
-            // 配置设置（简化）
+            // 配置设置（使用全局默认设置）
             settings: {
-                translationEnabled: true,
-                language: "Chinese"
+                translationEnabled: defaultSettings.defaultTranslationEnabled,
+                language: defaultSettings.defaultLanguage
             },
 
             createdAt: Date.now(),

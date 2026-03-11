@@ -702,6 +702,8 @@ class StreamNote {
                         this.isUpdatingUI = false;
                     }, 350);
                 } else {
+                    // 初始化设置面板的默认值
+                    this.initializeSettingsPanel();
                     showContent(settingsContent, "Settings");
                 }
             });
@@ -841,6 +843,141 @@ class StreamNote {
                 this.updateDisplay();
             }
         });
+    }
+
+    /**
+     * 初始化设置面板
+     */
+    initializeSettingsPanel() {
+        // 获取默认设置控件
+        const defaultLanguageSelect = document.getElementById("defaultLanguage");
+        const defaultTranslationCheckbox = document.getElementById("defaultTranslationEnabled");
+
+        if (!defaultLanguageSelect || !defaultTranslationCheckbox) return;
+
+        // 从 sessionManager 获取当前默认设置
+        const defaultSettings = this.sessionManager.getDefaultSettings();
+
+        // 设置当前值
+        defaultLanguageSelect.value = defaultSettings.defaultLanguage || "Chinese";
+        defaultTranslationCheckbox.checked = defaultSettings.defaultTranslationEnabled !== false;
+
+        // 移除旧的事件监听器（防止重复）
+        defaultLanguageSelect.onchange = null;
+        defaultTranslationCheckbox.onchange = null;
+
+        // 添加语言选择器的变化事件
+        defaultLanguageSelect.addEventListener("change", (e) => {
+            this.sessionManager.updateDefaultSettings({
+                defaultLanguage: e.target.value
+            });
+            this.showStatusMessage(`📋 Default language set to ${e.target.value}`, 2000);
+        });
+
+        // 添加翻译开关的变化事件
+        defaultTranslationCheckbox.addEventListener("change", (e) => {
+            this.sessionManager.updateDefaultSettings({
+                defaultTranslationEnabled: e.target.checked
+            });
+            this.showStatusMessage(`📋 Translation ${e.target.checked ? 'enabled' : 'disabled'} for new sessions`, 2000);
+        });
+
+        // 初始化 Session Management 按钮
+        this.initializeSessionManagementButtons();
+    }
+
+    /**
+     * 初始化 Session Management 按钮
+     */
+    initializeSessionManagementButtons() {
+        const exportCurrentBtn = document.getElementById("exportCurrentBtn");
+        const exportAllBtn = document.getElementById("exportAllBtn");
+        const importBtn = document.getElementById("importBtn");
+        const importFileInput = document.getElementById("importFileInput");
+        const clearAllBtn = document.getElementById("clearAllBtn");
+
+        if (exportCurrentBtn) {
+            exportCurrentBtn.onclick = () => {
+                const session = this.sessionManager.getCurrentSession();
+                if (!session) {
+                    alert("No session to export");
+                    return;
+                }
+
+                const dataStr = JSON.stringify(session, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
+                const exportFileDefaultName = `${session.name}_${Date.now()}.json`;
+
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+            };
+        }
+
+        if (exportAllBtn) {
+            exportAllBtn.onclick = () => {
+                const dataStr = JSON.stringify(this.sessionManager.sessions, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
+                const exportFileDefaultName = `all_sessions_${Date.now()}.json`;
+
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+            };
+        }
+
+        if (importBtn && importFileInput) {
+            importBtn.onclick = () => {
+                importFileInput.click();
+            };
+
+            importFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const imported = JSON.parse(event.target.result);
+
+                        if (imported.id && imported.transcripts) {
+                            // 单个 session
+                            const id = imported.id;
+                            this.sessionManager.sessions[id] = imported;
+                            this.sessionManager.saveSessions();
+                            this.sessionManager.switchSession(id);
+                            this.showStatusMessage("✅ Session imported successfully", 2000);
+                        } else if (typeof imported === 'object') {
+                            // 多个 sessions
+                            Object.assign(this.sessionManager.sessions, imported);
+                            this.sessionManager.saveSessions();
+                            const firstId = Object.keys(imported)[0];
+                            if (firstId) {
+                                this.sessionManager.switchSession(firstId);
+                            }
+                            this.showStatusMessage("✅ Sessions imported successfully", 2000);
+                        }
+                    } catch (error) {
+                        console.error("Import error:", error);
+                        alert("Failed to import sessions");
+                    }
+                };
+                reader.readAsText(file);
+            });
+        }
+
+        if (clearAllBtn) {
+            clearAllBtn.onclick = () => {
+                if (confirm("⚠️ Are you sure you want to delete all data? This cannot be undone.")) {
+                    localStorage.clear();
+                    alert("All data cleared. Please refresh the page.");
+                }
+            };
+        }
     }
 
     /**
