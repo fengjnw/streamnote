@@ -1107,8 +1107,8 @@ class StreamNote {
                     this.keywordManager.addToExplanations(term);
                 }
 
-                // 使用统一的showContent逻辑打开History面板
-                showContent.call(this, historyContent, "History");
+                // 使用统一的showContent逻辑打开解释面板
+                showContent.call(this, historyContent, "Explanations");
 
                 // 等待 DOM 更新后再展开
                 setTimeout(() => {
