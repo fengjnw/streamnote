@@ -1,22 +1,7 @@
 class StreamNote {
     constructor() {
-        this.mediaRecorder = null;
-        this.isRecording = false;
-        this.preciseResults = {};
-        this.chunkIndex = 0;
-        this.startTime = null;
-        this.audioChunks = [];
-        this.statsUpdateInterval = null;
-
-        // 停顿检测
-        this.audioContext = null;
-        this.analyser = null;
-        this.silenceStart = null;
-        this.voiceStart = null;
-        this.lastSendTime = null;
-        this.recordingStartTime = null;
-        this.hasVoice = false;
-        this.checkInterval = null;
+        // Session 管理器
+        this.sessionManager = null;
 
         // 关键词管理器
         this.keywordManager = null;
@@ -24,9 +9,6 @@ class StreamNote {
 
         // 高亮ID映射
         this.highlightIdMap = {};
-
-        // Session 管理器
-        this.sessionManager = null;
 
         // 翻译功能
         this.translationResults = {};
@@ -43,17 +25,6 @@ class StreamNote {
         this.recordingSessionId = null;  // 记录当前正在转录的 session
         this.displaySessionId = null;    // 当前显示的 session（用户看到的）
 
-        // 同步滚动
-        this.isSyncingScroll = false;
-        this.scrollTimeout = null;
-
-        // 防止UI更新期间的滚动干扰
-        this.isUpdatingUI = false;
-
-        // 自动滚动开关
-        this.autoScroll = true;
-        this.isTogglingAutoScroll = false;  // 用户刚刚点击了自动滚动按钮
-
         // 文本选中菜单
         this.selectedText = "";
         this.selectedTextElement = null;
@@ -62,14 +33,17 @@ class StreamNote {
         this.hasActiveSelection = false;
         this.pendingUpdates = false;
 
+        // === 初始化管理器 ===
         this.initSessionManager();
-        this.setupUIListeners();
+        this.initRecordingManager();
+        this.initPanelManager();
         this.initKeywordManager();
+        this.setupUIListeners();
         this.loadCurrentSession();
 
         // 延迟设置同步滚动，确保元素已加载
         setTimeout(() => {
-            this.setupSyncScroll();
+            this.panelManager.setupSyncScroll();
             this.initializeVisibility();
             // 设置容器为 auto 滚动行为（而不是 smooth）
             const transcript = document.getElementById("transcript");
@@ -84,43 +58,69 @@ class StreamNote {
     }
 
     /**
+     * 初始化录音管理器
+     */
+    initRecordingManager() {
+        this.recordingManager = new RecordingManager({
+            transcribeApiUrl: "/api/transcribe",
+            onTranscribeProgress: (data) => this.onTranscribeProgress(data),
+            onStatusUpdate: (status) => this.updateStatus(status),
+            onRecordingStateChange: (isRecording) => {
+                this.updateRecordingIndicator();
+            }
+        });
+    }
+
+    /**
+     * 初始化面板管理器
+     */
+    initPanelManager() {
+        this.panelManager = new PanelManager({
+            onLayoutChange: (layout) => {
+                this.translationEnabled = layout.translationEnabled;
+                this.saveSettingsToSession();
+                this.updateDisplay();
+            },
+            onStatusUpdate: (status) => this.updateStatus(status)
+        });
+    }
+
+    /**
+     * 获取当前转录数据（快捷方法）
+     */
+    get preciseResults() {
+        return this.recordingManager.getTranscriptData();
+    }
+
+    /**
+     * 转录进度回调
+     */
+    onTranscribeProgress(data) {
+        const { index, text, timestamp, sessionId } = data;
+
+        // 获取当前 session
+        const currentSession = this.sessionManager.getCurrentSession();
+        const isCurrentSession = sessionId === this.sessionManager.currentSessionId;
+
+        if (isCurrentSession) {
+            // 只有在仍然在同一个 session 时，才更新本地显示
+            const transcriptData = this.recordingManager.getTranscriptData();
+            transcriptData[index] = { text, timestamp };
+            this.updateDisplay();
+
+            // 自动翻译
+            if (this.translationEnabled) {
+                this.translateText(text, index, sessionId);
+            }
+        }
+    }
+
+    /**
      * 初始化显示/隐藏状态
      */
     initializeVisibility() {
         // 加载保存的布局偏好或使用默认的split view
-        this.loadPanelState();
-    }
-
-    /**
-     * 根据选定的布局应用相应的CSS类
-     */
-    setLayout(layoutType) {
-        const mainContent = document.querySelector(".main-content");
-        if (!mainContent) return;
-
-        // 移除所有布局类
-        mainContent.classList.remove("layout-full-transcript", "layout-split", "layout-full-translation");
-        // 添加新的布局类
-        mainContent.classList.add(`layout-${layoutType}`);
-
-        // 根据布局类型更新translationEnabled
-        this.translationEnabled = layoutType !== "full-transcript";
-
-        // 保存偏好
-        this.savePanelState();
-    }
-
-    /**
-     * 根据面板的实际状态（expanded/collapsed）更新按钮状态 (deprecated: 已被布局选择器替代)
-     */
-    updatePanelButtonState(button, panel) {
-        if (!button || !panel) return;
-
-        if (panel.classList.contains("expanded")) {
-            button.classList.add("active");
-        } else {
-            button.classList.remove("active");
-        }
+        this.panelManager.loadPanelState();
     }
 
     /**
@@ -149,7 +149,6 @@ class StreamNote {
         this.updateSessionInfo();
 
         // 不再自动停止转录，保持全局转录状态
-        // 如果有其他 session 在录制，显示提示
         if (this.recordingSessionId !== null && this.recordingSessionId !== this.sessionManager.currentSessionId) {
             const recordingSession = this.sessionManager.getSession(this.recordingSessionId);
             const recordingSessionName = recordingSession ? recordingSession.name : "Unknown";
@@ -188,9 +187,9 @@ class StreamNote {
             keywordExplanationLangSelector.value = this.explanationLanguage;
         }
 
-        // 加载转录内容
-        this.preciseResults = { ...session.transcripts };
-        this.chunkIndex = Object.keys(this.preciseResults).length;
+        // 加载转录内容到 RecordingManager
+        this.recordingManager.setTranscriptData(session.transcripts || {});
+        this.panelManager.setTranscriptData(session.transcripts || {});
 
         // 加载当前语言的翻译内容
         this.translationResults = (session.translations && session.translations[this.language])
@@ -255,7 +254,7 @@ class StreamNote {
             layoutToApply = defaultSettings.defaultLayout || "split";
         }
 
-        this.setLayout(layoutToApply);
+        this.panelManager.setLayout(layoutToApply);
 
         // 更新布局选择器的值
         const layoutSelector = document.getElementById("layoutSelector");
@@ -387,7 +386,8 @@ class StreamNote {
         }
 
         // 保存转录内容
-        this.sessionManager.updateTranscriptsForSession(sessionId, this.preciseResults);
+        const transcripts = this.recordingManager.getTranscriptData();
+        this.sessionManager.updateTranscriptsForSession(sessionId, transcripts);
 
         // 分别保存词列表和缓存
         if (this.keywordManager) {
@@ -465,9 +465,6 @@ class StreamNote {
 
         // 使 KeywordManager 全局可访问
         window.keywordManagerInstance = this.keywordManager;
-
-
-
     }
 
     setupUIListeners() {
@@ -475,41 +472,14 @@ class StreamNote {
         document.getElementById("stopBtn").addEventListener("click", () => this.stop());
         document.getElementById("clearBtn").addEventListener("click", () => this.clear());
 
-        // 布局选择器
+        // 布局选择器已由 PanelManager 处理
         const layoutSelector = document.getElementById("layoutSelector");
         if (layoutSelector) {
             layoutSelector.addEventListener("change", (e) => {
-                this.setLayout(e.target.value);
                 // 保存布局选择到当前session的settings
                 this.sessionManager.updateCurrentSettings({
                     layout: e.target.value
                 });
-            });
-        }
-
-        // 关闭面板按钮（保留这些用于边框上的关闭按钮）
-        const closeTranscriptPanelBtn = document.getElementById("closeTranscriptPanelBtn");
-        const closeTranslationPanelBtn = document.getElementById("closeTranslationPanelBtn");
-
-        if (closeTranscriptPanelBtn) {
-            closeTranscriptPanelBtn.addEventListener("click", () => {
-                // 点击关闭时切换到全译文布局
-                const layoutSelector = document.getElementById("layoutSelector");
-                if (layoutSelector) {
-                    layoutSelector.value = "full-translation";
-                    this.setLayout("full-translation");
-                }
-            });
-        }
-
-        if (closeTranslationPanelBtn) {
-            closeTranslationPanelBtn.addEventListener("click", () => {
-                // 点击关闭时切换到全原文布局
-                const layoutSelector = document.getElementById("layoutSelector");
-                if (layoutSelector) {
-                    layoutSelector.value = "full-transcript";
-                    this.setLayout("full-transcript");
-                }
             });
         }
 
@@ -1822,106 +1792,19 @@ class StreamNote {
             this.recordingSessionId = this.sessionManager.currentSessionId;
             this.updateRecordingIndicator();
 
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-            // 设置音量检测
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            this.analyser = this.audioContext.createAnalyser();
-            const source = this.audioContext.createMediaStreamSource(stream);
-            source.connect(this.analyser);
-            this.analyser.fftSize = 2048;
-
-            this.mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-            this.startTime = Date.now();
-            this.lastSendTime = Date.now();
-            this.recordingStartTime = Date.now();
-            // 只在第一次或清空后重置 chunkIndex，继续录制时保留
-            if (Object.keys(this.preciseResults).length === 0) {
-                this.chunkIndex = 0;
-            } else {
-                // 继续录制：chunkIndex 继续从上次结束的地方开始
-                this.chunkIndex = Math.max(...Object.keys(this.preciseResults).map(Number)) + 1;
-            }
-            this.isRecording = true;
-            this.audioChunks = [];
-            this.silenceStart = null;
-            this.voiceStart = null;
-            this.hasVoice = false;
-
-            this.mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    this.audioChunks.push(event.data);
-                    // 立即发送这个完整的音频块
-                    this.sendToWhisper();
-                    this.audioChunks = [];
-                }
-            };
-
-            this.mediaRecorder.onstop = () => {
-                // 停止时直接丢弃最后一段（通常是静音）
-                if (!this.isRecording) {
-                    this.audioChunks = [];
-                }
-            };
-
-            // 开始录制
-            this.mediaRecorder.start();
-
-            // 每 100ms 检测音量，停顿 600ms 或超过 10秒 就发送
-            this.checkInterval = setInterval(() => {
-                if (!this.isRecording) return;
-
-                const volume = this.getVolume();
-                const now = Date.now();
-                const timeSinceLastSend = now - this.lastSendTime;
-                const recordingDuration = now - this.recordingStartTime;
-
-
-                if (volume < 0.015) {  // 沉默（降低阈值，避免噪音干扰）
-                    this.voiceStart = null;
-
-                    if (!this.silenceStart) {
-                        this.silenceStart = now;
-                    } else if (now - this.silenceStart > 600 && recordingDuration > 100 && this.hasVoice) {
-                        // 沉默 >600ms + 录制 >100ms + 有真实语音 → 发送
-                        this.mediaRecorder.stop();
-                        this.mediaRecorder.start();
-                        this.recordingStartTime = Date.now();
-                        this.lastSendTime = Date.now();
-                        this.hasVoice = false;
-                        this.voiceStart = null;
-                        this.silenceStart = null;
-                    }
-                } else {  // 有声音
-                    this.silenceStart = null;
-
-                    if (!this.voiceStart) {
-                        this.voiceStart = now;
-                    } else if (!this.hasVoice && now - this.voiceStart > 150) {
-                        // 持续声音 >150ms → 确认为真实语音（改为150ms以捕捉短句话）
-                        this.hasVoice = true;
-                    }
-                }
-
-                // 超过 10秒 + 有真实语音 → 强制发送
-                if (timeSinceLastSend > 10000 && this.hasVoice) {
-                    this.mediaRecorder.stop();
-                    this.mediaRecorder.start();
-                    this.recordingStartTime = Date.now();
-                    this.lastSendTime = Date.now();
-                    this.hasVoice = false;
-                    this.voiceStart = null;
-                    this.silenceStart = null;
-                }
-            }, 100);
+            await this.recordingManager.start(this.recordingSessionId);
 
             document.getElementById("startBtn").disabled = true;
             document.getElementById("stopBtn").disabled = false;
-            this.updateStatus("Recording...");
 
             // 每秒更新 session 统计信息
-            if (this.statsUpdateInterval) clearInterval(this.statsUpdateInterval);
-            this.statsUpdateInterval = setInterval(() => this.updateSessionStats(), 1000);
+            let statsInterval = setInterval(() => {
+                if (!this.recordingManager.isRecording) {
+                    clearInterval(statsInterval);
+                    return;
+                }
+                this.updateSessionStats();
+            }, 1000);
 
         } catch (error) {
             console.error("[ERROR] Microphone access:", error);
@@ -1930,37 +1813,15 @@ class StreamNote {
     }
 
     stop() {
-        if (this.mediaRecorder && this.isRecording) {
-            this.isRecording = false;
+        if (this.recordingManager && this.recordingManager.isRecording) {
+            this.recordingManager.stop();
 
             // 清除全局录制状态
             this.recordingSessionId = null;
             this.updateRecordingIndicator();
 
-            if (this.checkInterval) {
-                clearInterval(this.checkInterval);
-                this.checkInterval = null;
-            }
-
-            // 清除 stats 更新定时器
-            if (this.statsUpdateInterval) {
-                clearInterval(this.statsUpdateInterval);
-                this.statsUpdateInterval = null;
-            }
-
-            if (this.audioContext) {
-                this.audioContext.close();
-            }
-
-            this.mediaRecorder.stop();
-
-            if (this.mediaRecorder.stream) {
-                this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
-            }
-
             document.getElementById("startBtn").disabled = false;
             document.getElementById("stopBtn").disabled = true;
-            this.updateStatus("Stopped");
 
             // 停止时更新一次统计信息
             this.updateSessionStats();
@@ -2113,6 +1974,9 @@ class StreamNote {
         }
     }
 
+    /**
+     * 更新显示（使用RecordingManager的数据）
+     */
     updateDisplay() {
         // 如果用户有活动选择，暂停更新（后台数据仍在更新）
         if (this.hasActiveSelection) {
@@ -2128,10 +1992,11 @@ class StreamNote {
 
         const transcriptDiv = document.getElementById("transcript");
         const translationDiv = document.getElementById("translation");
+        const preciseResults = this.recordingManager.getTranscriptData();
 
         // 更新转录显示
-        const formattedLines = Object.keys(this.preciseResults).map(key => {
-            const item = this.preciseResults[key];
+        const formattedLines = Object.keys(preciseResults).map(key => {
+            const item = preciseResults[key];
             if (!item || !item.text) return null;
 
             const text = item.text.trim();
@@ -2152,8 +2017,8 @@ class StreamNote {
         }
 
         // 更新翻译显示
-        const translationLines = Object.keys(this.preciseResults).map(key => {
-            const item = this.preciseResults[key];
+        const translationLines = Object.keys(preciseResults).map(key => {
+            const item = preciseResults[key];
             if (!item || !item.text) return null;
 
             const timestamp = item.timestamp || new Date().toLocaleTimeString('zh-CN', {
@@ -2178,31 +2043,28 @@ class StreamNote {
         // 重新应用所有高亮
         this.reapplyAllHighlights();
 
-        // 仅在自动滚动启用时滚动到底部（阻止同步滚动触发）
-        // 注意：要滚动外层容器，不是内容 div
-        if (this.autoScroll) {
-            this.isUpdatingUI = true;
+        // 仅在自动滚动启用时滚动到底部
+        if (this.panelManager.autoScroll) {
+            this.panelManager.isUpdatingUI = true;
             const transcript = document.getElementById("transcript");
             const translation = document.getElementById("translation");
 
-            // 获取最后一行的索引，用于对齐滚动
-            const keys = Object.keys(this.preciseResults);
+            const keys = Object.keys(preciseResults);
             if (keys.length > 0) {
                 const lastIndex = keys[keys.length - 1];
 
-                // 使用 scrollToLineBottom 确保两个容器同步滚动到同一行
                 if (transcript) {
                     transcript.style.scrollBehavior = 'auto';
-                    this.scrollToLineBottom(transcript, lastIndex);
+                    this.panelManager.scrollToLineBottom(transcript, lastIndex);
                 }
                 if (translation) {
                     translation.style.scrollBehavior = 'auto';
-                    this.scrollToLineBottom(translation, lastIndex);
+                    this.panelManager.scrollToLineBottom(translation, lastIndex);
                 }
             }
 
             setTimeout(() => {
-                this.isUpdatingUI = false;
+                this.panelManager.isUpdatingUI = false;
             }, 100);
         }
     }
@@ -2523,11 +2385,15 @@ class StreamNote {
     /**
      * 处理关键词提取 - 基于整个转录文本
      */
+    /**
+     * 处理关键词提取 - 基于整个转录文本
+     */
     async processKeywords(targetSessionId = null) {
         if (!this.keywordManager) return;
 
         // 收集所有转录文本（保证准确率）
-        this.currentTranscriptText = Object.values(this.preciseResults)
+        const preciseResults = this.recordingManager.getTranscriptData();
+        this.currentTranscriptText = Object.values(preciseResults)
             .map(item => item && item.text ? item.text : "")
             .join(" ");
 
@@ -2548,7 +2414,8 @@ class StreamNote {
         if (!this.keywordManager) return;
 
         // 获取当前的全文
-        this.currentTranscriptText = Object.values(this.preciseResults)
+        const preciseResults = this.recordingManager.getTranscriptData();
+        this.currentTranscriptText = Object.values(preciseResults)
             .map(item => item && item.text ? item.text : "")
             .join(" ");
 

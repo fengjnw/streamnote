@@ -1,0 +1,277 @@
+/**
+ * 录音管理器 - 前端模块
+ * 负责音频录制、转录、音量检测、停顿检测
+ */
+
+class RecordingManager {
+    constructor(config = {}) {
+        this.mediaRecorder = null;
+        this.isRecording = false;
+        this.audioChunks = [];
+        
+        // 音量检测
+        this.audioContext = null;
+        this.analyser = null;
+        this.silenceStart = null;
+        this.voiceStart = null;
+        this.lastSendTime = null;
+        this.recordingStartTime = null;
+        this.hasVoice = false;
+        this.checkInterval = null;
+
+        // 状态
+        this.startTime = null;
+        this.chunkIndex = 0;
+        this.preciseResults = {};
+        this.statsUpdateInterval = null;
+
+        // API 和回调
+        this.transcribeApiUrl = config.transcribeApiUrl || "/api/transcribe";
+        this.onTranscribeProgress = config.onTranscribeProgress || (() => {});
+        this.onStatusUpdate = config.onStatusUpdate || (() => {});
+        this.onRecordingStateChange = config.onRecordingStateChange || (() => {});
+    }
+
+    /**
+     * 开始录音
+     */
+    async start(sessionId = null) {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            // 设置音量检测
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.analyser = this.audioContext.createAnalyser();
+            const source = this.audioContext.createMediaStreamSource(stream);
+            source.connect(this.analyser);
+            this.analyser.fftSize = 2048;
+
+            this.mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+            this.startTime = Date.now();
+            this.lastSendTime = Date.now();
+            this.recordingStartTime = Date.now();
+            
+            if (Object.keys(this.preciseResults).length === 0) {
+                this.chunkIndex = 0;
+            } else {
+                this.chunkIndex = Math.max(...Object.keys(this.preciseResults).map(Number)) + 1;
+            }
+            
+            this.isRecording = true;
+            this.audioChunks = [];
+            this.silenceStart = null;
+            this.voiceStart = null;
+            this.hasVoice = false;
+
+            this.mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    this.audioChunks.push(event.data);
+                    this.sendToWhisper(sessionId);
+                    this.audioChunks = [];
+                }
+            };
+
+            this.mediaRecorder.onstop = () => {
+                if (!this.isRecording) {
+                    this.audioChunks = [];
+                }
+            };
+
+            this.mediaRecorder.start();
+
+            // 每 100ms 检测音量，停顿 600ms 或超过 10秒 就发送
+            this.checkInterval = setInterval(() => {
+                this._checkSilenceAndSend();
+            }, 100);
+
+            this.onStatusUpdate("Recording...");
+            this.onRecordingStateChange(true);
+
+            // 每秒更新统计信息
+            if (this.statsUpdateInterval) clearInterval(this.statsUpdateInterval);
+            this.statsUpdateInterval = setInterval(() => {
+                this.onStatusUpdate("Recording...");
+            }, 1000);
+
+        } catch (error) {
+            console.error("[ERROR] Microphone access:", error);
+            this.onStatusUpdate("Microphone access denied");
+        }
+    }
+
+    /**
+     * 停止录音
+     */
+    stop() {
+        if (this.mediaRecorder && this.isRecording) {
+            this.isRecording = false;
+
+            if (this.checkInterval) {
+                clearInterval(this.checkInterval);
+                this.checkInterval = null;
+            }
+
+            if (this.statsUpdateInterval) {
+                clearInterval(this.statsUpdateInterval);
+                this.statsUpdateInterval = null;
+            }
+
+            if (this.audioContext) {
+                this.audioContext.close();
+            }
+
+            this.mediaRecorder.stop();
+
+            if (this.mediaRecorder.stream) {
+                this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+
+            this.onStatusUpdate("Stopped");
+            this.onRecordingStateChange(false);
+        }
+    }
+
+    /**
+     * 获取当前音量
+     */
+    getVolume() {
+        if (!this.analyser) return 0;
+        const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+        this.analyser.getByteTimeDomainData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+            const normalized = (dataArray[i] - 128) / 128;
+            sum += normalized * normalized;
+        }
+        return Math.sqrt(sum / dataArray.length);
+    }
+
+    /**
+     * 检测停顿和发送音频
+     * @private
+     */
+    _checkSilenceAndSend() {
+        if (!this.isRecording) return;
+
+        const volume = this.getVolume();
+        const now = Date.now();
+        const timeSinceLastSend = now - this.lastSendTime;
+        const recordingDuration = now - this.recordingStartTime;
+
+        if (volume < 0.015) {  // 沉默
+            this.voiceStart = null;
+
+            if (!this.silenceStart) {
+                this.silenceStart = now;
+            } else if (now - this.silenceStart > 600 && recordingDuration > 100 && this.hasVoice) {
+                // 沉默 >600ms + 录制 >100ms + 有真实语音 → 发送
+                this.mediaRecorder.stop();
+                this.mediaRecorder.start();
+                this.recordingStartTime = Date.now();
+                this.lastSendTime = Date.now();
+                this.hasVoice = false;
+                this.voiceStart = null;
+                this.silenceStart = null;
+            }
+        } else {  // 有声音
+            this.silenceStart = null;
+
+            if (!this.voiceStart) {
+                this.voiceStart = now;
+            } else if (!this.hasVoice && now - this.voiceStart > 150) {
+                // 持续声音 >150ms → 确认为真实语音
+                this.hasVoice = true;
+            }
+        }
+
+        // 超过 10秒 + 有真实语音 → 强制发送
+        if (timeSinceLastSend > 10000 && this.hasVoice) {
+            this.mediaRecorder.stop();
+            this.mediaRecorder.start();
+            this.recordingStartTime = Date.now();
+            this.lastSendTime = Date.now();
+            this.hasVoice = false;
+            this.voiceStart = null;
+            this.silenceStart = null;
+        }
+    }
+
+    /**
+     * 发送音频到 Whisper API
+     * @private
+     */
+    async sendToWhisper(sessionId = null) {
+        if (this.audioChunks.length === 0) {
+            return;
+        }
+
+        this.lastSendTime = Date.now();
+        const audioBlob = new Blob(this.audioChunks, { type: "audio/webm" });
+        const formData = new FormData();
+        formData.append("file", audioBlob, "audio.webm");
+
+        const currentChunkIndex = this.chunkIndex;
+        const sessionIdAtRequest = sessionId;
+
+        try {
+            const response = await fetch(this.transcribeApiUrl, {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!response.ok) {
+                console.error(`[ERROR] API error: ${response.status}`);
+                return;
+            }
+
+            const result = await response.json();
+            const text = result.text.trim();
+
+            if (text) {
+                const timestamp = new Date().toLocaleTimeString('zh-CN', {
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+
+                this.preciseResults[currentChunkIndex] = { text, timestamp };
+                this.chunkIndex += 1;
+
+                // 触发回调，通知上层更新显示
+                this.onTranscribeProgress({
+                    index: currentChunkIndex,
+                    text: text,
+                    timestamp: timestamp,
+                    sessionId: sessionIdAtRequest
+                });
+            }
+
+        } catch (error) {
+            console.error("[ERROR] Whisper request failed:", error);
+        }
+    }
+
+    /**
+     * 清除所有数据
+     */
+    clear() {
+        this.preciseResults = {};
+        this.chunkIndex = 0;
+    }
+
+    /**
+     * 获取当前转录数据
+     */
+    getTranscriptData() {
+        return { ...this.preciseResults };
+    }
+
+    /**
+     * 更新转录数据（用于加载 session）
+     */
+    setTranscriptData(data) {
+        this.preciseResults = { ...data };
+        this.chunkIndex = Object.keys(this.preciseResults).length;
+    }
+}
