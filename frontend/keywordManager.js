@@ -381,6 +381,18 @@ class KeywordManager {
     }
 
     /**
+     * 刷新所有已展开的解释（用新语言重新生成）
+     */
+    refreshExpandedExplanations() {
+        for (const keyword of this.expandedKeywords) {
+            const wrapper = document.querySelector(`[data-keyword="${keyword}"]`);
+            if (wrapper) {
+                this.fetchAndShowExplanation(keyword, wrapper);
+            }
+        }
+    }
+
+    /**
      * 完整流程：提取 → 显示
      * @param {string} text - 输入文本（仅用于提取关键词）
      */

@@ -596,6 +596,8 @@ class StreamNote {
                 // 如果keyword manager存在，刷新显示
                 if (this.keywordManager) {
                     this.keywordManager.displayExplanations();
+                    // 刷新所有已展开的解释（用新语言重新生成）
+                    this.keywordManager.refreshExpandedExplanations();
                 }
             });
         }
