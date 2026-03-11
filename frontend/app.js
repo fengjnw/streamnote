@@ -892,7 +892,7 @@ class StreamNote {
             this.sessionManager.updateDefaultSettings({
                 defaultLanguage: e.target.value
             });
-            this.showStatusMessage(`📋 Default language set to ${e.target.value}`, 2000);
+            this.showStatusMessage(`📋 Default translation language set to ${e.target.value}`, 2000);
         });
 
         // 添加布局选择器的变化事件
