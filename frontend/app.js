@@ -156,7 +156,6 @@ class StreamNote {
 
         // 恢复功能设置
         if (session.settings) {
-            this.translationEnabled = session.settings.translationEnabled;
             this.language = session.settings.language || "Chinese";
 
             // 更新 UI 控件状态
@@ -222,6 +221,24 @@ class StreamNote {
 
         // 更新显示（会应用当前的翻译开关状态和高亮）
         this.initializeVisibility();
+
+        // 应用session保存的布局，或使用全局默认布局
+        let layoutToApply = "split";
+        if (session.settings && session.settings.layout) {
+            layoutToApply = session.settings.layout;
+        } else {
+            // 向后兼容：如果session没有layout字段，使用全局默认
+            const defaultSettings = this.sessionManager.getDefaultSettings();
+            layoutToApply = defaultSettings.defaultLayout || "split";
+        }
+        
+        this.setLayout(layoutToApply);
+        
+        // 更新布局选择器的值
+        const layoutSelector = document.getElementById("layoutSelector");
+        if (layoutSelector) {
+            layoutSelector.value = layoutToApply;
+        }
 
         // 清空 Summary 显示
         const summaryDisplay = document.getElementById("summary-display");
@@ -440,6 +457,10 @@ class StreamNote {
         if (layoutSelector) {
             layoutSelector.addEventListener("change", (e) => {
                 this.setLayout(e.target.value);
+                // 保存布局选择到当前session的settings
+                this.sessionManager.updateCurrentSettings({
+                    layout: e.target.value
+                });
             });
         }
 
@@ -851,20 +872,20 @@ class StreamNote {
     initializeSettingsPanel() {
         // 获取默认设置控件
         const defaultLanguageSelect = document.getElementById("defaultLanguage");
-        const defaultTranslationCheckbox = document.getElementById("defaultTranslationEnabled");
+        const defaultLayoutSelect = document.getElementById("defaultLayout");
 
-        if (!defaultLanguageSelect || !defaultTranslationCheckbox) return;
+        if (!defaultLanguageSelect || !defaultLayoutSelect) return;
 
         // 从 sessionManager 获取当前默认设置
         const defaultSettings = this.sessionManager.getDefaultSettings();
-
+        
         // 设置当前值
         defaultLanguageSelect.value = defaultSettings.defaultLanguage || "Chinese";
-        defaultTranslationCheckbox.checked = defaultSettings.defaultTranslationEnabled !== false;
+        defaultLayoutSelect.value = defaultSettings.defaultLayout || "split";
 
         // 移除旧的事件监听器（防止重复）
         defaultLanguageSelect.onchange = null;
-        defaultTranslationCheckbox.onchange = null;
+        defaultLayoutSelect.onchange = null;
 
         // 添加语言选择器的变化事件
         defaultLanguageSelect.addEventListener("change", (e) => {
@@ -874,12 +895,17 @@ class StreamNote {
             this.showStatusMessage(`📋 Default language set to ${e.target.value}`, 2000);
         });
 
-        // 添加翻译开关的变化事件
-        defaultTranslationCheckbox.addEventListener("change", (e) => {
+        // 添加布局选择器的变化事件
+        defaultLayoutSelect.addEventListener("change", (e) => {
             this.sessionManager.updateDefaultSettings({
-                defaultTranslationEnabled: e.target.checked
+                defaultLayout: e.target.value
             });
-            this.showStatusMessage(`📋 Translation ${e.target.checked ? 'enabled' : 'disabled'} for new sessions`, 2000);
+            const layoutNames = {
+                'full-transcript': 'Transcript Only',
+                'split': 'Split View',
+                'full-translation': 'Translation Only'
+            };
+            this.showStatusMessage(`📋 Default layout set to ${layoutNames[e.target.value]}`, 2000);
         });
 
         // 初始化 Session Management 按钮

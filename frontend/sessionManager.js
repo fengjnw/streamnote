@@ -13,7 +13,7 @@ class SessionManager {
         // 全局默认设置（新建session时使用）
         this.defaultSettings = {
             defaultLanguage: "Chinese",
-            defaultTranslationEnabled: true
+            defaultLayout: "split"
         };
 
         this.loadDefaultSettings();
@@ -99,7 +99,7 @@ class SessionManager {
 
                     if (!session.settings) {
                         session.settings = {
-                            translationEnabled: true,
+                            layout: "split",
                             language: "Chinese"
                         };
                     } else {
@@ -108,6 +108,13 @@ class SessionManager {
                             session.settings.language = session.settings.targetLanguage;
                         }
                         delete session.settings.targetLanguage;
+                        
+                        // 迁移 translationEnabled 到 layout
+                        if (session.settings.translationEnabled !== undefined && !session.settings.layout) {
+                            session.settings.layout = session.settings.translationEnabled ? "split" : "full-transcript";
+                        }
+                        delete session.settings.translationEnabled;
+                        
                         delete session.settings.keywordEnabled;
                         delete session.settings.keywordExplanationLanguage;
                         delete session.settings.explanationCache;
@@ -194,7 +201,7 @@ class SessionManager {
 
             // 配置设置（使用全局默认设置）
             settings: {
-                translationEnabled: defaultSettings.defaultTranslationEnabled,
+                layout: defaultSettings.defaultLayout,
                 language: defaultSettings.defaultLanguage
             },
 

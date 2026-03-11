@@ -222,10 +222,12 @@
                                 </select>
                             </div>
                             <div class="settings-item">
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                    <input type="checkbox" id="defaultTranslationEnabled" checked />
-                                    <span>Enable Translation</span>
-                                </label>
+                                <label for="defaultLayout">Default Layout:</label>
+                                <select id="defaultLayout" class="layout-selector" style="width: 100%; margin-top: 4px;">
+                                    <option value="full-transcript">📄 Transcript Only</option>
+                                    <option value="split">📄 Split View</option>
+                                    <option value="full-translation">🌍 Translation Only</option>
+                                </select>
                             </div>
                         </div>
 
