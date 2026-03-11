@@ -5,8 +5,8 @@
 
 class PanelManager {
     constructor(config = {}) {
-        this.onLayoutChange = config.onLayoutChange || (() => {});
-        this.onStatusUpdate = config.onStatusUpdate || (() => {});
+        this.onLayoutChange = config.onLayoutChange || (() => { });
+        this.onStatusUpdate = config.onStatusUpdate || (() => { });
 
         // 布局状态
         this.currentLayout = 'split';
@@ -150,7 +150,7 @@ class PanelManager {
     scrollToBottom() {
         this.isTogglingAutoScroll = true;
         this.isUpdatingUI = true;
-        
+
         const transcript = document.getElementById("transcript");
         const translation = document.getElementById("translation");
 

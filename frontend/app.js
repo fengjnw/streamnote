@@ -10,9 +10,12 @@ class StreamNote {
         // 高亮ID映射
         this.highlightIdMap = {};
 
-        // 翻译功能
-        this.translationResults = {};
+        // 翻译管理器
+        this.translationManager = null;
         this.translationEnabled = true;
+
+        // 设置面板
+        this.settingsPanel = null;
 
         // 语言设置（分别用于翻译和解释）
         this.language = "Chinese";
@@ -37,6 +40,8 @@ class StreamNote {
         this.initSessionManager();
         this.initRecordingManager();
         this.initPanelManager();
+        this.initTranslationManager();
+        this.initSettingsPanel();
         this.initKeywordManager();
         this.setupUIListeners();
         this.loadCurrentSession();
@@ -78,10 +83,43 @@ class StreamNote {
         this.panelManager = new PanelManager({
             onLayoutChange: (layout) => {
                 this.translationEnabled = layout.translationEnabled;
+                if (this.translationManager) {
+                    this.translationManager.setEnabled(this.translationEnabled);
+                }
                 this.saveSettingsToSession();
                 this.updateDisplay();
             },
             onStatusUpdate: (status) => this.updateStatus(status)
+        });
+    }
+
+    /**
+     * 初始化翻译管理器
+     */
+    initTranslationManager() {
+        this.translationManager = new TranslationManager({
+            translateApiUrl: "/api/translate",
+            onTranslationProgress: (data) => {
+                // 翻译进度更新
+            },
+            onStatusUpdate: (status) => this.updateStatus(status),
+            onDisplayUpdate: () => this.updateDisplay(),
+            getSessionData: () => this.sessionManager.getCurrentSession(),
+            getPreciseResults: () => this.recordingManager.getTranscriptData(),
+            saveToSession: (sessionId) => this.saveToSession(sessionId)
+        });
+    }
+
+    /**
+     * 初始化设置面板
+     */
+    initSettingsPanel() {
+        this.settingsPanel = new SettingsPanel({
+            sessionManager: this.sessionManager,
+            onStatusUpdate: (status) => this.showStatusMessage(status, 2000),
+            onLanguageChange: (language) => {
+                this.language = language;
+            }
         });
     }
 
@@ -110,7 +148,7 @@ class StreamNote {
 
             // 自动翻译
             if (this.translationEnabled) {
-                this.translateText(text, index, sessionId);
+                this.translationManager.translateText(text, index, sessionId);
             }
         }
     }
@@ -160,7 +198,7 @@ class StreamNote {
 
         // 恢复功能设置，如果没有的话使用全局默认设置
         const defaultSettings = this.sessionManager.getDefaultSettings();
-        
+
         // 加载翻译语言
         if (session.settings && session.settings.language) {
             this.language = session.settings.language;
@@ -191,10 +229,12 @@ class StreamNote {
         this.recordingManager.setTranscriptData(session.transcripts || {});
         this.panelManager.setTranscriptData(session.transcripts || {});
 
-        // 加载当前语言的翻译内容
-        this.translationResults = (session.translations && session.translations[this.language])
+        // 加载当前语言的翻译内容到 TranslationManager
+        const translationsForLanguage = (session.translations && session.translations[this.language])
             ? { ...session.translations[this.language] }
             : {};
+        this.translationManager.setTranslationData(translationsForLanguage);
+        this.translationResults = translationsForLanguage; // 保留兼容性
 
         // 加载缓存数据
         this.summaryCache = session.summaryCache ? { ...session.summaryCache } : {};
@@ -402,8 +442,9 @@ class StreamNote {
         }
 
         // 保存翻译（按当前语言保存）
-        if (this.translationResults) {
-            this.sessionManager.updateCurrentTranslations(this.translationResults, this.language);
+        const translationData = this.translationManager.getTranslationData();
+        if (translationData && Object.keys(translationData).length > 0) {
+            this.sessionManager.updateCurrentTranslations(translationData, this.language);
         }
 
         // 保存总结缓存
@@ -494,7 +535,7 @@ class StreamNote {
                     // 如果正在录制，提示用户
                     if (this.isRecording) {
                     }
-                    await this.retranslateAll();
+                    await this.translationManager.retranslateAll();
                 }
 
                 // 更新 Summary 显示
@@ -733,7 +774,7 @@ class StreamNote {
                     }, 350);
                 } else {
                     // 初始化设置面板的默认值
-                    this.initializeSettingsPanel();
+                    this.settingsPanel.initialize();
                     showContent(settingsContent, "Settings");
                 }
             });
@@ -873,163 +914,6 @@ class StreamNote {
                 this.updateDisplay();
             }
         });
-    }
-
-    /**
-     * 初始化设置面板
-     */
-    initializeSettingsPanel() {
-        // 获取默认设置控件
-        const defaultLanguageSelect = document.getElementById("defaultLanguage");
-        const defaultExplanationLanguageSelect = document.getElementById("defaultExplanationLanguage");
-        const defaultLayoutSelect = document.getElementById("defaultLayout");
-
-        if (!defaultLanguageSelect || !defaultLayoutSelect) return;
-
-        // 从 sessionManager 获取当前默认设置
-        const defaultSettings = this.sessionManager.getDefaultSettings();
-
-        // 设置当前值
-        defaultLanguageSelect.value = defaultSettings.defaultLanguage || "Chinese";
-        if (defaultExplanationLanguageSelect) {
-            defaultExplanationLanguageSelect.value = defaultSettings.defaultExplanationLanguage || "Chinese";
-        }
-        defaultLayoutSelect.value = defaultSettings.defaultLayout || "split";
-
-        // 移除旧的事件监听器（防止重复）
-        defaultLanguageSelect.onchange = null;
-        if (defaultExplanationLanguageSelect) {
-            defaultExplanationLanguageSelect.onchange = null;
-        }
-        defaultLayoutSelect.onchange = null;
-
-        // 添加翻译语言选择器的变化事件
-        defaultLanguageSelect.addEventListener("change", (e) => {
-            this.sessionManager.updateDefaultSettings({
-                defaultLanguage: e.target.value
-            });
-            this.showStatusMessage(`📋 Default translation language set to ${e.target.value}`, 2000);
-        });
-
-        // 添加解释语言选择器的变化事件
-        if (defaultExplanationLanguageSelect) {
-            defaultExplanationLanguageSelect.addEventListener("change", (e) => {
-                this.sessionManager.updateDefaultSettings({
-                    defaultExplanationLanguage: e.target.value
-                });
-                this.showStatusMessage(`📋 Default explanation language set to ${e.target.value}`, 2000);
-            });
-        }
-
-        // 添加布局选择器的变化事件
-        defaultLayoutSelect.addEventListener("change", (e) => {
-            this.sessionManager.updateDefaultSettings({
-                defaultLayout: e.target.value
-            });
-            const layoutNames = {
-                'full-transcript': 'Transcript Only',
-                'split': 'Split View',
-                'full-translation': 'Translation Only'
-            };
-            this.showStatusMessage(`📋 Default layout set to ${layoutNames[e.target.value]}`, 2000);
-        });
-
-        // 初始化 Session Management 按钮
-        this.initializeSessionManagementButtons();
-    }
-
-    /**
-     * 初始化 Session Management 按钮
-     */
-    initializeSessionManagementButtons() {
-        const exportCurrentBtn = document.getElementById("exportCurrentBtn");
-        const exportAllBtn = document.getElementById("exportAllBtn");
-        const importBtn = document.getElementById("importBtn");
-        const importFileInput = document.getElementById("importFileInput");
-        const clearAllBtn = document.getElementById("clearAllBtn");
-
-        if (exportCurrentBtn) {
-            exportCurrentBtn.onclick = () => {
-                const session = this.sessionManager.getCurrentSession();
-                if (!session) {
-                    alert("No session to export");
-                    return;
-                }
-
-                const dataStr = JSON.stringify(session, null, 2);
-                const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-
-                const exportFileDefaultName = `${session.name}_${Date.now()}.json`;
-
-                const linkElement = document.createElement('a');
-                linkElement.setAttribute('href', dataUri);
-                linkElement.setAttribute('download', exportFileDefaultName);
-                linkElement.click();
-            };
-        }
-
-        if (exportAllBtn) {
-            exportAllBtn.onclick = () => {
-                const dataStr = JSON.stringify(this.sessionManager.sessions, null, 2);
-                const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-
-                const exportFileDefaultName = `all_sessions_${Date.now()}.json`;
-
-                const linkElement = document.createElement('a');
-                linkElement.setAttribute('href', dataUri);
-                linkElement.setAttribute('download', exportFileDefaultName);
-                linkElement.click();
-            };
-        }
-
-        if (importBtn && importFileInput) {
-            importBtn.onclick = () => {
-                importFileInput.click();
-            };
-
-            importFileInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const imported = JSON.parse(event.target.result);
-
-                        if (imported.id && imported.transcripts) {
-                            // 单个 session
-                            const id = imported.id;
-                            this.sessionManager.sessions[id] = imported;
-                            this.sessionManager.saveSessions();
-                            this.sessionManager.switchSession(id);
-                            this.showStatusMessage("✅ Session imported successfully", 2000);
-                        } else if (typeof imported === 'object') {
-                            // 多个 sessions
-                            Object.assign(this.sessionManager.sessions, imported);
-                            this.sessionManager.saveSessions();
-                            const firstId = Object.keys(imported)[0];
-                            if (firstId) {
-                                this.sessionManager.switchSession(firstId);
-                            }
-                            this.showStatusMessage("✅ Sessions imported successfully", 2000);
-                        }
-                    } catch (error) {
-                        console.error("Import error:", error);
-                        alert("Failed to import sessions");
-                    }
-                };
-                reader.readAsText(file);
-            });
-        }
-
-        if (clearAllBtn) {
-            clearAllBtn.onclick = () => {
-                if (confirm("⚠️ Are you sure you want to delete all data? This cannot be undone.")) {
-                    localStorage.clear();
-                    alert("All data cleared. Please refresh the page.");
-                }
-            };
-        }
     }
 
     /**
@@ -1517,13 +1401,14 @@ class StreamNote {
         const translationDiv = document.getElementById("translation");
         if (!translationDiv) return;
 
-        // 从translationResults中构建虚拟全文
+        // 从translationManager中构建虚拟全文
+        const translationData = this.translationManager.getTranslationData();
         const sortedKeys = Object.keys(this.preciseResults)
             .sort((a, b) => parseInt(a) - parseInt(b));
 
         // 获取每个段落对应的翻译文本
         const translationTexts = sortedKeys.map(key => {
-            const translation = this.translationResults[key];
+            const translation = translationData[key];
             // 如果没有翻译，返回空字符串，这样段落存在但不会被搜索到
             return translation ? translation.trim() : "";
         });
@@ -1831,6 +1716,7 @@ class StreamNote {
     clear() {
         this.preciseResults = {};
         this.translationResults = {};
+        this.translationManager.clear();
         this.chunkIndex = 0;
         this.currentTranscriptText = "";
         this.updateDisplay();
@@ -1958,7 +1844,7 @@ class StreamNote {
 
                         // 自动翻译（保存到原来的录制session）
                         if (this.translationEnabled) {
-                            this.translateText(text, currentChunkIndex, sessionIdAtRequest);
+                            this.translationManager.translateText(text, currentChunkIndex, sessionIdAtRequest);
                         }
 
                         // 关键词提取改为手动触发，注释掉自动调用
@@ -2028,7 +1914,7 @@ class StreamNote {
                 second: '2-digit'
             });
 
-            const translation = this.translationResults[key];
+            const translation = translationData[key];
             const translationText = translation || '<span class="placeholder">Translating...</span>';
 
             return `<p data-index="${key}" data-timestamp="[${timestamp}]">${translationText}</p>`;
@@ -2127,67 +2013,6 @@ class StreamNote {
     }
 
     /**
-     * 翻译文本 - 流式版本
-     */
-    async translateText(text, index, targetSessionId = null) {
-        if (!text || !this.translationEnabled) return;
-
-        try {
-            const response = await fetch("/api/translate", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    text: text,
-                    target_lang: this.language
-                })
-            });
-
-            if (!response.ok) {
-                console.error(`[ERROR] Translation API error: ${response.status}`);
-                return;
-            }
-
-            // 处理流式响应
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let translation = "";
-
-            try {
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    const chunk = decoder.decode(value, { stream: true });
-                    translation += chunk;
-
-                    // 实时更新显示
-                    if (translation) {
-                        this.translationResults[index] = translation;
-                        this.updateDisplay();
-                        // 保存翻译到正确的session（录制中的session或当前session）
-                        this.saveToSession(targetSessionId);
-                    }
-                }
-                // 刷新解码器缓冲区，获取最后的字符
-                const finalChunk = decoder.decode();
-                translation += finalChunk;
-                if (finalChunk) {
-                    this.translationResults[index] = translation;
-                    this.updateDisplay();
-                    this.saveToSession(targetSessionId);
-                }
-            } finally {
-                reader.releaseLock();
-            }
-
-        } catch (error) {
-            console.error("[ERROR] Translation request failed:", error);
-        }
-    }
-
-    /**
      * 总结文本（使用用户选择的语言） - 流式版本
      */
     async summarizeText(text, forceRefresh = false) {
@@ -2272,113 +2097,6 @@ class StreamNote {
         } catch (error) {
             console.error("[ERROR] Summarization request failed:", error);
             throw error;
-        }
-    }
-
-    /**
-     * 重新翻译所有内容（仅在语言切换或强制刷新时使用）
-     */
-    async retranslateAll() {
-        const session = this.sessionManager.getCurrentSession();
-        if (!session) return;
-
-        // 检查当前语言的缓存是否完整
-        const currentLangCache = session.translations[this.language] || {};
-        let hasMissingTranslations = false;
-
-        // 检查是否所有转录都已翻译
-        const totalSegments = Object.keys(this.preciseResults).length;
-        const cachedSegments = Object.keys(currentLangCache).length;
-        const missingSegments = [];
-
-        for (const index of Object.keys(this.preciseResults)) {
-            if (!currentLangCache[index]) {
-                hasMissingTranslations = true;
-                missingSegments.push(index);
-            }
-        }
-
-        if (!hasMissingTranslations && cachedSegments > 0) {
-            // 缓存完整，直接使用
-            this.translationResults = { ...currentLangCache };
-            this.updateDisplay();
-
-            // 恢复或翻译关键词
-            if (this.keywordManager && this.keywordManager.allCollectedKeywords.length > 0) {
-                // 关键词翻译已删除
-            }
-            return;
-        }
-
-        // 缓存不完整，只翻译缺失的部分
-        const missingCount = missingSegments.length;
-
-        // 显示翻译进度提示
-        if (missingCount > 5) {
-            this.updateStatus(`Translating to ${this.language}... (${missingCount} segments)`);
-        }
-
-        this.translationResults = { ...currentLangCache };  // 保留已有的翻译
-        this.updateDisplay();
-
-        // 翻译缺失的部分
-        let translated = 0;
-        for (const [index, item] of Object.entries(this.preciseResults)) {
-            if (item && item.text && !this.translationResults[index]) {
-                await this.translateText(item.text, index);
-                translated++;
-
-                // 更新进度（避免过于频繁）
-                if (missingCount > 5 && translated % 5 === 0) {
-                    this.updateStatus(`Translating... ${translated}/${missingCount}`);
-                }
-            }
-        }
-
-        // 翻译完成提示
-        if (missingCount > 5) {
-            this.updateStatus(`Translation complete (${this.language})`);
-            setTimeout(() => {
-                if (!this.isRecording) {
-                    this.updateStatus("Ready");
-                }
-            }, 2000);
-        }
-
-        // 重新翻译关键词（保存到当前session）
-        if (this.keywordManager && this.keywordManager.allCollectedKeywords.length > 0) {
-            // 关键词翻译已删除
-        }
-    }
-
-    /**
-     * 只翻译缺失的内容（用于翻译开关重新打开时）
-     */
-    async translateMissingContent() {
-        const session = this.sessionManager.getCurrentSession();
-        if (!session) return;
-
-        // 加载当前语言的缓存
-        const currentLangCache = session.translations[this.language] || {};
-        this.translationResults = { ...currentLangCache };
-
-        // 检查是否有未翻译的内容
-        let hasUntranslated = false;
-        for (const [index, item] of Object.entries(this.preciseResults)) {
-            if (item && item.text && !this.translationResults[index]) {
-                hasUntranslated = true;
-                await this.translateText(item.text, index);
-            }
-        }
-
-        // 如果没有未翻译的内容，只需要更新显示即可
-        if (!hasUntranslated) {
-            this.updateDisplay();
-        }
-
-        // 翻译并显示关键词（如果有）
-        if (this.keywordManager && this.keywordManager.allCollectedKeywords.length > 0) {
-            // 关键词翻译已删除
         }
     }
 

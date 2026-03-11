@@ -8,7 +8,7 @@ class RecordingManager {
         this.mediaRecorder = null;
         this.isRecording = false;
         this.audioChunks = [];
-        
+
         // 音量检测
         this.audioContext = null;
         this.analyser = null;
@@ -27,9 +27,9 @@ class RecordingManager {
 
         // API 和回调
         this.transcribeApiUrl = config.transcribeApiUrl || "/api/transcribe";
-        this.onTranscribeProgress = config.onTranscribeProgress || (() => {});
-        this.onStatusUpdate = config.onStatusUpdate || (() => {});
-        this.onRecordingStateChange = config.onRecordingStateChange || (() => {});
+        this.onTranscribeProgress = config.onTranscribeProgress || (() => { });
+        this.onStatusUpdate = config.onStatusUpdate || (() => { });
+        this.onRecordingStateChange = config.onRecordingStateChange || (() => { });
     }
 
     /**
@@ -50,13 +50,13 @@ class RecordingManager {
             this.startTime = Date.now();
             this.lastSendTime = Date.now();
             this.recordingStartTime = Date.now();
-            
+
             if (Object.keys(this.preciseResults).length === 0) {
                 this.chunkIndex = 0;
             } else {
                 this.chunkIndex = Math.max(...Object.keys(this.preciseResults).map(Number)) + 1;
             }
-            
+
             this.isRecording = true;
             this.audioChunks = [];
             this.silenceStart = null;
