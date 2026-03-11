@@ -1027,6 +1027,29 @@ header h1 {
     word-wrap: break-word;
 }
 
+/* Timestamp styling using ::before pseudo-element */
+.transcript p::before {
+    content: attr(data-timestamp);
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    color: #999;
+    font-size: 0.9em;
+    margin-right: 0.5em;
+}
+
+.translation p::before {
+    content: attr(data-timestamp);
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    color: #999;
+    font-size: 0.9em;
+    margin-right: 0.5em;
+}
+
 .placeholder {
     color: #999;
     font-style: italic;
@@ -1521,4 +1544,14 @@ header h1 {
 
 .keywords-tab-content.active {
     display: flex;
+}
+
+/* ================ Text Highlight Style ================ */
+.text-highlight {
+    background-color: #fff59d;
+    color: inherit;
+    padding: 2px 3px;
+    border-radius: 2px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
 }

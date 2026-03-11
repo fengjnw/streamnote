@@ -127,13 +127,13 @@ class KeywordManager {
     }
 
     /**
-     * 显示手动关键词列表
+     * 显示高亮列表
      */
     displayManualKeywords() {
         const element = document.getElementById("manual-keywords-display");
         if (!element) return;
         const uniqueKeywords = [...new Set(this.manualKeywords)];
-        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "No manual keywords yet");
+        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "No highlights yet");
     }
 
     /**
