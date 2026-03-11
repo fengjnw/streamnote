@@ -991,9 +991,6 @@ class StreamNote {
     /**
      * 初始化文本选中菜单功能
      */
-    /**
-     * 初始化文本工具功能
-     */
     initTextSelectionMenu() {
         const explainBtn = document.getElementById("explainBtn");
         const addHighlightBtn = document.getElementById("addHighlightBtn");
@@ -1004,14 +1001,63 @@ class StreamNote {
         const keywordsContent = document.getElementById("keywordsContent");
         const historyContent = document.getElementById("historyContent");
         const settingsContent = document.getElementById("settingsContent");
+        const highlightsContent = document.getElementById("highlightsContent");
 
         if (!explainBtn || !addHighlightBtn) return;
+
+        // Get quick access buttons
+        const quickAccessHistory = document.getElementById("quickAccessHistory");
+        const quickAccessHighlights = document.getElementById("quickAccessHighlights");
 
         // Hide all content
         const hideAllContent = () => {
             keywordsContent.classList.remove("active");
             historyContent.classList.remove("active");
             settingsContent.classList.remove("active");
+            highlightsContent.classList.remove("active");
+            // Clear active state from quick access buttons
+            if (quickAccessHistory) quickAccessHistory.classList.remove("active");
+            if (quickAccessHighlights) quickAccessHighlights.classList.remove("active");
+        };
+
+        // Show specific content with unified logic
+        const showContent = (contentEl, title) => {
+            hideAllContent();
+            contentEl.classList.add("active");
+            sidePanelTitle.textContent = title;
+
+            // Update corresponding button active state
+            if (contentEl === historyContent) {
+                if (quickAccessHistory) quickAccessHistory.classList.add("active");
+            } else if (contentEl === highlightsContent) {
+                if (quickAccessHighlights) quickAccessHighlights.classList.add("active");
+            }
+
+            // Update button display states
+            const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
+            const generateSummaryBtn = document.getElementById("generateSummaryBtn");
+            const copySummaryBtn = document.getElementById("copySummaryBtn");
+            const explanationLangSelector = document.getElementById("keyword-explanation-language");
+
+            if (autoExtractBtn) {
+                autoExtractBtn.style.display = 'none';
+            }
+            if (generateSummaryBtn) {
+                generateSummaryBtn.style.display = 'none';
+            }
+            if (copySummaryBtn) {
+                copySummaryBtn.style.display = 'none';
+            }
+            if (explanationLangSelector) {
+                explanationLangSelector.style.display = (contentEl === historyContent || contentEl === highlightsContent) ? 'block' : 'none';
+            }
+
+            // Set flag to prevent resize-induced scroll from closing autoScroll
+            this.isUpdatingUI = true;
+            sidePanelsContainer.classList.add("expanded");
+            setTimeout(() => {
+                this.isUpdatingUI = false;
+            }, 350);
         };
 
         // 监听选中事件
@@ -1061,42 +1107,13 @@ class StreamNote {
                     this.keywordManager.addToExplanations(term);
                 }
 
-                // 打开 History 面板并显示/隐藏按钮
-                if (historyContent && sidePanelTitle && sidePanelsContainer) {
-                    hideAllContent();
-                    historyContent.classList.add("active");
-                    sidePanelTitle.textContent = "History";
+                // 使用统一的showContent逻辑打开History面板
+                showContent.call(this, historyContent, "History");
 
-                    // 更新按钮显示状态
-                    const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
-                    const generateSummaryBtn = document.getElementById("generateSummaryBtn");
-                    const copySummaryBtn = document.getElementById("copySummaryBtn");
-                    const explanationLangSelector = document.getElementById("keyword-explanation-language");
-
-                    if (autoExtractBtn) {
-                        autoExtractBtn.style.display = 'none';
-                    }
-                    if (generateSummaryBtn) {
-                        generateSummaryBtn.style.display = 'none';
-                    }
-                    if (copySummaryBtn) {
-                        copySummaryBtn.style.display = 'none';
-                    }
-                    if (explanationLangSelector) {
-                        explanationLangSelector.style.display = 'block';
-                    }
-
-                    this.isUpdatingUI = true;
-                    sidePanelsContainer.classList.add("expanded");
-                    setTimeout(() => {
-                        this.isUpdatingUI = false;
-                    }, 350);
-
-                    // 等待 DOM 更新后再展开
-                    setTimeout(() => {
-                        this.keywordManager.toggleExplanation(term);
-                    }, 50);
-                }
+                // 等待 DOM 更新后再展开
+                setTimeout(() => {
+                    this.keywordManager.toggleExplanation(term);
+                }, 50);
 
                 // 禁用按钮 - 清除选中文本
                 explainBtn.disabled = true;
@@ -1124,12 +1141,12 @@ class StreamNote {
             this.highlightManager.addSelectedTextAsHighlightWithRange(selectedText, range);
 
             // 使用统一的showContent逻辑打开Highlights面板
-            showContent(highlightsContent, "Highlights");
+            showContent.call(this, highlightsContent, "Highlights");
 
             // 禁用按钮 - 清除选中文本
             explainBtn.disabled = true;
             addHighlightBtn.disabled = true;
-        });
+        })
     }
 
     async start() {
