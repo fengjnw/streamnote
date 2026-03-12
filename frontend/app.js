@@ -1271,6 +1271,10 @@ class StreamNote {
             const sidePanelsContainer = document.querySelector(".side-panels-container");
             const sidePanelTitle = document.getElementById("sidePanelTitle");
             const quickAccessHighlights = document.getElementById("quickAccessHighlights");
+            const quickAccessKeywords = document.getElementById("quickAccessKeywords");
+            const quickAccessSummary = document.getElementById("quickAccessSummary");
+            const quickAccessHistory = document.getElementById("quickAccessHistory");
+            const quickAccessSettings = document.getElementById("quickAccessSettings");
 
             // 隐藏所有内容
             const keywordsContent = document.getElementById("keywordsContent");
@@ -1281,6 +1285,13 @@ class StreamNote {
             [keywordsContent, historyContent, summaryContent, settingsContent, highlightsContent].forEach(el => {
                 if (el) el.classList.remove("active");
             });
+
+            // 移除所有按钮的 active 状态
+            if (quickAccessKeywords) quickAccessKeywords.classList.remove("active");
+            if (quickAccessSummary) quickAccessSummary.classList.remove("active");
+            if (quickAccessHistory) quickAccessHistory.classList.remove("active");
+            if (quickAccessSettings) quickAccessSettings.classList.remove("active");
+            if (quickAccessHighlights) quickAccessHighlights.classList.remove("active");
 
             // 显示高亮面板
             highlightsContent.classList.add("active");

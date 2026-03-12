@@ -380,17 +380,43 @@ class PanelManager {
         const settingsContent = document.getElementById("settingsContent");
         const highlightsContent = document.getElementById("highlightsContent");
 
-        // 隐藏所有
+        // 隐藏所有内容
         if (keywordsContent) keywordsContent.classList.remove("active");
         if (summaryContent) summaryContent.classList.remove("active");
         if (historyContent) historyContent.classList.remove("active");
         if (settingsContent) settingsContent.classList.remove("active");
         if (highlightsContent) highlightsContent.classList.remove("active");
 
+        // 移除所有按钮的 active 状态
+        const quickAccessKeywords = document.getElementById("quickAccessKeywords");
+        const quickAccessSummary = document.getElementById("quickAccessSummary");
+        const quickAccessHistory = document.getElementById("quickAccessHistory");
+        const quickAccessSettings = document.getElementById("quickAccessSettings");
+        const quickAccessHighlights = document.getElementById("quickAccessHighlights");
+
+        if (quickAccessKeywords) quickAccessKeywords.classList.remove("active");
+        if (quickAccessSummary) quickAccessSummary.classList.remove("active");
+        if (quickAccessHistory) quickAccessHistory.classList.remove("active");
+        if (quickAccessSettings) quickAccessSettings.classList.remove("active");
+        if (quickAccessHighlights) quickAccessHighlights.classList.remove("active");
+
         // 显示指定内容
         contentElement.classList.add("active");
         if (sidePanelTitle) {
             sidePanelTitle.textContent = title;
+        }
+
+        // 更新对应的按钮 active 状态
+        if (contentElement === keywordsContent && quickAccessKeywords) {
+            quickAccessKeywords.classList.add("active");
+        } else if (contentElement === summaryContent && quickAccessSummary) {
+            quickAccessSummary.classList.add("active");
+        } else if (contentElement === historyContent && quickAccessHistory) {
+            quickAccessHistory.classList.add("active");
+        } else if (contentElement === settingsContent && quickAccessSettings) {
+            quickAccessSettings.classList.add("active");
+        } else if (contentElement === highlightsContent && quickAccessHighlights) {
+            quickAccessHighlights.classList.add("active");
         }
 
         // 管理标题栏按钮的显隐
