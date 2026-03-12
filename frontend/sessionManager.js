@@ -95,6 +95,11 @@ class SessionManager {
                     if (!session.explanationCache) session.explanationCache = {};
                     if (!session.summaryCache) session.summaryCache = {};
 
+                    // 向后兼容：添加 lastAccessed 字段（如果缺失），初始化为 lastModified 的值
+                    if (!session.lastAccessed) {
+                        session.lastAccessed = session.lastModified || Date.now();
+                    }
+
                     // 删除旧的冗余字段
                     delete session.translatedKeywords;
 
@@ -221,7 +226,8 @@ class SessionManager {
             },
 
             createdAt: Date.now(),
-            lastModified: Date.now()
+            lastModified: Date.now(),
+            lastAccessed: Date.now()
         };
 
         this.saveSessions();
@@ -253,6 +259,7 @@ class SessionManager {
         }
 
         this.currentSessionId = sessionId;
+        this.sessions[sessionId].lastAccessed = Date.now();
         this.saveSessions();
         this.renderSessionList();
         this.updateSessionNameInput();
@@ -661,6 +668,10 @@ class SessionManager {
         if (!listContainer) return;
 
         const sessionIds = Object.keys(this.sessions).sort((a, b) => {
+            // 优先按 lastAccessed 排序（最近访问的在前）
+            const accessDiff = this.sessions[b].lastAccessed - this.sessions[a].lastAccessed;
+            if (accessDiff !== 0) return accessDiff;
+            // 次要按 lastModified 排序
             return this.sessions[b].lastModified - this.sessions[a].lastModified;
         });
 
