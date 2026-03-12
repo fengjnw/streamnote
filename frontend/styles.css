@@ -1714,20 +1714,21 @@ header h1 {
     display: flex;
     gap: 8px;
     padding: 10px 15px;
-    border-top: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
     background: #fafafa;
     flex-shrink: 0;
     flex-wrap: wrap;
     justify-content: flex-start;
+    order: -1;
 }
 
 .toolbar-btn {
-    padding: 8px 12px;
+    padding: 6px 10px;
     border: 1px solid #d0d0d0;
     border-radius: 4px;
     background: white;
     color: #333;
-    font-size: 0.9em;
+    font-size: 0.85em;
     cursor: pointer;
     transition: all 0.2s;
     font-family: inherit;

@@ -163,35 +163,31 @@
 
                     <!-- Highlights Content -->
                     <div id="highlightsContent" class="panel-content">
-                        <div id="manual-keywords-display" class="keywords-items">
-                            <p class="placeholder">Select text to add highlights...</p>
-                        </div>
                         <div class="panel-toolbar">
                             <button id="clearHighlightsBtn" class="toolbar-btn danger" title="Clear all highlights">🗑️
                                 Clear All</button>
+                        </div>
+                        <div id="manual-keywords-display" class="keywords-items">
+                            <p class="placeholder">Select text to add highlights...</p>
                         </div>
                     </div>
 
                     <!-- Keywords Content -->
                     <div id="keywordsContent" class="panel-content active">
-                        <!-- Auto-extracted Keywords Section -->
-                        <div id="auto-keywords-display" class="keywords-tab-content active">
-                            <p class="placeholder">Click 🔄 to extract keywords...</p>
-                        </div>
                         <div class="panel-toolbar">
                             <button id="reExtractKeywordsBtn" class="toolbar-btn" title="Re-extract keywords">🔄
                                 Re-extract</button>
                             <button id="clearKeywordsBtn" class="toolbar-btn danger" title="Clear all keywords">🗑️
                                 Clear All</button>
                         </div>
+                        <!-- Auto-extracted Keywords Section -->
+                        <div id="auto-keywords-display" class="keywords-tab-content active">
+                            <p class="placeholder">Click 🔄 to extract keywords...</p>
+                        </div>
                     </div>
 
                     <!-- Summary Content -->
                     <div id="summaryContent" class="panel-content">
-                        <div id="summary-display" class="summary-text"
-                            style="overflow-y: auto; height: 100%; min-height: 200px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em; line-height: 1.6;">
-                            <p class="placeholder">Click the button to generate summary</p>
-                        </div>
                         <div class="panel-toolbar">
                             <button id="regenerateSummaryBtn" class="toolbar-btn" title="Regenerate summary">🔄
                                 Regenerate</button>
@@ -199,21 +195,28 @@
                             <button id="clearSummaryBtn" class="toolbar-btn danger" title="Clear summary">🗑️
                                 Clear</button>
                         </div>
+                        <div id="summary-display" class="summary-text"
+                            style="overflow-y: auto; height: 100%; min-height: 200px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em; line-height: 1.6;">
+                            <p class="placeholder">Click the button to generate summary</p>
+                        </div>
                     </div>
 
                     <!-- Explanation Content -->
                     <div id="historyContent" class="panel-content">
-                        <div id="query-history-list" class="query-history-list">
-                            <p class="placeholder">No queries yet</p>
-                        </div>
                         <div class="panel-toolbar">
                             <button id="clearExplanationsBtn" class="toolbar-btn danger"
                                 title="Clear all explanations">🗑️ Clear All</button>
+                        </div>
+                        <div id="query-history-list" class="query-history-list">
+                            <p class="placeholder">No queries yet</p>
                         </div>
                     </div>
 
                     <!-- Settings Content -->
                     <div id="settingsContent" class="panel-content">
+                        <div class="panel-toolbar"
+                            style="display: flex; gap: 8px; padding: 10px 15px; border-bottom: 1px solid #e9ecef; background: #fafafa; border-top: none;">
+                        </div>
                         <!-- Default Settings for New Session -->
                         <div class="settings-section">
                             <h4 class="settings-section-title">📋 New Session Defaults</h4>
