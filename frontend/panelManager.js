@@ -257,7 +257,7 @@ class PanelManager {
     setupSyncScroll() {
         const transcript = document.getElementById("transcript");
         const translation = document.getElementById("translation");
-        const SCROLL_OFFSET = 8;
+        const SCROLL_OFFSET = 0;
 
         if (!transcript || !translation) {
             return;

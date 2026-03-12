@@ -189,9 +189,9 @@ class SessionManager {
         // 使用全局默认设置
         const defaultSettings = this.getDefaultSettings();
 
-        // 确定翻译布局：如果默认布局是'full-transcript'，则用'split-bottom'作为实际翻译布局
+        // 确定翻译布局：如果默认布局是'full-transcript'，则用'split-right'作为实际翻译布局
         const actualTranslationLayout = (defaultSettings.defaultLayout === 'full-transcript')
-            ? 'split-bottom'
+            ? 'split-right'
             : defaultSettings.defaultLayout;
 
         this.sessions[id] = {
