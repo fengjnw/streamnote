@@ -45,8 +45,8 @@ class StreamNote {
         this.initPanelManager();
         this.initTranslationManager();
         this.initSettingsPanel();
-        this.initHighlightManager();
         this.initKeywordManager();
+        this.initHighlightManager();
         this.setupUIListeners();
         this.loadCurrentSession();
 
@@ -1092,6 +1092,10 @@ class StreamNote {
 
         if (!floatingMenu || !floatingExplainBtn || !floatingHighlightBtn) return;
 
+        // 保存当前的选中range对象，用于菜单按钮点击时使用
+        let currentSelectedRange = null;
+        let rangeInfo = null;  // 保存range的详细信息以便重建
+
         /**
          * 计算并显示浮动菜单
          */
@@ -1120,6 +1124,16 @@ class StreamNote {
             if (inTranscript || inTranslation) {
                 this.selectedText = selectedText;
                 this.selectedTextElement = range.commonAncestorContainer;
+
+                // 保存当前的range和其详细信息
+                currentSelectedRange = range.cloneRange();
+                rangeInfo = {
+                    startContainer: range.startContainer,
+                    startOffset: range.startOffset,
+                    endContainer: range.endContainer,
+                    endOffset: range.endOffset,
+                    commonAncestorContainer: range.commonAncestorContainer
+                };
 
                 // 先显示菜单，以便计算实际尺寸
                 floatingMenu.classList.remove("hidden");
@@ -1206,26 +1220,82 @@ class StreamNote {
 
         // 高亮按钮点击事件
         floatingHighlightBtn.addEventListener("click", () => {
-            const selection = window.getSelection();
-            if (!selection || selection.rangeCount === 0) {
+            // 使用保存的选中文本和range
+            if (!this.selectedText || !this.selectedText.trim()) {
                 this.showStatusMessage("No text selected", 1500);
                 floatingMenu.classList.add("hidden");
                 return;
             }
 
-            const range = selection.getRangeAt(0);
-            const selectedText = selection.toString().trim();
-
-            if (!selectedText) {
-                this.showStatusMessage("No text selected", 1500);
+            if (!currentSelectedRange && !rangeInfo) {
+                this.showStatusMessage("Cannot highlight: selection lost", 1500);
                 floatingMenu.classList.add("hidden");
                 return;
             }
 
-            this.highlightManager.addSelectedTextAsHighlightWithRange(selectedText, range);
+            const selectedText = this.selectedText.trim();
 
-            // 使用统一的showContent逻辑打开Highlights面板
-            showContent.call(this, highlightsContent, "Highlights");
+            // 尝试使用保存的range，如果失效则尝试重建
+            let rangeToUse = currentSelectedRange;
+
+            if (!rangeToUse && rangeInfo) {
+                // 尝试从保存的信息重建range
+                try {
+                    rangeToUse = document.createRange();
+                    rangeToUse.setStart(rangeInfo.startContainer, rangeInfo.startOffset);
+                    rangeToUse.setEnd(rangeInfo.endContainer, rangeInfo.endOffset);
+                } catch (e) {
+                    this.showStatusMessage("Cannot highlight: range invalid", 1500);
+                    floatingMenu.classList.add("hidden");
+                    return;
+                }
+            }
+
+            // 添加高亮
+            const highlightResult = this.highlightManager.addSelectedTextAsHighlightWithRange(selectedText, rangeToUse);
+
+            if (!highlightResult) {
+                this.showStatusMessage("Add highlight failed", 1500);
+                floatingMenu.classList.add("hidden");
+                return;
+            }
+
+            // 直接打开Highlights面板（复制showContent的逻辑）
+            const sidePanelsContainer = document.querySelector(".side-panels-container");
+            const sidePanelTitle = document.getElementById("sidePanelTitle");
+            const quickAccessHighlights = document.getElementById("quickAccessHighlights");
+
+            // 隐藏所有内容
+            const keywordsContent = document.getElementById("keywordsContent");
+            const historyContent = document.getElementById("historyContent");
+            const summaryContent = document.getElementById("summaryContent");
+            const settingsContent = document.getElementById("settingsContent");
+
+            [keywordsContent, historyContent, summaryContent, settingsContent, highlightsContent].forEach(el => {
+                if (el) el.classList.remove("active");
+            });
+
+            // 显示高亮面板
+            highlightsContent.classList.add("active");
+            sidePanelTitle.textContent = "Highlights";
+
+            // 更新按钮状态
+            if (quickAccessHighlights) {
+                quickAccessHighlights.classList.add("active");
+            }
+
+            // 显示语言选择器
+            const explanationLangSelector = document.getElementById("keyword-explanation-language");
+            if (explanationLangSelector) {
+                explanationLangSelector.style.display = 'block';
+            }
+
+            // 展开侧面板
+            this.isUpdatingUI = true;
+            sidePanelsContainer.classList.add("expanded");
+            setTimeout(() => {
+                this.isUpdatingUI = false;
+            }, 350);
 
             floatingMenu.classList.add("hidden");
             // 清除选中文本
