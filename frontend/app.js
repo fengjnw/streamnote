@@ -90,9 +90,14 @@ class StreamNote {
     initPanelManager() {
         this.panelManager = new PanelManager({
             onLayoutChange: (layout) => {
+                const wasTranslationDisabled = !this.translationEnabled;
                 this.translationEnabled = layout.translationEnabled;
                 if (this.translationManager) {
                     this.translationManager.setEnabled(this.translationEnabled);
+                    // 如果翻译从禁用改为启用，翻译缺失的内容
+                    if (wasTranslationDisabled && this.translationEnabled) {
+                        this.translationManager.translateMissingContent();
+                    }
                 }
                 this.saveSettingsToSession();
                 this.updateDisplay();
