@@ -76,6 +76,10 @@ class StreamNote {
             onStatusUpdate: (status) => this.updateStatus(status),
             onRecordingStateChange: (isRecording) => {
                 this.updateRecordingIndicator();
+                // 停止录音时刷新UI，移除转录状态占位符
+                if (!isRecording) {
+                    this.updateDisplay();
+                }
             }
         });
     }
@@ -217,6 +221,9 @@ class StreamNote {
 
         // 更新录制指示器UI
         this.updateRecordingIndicator();
+
+        // 重置转录状态（切换 session 意味着当前的转录已停止）
+        this.recordingManager.isTranscribing = false;
 
         // 恢复功能设置，如果没有的话使用全局默认设置
         const defaultSettings = this.sessionManager.getDefaultSettings();
@@ -1538,7 +1545,15 @@ class StreamNote {
         }).filter(line => line !== null);
 
         if (formattedLines.length > 0) {
-            transcriptDiv.innerHTML = formattedLines.join('');
+            let displayHTML = formattedLines.join('');
+            // 如果正在转录，添加转录中的占位符
+            if (this.recordingManager.isTranscribingActive()) {
+                displayHTML += '<p class="placeholder" style="opacity: 0.7;">✍️ Transcripting...</p>';
+            }
+            transcriptDiv.innerHTML = displayHTML;
+        } else if (this.recordingManager.isTranscribingActive()) {
+            // 如果没有转录内容但正在转录中
+            transcriptDiv.innerHTML = '<p class="placeholder">✍️ Transcripting...</p>';
         } else {
             transcriptDiv.innerHTML = '<p class="placeholder">Click "Record" to begin transcription</p>';
         }

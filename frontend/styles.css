@@ -1128,14 +1128,27 @@ header h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 15px;
+    padding: 10px 15px;
     background: #f8f9fa;
     border-top: 1px solid #e9ecef;
     font-size: 0.85em;
     color: #666;
-    height: 32px;
+    height: auto;
+    min-height: 40px;
     flex-shrink: 0;
+    gap: 20px;
 }
+
+.status-bar #status {
+    flex: 1;
+    min-width: 100px;
+}
+
+.status-bar #recording-indicator {
+    white-space: nowrap;
+}
+
+
 
 .recording-indicator {
     color: #ff4444;

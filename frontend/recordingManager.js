@@ -24,6 +24,7 @@ class RecordingManager {
         this.chunkIndex = 0;
         this.preciseResults = {};
         this.statsUpdateInterval = null;
+        this.isTranscribing = false;  // 转录状态标志
 
         // API 和回调
         this.transcribeApiUrl = config.transcribeApiUrl || "/api/transcribe";
@@ -84,13 +85,15 @@ class RecordingManager {
                 this._checkSilenceAndSend();
             }, 100);
 
-            this.onStatusUpdate("Recording...");
+            this.onStatusUpdate("🎤 Listening...");
             this.onRecordingStateChange(true);
 
-            // 每秒更新统计信息
+            // 每秒更新统计信息（当不在转录中时）
             if (this.statsUpdateInterval) clearInterval(this.statsUpdateInterval);
             this.statsUpdateInterval = setInterval(() => {
-                this.onStatusUpdate("Recording...");
+                if (this.isRecording && !this.isTranscribing) {
+                    this.onStatusUpdate("🎤 Listening...");
+                }
             }, 1000);
 
         } catch (error) {
@@ -105,6 +108,7 @@ class RecordingManager {
     stop() {
         if (this.mediaRecorder && this.isRecording) {
             this.isRecording = false;
+            this.isTranscribing = false;
 
             if (this.checkInterval) {
                 clearInterval(this.checkInterval);
@@ -126,7 +130,7 @@ class RecordingManager {
                 this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
             }
 
-            this.onStatusUpdate("Stopped");
+            this.onStatusUpdate("⏹️ Stopped");
             this.onRecordingStateChange(false);
         }
     }
@@ -213,6 +217,10 @@ class RecordingManager {
         const currentChunkIndex = this.chunkIndex;
         const sessionIdAtRequest = sessionId;
 
+        // 显示转录进行中的状态
+        this.isTranscribing = true;
+        this.onStatusUpdate("✍️ Transcripting...");
+
         try {
             const response = await fetch(this.transcribeApiUrl, {
                 method: "POST",
@@ -221,34 +229,59 @@ class RecordingManager {
 
             if (!response.ok) {
                 console.error(`[ERROR] API error: ${response.status}`);
+                this.isTranscribing = false;
+                if (this.isRecording) {
+                    this.onStatusUpdate("🎤 Listening...");
+                }
                 return;
             }
 
             const result = await response.json();
             const text = result.text.trim();
 
-            if (text) {
-                const timestamp = new Date().toLocaleTimeString('zh-CN', {
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
+            // 转录完成，回到监听状态（在通知上层之前设置）
+            this.isTranscribing = false;
 
-                this.preciseResults[currentChunkIndex] = { text, timestamp };
-                this.chunkIndex += 1;
-
-                // 触发回调，通知上层更新显示
+            if (!text) {
+                // 即使没有文本，也要通知上层刷新UI（特别是当停止录音时）
                 this.onTranscribeProgress({
                     index: currentChunkIndex,
-                    text: text,
-                    timestamp: timestamp,
+                    text: "",
+                    timestamp: "",
                     sessionId: sessionIdAtRequest
                 });
+                return;
+            }
+
+            const timestamp = new Date().toLocaleTimeString('zh-CN', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            this.preciseResults[currentChunkIndex] = { text, timestamp };
+            this.chunkIndex += 1;
+
+            // 触发回调，通知上层更新显示
+            this.onTranscribeProgress({
+                index: currentChunkIndex,
+                text: text,
+                timestamp: timestamp,
+                sessionId: sessionIdAtRequest
+            });
+
+            // 恢复监听状态
+            if (this.isRecording) {
+                this.onStatusUpdate("🎤 Listening...");
             }
 
         } catch (error) {
             console.error("[ERROR] Whisper request failed:", error);
+            this.isTranscribing = false;
+            if (this.isRecording) {
+                this.onStatusUpdate("🎤 Listening...");
+            }
         }
     }
 
@@ -273,5 +306,12 @@ class RecordingManager {
     setTranscriptData(data) {
         this.preciseResults = { ...data };
         this.chunkIndex = Object.keys(this.preciseResults).length;
+    }
+
+    /**
+     * 获取转录状态
+     */
+    isTranscribingActive() {
+        return this.isTranscribing;
     }
 }
