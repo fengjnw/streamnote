@@ -257,20 +257,36 @@ class PanelManager {
     setupSyncScroll() {
         const transcript = document.getElementById("transcript");
         const translation = document.getElementById("translation");
-        const SCROLL_OFFSET = 0;
 
         if (!transcript || !translation) {
             return;
         }
 
+        // 根据布局确定滚动偏移
+        const getScrollOffset = () => {
+            switch (this.translationLayout) {
+                case 'split-top':
+                    return -6;  // 上布局，偏移 -6
+                case 'split-bottom':
+                    return 8;   // 下布局，偏移 8
+                case 'split-left':
+                case 'split-right':
+                    return 0;   // 左右布局，偏移 0
+                default:
+                    return 0;
+            }
+        };
+
         // 原文容器滚动时，同步译文容器
         transcript.addEventListener('scroll', () => {
-            this._handleScroll(transcript, translation, -SCROLL_OFFSET);
+            const offset = getScrollOffset();
+            this._handleScroll(transcript, translation, -offset);
         });
 
         // 译文容器滚动时，同步原文容器
         translation.addEventListener('scroll', () => {
-            this._handleScroll(translation, transcript, SCROLL_OFFSET);
+            const offset = getScrollOffset();
+            this._handleScroll(translation, transcript, offset);
         });
     }
 
