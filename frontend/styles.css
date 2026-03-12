@@ -353,13 +353,14 @@ header h1 {
 .control-panel {
     display: flex;
     gap: 0;
-    padding: 8px 12px;
+    padding: 10px 12px;
     background: #f8f9fa;
     border-bottom: 1px solid #e9ecef;
     align-items: center;
     flex-wrap: nowrap;
     overflow-x: auto;
     position: relative;
+    min-height: 40px;
 }
 
 /* 导航栏分组 */
@@ -416,6 +417,14 @@ header h1 {
 .control-btn.icon-only::after {
     content: attr(title);
     display: none;
+}
+
+/* 快速访问按钮的紧凑布局 */
+.nav-group:last-of-type .control-btn {
+    min-width: auto;
+    padding: 0 10px;
+    font-size: 0.9em;
+    gap: 5px;
 }
 
 .control-btn-primary {
