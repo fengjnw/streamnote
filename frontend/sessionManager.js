@@ -100,7 +100,8 @@ class SessionManager {
 
                     if (!session.settings) {
                         session.settings = {
-                            layout: "split-bottom",
+                            translationEnabled: true,
+                            translationLayout: "split-bottom",
                             language: "Chinese",
                             explanationLanguage: "Chinese"
                         };
@@ -111,11 +112,16 @@ class SessionManager {
                         }
                         delete session.settings.targetLanguage;
 
-                        // 迁移 translationEnabled 到 layout
-                        if (session.settings.translationEnabled !== undefined && !session.settings.layout) {
-                            session.settings.layout = session.settings.translationEnabled ? "split-bottom" : "full-transcript";
+                        // 迁移 layout 到 translationLayout
+                        if (session.settings.layout && !session.settings.translationLayout) {
+                            session.settings.translationLayout = session.settings.layout;
                         }
-                        delete session.settings.translationEnabled;
+                        delete session.settings.layout;
+
+                        // 保证 translationEnabled 存在
+                        if (session.settings.translationEnabled === undefined) {
+                            session.settings.translationEnabled = true;
+                        }
 
                         // 初始化 explanationLanguage（如果缺失）
                         if (!session.settings.explanationLanguage) {

@@ -337,18 +337,14 @@ class StreamNote {
         let translationLayout = 'split-bottom';
         if (session.settings && session.settings.translationLayout) {
             translationLayout = session.settings.translationLayout;
+        } else if (session.settings && session.settings.layout) {
+            // 向后兼容：检查旧的 layout 字段
+            translationLayout = session.settings.layout;
         }
         this.panelManager.translationLayout = translationLayout;
 
         // 确定最终要应用的布局
         let layoutToApply = translationEnabled ? translationLayout : 'full-transcript';
-
-        // 向后兼容：查看旧的 layout 字段
-        if (!translationLayout && session.settings && session.settings.layout) {
-            layoutToApply = session.settings.layout;
-        } else if (!translationLayout) {
-            layoutToApply = defaultSettings.defaultLayout || "split-bottom";
-        }
 
         this.panelManager.setLayout(layoutToApply);
 
