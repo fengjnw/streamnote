@@ -14,7 +14,7 @@ class SessionManager {
         this.defaultSettings = {
             defaultLanguage: "Chinese",
             defaultExplanationLanguage: "Chinese",
-            defaultLayout: "split"
+            defaultLayout: "split-bottom"
         };
 
         this.loadDefaultSettings();
@@ -100,7 +100,7 @@ class SessionManager {
 
                     if (!session.settings) {
                         session.settings = {
-                            layout: "split",
+                            layout: "split-bottom",
                             language: "Chinese",
                             explanationLanguage: "Chinese"
                         };
@@ -113,7 +113,7 @@ class SessionManager {
 
                         // 迁移 translationEnabled 到 layout
                         if (session.settings.translationEnabled !== undefined && !session.settings.layout) {
-                            session.settings.layout = session.settings.translationEnabled ? "split" : "full-transcript";
+                            session.settings.layout = session.settings.translationEnabled ? "split-bottom" : "full-transcript";
                         }
                         delete session.settings.translationEnabled;
 

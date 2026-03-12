@@ -333,8 +333,8 @@ class StreamNote {
         }
         this.panelManager.translationEnabled = translationEnabled;
 
-        // 翻译面板布局（默认 split）
-        let translationLayout = 'split';
+        // 翻译面板布局（默认 split-bottom）
+        let translationLayout = 'split-bottom';
         if (session.settings && session.settings.translationLayout) {
             translationLayout = session.settings.translationLayout;
         }
@@ -347,7 +347,7 @@ class StreamNote {
         if (!translationLayout && session.settings && session.settings.layout) {
             layoutToApply = session.settings.layout;
         } else if (!translationLayout) {
-            layoutToApply = defaultSettings.defaultLayout || "split";
+            layoutToApply = defaultSettings.defaultLayout || "split-bottom";
         }
 
         this.panelManager.setLayout(layoutToApply);

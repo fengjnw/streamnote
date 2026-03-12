@@ -29,7 +29,7 @@ class SettingsPanel {
         if (defaultExplanationLanguageSelect) {
             defaultExplanationLanguageSelect.value = defaultSettings.defaultExplanationLanguage || "Chinese";
         }
-        defaultLayoutSelect.value = defaultSettings.defaultLayout || "split";
+        defaultLayoutSelect.value = defaultSettings.defaultLayout || "split-bottom";
 
         // 移除旧的事件监听器（防止重复）
         defaultLanguageSelect.onchange = null;
@@ -63,7 +63,7 @@ class SettingsPanel {
             });
             const layoutNames = {
                 'full-transcript': 'Transcript Only',
-                'split': 'Split View',
+                'split-bottom': 'Split View',
                 'full-translation': 'Translation Only'
             };
             this.onStatusUpdate(`📋 Default layout set to ${layoutNames[e.target.value]}`);

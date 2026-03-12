@@ -125,8 +125,13 @@
                                 <option value="Japanese">日本語</option>
                                 <option value="Korean">한국어</option>
                             </select>
-                            <button id="splitLayoutToggleBtn" class="btn-icon toggle-btn"
-                                title="Toggle Split Layout">⇅</button>
+                            <select id="layoutDropdown" class="layout-dropdown">
+                                <option value="split-top">Translation Top</option>
+                                <option value="split-bottom" selected>Translation Bottom</option>
+                                <option value="split-left">Translation Left</option>
+                                <option value="split-right">Translation Right</option>
+                                <option value="full-translation">Translation Only</option>
+                            </select>
                             <button id="closeTranslationPanelBtn" class="btn-icon toggle-btn"
                                 title="Close Panel">✕</button>
                         </div>
@@ -248,7 +253,7 @@
                                 <select id="defaultLayout" class="layout-selector"
                                     style="width: 100%; margin-top: 4px;">
                                     <option value="full-transcript">📄 Transcript Only</option>
-                                    <option value="split">📄 Split View</option>
+                                    <option value="split-bottom">📄 Split View</option>
                                     <option value="full-translation">🌍 Translation Only</option>
                                 </select>
                             </div>

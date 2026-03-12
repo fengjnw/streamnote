@@ -11,18 +11,14 @@ class PanelManager {
         // 翻译启用状态（true=启用, false=禁用）
         this.translationEnabled = true;
 
-        // 翻译面板的布局选项
-        this.translationLayoutOptions = ['split', 'full-translation'];
-        this.translationLayoutLabels = {
-            'split': '⬅➡',           // 左右分割
-            'full-translation': '⬇'  // 全屏翻译
-        };
+        // 翻译面板的布局选项（当翻译启用时在这些选项间切换）
+        this.translationLayoutOptions = ['split-top', 'split-bottom', 'split-left', 'split-right', 'full-translation'];
 
         // 当前翻译面板的布局
-        this.translationLayout = 'split';
+        this.translationLayout = 'split-bottom';
 
         // 布局状态
-        this.currentLayout = 'split';
+        this.currentLayout = 'split-bottom';
 
         // 同步滚动
         this.isSyncingScroll = false;
@@ -54,11 +50,11 @@ class PanelManager {
             });
         }
 
-        // 分割布局切换按钮（翻译面板标题栏）
-        const splitLayoutToggleBtn = document.getElementById("splitLayoutToggleBtn");
-        if (splitLayoutToggleBtn) {
-            splitLayoutToggleBtn.addEventListener("click", () => {
-                this.toggleSplitLayout();
+        // 布局下拉菜单（翻译面板标题栏）
+        const layoutDropdown = document.getElementById("layoutDropdown");
+        if (layoutDropdown) {
+            layoutDropdown.addEventListener("change", (e) => {
+                this.setTranslationLayout(e.target.value);
             });
         }
 
@@ -104,17 +100,17 @@ class PanelManager {
     }
 
     /**
-     * 在 split 和 full-translation 之间切换翻译面板布局
+     * 设置翻译面板布局
      */
-    toggleSplitLayout() {
-        const currentIndex = this.translationLayoutOptions.indexOf(this.translationLayout);
-        const nextIndex = (currentIndex + 1) % this.translationLayoutOptions.length;
-        const nextLayout = this.translationLayoutOptions[nextIndex];
-        this.translationLayout = nextLayout;
+    setTranslationLayout(layoutType) {
+        this.translationLayout = layoutType;
 
-        // 如果翻译已启用，刷新布局
+        // 如果翻译已启用，应用此布局
         if (this.translationEnabled) {
-            this.setLayout(nextLayout);
+            this.setLayout(layoutType);
+        } else {
+            // 如果翻译禁用，只需更新下拉菜单值
+            this.updateLayoutDropdown();
         }
     }
 
@@ -135,14 +131,13 @@ class PanelManager {
     }
 
     /**
-     * 更新分割布局按钮的文本
+     * 更新布局按钮的激活状态
      * @private
      */
-    updateSplitLayoutButton() {
-        const splitLayoutToggleBtn = document.getElementById("splitLayoutToggleBtn");
-        if (splitLayoutToggleBtn) {
-            splitLayoutToggleBtn.textContent = this.translationLayoutLabels[this.translationLayout];
-            splitLayoutToggleBtn.title = this.translationLayout === 'split' ? '⬅➡ Left-Right Split' : '⬇ Full Translation';
+    updateLayoutDropdown() {
+        const layoutDropdown = document.getElementById("layoutDropdown");
+        if (layoutDropdown) {
+            layoutDropdown.value = this.translationLayout;
         }
     }
 
@@ -153,14 +148,14 @@ class PanelManager {
         const mainContent = document.querySelector(".main-content");
         if (!mainContent) return;
 
-        mainContent.classList.remove("layout-full-transcript", "layout-split", "layout-full-translation");
+        mainContent.classList.remove("layout-full-transcript", "layout-split-top", "layout-split-bottom", "layout-split-left", "layout-split-right", "layout-full-translation");
         mainContent.classList.add(`layout-${layoutType}`);
 
         this.currentLayout = layoutType;
 
-        // 更新按钮文本
+        // 更新下拉菜单状态
+        this.updateLayoutDropdown();
         this.updateTranslationButton();
-        this.updateSplitLayoutButton();
 
         // 通知上层，翻译是否启用
         const translationEnabled = layoutType !== "full-transcript";
@@ -181,8 +176,8 @@ class PanelManager {
         const saved = localStorage.getItem('translationEnabled');
         this.translationEnabled = saved !== null ? JSON.parse(saved) : true;
 
-        // 加载翻译面板布局（默认 split）
-        this.translationLayout = localStorage.getItem('translationLayout') || 'split';
+        // 加载翻译面板布局（默认 split-bottom）
+        this.translationLayout = localStorage.getItem('translationLayout') || 'split-bottom';
 
         // 根据翻译启用状态设置初始布局
         const initialLayout = this.translationEnabled ? this.translationLayout : 'full-transcript';

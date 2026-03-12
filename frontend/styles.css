@@ -488,12 +488,73 @@ header h1 {
     display: none;
 }
 
-.main-content.layout-split .transcript-panel {
+
+/* Split Bottom: 翻译在下面（默认） */
+.main-content.layout-split-bottom {
+    flex-direction: column;
+}
+
+.main-content.layout-split-bottom .transcript-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.main-content.layout-split-bottom .translation-panel {
     flex: 1 1 50%;
     display: flex;
 }
 
-.main-content.layout-split .translation-panel {
+/* Split Top: 翻译在上面 */
+.main-content.layout-split-top {
+    flex-direction: column;
+}
+
+.main-content.layout-split-top .transcript-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-bottom: 1px solid #e9ecef;
+    order: 2;
+}
+
+.main-content.layout-split-top .translation-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-bottom: 1px solid #e9ecef;
+    order: 1;
+}
+
+/* Split Left: 翻译在左边 */
+.main-content.layout-split-left {
+    flex-direction: row;
+}
+
+.main-content.layout-split-left .transcript-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-right: 1px solid #e9ecef;
+    order: 2;
+}
+
+.main-content.layout-split-left .translation-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-right: 1px solid #e9ecef;
+    order: 1;
+}
+
+/* Split Right: 翻译在右边 */
+.main-content.layout-split-right {
+    flex-direction: row;
+}
+
+.main-content.layout-split-right .transcript-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-right: 1px solid #e9ecef;
+}
+
+.main-content.layout-split-right .translation-panel {
     flex: 1 1 50%;
     display: flex;
 }
@@ -530,10 +591,6 @@ header h1 {
     flex-shrink: 0;
 }
 
-.text-panel-header> :nth-child(2) {
-    margin-left: auto;
-}
-
 /* ===== Layout Selector ===== */
 .layout-selector {
     padding: 8px 12px;
@@ -560,7 +617,44 @@ header h1 {
 
 .text-panel-header .language-selector,
 .side-panel-header .language-selector {
-    height: 28px !important;
+    padding: 4px 8px !important;
+    height: auto !important;
+    min-width: 100px;
+    max-width: 100px;
+    margin-left: auto;
+    margin-right: 0;
+}
+
+/* ===== Layout Dropdown ===== */
+.layout-dropdown {
+    padding: 4px 10px;
+    height: 28px;
+    background: white;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+    color: #333;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    max-width: 140px;
+    margin-left: 8px;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.layout-dropdown:hover {
+    border-color: white;
+    background: #f9f9f9;
+}
+
+.layout-dropdown:focus {
+    outline: none;
+    border-color: white;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.text-panel-header .btn-icon {
     padding: 4px 6px !important;
     font-size: 0.85em !important;
     margin-right: 8px;
@@ -1229,6 +1323,26 @@ header h1 {
 
     .main-content {
         grid-template-columns: 1fr;
+    }
+
+    /* 在小屏幕上，左右分割自动改为上下分割 */
+    .main-content.layout-split-left,
+    .main-content.layout-split-right {
+        flex-direction: column;
+    }
+
+    .main-content.layout-split-left .transcript-panel,
+    .main-content.layout-split-right .transcript-panel {
+        border-right: none;
+        border-bottom: 1px solid #e9ecef;
+        order: 2;
+    }
+
+    .main-content.layout-split-left .translation-panel,
+    .main-content.layout-split-right .translation-panel {
+        border-right: none;
+        border-bottom: 1px solid #e9ecef;
+        order: 1;
     }
 
     .transcript-container {
