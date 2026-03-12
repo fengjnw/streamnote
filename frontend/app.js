@@ -590,11 +590,15 @@ class StreamNote {
                     this.keywordManager.refreshExpandedExplanations();
                 }
 
-                // 清除summary缓存，因为summary的语言已改变
-                this.summaryCache = {};
+                // 更新 Summary 显示 - 检查是否有该语言的缓存
                 const summaryDisplay = document.getElementById("summary-display");
                 if (summaryDisplay) {
-                    summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
+                    if (this.summaryCache && this.summaryCache[this.explanationLanguage]) {
+                        const cachedSummary = this.summaryCache[this.explanationLanguage];
+                        summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
+                    } else {
+                        summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
+                    }
                 }
             });
         }
