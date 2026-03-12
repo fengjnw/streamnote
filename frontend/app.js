@@ -1080,42 +1080,34 @@ class StreamNote {
     }
 
     /**
-     * 初始化文本选中菜单功能
+     * 初始化文本选中菜单功能（浮动菜单）
      */
     initTextSelectionMenu() {
-        const explainBtn = document.getElementById("explainBtn");
-        const addHighlightBtn = document.getElementById("addHighlightBtn");
+        const floatingMenu = document.getElementById("textSelectionMenu");
+        const floatingExplainBtn = document.getElementById("floatingExplainBtn");
+        const floatingHighlightBtn = document.getElementById("floatingHighlightBtn");
 
-        // 获取侧边栏相关元素
-        const sidePanelsContainer = document.querySelector(".side-panels-container");
-        const sidePanelTitle = document.getElementById("sidePanelTitle");
         const keywordsContent = document.getElementById("keywordsContent");
-        const historyContent = document.getElementById("historyContent");
-        const settingsContent = document.getElementById("settingsContent");
         const highlightsContent = document.getElementById("highlightsContent");
 
-        if (!explainBtn || !addHighlightBtn) return;
+        if (!floatingMenu || !floatingExplainBtn || !floatingHighlightBtn) return;
 
-        // Get quick access buttons
-        const quickAccessHistory = document.getElementById("quickAccessHistory");
-        const quickAccessHighlights = document.getElementById("quickAccessHighlights");
-
-        // 监听选中事件
-        document.addEventListener("selectionchange", () => {
+        /**
+         * 计算并显示浮动菜单
+         */
+        const showFloatingMenu = () => {
             const selection = window.getSelection();
             const selectedText = selection.toString().trim();
 
             if (!selectedText || selectedText.length === 0) {
-                explainBtn.disabled = true;
-                addHighlightBtn.disabled = true;
+                floatingMenu.classList.add("hidden");
                 return;
             }
 
             // 检查选中内容是否在转录或翻译区域
             const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
             if (!range) {
-                explainBtn.disabled = true;
-                addHighlightBtn.disabled = true;
+                floatingMenu.classList.add("hidden");
                 return;
             }
 
@@ -1129,34 +1121,95 @@ class StreamNote {
                 this.selectedText = selectedText;
                 this.selectedTextElement = range.commonAncestorContainer;
 
-                // 启用按钮
-                explainBtn.disabled = false;
-                addHighlightBtn.disabled = false;
+                // 先显示菜单，以便计算实际尺寸
+                floatingMenu.classList.remove("hidden");
+
+                // 获取选区和菜单的位置
+                const rangeRect = range.getBoundingClientRect();
+
+                // 使用requestAnimationFrame确保菜单已渲染
+                requestAnimationFrame(() => {
+                    // 获取菜单的实际尺寸
+                    const menuWidth = floatingMenu.offsetWidth || 180;
+                    const menuHeight = floatingMenu.offsetHeight || 100;
+
+                    // 计算菜单位置：显示在选中文本的右下方
+                    let menuX = rangeRect.right + 10;  // 选区右侧 + 10px间距
+                    let menuY = rangeRect.top;          // 选区顶部对齐
+
+                    // 检查菜单是否超出屏幕右边界，如果超出则显示在左边
+                    if (menuX + menuWidth > window.innerWidth - 10) {
+                        menuX = rangeRect.left - menuWidth - 10;  // 显示在左边
+                    }
+
+                    // 检查菜单是否超出屏幕底部，如果超出则显示在上方
+                    const viewportHeight = window.innerHeight;
+
+                    if (menuY + menuHeight > viewportHeight - 10) {
+                        menuY = rangeRect.bottom - menuHeight;  // 显示在上方
+                    }
+
+                    // 保证菜单不会超出屏幕顶部
+                    if (menuY < 10) {
+                        menuY = rangeRect.bottom + 10;
+                    }
+
+                    // 设置菜单位置
+                    floatingMenu.style.left = Math.max(10, menuX) + "px";
+                    floatingMenu.style.top = Math.max(10, menuY) + "px";
+                });
             } else {
-                explainBtn.disabled = true;
-                addHighlightBtn.disabled = true;
+                floatingMenu.classList.add("hidden");
             }
+        };
+
+        // 监听选中变化（使用防抖避免频繁更新）
+        let selectionTimeout;
+        document.addEventListener("selectionchange", () => {
+            clearTimeout(selectionTimeout);
+            // 延迟更新，让浏览器完成选择后再响应
+            selectionTimeout = setTimeout(showFloatingMenu, 50);
         });
 
-        // 解释按钮事件
-        explainBtn.addEventListener("click", async () => {
+        // 监听鼠标释放，确保选择完成后立即显示菜单
+        document.addEventListener("mouseup", () => {
+            showFloatingMenu();
+        });
+
+        // 点击文档其他地方时隐藏菜单
+        document.addEventListener("click", (e) => {
+            // 如果点击的是菜单内部，不要隐藏
+            if (floatingMenu.contains(e.target)) {
+                return;
+            }
+
+            // 检查是否点击了选中的文本，如果是，不隐藏菜单
+            const selection = window.getSelection();
+            if (selection.toString().trim().length > 0) {
+                return;
+            }
+
+            floatingMenu.classList.add("hidden");
+        });
+
+        // 解释按钮点击事件
+        floatingExplainBtn.addEventListener("click", async () => {
             if (this.selectedText.trim()) {
                 const term = this.selectedText.trim();
                 // 通过 KeywordManager 统一处理显示解释面板的逻辑
                 this.keywordManager.showExplanationPanel(term);
-
-                // 禁用按钮 - 清除选中文本
-                explainBtn.disabled = true;
-                addHighlightBtn.disabled = true;
             }
+            floatingMenu.classList.add("hidden");
+            // 清除选中文本
+            window.getSelection().removeAllRanges();
         });
 
-        // 添加高亮按钮事件
-        addHighlightBtn.addEventListener("click", () => {
-            // 直接从当前选区获取range，而不是依赖之前保存的数据
+        // 高亮按钮点击事件
+        floatingHighlightBtn.addEventListener("click", () => {
             const selection = window.getSelection();
             if (!selection || selection.rangeCount === 0) {
                 this.showStatusMessage("No text selected", 1500);
+                floatingMenu.classList.add("hidden");
                 return;
             }
 
@@ -1165,6 +1218,7 @@ class StreamNote {
 
             if (!selectedText) {
                 this.showStatusMessage("No text selected", 1500);
+                floatingMenu.classList.add("hidden");
                 return;
             }
 
@@ -1173,10 +1227,10 @@ class StreamNote {
             // 使用统一的showContent逻辑打开Highlights面板
             showContent.call(this, highlightsContent, "Highlights");
 
-            // 禁用按钮 - 清除选中文本
-            explainBtn.disabled = true;
-            addHighlightBtn.disabled = true;
-        })
+            floatingMenu.classList.add("hidden");
+            // 清除选中文本
+            window.getSelection().removeAllRanges();
+        });
     }
 
     async start() {

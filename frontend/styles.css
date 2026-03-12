@@ -1618,6 +1618,85 @@ header h1 {
     min-height: 0;
 }
 
+/* ================ Floating Context Menu ================ */
+.floating-menu {
+    position: fixed;
+    z-index: 1001;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 180px;
+    pointer-events: auto;
+}
+
+.floating-menu:not(.hidden) {
+    animation: fadeInScale 0.15s ease-out;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.floating-menu.hidden {
+    display: none;
+}
+
+.floating-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: white;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95em;
+    color: #333;
+    transition: all 0.15s ease;
+    text-align: left;
+    font-family: inherit;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.floating-menu-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.floating-menu-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.floating-menu-item:hover {
+    background: #f0f7ff;
+    color: #5a7c99;
+    padding-left: 16px;
+}
+
+.floating-menu-item:active {
+    background: #e0f0ff;
+}
+
+.floating-menu-item .menu-icon {
+    font-size: 1.1em;
+    flex-shrink: 0;
+}
+
+.floating-menu-item .menu-label {
+    flex: 1;
+}
+
 .keywords-tab-content.active {
     display: flex;
 }

@@ -55,18 +55,10 @@
                     </select>
                 </div>
 
-                <!-- Group 4: Text Operations -->
-                <div class="nav-group">
-                    <button id="explainBtn" class="control-btn control-btn-secondary" disabled
-                        title="Explain selected text">💡 Explain</button>
-                    <button id="addHighlightBtn" class="control-btn control-btn-secondary" disabled
-                        title="Highlight selected text">✏️ Highlight</button>
-                </div>
-
                 <!-- Spacer -->
                 <div class="control-spacer"></div>
 
-                <!-- Group 5: Quick Access Panels -->
+                <!-- Group 4: Quick Access Panels -->
                 <div class="nav-group">
                     <button id="quickAccessHistory" class="control-btn control-btn-secondary" title="Explanation">💡
                         Explain</button>
@@ -279,6 +271,18 @@
                 <span id="version" style="margin-left: auto; opacity: 0.6; font-size: 0.85em;">v0.9.0</span>
             </div>
         </div>
+    </div>
+
+    <!-- Floating Context Menu for Text Selection -->
+    <div id="textSelectionMenu" class="floating-menu hidden">
+        <button id="floatingExplainBtn" class="floating-menu-item" title="Explain selected text">
+            <span class="menu-icon">💡</span>
+            <span class="menu-label">Explain</span>
+        </button>
+        <button id="floatingHighlightBtn" class="floating-menu-item" title="Highlight selected text">
+            <span class="menu-icon">✏️</span>
+            <span class="menu-label">Highlight</span>
+        </button>
     </div>
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
