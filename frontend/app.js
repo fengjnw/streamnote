@@ -335,8 +335,8 @@ class StreamNote {
         const summaryDisplay = document.getElementById("summary-display");
         if (summaryDisplay) {
             // 检查当前语言是否有缓存，有就直接显示
-            if (this.summaryCache && this.summaryCache[this.language]) {
-                const cachedSummary = this.summaryCache[this.language];
+            if (this.summaryCache && this.summaryCache[this.explanationLanguage]) {
+                const cachedSummary = this.summaryCache[this.explanationLanguage];
                 summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
             } else {
                 summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
@@ -569,17 +569,6 @@ class StreamNote {
                     await this.translationManager.retranslateAll();
                 }
 
-                // 更新 Summary 显示
-                const summaryDisplay = document.getElementById("summary-display");
-                if (summaryDisplay) {
-                    if (this.summaryCache && this.summaryCache[this.language]) {
-                        const cachedSummary = this.summaryCache[this.language];
-                        summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
-                    } else {
-                        summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
-                    }
-                }
-
                 // 保存设置到 session
                 this.saveSettingsToSession();
             });
@@ -599,6 +588,13 @@ class StreamNote {
                     this.keywordManager.displayExplanations();
                     // 刷新所有已展开的解释（用新语言重新生成）
                     this.keywordManager.refreshExpandedExplanations();
+                }
+
+                // 清除summary缓存，因为summary的语言已改变
+                this.summaryCache = {};
+                const summaryDisplay = document.getElementById("summary-display");
+                if (summaryDisplay) {
+                    summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
                 }
             });
         }
@@ -1662,7 +1658,7 @@ class StreamNote {
         }
 
         try {
-            const language = this.language;
+            const language = this.explanationLanguage;
 
             // 检查该语言的缓存（除非强制刷新）
             if (!forceRefresh && this.summaryCache[language]) {
