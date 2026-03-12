@@ -38,9 +38,9 @@ class HighlightManager {
             return;
         }
 
-        // 检查是否已存在（高亮或自动提取）
-        const allKeywords = [...this.keywordManager.highlights, ...this.keywordManager.extracts];
-        if (allKeywords.includes(highlightText)) {
+        // 检查是否已存在（只检查highlights列表，不检查extracts）
+        // 高亮和自动提取的关键词应该是独立的命名空间
+        if (this.keywordManager.highlights.includes(highlightText)) {
             this.onStatusMessage("This highlight already exists", 1500);
             return;
         }
@@ -88,9 +88,9 @@ class HighlightManager {
             return;
         }
 
-        // 检查是否已存在
-        const allKeywords = [...this.keywordManager.highlights, ...this.keywordManager.extracts];
-        if (allKeywords.includes(highlightText)) {
+        // 检查是否已存在（只检查highlights列表，不检查extracts）
+        // 高亮和自动提取的关键词应该是独立的命名空间
+        if (this.keywordManager.highlights.includes(highlightText)) {
             this.onStatusMessage("This highlight already exists", 1500);
             return;
         }

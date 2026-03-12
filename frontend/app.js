@@ -279,14 +279,14 @@ class StreamNote {
         if (this.keywordManager) {
             this.keywordManager.reset();
 
-            // 恢复自动提取的关键词
+            // 恢复自动提取的关键词（去重，防止列表中有重复词）
             if (session.keywords && session.keywords.length > 0) {
-                this.keywordManager.extracts = [...session.keywords];
+                this.keywordManager.extracts = [...new Set(session.keywords)];
             }
 
-            // 恢复用户高亮的关键词
+            // 恢复用户高亮的关键词（去重，防止列表中有重复词）
             if (session.highlights && session.highlights.length > 0) {
-                this.keywordManager.highlights = [...session.highlights];
+                this.keywordManager.highlights = [...new Set(session.highlights)];
             } else {
                 this.keywordManager.highlights = [];
             }
