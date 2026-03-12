@@ -657,7 +657,7 @@ header h1 {
 .text-panel-header .btn-icon {
     padding: 4px 6px !important;
     font-size: 0.85em !important;
-    margin-right: 8px;
+    margin-right: 0;
 }
 
 /* Panel Content */

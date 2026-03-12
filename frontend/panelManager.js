@@ -58,14 +58,6 @@ class PanelManager {
             });
         }
 
-        // 关闭转录面板按钮 - 关闭翻译
-        const closeTranscriptPanelBtn = document.getElementById("closeTranscriptPanelBtn");
-        if (closeTranscriptPanelBtn) {
-            closeTranscriptPanelBtn.addEventListener("click", () => {
-                this.toggleTranslation(); // 切换翻译状态
-            });
-        }
-
         // 关闭翻译面板按钮 - 关闭翻译
         const closeTranslationPanelBtn = document.getElementById("closeTranslationPanelBtn");
         if (closeTranslationPanelBtn) {
