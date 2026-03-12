@@ -208,7 +208,8 @@ class SessionManager {
 
             // 配置设置（使用全局默认设置）
             settings: {
-                layout: defaultSettings.defaultLayout,
+                translationEnabled: true,
+                translationLayout: defaultSettings.defaultLayout,
                 language: defaultSettings.defaultLanguage,
                 explanationLanguage: defaultSettings.defaultExplanationLanguage
             },

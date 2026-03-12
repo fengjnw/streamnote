@@ -62,8 +62,11 @@ class SettingsPanel {
                 defaultLayout: e.target.value
             });
             const layoutNames = {
-                'full-transcript': 'Transcript Only',
-                'split-bottom': 'Split View',
+                'full-transcript': 'No Translation',
+                'split-top': 'Translation Top',
+                'split-bottom': 'Translation Bottom',
+                'split-left': 'Translation Left',
+                'split-right': 'Translation Right',
                 'full-translation': 'Translation Only'
             };
             this.onStatusUpdate(`📋 Default layout set to ${layoutNames[e.target.value]}`);
