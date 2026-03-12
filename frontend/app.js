@@ -356,7 +356,7 @@ class StreamNote {
                 const cachedSummary = this.summaryCache[this.explanationLanguage];
                 summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
             } else {
-                summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
+                summaryDisplay.innerHTML = '<p class="placeholder">Click Generate to generate a summary of your transcription</p>';
             }
         }
 
@@ -605,7 +605,7 @@ class StreamNote {
                         const cachedSummary = this.summaryCache[this.explanationLanguage];
                         summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
                     } else {
-                        summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
+                        summaryDisplay.innerHTML = '<p class="placeholder">Click Generate to generate a summary of your transcription</p>';
                     }
                 }
             });
@@ -982,7 +982,7 @@ class StreamNote {
             clearSummaryBtn.addEventListener("click", () => {
                 const summaryDisplay = document.getElementById("summary-display");
                 if (summaryDisplay) {
-                    summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
+                    summaryDisplay.innerHTML = '<p class="placeholder">Click Generate to generate a summary of your transcription</p>';
                     this.showStatusMessage("✓ Summary cleared", 1500);
                 }
             });
@@ -1594,7 +1594,7 @@ class StreamNote {
         if (translationLines.length > 0) {
             translationDiv.innerHTML = translationLines.join('');
         } else {
-            translationDiv.innerHTML = '<p class="placeholder">Click "Record" to begin translation</p>';
+            translationDiv.innerHTML = '<p class="placeholder">Translations will appear here as you record</p>';
         }
 
         // 重新应用所有高亮
