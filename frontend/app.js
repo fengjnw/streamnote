@@ -1416,7 +1416,7 @@ class StreamNote {
         if (formattedLines.length > 0) {
             transcriptDiv.innerHTML = formattedLines.join('');
         } else {
-            transcriptDiv.innerHTML = '<p class="placeholder">Click "Start" to begin transcription</p>';
+            transcriptDiv.innerHTML = '<p class="placeholder">Click "Record" to begin transcription</p>';
         }
 
         // 更新翻译显示
@@ -1440,7 +1440,7 @@ class StreamNote {
         if (translationLines.length > 0) {
             translationDiv.innerHTML = translationLines.join('');
         } else {
-            translationDiv.innerHTML = '<p class="placeholder">Click "Start" to begin translation</p>';
+            translationDiv.innerHTML = '<p class="placeholder">Click "Record" to begin translation</p>';
         }
 
         // 重新应用所有高亮
