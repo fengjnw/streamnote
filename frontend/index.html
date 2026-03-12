@@ -158,11 +158,6 @@
                     <!-- Side Panel Header -->
                     <div class="side-panel-header">
                         <h3 id="sidePanelTitle">Auto Keywords</h3>
-                        <button id="autoExtractKeywordsBtn" class="btn-icon" title="Auto extract keywords">🔄</button>
-                        <button id="generateSummaryBtn" class="btn-icon" style="display:none;"
-                            title="Refresh Summary">🔄</button>
-                        <button id="copySummaryBtn" class="btn-icon" style="display:none;" disabled
-                            title="Copy Summary">📋</button>
                         <select id="keyword-explanation-language" class="language-selector">
                             <option value="English">English</option>
                             <option value="Chinese">中文</option>
@@ -179,6 +174,10 @@
                         <div id="manual-keywords-display" class="keywords-items">
                             <p class="placeholder">Select text to add highlights...</p>
                         </div>
+                        <div class="panel-toolbar">
+                            <button id="clearHighlightsBtn" class="toolbar-btn danger" title="Clear all highlights">🗑️
+                                Clear All</button>
+                        </div>
                     </div>
 
                     <!-- Keywords Content -->
@@ -186,6 +185,12 @@
                         <!-- Auto-extracted Keywords Section -->
                         <div id="auto-keywords-display" class="keywords-tab-content active">
                             <p class="placeholder">Click 🔄 to extract keywords...</p>
+                        </div>
+                        <div class="panel-toolbar">
+                            <button id="reExtractKeywordsBtn" class="toolbar-btn" title="Re-extract keywords">🔄
+                                Re-extract</button>
+                            <button id="clearKeywordsBtn" class="toolbar-btn danger" title="Clear all keywords">🗑️
+                                Clear All</button>
                         </div>
                     </div>
 
@@ -195,12 +200,23 @@
                             style="overflow-y: auto; height: 100%; min-height: 200px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.95em; line-height: 1.6;">
                             <p class="placeholder">Click the button to generate summary</p>
                         </div>
+                        <div class="panel-toolbar">
+                            <button id="regenerateSummaryBtn" class="toolbar-btn" title="Regenerate summary">🔄
+                                Regenerate</button>
+                            <button id="copySummaryBtn" class="toolbar-btn" title="Copy summary">📋 Copy</button>
+                            <button id="clearSummaryBtn" class="toolbar-btn danger" title="Clear summary">🗑️
+                                Clear</button>
+                        </div>
                     </div>
 
                     <!-- Explanation Content -->
                     <div id="historyContent" class="panel-content">
                         <div id="query-history-list" class="query-history-list">
                             <p class="placeholder">No queries yet</p>
+                        </div>
+                        <div class="panel-toolbar">
+                            <button id="clearExplanationsBtn" class="toolbar-btn danger"
+                                title="Clear all explanations">🗑️ Clear All</button>
                         </div>
                     </div>
 

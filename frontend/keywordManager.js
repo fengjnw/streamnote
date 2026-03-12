@@ -91,30 +91,52 @@ class KeywordManager {
 
         const html = `
             <div class="keywords-items">
-                ${items.map(item => `
-                    <div class="keyword-item-wrapper">
+                ${items.map((item, index) => {
+            // Safely escape special characters in onclick attributes
+            const escapedItem = item.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            return `
+                    <div class="keyword-item-wrapper" data-keyword="${index}">
                         <div class="keyword-item">
-                            <button class="keyword-expand-btn" onclick="window.keywordManagerInstance.toggleExplanation('${item.replace(/'/g, "\\'")}')"
+                            <button class="keyword-expand-btn" onclick="window.keywordManagerInstance.toggleExplanation('${escapedItem}')"
                                 title="Click to expand/collapse explanation">
                                 <span class="expand-icon">▸</span>
                             </button>
-                            <span class="keyword-text" onclick="window.keywordManagerInstance.toggleExplanation('${item.replace(/'/g, "\\'")}')"
+                            <span class="keyword-text" onclick="window.keywordManagerInstance.toggleExplanation('${escapedItem}')"
                                 style="cursor: pointer; flex: 1;">
-                                ${item}
+                                ${this.escapeHtml(item)}
                             </span>
-                            <button class="keyword-delete-btn" onclick="window.keywordManagerInstance.${deleteHandlerName}('${item.replace(/'/g, "\\'")}')">×</button>
+                            <button class="keyword-delete-btn" onclick="window.keywordManagerInstance.${deleteHandlerName}('${escapedItem}')">×</button>
                         </div>
-                        <div class="keyword-explanation" data-keyword="${item}" style="display: none;">
+                        <div class="keyword-explanation" data-keyword-index="${index}" data-keyword-text="${this.escapeHtml(item)}" style="display: none;">
                             <div class="explanation-content">
                                 <p class="placeholder">Loading...</p>
                             </div>
+                            <div class="explanation-toolbar">
+                                <button class="explanation-btn" onclick="window.keywordManagerInstance.regenerateExplanation('${escapedItem}')" title="Regenerate explanation">🔄 Regenerate</button>
+                                <button class="explanation-btn" onclick="window.keywordManagerInstance.copyExplanation('${escapedItem}')" title="Copy explanation">📋 Copy</button>
+                            </div>
                         </div>
                     </div>
-                `).join('')}
+                `;
+        }).join('')}
             </div>
         `;
 
         containerElement.innerHTML = html;
+    }
+
+    /**
+     * Safely escape HTML special characters
+     */
+    escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, char => map[char]);
     }
 
     /**
@@ -164,12 +186,12 @@ class KeywordManager {
      * @param {string} keyword - 关键词
      */
     async toggleExplanation(keyword) {
-        // 更稳健的方式：遍历所有 keyword-explanation 元素，找到匹配的
+        // 查找对应的 keyword-explanation 元素
         const allExplanations = document.querySelectorAll('.keyword-explanation');
         let wrapper = null;
 
         for (const elem of allExplanations) {
-            if (elem.getAttribute('data-keyword') === keyword) {
+            if (elem.getAttribute('data-keyword-text') === keyword) {
                 wrapper = elem;
                 break;
             }
@@ -379,6 +401,92 @@ class KeywordManager {
     }
 
     /**
+     * 重新生成关键词的解释
+     * @param {string} keyword - 要重新解释的关键词
+     */
+    async regenerateExplanation(keyword) {
+        // 查找对应的 keyword-explanation 元素
+        const allExplanations = document.querySelectorAll('.keyword-explanation');
+        let wrapper = null;
+
+        for (const elem of allExplanations) {
+            if (elem.getAttribute('data-keyword-text') === keyword) {
+                wrapper = elem;
+                break;
+            }
+        }
+
+        if (!wrapper) {
+            console.warn(`[KeywordManager] Wrapper not found for keyword: ${keyword}`);
+            return;
+        }
+
+        const contentElement = wrapper.querySelector('.explanation-content');
+        if (!contentElement) return;
+
+        // 显示加载状态
+        contentElement.innerHTML = '<p class="placeholder">Regenerating...</p>';
+
+        // 清除缓存，强制重新获取
+        const cacheKey = `${keyword}|${window.streamNoteInstance?.explanationLanguage || 'English'}`;
+        if (this.extractsCache[cacheKey]) delete this.extractsCache[cacheKey];
+        if (this.highlightCache[cacheKey]) delete this.highlightCache[cacheKey];
+        if (this.explanationCache[cacheKey]) delete this.explanationCache[cacheKey];
+
+        // 重新加载解释
+        await this.fetchAndShowExplanation(keyword, wrapper);
+    }
+
+    /**
+     * 复制关键词的解释到剪贴板
+     * @param {string} keyword - 要复制解释的关键词
+     */
+    copyExplanation(keyword) {
+        // 查找对应的 keyword-explanation 元素
+        const allExplanations = document.querySelectorAll('.keyword-explanation');
+        let wrapper = null;
+
+        for (const elem of allExplanations) {
+            if (elem.getAttribute('data-keyword-text') === keyword) {
+                wrapper = elem;
+                break;
+            }
+        }
+
+        if (!wrapper) return;
+
+        const contentElement = wrapper.querySelector('.explanation-content');
+        if (!contentElement) return;
+
+        // 获取解释文本（去除HTML标签）
+        const text = contentElement.innerText || contentElement.textContent;
+
+        if (!text || text.includes('Loading') || text.includes('placeholder')) {
+            alert('Explanation not available yet');
+            return;
+        }
+
+        // 复制到剪贴板
+        navigator.clipboard.writeText(text).then(() => {
+            // 显示成功提示
+            const toolbar = wrapper.querySelector('.explanation-toolbar');
+            if (toolbar) {
+                const copyBtn = toolbar.querySelector('[onclick*="copyExplanation"]');
+                if (copyBtn) {
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = '✓ Copied';
+                    setTimeout(() => {
+                        copyBtn.textContent = originalText;
+                    }, 2000);
+                }
+            }
+        }).catch(err => {
+            console.error('[KeywordManager] Copy failed:', err);
+            alert('Failed to copy explanation');
+        });
+    }
+
+    /**
      * 显示解释列表
      */
     displayExplanations() {
@@ -392,12 +500,15 @@ class KeywordManager {
      */
     restoreExpandedStates() {
         for (const keyword of this.expandedKeywords) {
-            const wrapper = document.querySelector(`[data-keyword="${keyword}"]`);
-            if (wrapper) {
-                wrapper.style.display = 'block';
-                const expandBtn = wrapper.parentElement?.querySelector('.keyword-expand-btn');
-                if (expandBtn) {
-                    expandBtn.classList.add('expanded');
+            const allExplanations = document.querySelectorAll('.keyword-explanation');
+            for (const elem of allExplanations) {
+                if (elem.getAttribute('data-keyword-text') === keyword) {
+                    elem.style.display = 'block';
+                    const expandBtn = elem.parentElement?.querySelector('.keyword-expand-btn');
+                    if (expandBtn) {
+                        expandBtn.classList.add('expanded');
+                    }
+                    break;
                 }
             }
         }

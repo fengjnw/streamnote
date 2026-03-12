@@ -687,27 +687,9 @@ class StreamNote {
                 quickAccessHighlights.classList.add("active");
             }
 
-            // Show/hide auto extract keywords button and explanation language selector based on active tab
-            const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
-            const generateSummaryBtn = document.getElementById("generateSummaryBtn");
-            const copySummaryBtn = document.getElementById("copySummaryBtn");
+            // Show/hide language selector based on active tab
             const explanationLangSelector = document.getElementById("keyword-explanation-language");
 
-            if (autoExtractBtn) {
-                if (contentEl === keywordsContent) {
-                    autoExtractBtn.style.display = 'block';
-                    autoExtractBtn.style.opacity = '1';
-                    autoExtractBtn.style.pointerEvents = 'auto';
-                } else {
-                    autoExtractBtn.style.display = 'none';
-                }
-            }
-            if (generateSummaryBtn) {
-                generateSummaryBtn.style.display = contentEl === summaryContent ? 'block' : 'none';
-            }
-            if (copySummaryBtn) {
-                copySummaryBtn.style.display = contentEl === summaryContent ? 'block' : 'none';
-            }
             if (explanationLangSelector) {
                 explanationLangSelector.style.display = (contentEl === keywordsContent || contentEl === historyContent || contentEl === summaryContent || contentEl === highlightsContent) ? 'block' : 'none';
             }
@@ -832,12 +814,12 @@ class StreamNote {
         }
 
         // ===== Summary Feature =====
-        const generateSummaryBtn = document.getElementById("generateSummaryBtn");
+        const regenerateSummaryBtn = document.getElementById("regenerateSummaryBtn");
         const copySummaryBtn = document.getElementById("copySummaryBtn");
         const summaryDisplay = document.getElementById("summary-display");
 
-        if (generateSummaryBtn) {
-            generateSummaryBtn.addEventListener("click", async () => {
+        if (regenerateSummaryBtn) {
+            regenerateSummaryBtn.addEventListener("click", async () => {
                 // 从当前session获取转录文本
                 const session = this.sessionManager.getCurrentSession();
                 let textToSummarize = "";
@@ -855,8 +837,8 @@ class StreamNote {
                     return;
                 }
 
-                generateSummaryBtn.disabled = true;
-                generateSummaryBtn.title = "Generating...";
+                regenerateSummaryBtn.disabled = true;
+                regenerateSummaryBtn.title = "Generating...";
                 copySummaryBtn.disabled = true;
 
                 try {
@@ -871,8 +853,8 @@ class StreamNote {
                     console.error("[SUMMARY] Error:", error);
                     summaryDisplay.innerHTML = `<p class="placeholder">Error: ${error.message}</p>`;
                 } finally {
-                    generateSummaryBtn.disabled = false;
-                    generateSummaryBtn.title = "Refresh Summary";
+                    regenerateSummaryBtn.disabled = false;
+                    regenerateSummaryBtn.title = "Regenerate Summary";
                 }
             });
         }
@@ -882,10 +864,118 @@ class StreamNote {
                 const summaryText = summaryDisplay.innerText;
                 if (summaryText && summaryText !== "Click the button to generate summary") {
                     navigator.clipboard.writeText(summaryText).then(() => {
-                        alert("Summary copied to clipboard!");
+                        const originalText = copySummaryBtn.textContent;
+                        copySummaryBtn.textContent = '✓ Copied';
+                        setTimeout(() => {
+                            copySummaryBtn.textContent = originalText;
+                        }, 2000);
                     }).catch(err => {
                         console.error("Failed to copy:", err);
+                        alert("Failed to copy summary");
                     });
+                } else {
+                    alert("Please generate a summary first");
+                }
+            });
+        }
+
+        // ===== Panel Toolbar Buttons =====
+
+        // Re-extract keywords button
+        const reExtractKeywordsBtn = document.getElementById("reExtractKeywordsBtn");
+        if (reExtractKeywordsBtn) {
+            reExtractKeywordsBtn.addEventListener("click", async () => {
+                if (!this.keywordManager) {
+                    this.showStatusMessage("Keyword extractor not initialized", 2000);
+                    return;
+                }
+
+                if (Object.keys(this.preciseResults).length === 0) {
+                    this.showStatusMessage("No transcript available to extract keywords from", 2000);
+                    return;
+                }
+
+                reExtractKeywordsBtn.disabled = true;
+                const originalText = reExtractKeywordsBtn.textContent;
+                reExtractKeywordsBtn.textContent = '🔄 Extracting...';
+
+                try {
+                    await this.processKeywords(this.recordingSessionId || this.sessionManager.currentSessionId);
+                    this.showStatusMessage("✓ Keywords extracted", 1500);
+                } catch (error) {
+                    console.error("[StreamNote] Error extracting keywords:", error);
+                    this.showStatusMessage("✗ Failed to extract keywords", 2000);
+                } finally {
+                    reExtractKeywordsBtn.disabled = false;
+                    reExtractKeywordsBtn.textContent = originalText;
+                }
+            });
+        }
+
+        // Clear keywords button
+        const clearKeywordsBtn = document.getElementById("clearKeywordsBtn");
+        if (clearKeywordsBtn) {
+            clearKeywordsBtn.addEventListener("click", () => {
+                if (!this.keywordManager || this.keywordManager.extracts.length === 0) {
+                    this.showStatusMessage("No keywords to clear", 1500);
+                    return;
+                }
+
+                if (confirm("Clear all auto-extracted keywords? This cannot be undone.")) {
+                    this.keywordManager.extracts = [];
+                    this.keywordManager.extractsCache = {};
+                    this.keywordManager.displayExtracts();
+                    this.saveToSession();
+                    this.showStatusMessage("✓ Keywords cleared", 1500);
+                }
+            });
+        }
+
+        // Clear highlights button
+        const clearHighlightsBtn = document.getElementById("clearHighlightsBtn");
+        if (clearHighlightsBtn) {
+            clearHighlightsBtn.addEventListener("click", () => {
+                if (!this.keywordManager || this.keywordManager.highlights.length === 0) {
+                    this.showStatusMessage("No highlights to clear", 1500);
+                    return;
+                }
+
+                if (confirm("Clear all highlights? This cannot be undone.")) {
+                    this.keywordManager.highlights = [];
+                    this.keywordManager.highlightCache = {};
+                    this.keywordManager.displayHighlights();
+                    this.saveToSession();
+                    this.showStatusMessage("✓ Highlights cleared", 1500);
+                }
+            });
+        }
+
+        // Clear explanations button
+        const clearExplanationsBtn = document.getElementById("clearExplanationsBtn");
+        if (clearExplanationsBtn) {
+            clearExplanationsBtn.addEventListener("click", () => {
+                if (!this.keywordManager || this.keywordManager.explanations.length === 0) {
+                    this.showStatusMessage("No explanations to clear", 1500);
+                    return;
+                }
+
+                if (confirm("Clear all explanation history? This cannot be undone.")) {
+                    this.keywordManager.explanations = [];
+                    this.keywordManager.explanationCache = {};
+                    this.keywordManager.displayExplanations();
+                    this.saveToSession();
+                    this.showStatusMessage("✓ Explanation history cleared", 1500);
+                }
+            });
+        }
+
+        const clearSummaryBtn = document.getElementById("clearSummaryBtn");
+        if (clearSummaryBtn) {
+            clearSummaryBtn.addEventListener("click", () => {
+                const summaryDisplay = document.getElementById("summary-display");
+                if (summaryDisplay) {
+                    summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
+                    this.showStatusMessage("✓ Summary cleared", 1500);
                 }
             });
         }
@@ -1009,57 +1099,6 @@ class StreamNote {
         // Get quick access buttons
         const quickAccessHistory = document.getElementById("quickAccessHistory");
         const quickAccessHighlights = document.getElementById("quickAccessHighlights");
-
-        // Hide all content
-        const hideAllContent = () => {
-            keywordsContent.classList.remove("active");
-            historyContent.classList.remove("active");
-            settingsContent.classList.remove("active");
-            highlightsContent.classList.remove("active");
-            // Clear active state from quick access buttons
-            if (quickAccessHistory) quickAccessHistory.classList.remove("active");
-            if (quickAccessHighlights) quickAccessHighlights.classList.remove("active");
-        };
-
-        // Show specific content with unified logic
-        const showContent = (contentEl, title) => {
-            hideAllContent();
-            contentEl.classList.add("active");
-            sidePanelTitle.textContent = title;
-
-            // Update corresponding button active state
-            if (contentEl === historyContent) {
-                if (quickAccessHistory) quickAccessHistory.classList.add("active");
-            } else if (contentEl === highlightsContent) {
-                if (quickAccessHighlights) quickAccessHighlights.classList.add("active");
-            }
-
-            // Update button display states
-            const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
-            const generateSummaryBtn = document.getElementById("generateSummaryBtn");
-            const copySummaryBtn = document.getElementById("copySummaryBtn");
-            const explanationLangSelector = document.getElementById("keyword-explanation-language");
-
-            if (autoExtractBtn) {
-                autoExtractBtn.style.display = 'none';
-            }
-            if (generateSummaryBtn) {
-                generateSummaryBtn.style.display = 'none';
-            }
-            if (copySummaryBtn) {
-                copySummaryBtn.style.display = 'none';
-            }
-            if (explanationLangSelector) {
-                explanationLangSelector.style.display = (contentEl === historyContent || contentEl === highlightsContent) ? 'block' : 'none';
-            }
-
-            // Set flag to prevent resize-induced scroll from closing autoScroll
-            this.isUpdatingUI = true;
-            sidePanelsContainer.classList.add("expanded");
-            setTimeout(() => {
-                this.isUpdatingUI = false;
-            }, 350);
-        };
 
         // 监听选中事件
         document.addEventListener("selectionchange", () => {
