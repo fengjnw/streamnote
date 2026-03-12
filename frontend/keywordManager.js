@@ -157,7 +157,7 @@ class KeywordManager {
         const element = document.getElementById("manual-keywords-display");
         if (!element) return;
         const uniqueKeywords = [...new Set(this.highlights)];
-        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "No highlights yet");
+        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "Select text to highlight and add to this panel");
     }
 
     /**
@@ -167,7 +167,7 @@ class KeywordManager {
         const element = document.getElementById("auto-keywords-display");
         if (!element) return;
         const uniqueKeywords = [...new Set(this.extracts)];
-        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "No auto-extracted keywords yet");
+        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "Click Extract to generate keywords from your transcription");
     }
 
     /**
@@ -490,7 +490,7 @@ class KeywordManager {
      * 显示解释列表
      */
     displayExplanations() {
-        this.displayItemList(this.explanations, this.historyElement, "removeFromExplanations", "No explanations yet");
+        this.displayItemList(this.explanations, this.historyElement, "removeFromExplanations", "Select text to get explanations");
         // 重新生成 HTML 后，恢复之前展开的项目的显示状态
         this.restoreExpandedStates();
     }
