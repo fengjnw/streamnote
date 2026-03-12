@@ -1539,12 +1539,25 @@ header h1 {
     overflow-y: auto;
 }
 
+/* Override for settingsContent - no internal scroll */
+#settingsContent {
+    overflow: hidden;
+}
+
 /* Settings Panel */
 .tab-content[data-tab="settings"] .panel-content {
     display: flex;
     flex-direction: column;
     gap: 0;
+    padding: 0;
+}
+
+/* Settings Scroll Container */
+.settings-scroll-container {
+    flex: 1;
+    overflow-y: auto;
     padding: 12px 15px;
+    min-height: 0;
 }
 
 .settings-group {
