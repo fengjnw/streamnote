@@ -362,6 +362,10 @@ class StreamNote {
             }
         }
 
+        // 重置自动滚动状态为启用（切换 session 时应该重新启用自动滚动）
+        this.panelManager.autoScroll = true;
+        this.panelManager.updateAutoScrollButton();
+
         this.updateDisplay();
 
         // 更新关键词显示（高亮已在updateDisplay内的reapplyAllHighlights中应用）
