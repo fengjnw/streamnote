@@ -123,9 +123,9 @@ class SessionManager {
                         }
                         delete session.settings.layout;
 
-                        // 保证 translationEnabled 存在
+                        // 保证 translationEnabled 存在，并与 translationLayout 保持一致
                         if (session.settings.translationEnabled === undefined) {
-                            session.settings.translationEnabled = true;
+                            session.settings.translationEnabled = session.settings.translationLayout !== 'full-transcript';
                         }
 
                         // 初始化 explanationLanguage（如果缺失）
@@ -189,6 +189,11 @@ class SessionManager {
         // 使用全局默认设置
         const defaultSettings = this.getDefaultSettings();
 
+        // 确定翻译布局：如果默认布局是'full-transcript'，则用'split-bottom'作为实际翻译布局
+        const actualTranslationLayout = (defaultSettings.defaultLayout === 'full-transcript')
+            ? 'split-bottom'
+            : defaultSettings.defaultLayout;
+
         this.sessions[id] = {
             id: id,
             name: defaultName,
@@ -219,8 +224,8 @@ class SessionManager {
 
             // 配置设置（使用全局默认设置）
             settings: {
-                translationEnabled: true,
-                translationLayout: defaultSettings.defaultLayout,
+                translationEnabled: defaultSettings.defaultLayout !== 'full-transcript',
+                translationLayout: actualTranslationLayout,
                 language: defaultSettings.defaultLanguage,
                 explanationLanguage: defaultSettings.defaultExplanationLanguage
             },

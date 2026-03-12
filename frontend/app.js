@@ -48,6 +48,11 @@ class StreamNote {
         this.initKeywordManager();
         this.initHighlightManager();
         this.setupUIListeners();
+
+        // 在读取 session 前，先加载全局面板状态（作为默认值）
+        this.panelManager.loadPanelState();
+
+        // 加载 session 时会覆盖全局设置为 session 特定设置
         this.loadCurrentSession();
 
         // 延迟设置同步滚动，确保元素已加载
@@ -188,8 +193,8 @@ class StreamNote {
      * 初始化显示/隐藏状态
      */
     initializeVisibility() {
-        // 加载保存的布局偏好或使用默认的split view
-        this.panelManager.loadPanelState();
+        // 应用高亮重新渲染
+        this.reapplyAllHighlights();
     }
 
     /**
@@ -321,9 +326,6 @@ class StreamNote {
             // 更新显示
             this.keywordManager.displayExplanations();
         }
-
-        // 更新显示（会应用当前的翻译开关状态和高亮）
-        this.initializeVisibility();
 
         // 应用session保存的布局和翻译状态
         // 翻译启用状态（默认启用）
