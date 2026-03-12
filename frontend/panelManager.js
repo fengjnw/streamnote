@@ -8,6 +8,14 @@ class PanelManager {
         this.onLayoutChange = config.onLayoutChange || (() => { });
         this.onStatusUpdate = config.onStatusUpdate || (() => { });
 
+        // 布局循环顺序
+        this.layoutSequence = ['full-transcript', 'split', 'full-translation'];
+        this.layoutLabels = {
+            'full-transcript': '📄 Transcript Only',
+            'split': '📄 Split View',
+            'full-translation': '🌍 Translation Only'
+        };
+
         // 布局状态
         this.currentLayout = 'split';
 
@@ -33,10 +41,10 @@ class PanelManager {
      * @private
      */
     setupPanelControls() {
-        const layoutSelector = document.getElementById("layoutSelector");
-        if (layoutSelector) {
-            layoutSelector.addEventListener("change", (e) => {
-                this.setLayout(e.target.value);
+        const layoutToggleBtn = document.getElementById("layoutToggleBtn");
+        if (layoutToggleBtn) {
+            layoutToggleBtn.addEventListener("click", () => {
+                this.toggleLayout();
             });
         }
 
@@ -67,6 +75,27 @@ class PanelManager {
     }
 
     /**
+     * 循环切换布局
+     */
+    toggleLayout() {
+        const currentIndex = this.layoutSequence.indexOf(this.currentLayout);
+        const nextIndex = (currentIndex + 1) % this.layoutSequence.length;
+        const nextLayout = this.layoutSequence[nextIndex];
+        this.setLayout(nextLayout);
+    }
+
+    /**
+     * 更新布局按钮的文本
+     * @private
+     */
+    updateLayoutButton() {
+        const layoutToggleBtn = document.getElementById("layoutToggleBtn");
+        if (layoutToggleBtn) {
+            layoutToggleBtn.textContent = this.layoutLabels[this.currentLayout];
+        }
+    }
+
+    /**
      * 设置布局
      */
     setLayout(layoutType) {
@@ -77,7 +106,8 @@ class PanelManager {
         mainContent.classList.add(`layout-${layoutType}`);
 
         this.currentLayout = layoutType;
-
+        // 更新按钮文本
+        this.updateLayoutButton();
         // 通知上层，翻译是否启用
         const translationEnabled = layoutType !== "full-transcript";
         this.onLayoutChange({
@@ -94,14 +124,7 @@ class PanelManager {
      */
     loadPanelState() {
         const layoutPreference = localStorage.getItem('layoutPreference') || 'split';
-        const layoutSelector = document.getElementById("layoutSelector");
-        if (layoutSelector) {
-            layoutSelector.value = layoutPreference;
-            this.setLayout(layoutPreference);
-        } else {
-            // 如果没有选择器，直接应用
-            this.setLayout(layoutPreference);
-        }
+        this.setLayout(layoutPreference);
     }
 
     /**
@@ -109,12 +132,7 @@ class PanelManager {
      * @private
      */
     savePanelState() {
-        const layoutSelector = document.getElementById("layoutSelector");
-        if (layoutSelector) {
-            localStorage.setItem('layoutPreference', layoutSelector.value);
-        } else {
-            localStorage.setItem('layoutPreference', this.currentLayout);
-        }
+        localStorage.setItem('layoutPreference', this.currentLayout);
     }
 
     /**

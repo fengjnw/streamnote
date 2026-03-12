@@ -337,12 +337,6 @@ class StreamNote {
 
         this.panelManager.setLayout(layoutToApply);
 
-        // 更新布局选择器的值
-        const layoutSelector = document.getElementById("layoutSelector");
-        if (layoutSelector) {
-            layoutSelector.value = layoutToApply;
-        }
-
         // 清空 Summary 显示
         const summaryDisplay = document.getElementById("summary-display");
         if (summaryDisplay) {
@@ -513,25 +507,21 @@ class StreamNote {
     }
 
     /**
-     * 保存布局选择状态
+     * 保存当前布局设置到会话
      */
     savePanelState() {
-        const layoutSelector = document.getElementById("layoutSelector");
-        if (layoutSelector) {
-            localStorage.setItem('layoutPreference', layoutSelector.value);
+        if (this.currentSession) {
+            this.sessionManager.updateCurrentSettings({
+                layout: this.panelManager.currentLayout
+            });
         }
     }
 
     /**
-     * 加载布局选择状态
+     * 加载布局状态（由 panelManager 处理）
      */
     loadPanelState() {
-        const layoutPreference = localStorage.getItem('layoutPreference') || 'split';
-        const layoutSelector = document.getElementById("layoutSelector");
-        if (layoutSelector) {
-            layoutSelector.value = layoutPreference;
-            this.setLayout(layoutPreference);
-        }
+        // 布局加载已由 panelManager 处理
     }
 
     /**
@@ -555,16 +545,7 @@ class StreamNote {
         document.getElementById("stopBtn").addEventListener("click", () => this.stop());
         document.getElementById("clearBtn").addEventListener("click", () => this.clear());
 
-        // 布局选择器已由 PanelManager 处理
-        const layoutSelector = document.getElementById("layoutSelector");
-        if (layoutSelector) {
-            layoutSelector.addEventListener("change", (e) => {
-                // 保存布局选择到当前session的settings
-                this.sessionManager.updateCurrentSettings({
-                    layout: e.target.value
-                });
-            });
-        }
+        // 布局切换已由 PanelManager 处理
 
         // 添加翻译语言选择
         const languageSelector = document.getElementById("target-language");
