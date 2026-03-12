@@ -325,13 +325,28 @@ class StreamNote {
         // 更新显示（会应用当前的翻译开关状态和高亮）
         this.initializeVisibility();
 
-        // 应用session保存的布局，或使用全局默认布局
-        let layoutToApply = "split";
-        if (session.settings && session.settings.layout) {
+        // 应用session保存的布局和翻译状态
+        // 翻译启用状态（默认启用）
+        let translationEnabled = true;
+        if (session.settings && session.settings.translationEnabled !== undefined) {
+            translationEnabled = session.settings.translationEnabled;
+        }
+        this.panelManager.translationEnabled = translationEnabled;
+
+        // 翻译面板布局（默认 split）
+        let translationLayout = 'split';
+        if (session.settings && session.settings.translationLayout) {
+            translationLayout = session.settings.translationLayout;
+        }
+        this.panelManager.translationLayout = translationLayout;
+
+        // 确定最终要应用的布局
+        let layoutToApply = translationEnabled ? translationLayout : 'full-transcript';
+
+        // 向后兼容：查看旧的 layout 字段
+        if (!translationLayout && session.settings && session.settings.layout) {
             layoutToApply = session.settings.layout;
-        } else {
-            // 向后兼容：如果session没有layout字段，使用全局默认
-            const defaultSettings = this.sessionManager.getDefaultSettings();
+        } else if (!translationLayout) {
             layoutToApply = defaultSettings.defaultLayout || "split";
         }
 
@@ -507,18 +522,22 @@ class StreamNote {
     }
 
     /**
-     * 保存当前布局设置到会话
+     * 保存当前布局和翻译设置到会话
      */
     savePanelState() {
         if (this.currentSession) {
             this.sessionManager.updateCurrentSettings({
-                layout: this.panelManager.currentLayout
+                layout: this.panelManager.currentLayout,
+                translationEnabled: this.panelManager.translationEnabled,
+                translationLayout: this.panelManager.translationLayout
             });
         }
+        // 同时保存到 localStorage 
+        this.panelManager.savePanelState();
     }
 
     /**
-     * 加载布局状态（由 panelManager 处理）
+     * 加载布局和翻译状态（由 panelManager 处理）
      */
     loadPanelState() {
         // 布局加载已由 panelManager 处理

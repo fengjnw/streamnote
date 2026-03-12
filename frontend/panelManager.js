@@ -8,13 +8,18 @@ class PanelManager {
         this.onLayoutChange = config.onLayoutChange || (() => { });
         this.onStatusUpdate = config.onStatusUpdate || (() => { });
 
-        // 布局循环顺序
-        this.layoutSequence = ['full-transcript', 'split', 'full-translation'];
-        this.layoutLabels = {
-            'full-transcript': '📄 Transcript Only',
-            'split': '📄 Split View',
-            'full-translation': '🌍 Translation Only'
+        // 翻译启用状态（true=启用, false=禁用）
+        this.translationEnabled = true;
+
+        // 翻译面板的布局选项
+        this.translationLayoutOptions = ['split', 'full-translation'];
+        this.translationLayoutLabels = {
+            'split': '⬅➡',           // 左右分割
+            'full-translation': '⬇'  // 全屏翻译
         };
+
+        // 当前翻译面板的布局
+        this.translationLayout = 'split';
 
         // 布局状态
         this.currentLayout = 'split';
@@ -41,26 +46,35 @@ class PanelManager {
      * @private
      */
     setupPanelControls() {
-        const layoutToggleBtn = document.getElementById("layoutToggleBtn");
-        if (layoutToggleBtn) {
-            layoutToggleBtn.addEventListener("click", () => {
-                this.toggleLayout();
+        // 翻译开关按钮（工具栏）
+        const translationToggleBtn = document.getElementById("translationToggleBtn");
+        if (translationToggleBtn) {
+            translationToggleBtn.addEventListener("click", () => {
+                this.toggleTranslation();
             });
         }
 
-        // 关闭转录面板按钮
+        // 分割布局切换按钮（翻译面板标题栏）
+        const splitLayoutToggleBtn = document.getElementById("splitLayoutToggleBtn");
+        if (splitLayoutToggleBtn) {
+            splitLayoutToggleBtn.addEventListener("click", () => {
+                this.toggleSplitLayout();
+            });
+        }
+
+        // 关闭转录面板按钮 - 关闭翻译
         const closeTranscriptPanelBtn = document.getElementById("closeTranscriptPanelBtn");
         if (closeTranscriptPanelBtn) {
             closeTranscriptPanelBtn.addEventListener("click", () => {
-                this.setLayout("full-translation");
+                this.toggleTranslation(); // 切换翻译状态
             });
         }
 
-        // 关闭翻译面板按钮
+        // 关闭翻译面板按钮 - 关闭翻译
         const closeTranslationPanelBtn = document.getElementById("closeTranslationPanelBtn");
         if (closeTranslationPanelBtn) {
             closeTranslationPanelBtn.addEventListener("click", () => {
-                this.setLayout("full-transcript");
+                this.toggleTranslation(); // 切换翻译状态
             });
         }
 
@@ -75,23 +89,60 @@ class PanelManager {
     }
 
     /**
-     * 循环切换布局
+     * 切换翻译启用/禁用
      */
-    toggleLayout() {
-        const currentIndex = this.layoutSequence.indexOf(this.currentLayout);
-        const nextIndex = (currentIndex + 1) % this.layoutSequence.length;
-        const nextLayout = this.layoutSequence[nextIndex];
-        this.setLayout(nextLayout);
+    toggleTranslation() {
+        this.translationEnabled = !this.translationEnabled;
+
+        if (this.translationEnabled) {
+            // 启用翻译 - 使用当前保存的翻译布局
+            this.setLayout(this.translationLayout);
+        } else {
+            // 禁用翻译 - 只显示原文
+            this.setLayout('full-transcript');
+        }
     }
 
     /**
-     * 更新布局按钮的文本
+     * 在 split 和 full-translation 之间切换翻译面板布局
+     */
+    toggleSplitLayout() {
+        const currentIndex = this.translationLayoutOptions.indexOf(this.translationLayout);
+        const nextIndex = (currentIndex + 1) % this.translationLayoutOptions.length;
+        const nextLayout = this.translationLayoutOptions[nextIndex];
+        this.translationLayout = nextLayout;
+
+        // 如果翻译已启用，刷新布局
+        if (this.translationEnabled) {
+            this.setLayout(nextLayout);
+        }
+    }
+
+    /**
+     * 更新翻译按钮的激活状态
      * @private
      */
-    updateLayoutButton() {
-        const layoutToggleBtn = document.getElementById("layoutToggleBtn");
-        if (layoutToggleBtn) {
-            layoutToggleBtn.textContent = this.layoutLabels[this.currentLayout];
+    updateTranslationButton() {
+        const translationToggleBtn = document.getElementById("translationToggleBtn");
+        if (translationToggleBtn) {
+            translationToggleBtn.textContent = '🌐 Translation';
+            if (this.translationEnabled) {
+                translationToggleBtn.classList.add('active');
+            } else {
+                translationToggleBtn.classList.remove('active');
+            }
+        }
+    }
+
+    /**
+     * 更新分割布局按钮的文本
+     * @private
+     */
+    updateSplitLayoutButton() {
+        const splitLayoutToggleBtn = document.getElementById("splitLayoutToggleBtn");
+        if (splitLayoutToggleBtn) {
+            splitLayoutToggleBtn.textContent = this.translationLayoutLabels[this.translationLayout];
+            splitLayoutToggleBtn.title = this.translationLayout === 'split' ? '⬅➡ Left-Right Split' : '⬇ Full Translation';
         }
     }
 
@@ -106,8 +157,11 @@ class PanelManager {
         mainContent.classList.add(`layout-${layoutType}`);
 
         this.currentLayout = layoutType;
+
         // 更新按钮文本
-        this.updateLayoutButton();
+        this.updateTranslationButton();
+        this.updateSplitLayoutButton();
+
         // 通知上层，翻译是否启用
         const translationEnabled = layoutType !== "full-transcript";
         this.onLayoutChange({
@@ -120,19 +174,28 @@ class PanelManager {
     }
 
     /**
-     * 加载保存的初始布局
+     * 加载保存的初始布局和翻译状态
      */
     loadPanelState() {
-        const layoutPreference = localStorage.getItem('layoutPreference') || 'split';
-        this.setLayout(layoutPreference);
+        // 加载翻译启用状态（默认启用）
+        const saved = localStorage.getItem('translationEnabled');
+        this.translationEnabled = saved !== null ? JSON.parse(saved) : true;
+
+        // 加载翻译面板布局（默认 split）
+        this.translationLayout = localStorage.getItem('translationLayout') || 'split';
+
+        // 根据翻译启用状态设置初始布局
+        const initialLayout = this.translationEnabled ? this.translationLayout : 'full-transcript';
+        this.setLayout(initialLayout);
     }
 
     /**
-     * 保存布局偏好
+     * 保存布局偏好和翻译状态
      * @private
      */
     savePanelState() {
-        localStorage.setItem('layoutPreference', this.currentLayout);
+        localStorage.setItem('translationEnabled', JSON.stringify(this.translationEnabled));
+        localStorage.setItem('translationLayout', this.translationLayout);
     }
 
     /**
