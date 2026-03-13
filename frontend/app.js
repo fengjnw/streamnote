@@ -48,6 +48,7 @@ class StreamNote {
         this.initKeywordManager();
         this.initHighlightManager();
         this.setupUIListeners();
+        this.initVisibilityHandlers();
 
         // 在读取 session 前，先加载全局面板状态（作为默认值）
         this.panelManager.loadPanelState();
@@ -1313,6 +1314,56 @@ class StreamNote {
             floatingMenu.classList.add("hidden");
             // 清除选中文本
             window.getSelection().removeAllRanges();
+        });
+    }
+
+    /**
+     * 初始化窗口可见性处理器
+     * 当窗口重新获得焦点或文档变为可见时，如果自动滚动启用，重新滚动到底部
+     */
+    initVisibilityHandlers() {
+        // 监听窗口获得焦点
+        window.addEventListener('focus', () => {
+            // 如果自动滚动启用，重新滚动到底部
+            if (this.panelManager && this.panelManager.autoScroll) {
+                setTimeout(() => {
+                    const transcript = document.getElementById("transcript");
+                    const translation = document.getElementById("translation");
+                    const keys = Object.keys(this.recordingManager.getTranscriptData());
+
+                    if (keys.length > 0) {
+                        const lastIndex = keys[keys.length - 1];
+                        if (transcript) {
+                            this.panelManager.scrollToLineBottom(transcript, lastIndex);
+                        }
+                        if (translation) {
+                            this.panelManager.scrollToLineBottom(translation, lastIndex);
+                        }
+                    }
+                }, 0);
+            }
+        });
+
+        // 监听文档可见性变化
+        document.addEventListener('visibilitychange', () => {
+            // 当文档变为可见且自动滚动启用时，重新滚动到底部
+            if (!document.hidden && this.panelManager && this.panelManager.autoScroll) {
+                setTimeout(() => {
+                    const transcript = document.getElementById("transcript");
+                    const translation = document.getElementById("translation");
+                    const keys = Object.keys(this.recordingManager.getTranscriptData());
+
+                    if (keys.length > 0) {
+                        const lastIndex = keys[keys.length - 1];
+                        if (transcript) {
+                            this.panelManager.scrollToLineBottom(transcript, lastIndex);
+                        }
+                        if (translation) {
+                            this.panelManager.scrollToLineBottom(translation, lastIndex);
+                        }
+                    }
+                }, 0);
+            }
         });
     }
 

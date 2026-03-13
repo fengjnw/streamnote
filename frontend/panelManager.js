@@ -317,11 +317,11 @@ class PanelManager {
         this.scrollTimeout = setTimeout(() => {
             this.isSyncingScroll = true;
 
-            const topInfo = this.getTopLineNumber(source);
+            const bottomInfo = this.getBottomLineNumber(source);
 
-            if (topInfo) {
+            if (bottomInfo) {
                 target.style.scrollBehavior = 'auto';
-                this.scrollToLineNumberTop(target, topInfo.lineNumber, offset);
+                this.scrollToLineBottom(target, bottomInfo.index);
             }
 
             setTimeout(() => {
@@ -331,8 +331,34 @@ class PanelManager {
     }
 
     /**
-     * 获取容器顶部对应的行号
+     * 获取容器底部对应的行的data-index（底部对齐）
      * @private
+     */
+    getBottomLineNumber(container) {
+        const paragraphs = container.querySelectorAll('p[data-index]');
+
+        if (paragraphs.length === 0) return null;
+
+        // 从下往上遍历，找到最后一个在viewport中的元素
+        for (let i = paragraphs.length - 1; i >= 0; i--) {
+            const p = paragraphs[i];
+            const rect = p.getBoundingClientRect();
+            // 如果元素的顶部在viewport内，则返回它
+            if (rect.top < container.clientHeight) {
+                return {
+                    index: p.getAttribute('data-index'),
+                    lineNumber: i
+                };
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 获取容器顶部对应的行号（已废弃，保留向后兼容）
+     * @private
+     * @deprecated 使用 getBottomLineNumber 代替底部对齐同步
      */
     getTopLineNumber(container) {
         const paragraphs = container.querySelectorAll('p[data-index]');
