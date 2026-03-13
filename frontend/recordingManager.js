@@ -250,6 +250,10 @@ class RecordingManager {
                     timestamp: "",
                     sessionId: sessionIdAtRequest
                 });
+                // 清除转录进行中的状态
+                if (!this.isRecording) {
+                    this.onStatusUpdate("");
+                }
                 return;
             }
 
@@ -271,9 +275,12 @@ class RecordingManager {
                 sessionId: sessionIdAtRequest
             });
 
-            // 恢复监听状态
+            // 恢复监听状态 - 只有在还在录音时才显示"Listening"
             if (this.isRecording) {
                 this.onStatusUpdate("🎤 Listening...");
+            } else {
+                // 停止录音后，清除"Transcripting"状态
+                this.onStatusUpdate("");
             }
 
         } catch (error) {
