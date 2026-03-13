@@ -130,7 +130,7 @@ class RecordingManager {
                 this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
             }
 
-            this.onStatusUpdate("⏹️ Stopped");
+            this.onStatusUpdate("");  // 清除状态显示
             this.onRecordingStateChange(false);
         }
     }
