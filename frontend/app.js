@@ -944,6 +944,7 @@ class StreamNote {
                 if (confirm("Clear all highlights? This cannot be undone.")) {
                     this.keywordManager.highlights = [];
                     this.keywordManager.highlightCache = {};
+                    this.highlightManager.reapplyAllHighlights();
                     this.keywordManager.displayHighlights();
                     this.saveToSession();
                     this.showStatusMessage("✓ Highlights cleared", 1500);
