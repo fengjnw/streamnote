@@ -105,6 +105,7 @@ class StreamNote {
                     }
                 }
                 this.saveSettingsToSession();
+                // 布局改变打全局，影响所有 session（由 panelManager.savePanelState() 处理）
                 this.updateDisplay();
             },
             onStatusUpdate: (status) => this.updateStatus(status)
@@ -327,28 +328,14 @@ class StreamNote {
             this.keywordManager.displayExplanations();
         }
 
-        // 应用session保存的布局和翻译状态
-        // 翻译启用状态（默认启用）
-        let translationEnabled = true;
-        if (session.settings && session.settings.translationEnabled !== undefined) {
-            translationEnabled = session.settings.translationEnabled;
+        // 应用全局布局和翻译状态（而不是session特定的）
+        // panelManager 会自动从 localStorage 加载全局设置
+        // 所有 session 共享同一个当前布局
+        const mainContent = document.querySelector(".main-content");
+        if (mainContent) {
+            // 确保应用当前的全局布局
+            this.panelManager.setLayout(this.panelManager.currentLayout, true);
         }
-        this.panelManager.translationEnabled = translationEnabled;
-
-        // 翻译面板布局（默认 split-bottom）
-        let translationLayout = 'split-bottom';
-        if (session.settings && session.settings.translationLayout) {
-            translationLayout = session.settings.translationLayout;
-        } else if (session.settings && session.settings.layout) {
-            // 向后兼容：检查旧的 layout 字段
-            translationLayout = session.settings.layout;
-        }
-        this.panelManager.translationLayout = translationLayout;
-
-        // 确定最终要应用的布局
-        let layoutToApply = translationEnabled ? translationLayout : 'full-transcript';
-
-        this.panelManager.setLayout(layoutToApply);
 
         // 清空 Summary 显示
         const summaryDisplay = document.getElementById("summary-display");
@@ -1799,6 +1786,12 @@ class StreamNote {
 
             // 更新所有显示
             this.keywordManager.updateAllKeywordDisplays();
+
+            // 保存提取的关键词到当前 session
+            const sessionId = targetSessionId || this.recordingSessionId || this.sessionManager.currentSessionId;
+            if (sessionId && this.sessionManager) {
+                this.sessionManager.updateKeywordsForSession(sessionId, this.keywordManager.extracts);
+            }
         }
     }
 

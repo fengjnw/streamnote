@@ -135,8 +135,10 @@ class PanelManager {
 
     /**
      * 设置布局
+     * @param {string} layoutType - 布局类型
+     * @param {boolean} skipSave - 如果为 true，则只更新 UI 不保存也不触发回调（用于加载时）
      */
-    setLayout(layoutType) {
+    setLayout(layoutType, skipSave = false) {
         const mainContent = document.querySelector(".main-content");
         if (!mainContent) return;
 
@@ -149,15 +151,17 @@ class PanelManager {
         this.updateLayoutDropdown();
         this.updateTranslationButton();
 
-        // 通知上层，翻译是否启用
-        const translationEnabled = layoutType !== "full-transcript";
-        this.onLayoutChange({
-            layout: layoutType,
-            translationEnabled: translationEnabled
-        });
+        if (!skipSave) {
+            // 通知上层，翻译是否启用
+            const translationEnabled = layoutType !== "full-transcript";
+            this.onLayoutChange({
+                layout: layoutType,
+                translationEnabled: translationEnabled
+            });
 
-        // 保存偏好
-        this.savePanelState();
+            // 保存偏好（全局保存）
+            this.savePanelState();
+        }
     }
 
     /**

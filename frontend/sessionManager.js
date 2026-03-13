@@ -13,8 +13,7 @@ class SessionManager {
         // 全局默认设置（新建session时使用）
         this.defaultSettings = {
             defaultLanguage: "Chinese",
-            defaultExplanationLanguage: "Chinese",
-            defaultLayout: "split-bottom"
+            defaultExplanationLanguage: "Chinese"
         };
 
         this.loadDefaultSettings();
@@ -189,10 +188,11 @@ class SessionManager {
         // 使用全局默认设置
         const defaultSettings = this.getDefaultSettings();
 
-        // 确定翻译布局：如果默认布局是'full-transcript'，则用'split-left'作为实际翻译布局
-        const actualTranslationLayout = (defaultSettings.defaultLayout === 'full-transcript')
-            ? 'split-left'
-            : defaultSettings.defaultLayout;
+        // 获取当前全局布局设置（从 localStorage）
+        const translationEnabled = localStorage.getItem('translationEnabled') !== null
+            ? JSON.parse(localStorage.getItem('translationEnabled'))
+            : true;
+        const translationLayout = localStorage.getItem('translationLayout') || 'split-bottom';
 
         this.sessions[id] = {
             id: id,
@@ -222,10 +222,8 @@ class SessionManager {
             // 总结缓存
             summaryCache: {},      // { language: "summary", ... }
 
-            // 配置设置（使用全局默认设置）
+            // 配置设置（使用全局默认设置和当前全局布局）
             settings: {
-                translationEnabled: defaultSettings.defaultLayout !== 'full-transcript',
-                translationLayout: actualTranslationLayout,
                 language: defaultSettings.defaultLanguage,
                 explanationLanguage: defaultSettings.defaultExplanationLanguage
             },
@@ -307,6 +305,21 @@ class SessionManager {
         // 合并新的转录内容
         const session = this.sessions[sessionId];
         session.transcripts = { ...session.transcripts, ...transcripts };
+        session.lastModified = Date.now();
+        this.saveSessions();
+        return true;
+    }
+
+    /**
+     * 更新指定 sessionId 的关键词
+     */
+    updateKeywordsForSession(sessionId, keywords) {
+        if (!this.sessions[sessionId]) {
+            return false;
+        }
+
+        const session = this.sessions[sessionId];
+        session.keywords = [...keywords];
         session.lastModified = Date.now();
         this.saveSessions();
         return true;

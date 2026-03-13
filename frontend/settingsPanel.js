@@ -17,9 +17,8 @@ class SettingsPanel {
         // 获取默认设置控件
         const defaultLanguageSelect = document.getElementById("defaultLanguage");
         const defaultExplanationLanguageSelect = document.getElementById("defaultExplanationLanguage");
-        const defaultLayoutSelect = document.getElementById("defaultLayout");
 
-        if (!defaultLanguageSelect || !defaultLayoutSelect) return;
+        if (!defaultLanguageSelect) return;
 
         // 从 sessionManager 获取当前默认设置
         const defaultSettings = this.sessionManager.getDefaultSettings();
@@ -29,14 +28,12 @@ class SettingsPanel {
         if (defaultExplanationLanguageSelect) {
             defaultExplanationLanguageSelect.value = defaultSettings.defaultExplanationLanguage || "Chinese";
         }
-        defaultLayoutSelect.value = defaultSettings.defaultLayout || "split-bottom";
 
         // 移除旧的事件监听器（防止重复）
         defaultLanguageSelect.onchange = null;
         if (defaultExplanationLanguageSelect) {
             defaultExplanationLanguageSelect.onchange = null;
         }
-        defaultLayoutSelect.onchange = null;
 
         // 添加翻译语言选择器的变化事件
         defaultLanguageSelect.addEventListener("change", (e) => {
@@ -55,22 +52,6 @@ class SettingsPanel {
                 this.onStatusUpdate(`📋 Default explanation language set to ${e.target.value}`);
             });
         }
-
-        // 添加布局选择器的变化事件
-        defaultLayoutSelect.addEventListener("change", (e) => {
-            this.sessionManager.updateDefaultSettings({
-                defaultLayout: e.target.value
-            });
-            const layoutNames = {
-                'full-transcript': 'No Translation',
-                'split-top': 'Translation Top',
-                'split-bottom': 'Translation Bottom',
-                'split-left': 'Translation Left',
-                'split-right': 'Translation Right',
-                'full-translation': 'Translation Only'
-            };
-            this.onStatusUpdate(`📋 Default layout set to ${layoutNames[e.target.value]}`);
-        });
 
         // 初始化 Session Management 按钮
         this.initializeSessionManagementButtons();
