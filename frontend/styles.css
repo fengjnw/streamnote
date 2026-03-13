@@ -337,7 +337,6 @@ header h1 {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: all 0.3s ease;
 }
 
 .content-wrapper {
@@ -345,7 +344,6 @@ header h1 {
     display: flex;
     gap: 0;
     overflow: hidden;
-    transition: all 0.3s ease;
 }
 
 /* ================ Control Panel - 优化的导航栏设计 ================ */

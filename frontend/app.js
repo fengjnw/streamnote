@@ -1577,6 +1577,9 @@ class StreamNote {
         // 重置待更新标志
         this.pendingUpdates = false;
 
+        // 在DOM更新前设置标志，防止滚动事件改变autoScroll状态
+        this.panelManager.isUpdatingUI = true;
+
         // 更新 session 统计信息
         this.updateSessionStats();
 
@@ -1647,7 +1650,6 @@ class StreamNote {
 
         // 仅在自动滚动启用时滚动到底部
         if (this.panelManager.autoScroll) {
-            this.panelManager.isUpdatingUI = true;
             const transcript = document.getElementById("transcript");
             const translation = document.getElementById("translation");
 
@@ -1664,11 +1666,19 @@ class StreamNote {
                     this.panelManager.scrollToLineBottom(translation, lastIndex);
                 }
             }
-
-            setTimeout(() => {
-                this.panelManager.isUpdatingUI = false;
-            }, 100);
         }
+
+        // DOM更新完毕后，清除标志并重新检查滚动（确保autoScroll状态准确）
+        setTimeout(() => {
+            this.panelManager.isUpdatingUI = false;
+
+            // 检查是否仍在底部，如果不在则确保autoScroll被正确禁用
+            const transcript = document.getElementById("transcript");
+            if (transcript && !this.panelManager.isScrolledToBottom(transcript)) {
+                this.panelManager.autoScroll = false;
+                this.panelManager.updateAutoScrollButton();
+            }
+        }, 50);
     }
 
     updateStatus(text) {

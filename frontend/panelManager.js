@@ -416,7 +416,7 @@ class PanelManager {
      * 检测容器是否滑到底部
      * @private
      */
-    isScrolledToBottom(container, threshold = 10) {
+    isScrolledToBottom(container, threshold = 20) {
         return container.scrollTop + container.clientHeight >= container.scrollHeight - threshold;
     }
 
