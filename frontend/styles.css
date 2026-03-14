@@ -1016,7 +1016,10 @@ header h1 {
     flex: 1;
     color: #333;
     font-size: 0.95em;
-    word-break: break-word;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .keyword-explain-btn {
@@ -2020,6 +2023,10 @@ header h1 {
     margin: 0;
     padding: 0;
     flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .explanation-body {
