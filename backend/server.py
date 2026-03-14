@@ -111,6 +111,7 @@ def translate():
         data = request.json
         text = data.get("text", "")
         target_lang = data.get("target_lang", "Chinese")
+        context = data.get("context", "").strip()  # 上下文信息，用于改进翻译准确率
         is_keywords_mode = data.get("is_keywords", False)
         
         if not text or len(text) < 1:
@@ -127,7 +128,7 @@ def translate():
             # 普通文本翻译模式：使用流式响应
             def generate():
                 try:
-                    yield from translator.translate_text(text, target_lang)
+                    yield from translator.translate_text(text, target_lang, context)
                 except Exception as e:
                     print(f"[ERROR] Stream error: {e}")
                     yield f"[ERROR] {str(e)}"

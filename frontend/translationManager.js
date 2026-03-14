@@ -31,7 +31,7 @@ class TranslationManager {
     /**
      * 翻译文本 - 流式版本
      */
-    async translateText(text, index, targetSessionId = null) {
+    async translateText(text, index, targetSessionId = null, context = "") {
         if (!text || !this.enabled) return;
 
         try {
@@ -42,7 +42,8 @@ class TranslationManager {
                 },
                 body: JSON.stringify({
                     text: text,
-                    target_lang: this.language
+                    target_lang: this.language,
+                    context: context || ""  // 传递上下文信息以改进翻译准确性
                 })
             });
 

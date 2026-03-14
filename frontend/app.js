@@ -184,9 +184,10 @@ class StreamNote {
             transcriptData[index] = { text, timestamp };
             this.updateDisplay();
 
-            // 自动翻译
+            // 自动翻译 - 使用转录的上下文来改进翻译
             if (this.translationEnabled) {
-                this.translationManager.translateText(text, index, sessionId);
+                const translationContext = this.recordingManager.getTranscriptionContext();
+                this.translationManager.translateText(text, index, sessionId, translationContext);
             }
 
             // 更新转录上下文 - 新转录的内容会被加入上下文
@@ -1585,7 +1586,8 @@ class StreamNote {
 
                         // 自动翻译（保存到原来的录制session）
                         if (this.translationEnabled) {
-                            this.translationManager.translateText(text, currentChunkIndex, sessionIdAtRequest);
+                            const translationContext = this.recordingManager.getTranscriptionContext();
+                            this.translationManager.translateText(text, currentChunkIndex, sessionIdAtRequest, translationContext);
                         }
 
                         // 关键词提取改为手动触发，注释掉自动调用

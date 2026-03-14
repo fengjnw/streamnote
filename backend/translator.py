@@ -12,7 +12,8 @@ class Translator(AIService):
     def translate_text(
         self,
         text: str,
-        target_lang: str = "Chinese"
+        target_lang: str = "Chinese",
+        context: str = ""
     ) -> Generator[str, None, None]:
         """
         流式翻译文本
@@ -20,6 +21,7 @@ class Translator(AIService):
         Args:
             text: 要翻译的文本
             target_lang: 目标语言
+            context: 前文上下文，帮助改进翻译的准确性和连贯性
             
         Yields:
             流式翻译结果
@@ -27,7 +29,10 @@ class Translator(AIService):
         if not text or len(text) < 1:
             return
         
-        system_message = f"You are a professional translator. Translate the following text to {target_lang}. Only provide the translation, no explanations."
+        if context:
+            system_message = f"You are a professional translator. Previous context for reference: '{context}'. Now translate the following text to {target_lang}, maintaining consistency with the context. Only provide the translation, no explanations."
+        else:
+            system_message = f"You are a professional translator. Translate the following text to {target_lang}. Only provide the translation, no explanations."
         user_message = text
         
         yield from self.stream_chat(
