@@ -698,6 +698,7 @@ class KeywordManager {
         const wordElement = document.getElementById("current-explanation-word");
         const contentElement = document.getElementById("explanation-content");
         const headerDiv = document.querySelector(".explanation-header");
+        const regenerateBtn = document.getElementById("regenerate-explanation-btn");
 
         if (!wordElement || !contentElement) return;
 
@@ -706,6 +707,9 @@ class KeywordManager {
 
         // 显示标题容器
         if (headerDiv) headerDiv.classList.remove("hidden");
+
+        // 启用Regenerate按钮
+        if (regenerateBtn) regenerateBtn.disabled = false;
 
         // 检查该词是否已在highlights中，更新按钮状态
         const isHighlighted = this.highlights?.includes(word) || false;

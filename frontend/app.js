@@ -988,14 +988,6 @@ class StreamNote {
             });
         }
 
-        // Explanation panel focus view button listeners
-        const copyExplanationBtn = document.getElementById("copy-explanation-btn");
-        if (copyExplanationBtn) {
-            copyExplanationBtn.addEventListener("click", () => {
-                this.keywordManager?.copyCurrentExplanation();
-            });
-        }
-
         // Highlight current explanation word button
         const highlightCurrentWordBtn = document.getElementById("highlight-current-word-btn");
         if (highlightCurrentWordBtn) {
@@ -1025,11 +1017,13 @@ class StreamNote {
                 const contentEl = document.getElementById("explanation-content");
                 const contextDiv = document.getElementById("word-context");
                 const headerDiv = document.querySelector(".explanation-header");
+                const regenerateBtn = document.getElementById("regenerate-explanation-btn");
 
                 if (currentWordEl) currentWordEl.textContent = "";
                 if (contentEl) contentEl.innerHTML = '<p class="placeholder">Select a word to view its explanation</p>';
                 if (contextDiv) contextDiv.style.display = 'none';
                 if (headerDiv) headerDiv.classList.add("hidden");
+                if (regenerateBtn) regenerateBtn.disabled = true;
 
                 this.showStatusMessage("✓ Explanation cleared", 1500);
             });
