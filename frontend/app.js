@@ -587,7 +587,8 @@ class StreamNote {
             topK: 5,
             panelManager: this.panelManager,
             recordingManager: this.recordingManager,
-            getTranscriptData: () => this.recordingManager.getTranscriptData()
+            getTranscriptData: () => this.recordingManager.getTranscriptData(),
+            translationManager: this.translationManager
         });
 
         // 使 KeywordManager 全局可访问

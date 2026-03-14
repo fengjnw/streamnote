@@ -23,6 +23,9 @@ class KeywordManager {
         // 录制管理器引用（用于获取preciseResults）
         this.recordingManager = config.recordingManager || null;
         this.getTranscriptData = config.getTranscriptData || (() => ({}));
+        
+        // 翻译管理器引用（用于获取翻译数据）
+        this.translationManager = config.translationManager || null;
 
         // 解释 API
         this.explanationApiUrl = config.explanationApiUrl || "/api/explain-keyword";
@@ -204,13 +207,31 @@ class KeywordManager {
             return "";
         }
 
-        const preciseResults = this.getTranscriptData();
+        // 根据container确定使用转录数据还是翻译数据
+        const isTranslationContext = positionInfo.container === 'translation';
+        let dataSource = {};
+        
+        if (isTranslationContext && this.translationManager) {
+            // 使用翻译数据
+            dataSource = this.translationManager.getTranslationData();
+        } else {
+            // 使用原始转录数据
+            dataSource = this.getTranscriptData();
+        }
+        
         const sourceIndices = positionInfo.sourceIndices;
 
         // 获取目标段落的文本
         const sourceTexts = sourceIndices.map(idx => {
-            const item = preciseResults[idx];
-            return item ? item.text.trim() : "";
+            if (isTranslationContext) {
+                // 翻译数据是纯文本
+                const translatedText = dataSource[idx];
+                return translatedText ? translatedText.trim() : "";
+            } else {
+                // 原始数据是object with text property
+                const item = dataSource[idx];
+                return item ? item.text.trim() : "";
+            }
         });
 
         // 构建包含所有相关段落的文本
@@ -222,8 +243,17 @@ class KeywordManager {
         if (firstIdx > 0) {
             const indices = [];
             for (let i = firstIdx - 1; i >= 0 && indices.length < 2; i--) {
-                if (preciseResults[i]) {
-                    indices.unshift(preciseResults[i].text.trim());
+                if (isTranslationContext) {
+                    // 翻译数据
+                    const translatedText = dataSource[i];
+                    if (translatedText) {
+                        indices.unshift(translatedText.trim());
+                    }
+                } else {
+                    // 原始数据
+                    if (dataSource[i]) {
+                        indices.unshift(dataSource[i].text.trim());
+                    }
                 }
             }
             contextBefore = indices.join(" ");
@@ -235,12 +265,21 @@ class KeywordManager {
         // 向后获取context：从最后一个sourceIndex的后面段落取文本
         let contextAfter = "";
         const lastIdx = sourceIndices[sourceIndices.length - 1];
-        const maxIdx = Object.keys(preciseResults).map(k => parseInt(k)).sort((a, b) => b - a)[0];
+        const maxIdx = Object.keys(dataSource).map(k => parseInt(k)).sort((a, b) => b - a)[0];
         if (lastIdx < maxIdx) {
             const indices = [];
             for (let i = lastIdx + 1; i <= maxIdx && indices.length < 2; i++) {
-                if (preciseResults[i]) {
-                    indices.push(preciseResults[i].text.trim());
+                if (isTranslationContext) {
+                    // 翻译数据
+                    const translatedText = dataSource[i];
+                    if (translatedText) {
+                        indices.push(translatedText.trim());
+                    }
+                } else {
+                    // 原始数据
+                    if (dataSource[i]) {
+                        indices.push(dataSource[i].text.trim());
+                    }
                 }
             }
             contextAfter = indices.join(" ");

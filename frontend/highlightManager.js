@@ -223,18 +223,65 @@ class HighlightManager {
 
     /**
      * 从Range对象中提取精确的位置信息（基于DOM中的data-index属性）
+     * 支持 #transcript 和 #translation 两种容器
      * @param {Range} range - DOM Range对象
+     * @param {string} containerSelector - 可选的容器选择器（"#transcript" 或 "#translation"，默认自动识别）
      * @returns {Object} 位置信息 { sourceIndices: [...] }，如果无法提取则返回null
      */
-    extractPositionFromRange(range) {
+    extractPositionFromRange(range, containerSelector = null) {
         if (!range) return null;
 
-        const sourceIndices = new Set();
-        const transcriptDiv = document.getElementById("transcript");
-        if (!transcriptDiv) return null;
+        // 如果未指定容器，尝试自动识别
+        let container = null;
+        if (containerSelector) {
+            container = document.querySelector(containerSelector);
+        } else {
+            // 根据Range的位置自动识别
+            const startContainer = range.startContainer;
+            const endContainer = range.endContainer;
+            
+            // 寻找最近的transcript或translation父元素
+            let node = startContainer;
+            while (node && node.nodeType !== Node.DOCUMENT_NODE) {
+                if (node.id === 'transcript') {
+                    container = node;
+                    break;
+                }
+                if (node.id === 'translation') {
+                    container = node;
+                    break;
+                }
+                node = node.parentNode;
+            }
+            
+            // 如果通过startContainer找不到，尝试endContainer
+            if (!container) {
+                node = endContainer;
+                while (node && node.nodeType !== Node.DOCUMENT_NODE) {
+                    if (node.id === 'transcript') {
+                        container = node;
+                        break;
+                    }
+                    if (node.id === 'translation') {
+                        container = node;
+                        break;
+                    }
+                    node = node.parentNode;
+                }
+            }
+        }
+        
+        // 如果仍未找到容器，默认使用transcript
+        if (!container) {
+            container = document.getElementById("transcript");
+        }
+        
+        if (!container) return null;
 
-        // 获取transcript中所有的段落
-        const paragraphs = transcriptDiv.querySelectorAll('p[data-index]');
+        const sourceIndices = new Set();
+
+        // 获取容器中所有的段落
+        const paragraphs = container.querySelectorAll('p[data-index]');
 
         // 检查每个段落是否与range有交集
         paragraphs.forEach(para => {
@@ -257,7 +304,8 @@ class HighlightManager {
         if (sourceIndices.size === 0) return null;
 
         return {
-            sourceIndices: Array.from(sourceIndices).sort((a, b) => a - b)
+            sourceIndices: Array.from(sourceIndices).sort((a, b) => a - b),
+            container: container.id  // 标记是 'transcript' 还是 'translation'
         };
     }
 
