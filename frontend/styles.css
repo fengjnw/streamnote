@@ -1215,8 +1215,7 @@ header h1 {
 }
 
 .keyword-explanation .explanation-content .placeholder {
-    color: #999;
-    font-style: italic;
+    /* inherits unified placeholder style */
 }
 
 .keyword-explanation .explanation-content .error {
@@ -1270,9 +1269,13 @@ header h1 {
 }
 
 .placeholder {
-    color: #999;
+    color: var(--color-text-lighter);
     font-style: italic;
-    font-size: 0.95em;
+    font-size: 0.9em;
+    text-align: center;
+    padding: 40px var(--spacing-md);
+    margin: 0;
+    line-height: 1.6;
 }
 
 }
@@ -2131,6 +2134,16 @@ header h1 {
     font-weight: 700;
 }
 
+/* Summary text container */
+.summary-text {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 200px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+}
+
 .explanation-scroll {
     flex: 1;
     color: #555;
@@ -2151,10 +2164,7 @@ header h1 {
 }
 
 .explanation-scroll .placeholder {
-    color: #999;
-    font-style: italic;
-    text-align: center;
-    padding: 40px var(--spacing-md);
+    /* inherits unified placeholder style */
 }
 
 .explanation-scroll .error {
