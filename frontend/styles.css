@@ -1909,10 +1909,6 @@ header h1 {
     order: -1;
 }
 
-#historyContent .panel-toolbar {
-    flex-direction: column;
-    gap: 6px;
-}
 
 .toolbar-row {
     display: flex;
@@ -1977,13 +1973,14 @@ header h1 {
 .explanation-focus-view {
     display: flex;
     flex-direction: column;
-    height: auto;
+    height: 100%;
     padding: 0;
     gap: 0;
+    overflow-y: auto;
 }
 
 .explanation-header {
-    padding: 12px 0;
+    padding: 12px 15px;
     background: #f8f9fa;
     border-bottom: 1px solid #e9ecef;
     flex-shrink: 0;
@@ -1997,12 +1994,20 @@ header h1 {
     display: none;
 }
 
+.explanation-header-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: space-between;
+}
+
 .current-word {
     font-size: 1.1em;
     font-weight: 600;
     color: #333;
     margin: 0;
-    padding: 0 15px;
+    padding: 0;
+    flex: 1;
 }
 
 .explanation-body {
