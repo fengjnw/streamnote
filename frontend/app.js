@@ -338,6 +338,14 @@ class StreamNote {
                 this.keywordManager.highlights = [];
             }
 
+            // 恢复高亮位置信息（用于精确提取上下文）
+            if (session.highlightPositions && Object.keys(session.highlightPositions).length > 0) {
+                this.keywordManager.setHighlightPositions({ ...session.highlightPositions });
+                if (this.highlightManager) {
+                    this.highlightManager.highlightPositions = { ...session.highlightPositions };
+                }
+            }
+
             // 恢复在解释面板查询过的词
             if (session.explanations && session.explanations.length > 0) {
                 this.keywordManager.explanations = [...session.explanations];
@@ -577,7 +585,9 @@ class StreamNote {
             transcriptElement: document.getElementById("transcript"),
             keywordElement: document.getElementById("keywords-display"),
             topK: 5,
-            panelManager: this.panelManager
+            panelManager: this.panelManager,
+            recordingManager: this.recordingManager,
+            getTranscriptData: () => this.recordingManager.getTranscriptData()
         });
 
         // 使 KeywordManager 全局可访问
@@ -1293,8 +1303,15 @@ class StreamNote {
         floatingExplainBtn.addEventListener("click", async () => {
             if (this.selectedText.trim()) {
                 const term = this.selectedText.trim();
-                // 通过 KeywordManager 统一处理显示解释面板的逻辑
-                this.keywordManager.showExplanationPanel(term);
+
+                // 获取Range的位置信息（如果可用）
+                let positionInfo = null;
+                if (currentSelectedRange) {
+                    positionInfo = this.highlightManager.extractPositionFromRangePublic(currentSelectedRange);
+                }
+
+                // 通过 KeywordManager 统一处理显示解释面板的逻辑，并传入位置信息
+                this.keywordManager.openExplanationForWord(term, positionInfo);
             }
             floatingMenu.classList.add("hidden");
             // 清除选中文本

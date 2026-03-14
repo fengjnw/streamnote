@@ -16,6 +16,14 @@ class KeywordManager {
         this.extracts = [];          // 自动提取的关键词
         this.explanations = [];      // 即时解释面板的词
 
+        // 高亮位置信息：{ "highlightText": { sourceIndices: [...], startIndex: ..., endIndex: ... } }
+        // 用于精确提取上下文
+        this.highlightPositions = config.highlightPositions || {};
+
+        // 录制管理器引用（用于获取preciseResults）
+        this.recordingManager = config.recordingManager || null;
+        this.getTranscriptData = config.getTranscriptData || (() => ({}));
+
         // 解释 API
         this.explanationApiUrl = config.explanationApiUrl || "/api/explain-keyword";
 
@@ -178,6 +186,79 @@ class KeywordManager {
     }
 
     /**
+     * 设置高亮的位置信息（来自HighlightManager）
+     * @param {Object} positions - { "highlightText": { sourceIndices: [...], startIndex: ..., endIndex: ... } }
+     */
+    setHighlightPositions(positions) {
+        this.highlightPositions = positions || {};
+    }
+
+    /**
+     * 基于位置信息从preciseResults中提取关键词的上下文
+     * @param {Object} positionInfo - 位置信息对象 { sourceIndices: [...] }
+     * @param {number} contextLength - 前后各取多少字符
+     * @returns {string} 包含上下文的字符串
+     */
+    extractContextByPosition(positionInfo, contextLength = 100) {
+        if (!positionInfo || !positionInfo.sourceIndices || positionInfo.sourceIndices.length === 0) {
+            return "";
+        }
+
+        const preciseResults = this.getTranscriptData();
+        const sourceIndices = positionInfo.sourceIndices;
+
+        // 获取目标段落的文本
+        const sourceTexts = sourceIndices.map(idx => {
+            const item = preciseResults[idx];
+            return item ? item.text.trim() : "";
+        });
+
+        // 构建包含所有相关段落的文本
+        let targetText = sourceTexts.join(" ");
+
+        // 向前获取context：从第一个sourceIndex的前面段落取文本
+        let contextBefore = "";
+        const firstIdx = sourceIndices[0];
+        if (firstIdx > 0) {
+            const indices = [];
+            for (let i = firstIdx - 1; i >= 0 && indices.length < 2; i--) {
+                if (preciseResults[i]) {
+                    indices.unshift(preciseResults[i].text.trim());
+                }
+            }
+            contextBefore = indices.join(" ");
+            if (contextBefore) {
+                contextBefore = contextBefore.slice(-contextLength); // 只保留后contextLength个字符
+            }
+        }
+
+        // 向后获取context：从最后一个sourceIndex的后面段落取文本
+        let contextAfter = "";
+        const lastIdx = sourceIndices[sourceIndices.length - 1];
+        const maxIdx = Object.keys(preciseResults).map(k => parseInt(k)).sort((a, b) => b - a)[0];
+        if (lastIdx < maxIdx) {
+            const indices = [];
+            for (let i = lastIdx + 1; i <= maxIdx && indices.length < 2; i++) {
+                if (preciseResults[i]) {
+                    indices.push(preciseResults[i].text.trim());
+                }
+            }
+            contextAfter = indices.join(" ");
+            if (contextAfter) {
+                contextAfter = contextAfter.slice(0, contextLength); // 只保留前contextLength个字符
+            }
+        }
+
+        // 组合最终的context
+        let fullContext = "";
+        if (contextBefore) fullContext += contextBefore + " ";
+        fullContext += targetText;
+        if (contextAfter) fullContext += " " + contextAfter;
+
+        return fullContext.trim();
+    }
+
+    /**
      * 从当前笔记文本中提取关键词的上下文
      * @param {string} keyword - 关键词
      * @param {string} fullText - 完整笔记文本
@@ -185,10 +266,36 @@ class KeywordManager {
      * @returns {string} 包含关键词的上下文
      */
     extractKeywordContext(keyword, fullText, contextLength = 100) {
-        if (!keyword || !fullText) return "";
+        if (!keyword) return "";
 
+        // 如果有位置信息（针对用户高亮的词），优先使用位置信息
+        if (this.highlightPositions && this.highlightPositions[keyword]) {
+            const positionInfo = this.highlightPositions[keyword];
+            const contextByPosition = this.extractContextByPosition(positionInfo, contextLength);
+            if (contextByPosition) {
+                return contextByPosition;
+            }
+        }
+
+        // 否则，构建全文再搜索
+        // 如果fullText为空，尝试从preciseResults中构建
+        let searchText = fullText;
+        if (!searchText) {
+            const preciseResults = this.getTranscriptData();
+            const sortedKeys = Object.keys(preciseResults).sort((a, b) => parseInt(a) - parseInt(b));
+            searchText = sortedKeys
+                .map(key => {
+                    const item = preciseResults[key];
+                    return item && item.text ? item.text.trim() : "";
+                })
+                .join(" ");
+        }
+
+        if (!searchText) return "";  // 仍然无法获取文本
+
+        // 降级方案：使用搜索方式（对于自动提取的词）
         // 查找关键词在文本中的位置（不区分大小写）
-        const lowerText = fullText.toLowerCase();
+        const lowerText = searchText.toLowerCase();
         const lowerKeyword = keyword.toLowerCase();
         const index = lowerText.indexOf(lowerKeyword);
 
@@ -196,9 +303,9 @@ class KeywordManager {
 
         // 计算context的起始和结束位置
         const contextStart = Math.max(0, index - contextLength);
-        const contextEnd = Math.min(fullText.length, index + keyword.length + contextLength);
+        const contextEnd = Math.min(searchText.length, index + keyword.length + contextLength);
 
-        let context = fullText.substring(contextStart, contextEnd);
+        let context = searchText.substring(contextStart, contextEnd);
 
         // 如果不是从文本开头开始，添加省略号
         if (contextStart > 0) {
@@ -206,7 +313,7 @@ class KeywordManager {
         }
 
         // 如果不是到文本末尾，添加省略号
-        if (contextEnd < fullText.length) {
+        if (contextEnd < searchText.length) {
             context = context + "...";
         }
 
@@ -239,9 +346,8 @@ class KeywordManager {
                 return;
             }
 
-            // 从当前笔记文本中提取上下文
-            const currentText = window.streamNoteInstance?.currentTranscriptText || "";
-            const context = this.extractKeywordContext(keyword, currentText, 100);
+            // 获取上下文（用于API）- 使用统一方法避免重复
+            const context = this.getContextForKeyword(keyword);
 
             const response = await fetch(this.explanationApiUrl, {
                 method: "POST",
@@ -450,9 +556,19 @@ class KeywordManager {
      * 为指定的词打开解释面板（焦点视图）
      * @param {string} word - 要解释的词
      */
-    async openExplanationForWord(word) {
+    /**
+     * 打开解释面板（支持自定义位置信息）
+     * @param {string} word - 要解释的词
+     * @param {Object} positionInfo - 可选的位置信息 { sourceIndices: [...] }
+     */
+    async openExplanationForWord(word, positionInfo = null) {
         word = word.trim();
         if (!word) return;
+
+        // 如果提供了位置信息，临时保存（用于这次查询）
+        if (positionInfo) {
+            this.highlightPositions[word] = positionInfo;
+        }
 
         // 添加到解释历史
         if (!this.explanations.includes(word)) {
@@ -464,16 +580,6 @@ class KeywordManager {
             // 已存在则移到最前
             this.explanations = this.explanations.filter(t => t !== word);
             this.explanations.unshift(word);
-        }
-
-        // 提前显示上下文（即使还没获取到解释）
-        const contextDiv = document.getElementById("word-context");
-        const contextText = document.getElementById("context-text");
-        const currentText = window.streamNoteInstance?.currentTranscriptText || "";
-        const context = this.extractKeywordContext(word, currentText, 100);
-
-        if (context && contextDiv && contextText) {
-            contextText.textContent = context;
         }
 
         // 显示解释面板
@@ -527,7 +633,10 @@ class KeywordManager {
         // 显示加载状态
         contentElement.innerHTML = '<p class="placeholder">Loading explanation...</p>';
 
-        // 获取解释（会同时显示上下文）
+        // 立即显示上下文（用于用户快速预览）
+        this.updateWordContext(word);
+
+        // 获取解释（会同时更新上下文）
         await this.fetchAndShowExplanationForFocusView(word, contentElement);
     }
 
@@ -544,13 +653,12 @@ class KeywordManager {
             // 检查缓存
             if (this.explanationCache[cacheKey]) {
                 contentElement.innerHTML = `<p>${this.explanationCache[cacheKey]}</p>`;
-                this.updateWordContext(keyword);
+                // 上下文已在displayExplanationFocusView中显示
                 return;
             }
 
-            // 从当前笔记文本中提取上下文
-            const currentText = window.streamNoteInstance?.currentTranscriptText || "";
-            const context = this.extractKeywordContext(keyword, currentText, 100);
+            // 获取上下文（用于API）- 使用统一方法
+            const context = this.getContextForKeyword(keyword);
 
             const response = await fetch(this.explanationApiUrl, {
                 method: "POST",
@@ -596,13 +704,20 @@ class KeywordManager {
             // 存入缓存
             this.explanationCache[cacheKey] = explanation;
             contentElement.innerHTML = `<p>${explanation}</p>`;
-
-            // 显示上下文
-            this.updateWordContext(keyword);
         } catch (error) {
             console.error("[KeywordManager] Error fetching explanation:", error);
             contentElement.innerHTML = `<p class="error">Failed to load explanation: ${error.message}</p>`;
         }
+    }
+
+    /**
+     * 获取关键词的上下文（同时用于显示和API发送）
+     * @param {string} keyword - 关键词
+     * @returns {string} 上下文
+     */
+    getContextForKeyword(keyword) {
+        // 直接调用extractKeywordContext，让它自动从preciseResults中构建文本
+        return this.extractKeywordContext(keyword, "", 100);
     }
 
     /**
@@ -615,8 +730,7 @@ class KeywordManager {
 
         if (!contextDiv || !contextText) return;
 
-        const currentText = window.streamNoteInstance?.currentTranscriptText || "";
-        const context = this.extractKeywordContext(keyword, currentText, 100);
+        const context = this.getContextForKeyword(keyword);
 
         if (context) {
             contextText.textContent = context;

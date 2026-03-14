@@ -16,6 +16,10 @@ class HighlightManager {
 
         // 高亮ID映射
         this.highlightIdMap = config.highlightIdMap || {};
+
+        // 高亮位置信息映射：{ "highlightText": { sourceIndices: [...], startIndex: ..., endIndex: ... } }
+        // 用于精确提取上下文，而不是重新搜索
+        this.highlightPositions = config.highlightPositions || {};
     }
 
     /**
@@ -54,6 +58,17 @@ class HighlightManager {
         // 存储高亮ID映射（用于后续删除）
         this.highlightIdMap[highlightText] = highlightId;
 
+        // 计算并保存位置信息
+        const positionInfo = this.calculateHighlightPosition(highlightText);
+        if (positionInfo) {
+            this.highlightPositions[highlightText] = positionInfo;
+
+            // 同时更新keywordManager中的highlightPositions
+            if (this.keywordManager && this.keywordManager.setHighlightPositions) {
+                this.keywordManager.setHighlightPositions(this.highlightPositions);
+            }
+        }
+
         // 更新所有显示
         this.keywordManager.updateAllKeywordDisplays();
 
@@ -63,6 +78,11 @@ class HighlightManager {
         // 同时保存高亮和关键词
         this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
         this.sessionManager.updateCurrentKeywords(this.keywordManager.extracts);
+
+        // 保存高亮位置信息到session
+        if (this.sessionManager) {
+            this.sessionManager.updateHighlightPositions(this.highlightPositions);
+        }
 
         this.onStatusMessage(`✓ Highlighted "${highlightText}"`, 1500);
 
@@ -104,6 +124,16 @@ class HighlightManager {
         // 存储高亮ID映射
         this.highlightIdMap[highlightText] = highlightId;
 
+        // 从Range中直接提取位置信息（精确）
+        const positionInfo = this.extractPositionFromRange(range);
+        if (positionInfo) {
+            this.highlightPositions[highlightText] = positionInfo;
+            // 同时更新keywordManager中的highlightPositions
+            if (this.keywordManager && this.keywordManager.setHighlightPositions) {
+                this.keywordManager.setHighlightPositions(this.highlightPositions);
+            }
+        }
+
         // 直接对Range的内容进行高亮（仅在原文）
         this.highlightRangeDirectly(range, highlightId);
 
@@ -114,6 +144,11 @@ class HighlightManager {
         this.keywordManager.updateAllKeywordDisplays();
         this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
         this.sessionManager.updateCurrentKeywords(this.keywordManager.extracts);
+
+        // 保存高亮位置信息到session
+        if (this.sessionManager) {
+            this.sessionManager.updateHighlightPositions(this.highlightPositions);
+        }
 
         this.onStatusMessage(`✓ Highlighted "${highlightText}"`, 1500);
 
@@ -175,6 +210,55 @@ class HighlightManager {
                 this._highlightNodePortion(node, startOffset, endOffset, highlightId);
             }
         });
+    }
+
+    /**
+     * 公共方法：从Range中提取位置信息
+     * @param {Range} range - DOM Range对象
+     * @returns {Object} 位置信息 { sourceIndices: [...] } 或 null
+     */
+    extractPositionFromRangePublic(range) {
+        return this.extractPositionFromRange(range);
+    }
+
+    /**
+     * 从Range对象中提取精确的位置信息（基于DOM中的data-index属性）
+     * @param {Range} range - DOM Range对象
+     * @returns {Object} 位置信息 { sourceIndices: [...] }，如果无法提取则返回null
+     */
+    extractPositionFromRange(range) {
+        if (!range) return null;
+
+        const sourceIndices = new Set();
+        const transcriptDiv = document.getElementById("transcript");
+        if (!transcriptDiv) return null;
+
+        // 获取transcript中所有的段落
+        const paragraphs = transcriptDiv.querySelectorAll('p[data-index]');
+
+        // 检查每个段落是否与range有交集
+        paragraphs.forEach(para => {
+            const paraRange = document.createRange();
+            paraRange.selectNode(para);
+
+            // 检查这个paragraph是否与range有交集
+            // START_TO_END >= 0 意味着range的结束在para的开始之后
+            // END_TO_START <= 0 意味着range的开始在para的结束之前
+            if (range.compareBoundaryPoints(Range.START_TO_END, paraRange) >= 0 &&
+                range.compareBoundaryPoints(Range.END_TO_START, paraRange) <= 0) {
+
+                const dataIndex = para.getAttribute('data-index');
+                if (dataIndex !== null) {
+                    sourceIndices.add(parseInt(dataIndex));
+                }
+            }
+        });
+
+        if (sourceIndices.size === 0) return null;
+
+        return {
+            sourceIndices: Array.from(sourceIndices).sort((a, b) => a - b)
+        };
     }
 
     /**
@@ -502,6 +586,16 @@ class HighlightManager {
 
             // 删除ID映射
             delete this.highlightIdMap[text];
+
+            // 删除位置信息
+            if (this.highlightPositions && this.highlightPositions[text]) {
+                delete this.highlightPositions[text];
+            }
+
+            // 更新session中保存的位置信息
+            if (this.sessionManager) {
+                this.sessionManager.updateHighlightPositions(this.highlightPositions);
+            }
         }
     }
 
