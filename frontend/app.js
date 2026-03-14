@@ -1003,7 +1003,9 @@ class StreamNote {
                 const currentWordEl = document.getElementById("current-explanation-word");
                 if (currentWordEl && currentWordEl.textContent) {
                     const word = currentWordEl.textContent.trim();
-                    this.highlightManager?.addSelectedTextAsHighlight(word);
+                    const isNowHighlighted = this.highlightManager?.toggleHighlight(word);
+                    // 更新按钮状态
+                    this.updateHighlightButtonState(word, isNowHighlighted);
                 }
             });
         }
@@ -2049,6 +2051,24 @@ class StreamNote {
                 statusEl.textContent = originalText;
             }
         }, duration);
+    }
+
+    /**
+     * 更新highlight按钮的状态（文本和样式）
+     * @param {string} word - 词条
+     * @param {boolean} isHighlighted - 是否已高亮
+     */
+    updateHighlightButtonState(word, isHighlighted) {
+        const btn = document.getElementById("highlight-current-word-btn");
+        if (!btn) return;
+
+        if (isHighlighted) {
+            btn.textContent = "✕ Remove";
+            btn.classList.add("active");
+        } else {
+            btn.textContent = "✏️ Highlight";
+            btn.classList.remove("active");
+        }
     }
 
     /**

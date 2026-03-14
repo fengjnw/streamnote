@@ -1959,6 +1959,18 @@ header h1 {
     border-color: #d32f2f;
 }
 
+.toolbar-btn.active {
+    background: #ffebee;
+    border-color: #d32f2f;
+    color: #d32f2f;
+    font-weight: 600;
+}
+
+.toolbar-btn.active:hover {
+    background: #ffcdd2;
+    border-color: #c62828;
+}
+
 /* ==================== Explanation Toolbar ==================== */
 .explanation-toolbar {
     display: flex;

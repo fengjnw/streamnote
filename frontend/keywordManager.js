@@ -707,6 +707,10 @@ class KeywordManager {
         // 显示标题容器
         if (headerDiv) headerDiv.classList.remove("hidden");
 
+        // 检查该词是否已在highlights中，更新按钮状态
+        const isHighlighted = this.highlights?.includes(word) || false;
+        window.streamNoteInstance?.updateHighlightButtonState(word, isHighlighted);
+
         // 显示加载状态
         contentElement.innerHTML = '<p class="placeholder">Loading explanation...</p>';
 

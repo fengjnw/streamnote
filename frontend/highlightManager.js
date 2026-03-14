@@ -732,6 +732,52 @@ class HighlightManager {
     }
 
     /**
+     * 从highlights列表中移除高亮（同时更新DOM和显示）
+     * @param {string} text - 要移除的高亮文本
+     */
+    removeHighlightFromList(text) {
+        if (!text || !this.keywordManager) return false;
+
+        // 检查该项是否在highlights中
+        const index = this.keywordManager.highlights.indexOf(text);
+        if (index === -1) return false;
+
+        // 从highlights数组中移除
+        this.keywordManager.highlights.splice(index, 1);
+
+        // 从DOM中移除高亮标记
+        this.removeHighlightFromTranscript(text);
+
+        // 更新所有显示
+        this.keywordManager.updateAllKeywordDisplays();
+
+        // 保存到session
+        this.sessionManager?.updateCurrentHighlights(this.keywordManager.highlights);
+
+        return true;
+    }
+
+    /**
+     * 切换高亮状态（添加或移除）
+     * @param {string} text - 要切换的文本
+     * @returns {boolean} 返回切换后的状态（true=现在已高亮, false=已移除高亮）
+     */
+    toggleHighlight(text) {
+        if (!text || !this.keywordManager) return false;
+
+        const isHighlighted = this.keywordManager.highlights.includes(text);
+
+        if (isHighlighted) {
+            this.removeHighlightFromList(text);
+            this.onStatusMessage(`✓ Removed "${text}" from highlights`, 1500);
+            return false;
+        } else {
+            this.addSelectedTextAsHighlight(text);
+            return true;
+        }
+    }
+
+    /**
      * 合并相邻的text nodes
      * @param {HTMLElement} element - 容器元素
      */
