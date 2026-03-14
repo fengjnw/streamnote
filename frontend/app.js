@@ -292,12 +292,6 @@ class StreamNote {
             languageSelector.value = this.language;
         }
 
-        // 更新解释语言选择器
-        const keywordExplanationLangSelector = document.getElementById("keyword-explanation-language");
-        if (keywordExplanationLangSelector) {
-            keywordExplanationLangSelector.value = this.explanationLanguage;
-        }
-
         // 加载转录内容到 RecordingManager
         this.recordingManager.setTranscriptData(session.transcripts || {});
         this.panelManager.setTranscriptData(session.transcripts || {});
@@ -735,12 +729,7 @@ class StreamNote {
                 quickAccessHighlights.classList.add("active");
             }
 
-            // Show/hide language selector based on active tab
-            const explanationLangSelector = document.getElementById("keyword-explanation-language");
 
-            if (explanationLangSelector) {
-                explanationLangSelector.style.display = (contentEl === keywordsContent || contentEl === historyContent || contentEl === summaryContent || contentEl === highlightsContent) ? 'block' : 'none';
-            }
 
             // Set flag to prevent resize-induced scroll from closing autoScroll
             this.isUpdatingUI = true;
@@ -1427,11 +1416,7 @@ class StreamNote {
                 quickAccessHighlights.classList.add("active");
             }
 
-            // 显示语言选择器
-            const explanationLangSelector = document.getElementById("keyword-explanation-language");
-            if (explanationLangSelector) {
-                explanationLangSelector.style.display = 'block';
-            }
+
 
             // 展开侧面板
             this.isUpdatingUI = true;
