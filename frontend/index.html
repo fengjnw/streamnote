@@ -86,11 +86,15 @@
                     </div>
                     <!-- Session Menu -->
                     <div class="session-menu" id="sessionMenu" style="display: none;">
-                        <button class="session-menu-item" id="deleteSessionBtn" title="Delete current session">🗑️ Delete</button>
-                        <button class="session-menu-item" id="exportCurrentBtn" title="Export current session">📥 Export</button>
-                        <button class="session-menu-item" id="exportAllBtn" title="Export all sessions">📦 Export All</button>
+                        <button class="session-menu-item" id="deleteSessionBtn" title="Delete current session">🗑️
+                            Delete</button>
+                        <button class="session-menu-item" id="exportCurrentBtn" title="Export current session">📥
+                            Export</button>
+                        <button class="session-menu-item" id="exportAllBtn" title="Export all sessions">📦 Export
+                            All</button>
                         <button class="session-menu-item" id="importBtn" title="Import sessions">📤 Import</button>
-                        <button class="session-menu-item danger" id="clearAllBtn" title="Clear all sessions">🗑️ Clear All</button>
+                        <button class="session-menu-item danger" id="clearAllBtn" title="Clear all sessions">🗑️ Clear
+                            All</button>
                     </div>
                     <!-- Session Panel Content -->
                     <div class="session-panel-content">
@@ -118,7 +122,12 @@
                         <!-- Panel Header -->
                         <div class="text-panel-header">
                             <h3>Translation</h3>
-                            <select id="target-language" class="language-selector">
+                            <button id="closeTranslationPanelBtn" class="btn-icon toggle-btn"
+                                title="Close Panel">✕</button>
+                        </div>
+                        <!-- Panel Toolbar -->
+                        <div class="panel-toolbar text-panel-toolbar">
+                            <select id="target-language" class="language-selector toolbar-language">
                                 <option value="Chinese">中文</option>
                                 <option value="English">English</option>
                                 <option value="Spanish">Español</option>
@@ -133,8 +142,6 @@
                                 <option value="split-right">Right</option>
                                 <option value="full-translation">Full</option>
                             </select>
-                            <button id="closeTranslationPanelBtn" class="btn-icon toggle-btn"
-                                title="Close Panel">✕</button>
                         </div>
                         <!-- Panel Content -->
                         <div class="text-panel-content">
@@ -200,6 +207,14 @@
                     <!-- Explanation Content -->
                     <div id="historyContent" class="panel-content">
                         <div class="panel-toolbar">
+                            <select id="keyword-explanation-language" class="language-selector toolbar-language">
+                                <option value="Chinese">中文</option>
+                                <option value="English">English</option>
+                                <option value="Spanish">Español</option>
+                                <option value="French">Français</option>
+                                <option value="Japanese">日本語</option>
+                                <option value="Korean">한국어</option>
+                            </select>
                             <button id="regenerate-explanation-btn" class="toolbar-btn" disabled
                                 title="Regenerate explanation">🔄 Regenerate</button>
                             <button id="clearExplanationsBtn" class="toolbar-btn danger"

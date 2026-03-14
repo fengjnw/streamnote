@@ -219,8 +219,6 @@ class StreamNote {
             : context;
 
         this.recordingManager.setTranscriptionContext(contextToUse);
-
-        console.log(`[INFO] Transcription context updated: "${contextToUse.substring(0, 100)}..."`);
     }
 
     /**
