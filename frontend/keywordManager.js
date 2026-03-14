@@ -876,8 +876,25 @@ class KeywordManager {
         const context = this.getContextForKeyword(keyword);
 
         if (context) {
-            // 高亮context中的关键词
-            const highlightedContext = this.highlightKeywordInText(context, keyword);
+            // 显示级别的字符裁剪：统一显示前后各100字符
+            let displayContext = context;
+            if (context.length > 300) {  // 前100 + 词 + 后100 = ~300字符
+                const lowerContext = context.toLowerCase();
+                const lowerKeyword = keyword.toLowerCase();
+                const keywordIndex = lowerContext.indexOf(lowerKeyword);
+
+                if (keywordIndex !== -1) {
+                    const start = Math.max(0, keywordIndex - 100);
+                    const end = Math.min(context.length, keywordIndex + keyword.length + 100);
+
+                    displayContext = (start > 0 ? "..." : "") +
+                        context.substring(start, end) +
+                        (end < context.length ? "..." : "");
+                }
+            }
+
+            // 高亮displayContext中的关键词
+            const highlightedContext = this.highlightKeywordInText(displayContext, keyword);
             contextText.innerHTML = highlightedContext;
             contextDiv.style.display = 'block';
         } else {
