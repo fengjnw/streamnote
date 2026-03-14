@@ -770,6 +770,38 @@ class SessionManager {
     }
 
     /**
+     * 格式化日期为相对时间或日期字符串
+     */
+    formatRelativeTime(timestamp) {
+        const now = Date.now();
+        const diff = now - timestamp;
+        const seconds = Math.floor(diff / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+
+        if (seconds < 60) return 'just now';
+        if (minutes < 60) return `${minutes}m ago`;
+        if (hours < 24) return `${hours}h ago`;
+        if (days < 7) return `${days}d ago`;
+
+        // 超过7天显示日期
+        const date = new Date(timestamp);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    /**
+     * 格式化完整日期（ISO 8601 格式）
+     */
+    formatFullDate(timestamp) {
+        const date = new Date(timestamp);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    /**
      * 渲染 session 列表
      */
     renderSessionList() {
@@ -790,11 +822,21 @@ class SessionManager {
             const session = this.sessions[id];
             const isActive = id === this.currentSessionId;
 
+            // 计算统计信息
+            const itemCount = Object.keys(session.transcripts || {}).length || 0;
+            const createdDate = this.formatFullDate(session.createdAt);
+            const lastModified = this.formatRelativeTime(session.lastModified || session.createdAt);
+
             return `
                 <div class="session-item ${isActive ? 'active' : ''}" data-session-id="${id}">
-                    <div class="session-info">
+                    <div class="session-main">
                         <div class="session-name">${session.name}</div>
+                        <div class="session-brief">
+                            <span class="brief-item">📅 ${createdDate}</span>
+                            <span class="brief-item">📄 ${itemCount}</span>
+                        </div>
                     </div>
+                    <div class="session-time">${lastModified}</div>
                 </div>
             `;
         }).join('');

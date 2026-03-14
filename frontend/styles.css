@@ -203,11 +203,18 @@ header h1 {
 .session-panel-content {
     flex: 1;
     overflow-y: auto;
-    padding: 0;
+    padding: 8px;
     background: white;
     display: flex;
     flex-direction: column;
     gap: 0;
+}
+
+#sessionList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 0;
 }
 
 /* 保留旧的session-header和session-header h3用于兼容性 */
@@ -275,54 +282,83 @@ header h1 {
 .session-item {
     background: white;
     border-radius: 6px;
-    padding: 10px var(--spacing-md);
+    padding: 12px;
     cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 1px solid var(--color-border);
+    gap: 12px;
+    border: 1px solid #f0f0f0;
 }
 
 .session-item:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
-    border-color: #5a7c99;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+    border-color: #e0e0e0;
+    background: #fafbfc;
 }
 
 .session-item.active {
     background: #5a7c99;
     color: white;
+    border-color: #5a7c99;
+    box-shadow: 0 4px 12px rgba(90, 124, 153, 0.2);
 }
 
 .session-item.recording {
-    border: 2px solid #ff4444;
-    box-shadow: 0 0 12px rgba(255, 68, 68, 0.3);
+    border: 1.5px solid #ff6b6b;
+    box-shadow: 0 0 12px rgba(255, 107, 107, 0.15);
 }
 
-.session-item.recording .session-name::before {
-    content: "🔴 ";
-    margin-right: 4px;
-}
-
-.session-info {
+.session-main {
     flex: 1;
-    overflow: hidden;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .session-name {
     font-weight: 600;
-    font-size: 1em;
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 0.95em;
+    line-height: 1.4;
+    color: inherit;
+    word-break: break-word;
 }
 
-.session-meta {
+.session-brief {
+    display: flex;
+    gap: 10px;
+    align-items: center;
     font-size: 0.75em;
-    opacity: 0.7;
+}
+
+.brief-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: #999;
+    background: rgba(90, 124, 153, 0.04);
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
+.session-item.active .brief-item {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.session-time {
+    font-size: 0.75em;
+    color: #bbb;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.session-item.active .session-time {
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .delete-session-btn {
