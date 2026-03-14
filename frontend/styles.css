@@ -1865,6 +1865,25 @@ header h1 {
     order: -1;
 }
 
+#historyContent .panel-toolbar {
+    flex-direction: column;
+    gap: 6px;
+}
+
+.toolbar-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.toolbar-actions-row {
+    justify-content: flex-start;
+}
+
+.toolbar-nav-row {
+    justify-content: flex-start;
+}
+
 .toolbar-btn {
     padding: 6px 10px;
     border: 1px solid #d0d0d0;
@@ -1909,31 +1928,6 @@ header h1 {
     border-top: 1px solid #f0f0f0;
 }
 
-.explanation-btn {
-    padding: 6px 10px;
-    border: 1px solid #d0d0d0;
-    border-radius: 4px;
-    background: white;
-    color: #666;
-    font-size: 0.85em;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: inherit;
-    flex: 1;
-    text-align: center;
-}
-
-.explanation-btn:hover {
-    background: #f8f8f8;
-    border-color: #5a7c99;
-    color: #5a7c99;
-}
-
-.explanation-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
 /* ==================== Explanation Focus View ==================== */
 
 .explanation-focus-view {
@@ -1945,34 +1939,17 @@ header h1 {
 }
 
 .explanation-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 16px 12px 16px;
-    border-bottom: 1px solid #e9ecef;
+    padding: 12px 16px;
     background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
     flex-shrink: 0;
 }
 
-.explanation-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
 .current-word {
-    font-size: 1.3em;
+    font-size: 1.1em;
     font-weight: 600;
     color: #333;
     margin: 0;
-    flex: 1;
-}
-
-.position-indicator {
-    font-size: 0.85em;
-    color: #999;
-    white-space: nowrap;
-    margin-left: 12px;
 }
 
 .explanation-body {
@@ -1980,7 +1957,31 @@ header h1 {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    padding: 0;
+}
+
+.word-context {
+    border-top: 1px solid #e9ecef;
+    border-bottom: 1px solid #e9ecef;
+    padding: 12px 16px;
+    background: #fafafa;
+    font-size: 0.9em;
+    line-height: 1.6;
+}
+
+.context-label {
+    font-size: 0.8em;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.context-text {
+    margin: 0;
+    color: #666;
+    font-style: italic;
+    word-break: break-word;
 }
 
 .explanation-scroll {
@@ -2016,95 +2017,33 @@ header h1 {
     border-radius: 4px;
 }
 
-.explanation-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 12px 16px;
-    border-top: 1px solid #e9ecef;
-    background: #f8f9fa;
-    flex-shrink: 0;
-    flex-wrap: wrap;
-}
-
-.explanation-nav-btn {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    background: white;
-    color: #333;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9em;
-    transition: all 0.2s;
+.position-indicator {
+    font-size: 0.8em;
+    color: #999;
     white-space: nowrap;
-}
-
-.explanation-nav-btn:hover {
-    background: #f0f0f0;
-    border-color: #5a7c99;
-    color: #5a7c99;
-}
-
-.explanation-nav-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.explanation-actions {
-    display: flex;
-    gap: 8px;
-    flex: 1;
-    justify-content: center;
-}
-
-.explanation-btn {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    background: white;
-    color: #333;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9em;
-    transition: all 0.2s;
-}
-
-.explanation-btn:hover {
-    background: #f0f0f0;
-    border-color: #5a7c99;
-    color: #5a7c99;
+    padding: 0 8px;
+    min-width: 45px;
+    text-align: center;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
     .explanation-header {
-        padding: 12px 12px 8px 12px;
+        padding: 10px 12px;
     }
 
     .current-word {
-        font-size: 1.1em;
+        font-size: 1em;
+    }
+
+    .position-indicator {
+        font-size: 0.75em;
+        min-width: 35px;
     }
 
     .explanation-scroll {
         padding: 12px;
         font-size: 0.9em;
-    }
-
-    .explanation-footer {
-        padding: 10px 12px;
-        gap: 4px;
-        flex-direction: column;
-    }
-
-    .explanation-nav-btn,
-    .explanation-btn {
-        padding: 6px 10px;
-        font-size: 0.85em;
-        flex: 1;
-    }
-
-    .explanation-actions {
-        width: 100%;
     }
 }
 }

@@ -228,7 +228,7 @@ class StreamNote {
      */
     initializeVisibility() {
         // 应用高亮重新渲染
-        this.reapplyAllHighlights();
+        this.highlightManager.reapplyAllHighlights();
     }
 
     /**
@@ -1029,6 +1029,22 @@ class StreamNote {
                 if (confirm("Clear all explanation history? This cannot be undone.")) {
                     this.keywordManager.explanations = [];
                     this.keywordManager.explanationCache = {};
+
+                    // 清空UI显示
+                    const currentWordEl = document.getElementById("current-explanation-word");
+                    const contentEl = document.getElementById("explanation-content");
+                    const positionEl = document.getElementById("explanation-position");
+                    const previousBtn = document.getElementById("previous-word-btn");
+                    const nextBtn = document.getElementById("next-word-btn");
+                    const contextDiv = document.getElementById("word-context");
+
+                    if (currentWordEl) currentWordEl.textContent = "";
+                    if (contentEl) contentEl.innerHTML = '<p class="placeholder">Select a word to view its explanation</p>';
+                    if (positionEl) positionEl.textContent = "";
+                    if (previousBtn) previousBtn.disabled = true;
+                    if (nextBtn) nextBtn.disabled = true;
+                    if (contextDiv) contextDiv.style.display = 'none';
+
                     this.saveToSession();
                     this.showStatusMessage("✓ Explanation history cleared", 1500);
                 }

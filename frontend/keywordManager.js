@@ -466,6 +466,16 @@ class KeywordManager {
             this.explanations.unshift(word);
         }
 
+        // 提前显示上下文（即使还没获取到解释）
+        const contextDiv = document.getElementById("word-context");
+        const contextText = document.getElementById("context-text");
+        const currentText = window.streamNoteInstance?.currentTranscriptText || "";
+        const context = this.extractKeywordContext(word, currentText, 100);
+
+        if (context && contextDiv && contextText) {
+            contextText.textContent = context;
+        }
+
         // 显示解释面板
         const historyContent = document.getElementById("historyContent");
         if (this.panelManager && historyContent) {
@@ -517,7 +527,7 @@ class KeywordManager {
         // 显示加载状态
         contentElement.innerHTML = '<p class="placeholder">Loading explanation...</p>';
 
-        // 获取解释
+        // 获取解释（会同时显示上下文）
         await this.fetchAndShowExplanationForFocusView(word, contentElement);
     }
 
@@ -534,6 +544,7 @@ class KeywordManager {
             // 检查缓存
             if (this.explanationCache[cacheKey]) {
                 contentElement.innerHTML = `<p>${this.explanationCache[cacheKey]}</p>`;
+                this.updateWordContext(keyword);
                 return;
             }
 
@@ -585,9 +596,33 @@ class KeywordManager {
             // 存入缓存
             this.explanationCache[cacheKey] = explanation;
             contentElement.innerHTML = `<p>${explanation}</p>`;
+
+            // 显示上下文
+            this.updateWordContext(keyword);
         } catch (error) {
             console.error("[KeywordManager] Error fetching explanation:", error);
             contentElement.innerHTML = `<p class="error">Failed to load explanation: ${error.message}</p>`;
+        }
+    }
+
+    /**
+     * 更新词语的上下文显示
+     * @param {string} keyword - 关键词
+     */
+    updateWordContext(keyword) {
+        const contextDiv = document.getElementById("word-context");
+        const contextText = document.getElementById("context-text");
+
+        if (!contextDiv || !contextText) return;
+
+        const currentText = window.streamNoteInstance?.currentTranscriptText || "";
+        const context = this.extractKeywordContext(keyword, currentText, 100);
+
+        if (context) {
+            contextText.textContent = context;
+            contextDiv.style.display = 'block';
+        } else {
+            contextDiv.style.display = 'none';
         }
     }
 

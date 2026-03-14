@@ -201,31 +201,34 @@
 
                     <!-- Explanation Content -->
                     <div id="historyContent" class="panel-content">
+                        <div class="panel-toolbar">
+                            <div class="toolbar-row toolbar-actions-row">
+                                <button id="copy-explanation-btn" class="toolbar-btn" title="Copy explanation">📋
+                                    Copy</button>
+                                <button id="regenerate-explanation-btn" class="toolbar-btn"
+                                    title="Regenerate explanation">🔄 Regenerate</button>
+                                <button id="clearExplanationsBtn" class="toolbar-btn danger"
+                                    title="Clear explanation history">🗑️ Clear</button>
+                            </div>
+                            <div class="toolbar-row toolbar-nav-row">
+                                <button id="previous-word-btn" class="toolbar-btn" title="Go to previous word">←
+                                    Previous</button>
+                                <span id="explanation-position" class="position-indicator"></span>
+                                <button id="next-word-btn" class="toolbar-btn" title="Go to next word">Next →</button>
+                            </div>
+                        </div>
                         <div id="explanation-focus-view" class="explanation-focus-view">
                             <div class="explanation-header">
                                 <h4 id="current-explanation-word" class="current-word"></h4>
-                                <div class="explanation-header-actions">
-                                    <span id="explanation-position" class="position-indicator"></span>
-                                    <button id="clearExplanationsBtn" class="btn-icon"
-                                        title="Clear explanation history">🗑️</button>
-                                </div>
                             </div>
                             <div class="explanation-body">
                                 <div id="explanation-content" class="explanation-scroll">
                                     <p class="placeholder">Select a word to view its explanation</p>
                                 </div>
-                            </div>
-                            <div class="explanation-footer">
-                                <button id="previous-word-btn" class="explanation-nav-btn" title="Go to previous word">←
-                                    Previous</button>
-                                <div class="explanation-actions">
-                                    <button id="copy-explanation-btn" class="explanation-btn"
-                                        title="Copy explanation">📋 Copy</button>
-                                    <button id="regenerate-explanation-btn" class="explanation-btn"
-                                        title="Regenerate explanation">🔄 Regenerate</button>
+                                <div id="word-context" class="word-context" style="display: none;">
+                                    <div class="context-label">Context:</div>
+                                    <p id="context-text" class="context-text"></p>
                                 </div>
-                                <button id="next-word-btn" class="explanation-nav-btn" title="Go to next word">Next
-                                    →</button>
                             </div>
                         </div>
                     </div>
