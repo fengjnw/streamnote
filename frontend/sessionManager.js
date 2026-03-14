@@ -262,7 +262,6 @@ class SessionManager {
         }
 
         this.currentSessionId = sessionId;
-        this.sessions[sessionId].lastAccessed = Date.now();
         this.saveSessions();
         this.renderSessionList();
         this.updateSessionNameInput();
@@ -686,11 +685,8 @@ class SessionManager {
         if (!listContainer) return;
 
         const sessionIds = Object.keys(this.sessions).sort((a, b) => {
-            // 优先按 lastAccessed 排序（最近访问的在前）
-            const accessDiff = this.sessions[b].lastAccessed - this.sessions[a].lastAccessed;
-            if (accessDiff !== 0) return accessDiff;
-            // 次要按 lastModified 排序
-            return this.sessions[b].lastModified - this.sessions[a].lastModified;
+            // 按创建时间排序（最新创建的在前）
+            return this.sessions[b].createdAt - this.sessions[a].createdAt;
         });
 
         if (sessionIds.length === 0) {
