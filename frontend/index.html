@@ -201,12 +201,32 @@
 
                     <!-- Explanation Content -->
                     <div id="historyContent" class="panel-content">
-                        <div class="panel-toolbar">
-                            <button id="clearExplanationsBtn" class="toolbar-btn danger"
-                                title="Clear all explanations">🗑️ Clear All</button>
-                        </div>
-                        <div id="query-history-list" class="query-history-list">
-                            <p class="placeholder">Select text to get explanations</p>
+                        <div id="explanation-focus-view" class="explanation-focus-view">
+                            <div class="explanation-header">
+                                <h4 id="current-explanation-word" class="current-word"></h4>
+                                <div class="explanation-header-actions">
+                                    <span id="explanation-position" class="position-indicator"></span>
+                                    <button id="clearExplanationsBtn" class="btn-icon"
+                                        title="Clear explanation history">🗑️</button>
+                                </div>
+                            </div>
+                            <div class="explanation-body">
+                                <div id="explanation-content" class="explanation-scroll">
+                                    <p class="placeholder">Select a word to view its explanation</p>
+                                </div>
+                            </div>
+                            <div class="explanation-footer">
+                                <button id="previous-word-btn" class="explanation-nav-btn" title="Go to previous word">←
+                                    Previous</button>
+                                <div class="explanation-actions">
+                                    <button id="copy-explanation-btn" class="explanation-btn"
+                                        title="Copy explanation">📋 Copy</button>
+                                    <button id="regenerate-explanation-btn" class="explanation-btn"
+                                        title="Regenerate explanation">🔄 Regenerate</button>
+                                </div>
+                                <button id="next-word-btn" class="explanation-nav-btn" title="Go to next word">Next
+                                    →</button>
+                            </div>
                         </div>
                     </div>
 

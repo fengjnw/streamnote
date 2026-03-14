@@ -1933,3 +1933,178 @@ header h1 {
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+/* ==================== Explanation Focus View ==================== */
+
+.explanation-focus-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0;
+    gap: 0;
+}
+
+.explanation-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 16px 12px 16px;
+    border-bottom: 1px solid #e9ecef;
+    background: #f8f9fa;
+    flex-shrink: 0;
+}
+
+.explanation-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.current-word {
+    font-size: 1.3em;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    flex: 1;
+}
+
+.position-indicator {
+    font-size: 0.85em;
+    color: #999;
+    white-space: nowrap;
+    margin-left: 12px;
+}
+
+.explanation-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0;
+}
+
+.explanation-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    color: #555;
+    line-height: 1.8;
+    font-size: 0.95em;
+    word-break: break-word;
+}
+
+.explanation-scroll p {
+    margin: 0 0 12px 0;
+    line-height: 1.8;
+}
+
+.explanation-scroll p:last-child {
+    margin-bottom: 0;
+}
+
+.explanation-scroll .placeholder {
+    color: #999;
+    font-style: italic;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.explanation-scroll .error {
+    color: #d32f2f;
+    padding: 12px;
+    background: #ffebee;
+    border-radius: 4px;
+}
+
+.explanation-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.explanation-nav-btn {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    background: white;
+    color: #333;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.explanation-nav-btn:hover {
+    background: #f0f0f0;
+    border-color: #5a7c99;
+    color: #5a7c99;
+}
+
+.explanation-nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.explanation-actions {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    justify-content: center;
+}
+
+.explanation-btn {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    background: white;
+    color: #333;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s;
+}
+
+.explanation-btn:hover {
+    background: #f0f0f0;
+    border-color: #5a7c99;
+    color: #5a7c99;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .explanation-header {
+        padding: 12px 12px 8px 12px;
+    }
+
+    .current-word {
+        font-size: 1.1em;
+    }
+
+    .explanation-scroll {
+        padding: 12px;
+        font-size: 0.9em;
+    }
+
+    .explanation-footer {
+        padding: 10px 12px;
+        gap: 4px;
+        flex-direction: column;
+    }
+
+    .explanation-nav-btn,
+    .explanation-btn {
+        padding: 6px 10px;
+        font-size: 0.85em;
+        flex: 1;
+    }
+
+    .explanation-actions {
+        width: 100%;
+    }
+}
+}

@@ -988,6 +988,35 @@ class StreamNote {
             });
         }
 
+        // Explanation panel focus view button listeners
+        const previousWordBtn = document.getElementById("previous-word-btn");
+        if (previousWordBtn) {
+            previousWordBtn.addEventListener("click", () => {
+                this.keywordManager?.goToPreviousExplanation();
+            });
+        }
+
+        const nextWordBtn = document.getElementById("next-word-btn");
+        if (nextWordBtn) {
+            nextWordBtn.addEventListener("click", () => {
+                this.keywordManager?.goToNextExplanation();
+            });
+        }
+
+        const copyExplanationBtn = document.getElementById("copy-explanation-btn");
+        if (copyExplanationBtn) {
+            copyExplanationBtn.addEventListener("click", () => {
+                this.keywordManager?.copyCurrentExplanation();
+            });
+        }
+
+        const regenerateExplanationBtn = document.getElementById("regenerate-explanation-btn");
+        if (regenerateExplanationBtn) {
+            regenerateExplanationBtn.addEventListener("click", () => {
+                this.keywordManager?.regenerateCurrentExplanation();
+            });
+        }
+
         // Clear explanations button
         const clearExplanationsBtn = document.getElementById("clearExplanationsBtn");
         if (clearExplanationsBtn) {
@@ -1000,7 +1029,6 @@ class StreamNote {
                 if (confirm("Clear all explanation history? This cannot be undone.")) {
                     this.keywordManager.explanations = [];
                     this.keywordManager.explanationCache = {};
-                    this.keywordManager.displayExplanations();
                     this.saveToSession();
                     this.showStatusMessage("✓ Explanation history cleared", 1500);
                 }

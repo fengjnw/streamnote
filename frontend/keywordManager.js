@@ -97,24 +97,11 @@ class KeywordManager {
             return `
                     <div class="keyword-item-wrapper" data-keyword="${index}">
                         <div class="keyword-item">
-                            <button class="keyword-expand-btn" onclick="window.keywordManagerInstance.toggleExplanation('${escapedItem}')"
-                                title="Click to expand/collapse explanation">
-                                <span class="expand-icon">▸</span>
-                            </button>
-                            <span class="keyword-text" onclick="window.keywordManagerInstance.toggleExplanation('${escapedItem}')"
+                            <span class="keyword-text" onclick="window.keywordManagerInstance.openExplanationForWord('${escapedItem}')"
                                 style="cursor: pointer; flex: 1;">
                                 ${this.escapeHtml(item)}
                             </span>
                             <button class="keyword-delete-btn" onclick="window.keywordManagerInstance.${deleteHandlerName}('${escapedItem}')">×</button>
-                        </div>
-                        <div class="keyword-explanation" data-keyword-index="${index}" data-keyword-text="${this.escapeHtml(item)}" style="display: none;">
-                            <div class="explanation-content">
-                                <p class="placeholder">Loading...</p>
-                            </div>
-                            <div class="explanation-toolbar">
-                                <button class="explanation-btn" onclick="window.keywordManagerInstance.regenerateExplanation('${escapedItem}')" title="Regenerate explanation">🔄 Regenerate</button>
-                                <button class="explanation-btn" onclick="window.keywordManagerInstance.copyExplanation('${escapedItem}')" title="Copy explanation">📋 Copy</button>
-                            </div>
                         </div>
                     </div>
                 `;
@@ -186,43 +173,8 @@ class KeywordManager {
      * @param {string} keyword - 关键词
      */
     async toggleExplanation(keyword) {
-        // 查找对应的 keyword-explanation 元素
-        const allExplanations = document.querySelectorAll('.keyword-explanation');
-        let wrapper = null;
-
-        for (const elem of allExplanations) {
-            if (elem.getAttribute('data-keyword-text') === keyword) {
-                wrapper = elem;
-                break;
-            }
-        }
-
-        if (!wrapper) {
-            console.warn(`[KeywordManager] Wrapper not found for keyword: ${keyword}`);
-            return;
-        }
-
-        const expandBtn = wrapper.parentElement?.querySelector('.keyword-expand-btn');
-
-        const isCurrentlyExpanded = this.expandedKeywords.has(keyword);
-
-        if (isCurrentlyExpanded) {
-            // 收起
-            this.expandedKeywords.delete(keyword);
-            wrapper.style.display = 'none';
-            if (expandBtn) {
-                expandBtn.classList.remove('expanded');
-            }
-        } else {
-            // 展开
-            this.expandedKeywords.add(keyword);
-            wrapper.style.display = 'block';
-            if (expandBtn) {
-                expandBtn.classList.add('expanded');
-            }
-            // 如果还没有加载过解释，现在加载它
-            await this.fetchAndShowExplanation(keyword, wrapper);
-        }
+        // 此方法已弃用，使用 openExplanationForWord 代替
+        await this.openExplanationForWord(keyword);
     }
 
     /**
@@ -487,84 +439,253 @@ class KeywordManager {
     }
 
     /**
-     * 显示解释列表
+     * 显示解释列表（仅用于兼容，无实际内容）
      */
     displayExplanations() {
-        this.displayItemList(this.explanations, this.historyElement, "removeFromExplanations", "Select text to get explanations");
-        // 重新生成 HTML 后，恢复之前展开的项目的显示状态
-        this.restoreExpandedStates();
+        // 新版本中，解释面板是焦点视图，不显示列表
+        // 此方法保留以兼容现存代码
     }
 
     /**
-     * 恢复展开状态 - 在 HTML 重新生成后调用
+     * 为指定的词打开解释面板（焦点视图）
+     * @param {string} word - 要解释的词
      */
-    restoreExpandedStates() {
-        for (const keyword of this.expandedKeywords) {
-            const allExplanations = document.querySelectorAll('.keyword-explanation');
-            for (const elem of allExplanations) {
-                if (elem.getAttribute('data-keyword-text') === keyword) {
-                    elem.style.display = 'block';
-                    const expandBtn = elem.parentElement?.querySelector('.keyword-expand-btn');
-                    if (expandBtn) {
-                        expandBtn.classList.add('expanded');
-                    }
-                    break;
-                }
+    async openExplanationForWord(word) {
+        word = word.trim();
+        if (!word) return;
+
+        // 添加到解释历史
+        if (!this.explanations.includes(word)) {
+            this.explanations.unshift(word);
+            if (this.explanations.length > 20) {
+                this.explanations = this.explanations.slice(0, 20);
             }
+        } else {
+            // 已存在则移到最前
+            this.explanations = this.explanations.filter(t => t !== word);
+            this.explanations.unshift(word);
+        }
+
+        // 显示解释面板
+        const historyContent = document.getElementById("historyContent");
+        if (this.panelManager && historyContent) {
+            this.panelManager.showSidePanelContent(historyContent, "Explanation");
+        }
+
+        // 更新焦点视图内容
+        setTimeout(() => {
+            this.displayExplanationFocusView(word);
+        }, 350);
+
+        // 保存到 session
+        if (window.streamNoteInstance) {
+            window.streamNoteInstance.saveSettingsToSession();
         }
     }
 
     /**
-     * 设置面板管理器引用
-     * @param {PanelManager} panelManager
+     * 显示焦点式解释面板
+     * @param {string} word - 要显示的词
      */
-    setPanelManager(panelManager) {
-        this.panelManager = panelManager;
+    async displayExplanationFocusView(word) {
+        const focusView = document.getElementById("explanation-focus-view");
+        if (!focusView) return;
+
+        const wordElement = document.getElementById("current-explanation-word");
+        const contentElement = document.getElementById("explanation-content");
+        const positionElement = document.getElementById("explanation-position");
+        const previousBtn = document.getElementById("previous-word-btn");
+        const nextBtn = document.getElementById("next-word-btn");
+
+        if (!wordElement || !contentElement) return;
+
+        // 更新词语显示
+        wordElement.textContent = word;
+
+        // 更新位置指示器
+        const currentIndex = this.explanations.indexOf(word);
+        positionElement.textContent = `${currentIndex + 1} / ${this.explanations.length}`;
+
+        // 更新导航按钮的禁用状态
+        if (previousBtn) {
+            previousBtn.disabled = currentIndex <= 0;
+        }
+        if (nextBtn) {
+            nextBtn.disabled = currentIndex >= this.explanations.length - 1;
+        }
+
+        // 显示加载状态
+        contentElement.innerHTML = '<p class="placeholder">Loading explanation...</p>';
+
+        // 获取解释
+        await this.fetchAndShowExplanationForFocusView(word, contentElement);
     }
 
     /**
-     * 显示解释面板 - 统一处理词条解释的完整流程
+     * 获取并显示关键词的解释（焦点视图版本）
+     * @param {string} keyword - 关键词
+     * @param {HTMLElement} contentElement - 显示容器
+     */
+    async fetchAndShowExplanationForFocusView(keyword, contentElement) {
+        try {
+            const explanationLanguage = window.streamNoteInstance?.explanationLanguage || "English";
+            const cacheKey = `${keyword}|${explanationLanguage}`;
+
+            // 检查缓存
+            if (this.explanationCache[cacheKey]) {
+                contentElement.innerHTML = `<p>${this.explanationCache[cacheKey]}</p>`;
+                return;
+            }
+
+            // 从当前笔记文本中提取上下文
+            const currentText = window.streamNoteInstance?.currentTranscriptText || "";
+            const context = this.extractKeywordContext(keyword, currentText, 100);
+
+            const response = await fetch(this.explanationApiUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    keyword: keyword,
+                    language: explanationLanguage,
+                    context: context
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let explanation = "";
+
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    explanation += chunk;
+
+                    if (explanation) {
+                        contentElement.innerHTML = `<p>${explanation}</p>`;
+                    }
+                }
+                const finalChunk = decoder.decode();
+                explanation += finalChunk;
+                if (finalChunk) {
+                    contentElement.innerHTML = `<p>${explanation}</p>`;
+                }
+            } finally {
+                reader.releaseLock();
+            }
+
+            // 存入缓存
+            this.explanationCache[cacheKey] = explanation;
+            contentElement.innerHTML = `<p>${explanation}</p>`;
+        } catch (error) {
+            console.error("[KeywordManager] Error fetching explanation:", error);
+            contentElement.innerHTML = `<p class="error">Failed to load explanation: ${error.message}</p>`;
+        }
+    }
+
+    /**
+     * 导航到下一个词的解释
+     */
+    goToNextExplanation() {
+        const currentWordEl = document.getElementById("current-explanation-word");
+        if (!currentWordEl) return;
+
+        const currentWord = currentWordEl.textContent;
+        const currentIndex = this.explanations.indexOf(currentWord);
+
+        if (currentIndex >= 0 && currentIndex < this.explanations.length - 1) {
+            const nextWord = this.explanations[currentIndex + 1];
+            this.displayExplanationFocusView(nextWord);
+        }
+    }
+
+    /**
+     * 导航到上一个词的解释
+     */
+    goToPreviousExplanation() {
+        const currentWordEl = document.getElementById("current-explanation-word");
+        if (!currentWordEl) return;
+
+        const currentWord = currentWordEl.textContent;
+        const currentIndex = this.explanations.indexOf(currentWord);
+
+        if (currentIndex > 0) {
+            const previousWord = this.explanations[currentIndex - 1];
+            this.displayExplanationFocusView(previousWord);
+        }
+    }
+
+    /**
+     * 重新生成当前显示词的解释
+     */
+    async regenerateCurrentExplanation() {
+        const currentWordEl = document.getElementById("current-explanation-word");
+        const contentElement = document.getElementById("explanation-content");
+
+        if (!currentWordEl || !contentElement) return;
+
+        const word = currentWordEl.textContent;
+        const explanationLanguage = window.streamNoteInstance?.explanationLanguage || "English";
+        const cacheKey = `${word}|${explanationLanguage}`;
+
+        // 清除缓存
+        delete this.explanationCache[cacheKey];
+
+        contentElement.innerHTML = '<p class="placeholder">Regenerating explanation...</p>';
+        await this.fetchAndShowExplanationForFocusView(word, contentElement);
+    }
+
+    /**
+     * 复制当前显示的解释
+     */
+    copyCurrentExplanation() {
+        const contentElement = document.getElementById("explanation-content");
+        if (!contentElement) return;
+
+        const text = contentElement.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            // 显示成功提示
+            const originalContent = contentElement.innerHTML;
+            contentElement.innerHTML = '<p style="color: green;">✓ Copied!</p>';
+            setTimeout(() => {
+                contentElement.innerHTML = originalContent;
+            }, 1500);
+        }).catch(err => {
+            console.error('[KeywordManager] Copy failed:', err);
+            alert('Failed to copy explanation');
+        });
+    }
+
+    /**
+     * 恢复展开状态 - 已弃用（兼容旧代码）
+     */
+    restoreExpandedStates() {
+        // 新版本不需要此方法
+    }
+
+    /**
+     * 显示解释面板 - 已弃用（使用 openExplanationForWord 代替）
      * @param {string} term - 要解释的词条
      */
     showExplanationPanel(term) {
-        term = term.trim();
-        if (!term) return;
-
-        // 添加到解释列表（如果不存在）
-        if (!this.explanations.includes(term)) {
-            this.addToExplanations(term);
-        } else {
-            // 已存在则刷新显示（确保排序为最新）
-            this.explanations = this.explanations.filter(t => t !== term);
-            this.explanations.unshift(term);
-            this.displayExplanations();
-        }
-
-        // 通过面板管理器显示解释面板
-        if (this.panelManager) {
-            const historyContent = document.getElementById("historyContent");
-            if (historyContent) {
-                // 显示解释面板，标题为 "Explanation"
-                this.panelManager.showSidePanelContent(historyContent, "Explanation");
-
-                // 等待面板转换完成（与 panelManager 的转换时间保持一致）后再展开
-                setTimeout(() => {
-                    this.toggleExplanation(term);
-                }, 350);
-            }
-        }
+        // 兼容旧代码，直接调用新方法
+        this.openExplanationForWord(term);
     }
 
     /**
      * 刷新所有已展开的解释（用新语言重新生成）
      */
     refreshExpandedExplanations() {
-        for (const keyword of this.expandedKeywords) {
-            const wrapper = document.querySelector(`[data-keyword="${keyword}"]`);
-            if (wrapper) {
-                this.fetchAndShowExplanation(keyword, wrapper);
-            }
-        }
+        // 刷新当前显示的词
+        this.regenerateCurrentExplanation();
     }
 
     /**
