@@ -20,6 +20,10 @@ class KeywordManager {
         // 用于精确提取上下文
         this.highlightPositions = config.highlightPositions || {};
 
+        // 词语来源面板映射：{ "word": "transcript" | "translation" }
+        // 用于追踪词语是从转录还是从译文中选中的
+        this.wordSourcePanel = {};
+
         // 录制管理器引用（用于获取preciseResults）
         this.recordingManager = config.recordingManager || null;
         this.getTranscriptData = config.getTranscriptData || (() => ({}));
@@ -596,13 +600,22 @@ class KeywordManager {
      * @param {string} word - 要解释的词
      */
     /**
-     * 打开解释面板（支持自定义位置信息）
+     * 打开解释面板（支持自定义位置信息和源面板）
      * @param {string} word - 要解释的词
      * @param {Object} positionInfo - 可选的位置信息 { sourceIndices: [...] }
+     * @param {string} sourcePanel - 词语的来源面板 ('transcript' 或 'translation')，默认从记录中读取或使用 'transcript'
      */
-    async openExplanationForWord(word, positionInfo = null) {
+    async openExplanationForWord(word, positionInfo = null, sourcePanel = null) {
         word = word.trim();
         if (!word) return;
+
+        // 如果没有提供sourcePanel，尝试从记录中读取
+        if (!sourcePanel) {
+            sourcePanel = this.wordSourcePanel[word] || 'transcript';
+        } else {
+            // 更新记录
+            this.wordSourcePanel[word] = sourcePanel;
+        }
 
         // 如果提供了位置信息，临时保存（用于这次查询）
         if (positionInfo) {
@@ -627,11 +640,11 @@ class KeywordManager {
             this.panelManager.showSidePanelContent(historyContent, "Explanation");
         }
 
-        // 自动跳转到转录文本中的词位置
+        // 自动跳转到指定面板中的词位置
         if (window.streamNoteInstance && window.streamNoteInstance.scrollToWord) {
             // 延迟跳转以确保面板已显示
             setTimeout(() => {
-                window.streamNoteInstance.scrollToWord(word);
+                window.streamNoteInstance.scrollToWord(word, sourcePanel);
             }, 300);
         }
 

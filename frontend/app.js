@@ -1305,14 +1305,27 @@ class StreamNote {
             if (this.selectedText.trim()) {
                 const term = this.selectedText.trim();
 
+                // 检测选中文本的来源面板
+                let sourcePanel = 'transcript'; // 默认
+                if (currentSelectedRange) {
+                    const transcriptDiv = document.getElementById("transcript");
+                    const translationDiv = document.getElementById("translation");
+
+                    if (translationDiv?.contains(currentSelectedRange.commonAncestorContainer)) {
+                        sourcePanel = 'translation';
+                    } else if (transcriptDiv?.contains(currentSelectedRange.commonAncestorContainer)) {
+                        sourcePanel = 'transcript';
+                    }
+                }
+
                 // 获取Range的位置信息（如果可用）
                 let positionInfo = null;
                 if (currentSelectedRange) {
                     positionInfo = this.highlightManager.extractPositionFromRangePublic(currentSelectedRange);
                 }
 
-                // 通过 KeywordManager 统一处理显示解释面板的逻辑，并传入位置信息
-                this.keywordManager.openExplanationForWord(term, positionInfo);
+                // 通过 KeywordManager 统一处理显示解释面板的逻辑，并传入位置信息和源面板
+                this.keywordManager.openExplanationForWord(term, positionInfo, sourcePanel);
             }
             floatingMenu.classList.add("hidden");
             // 清除选中文本
@@ -1336,6 +1349,19 @@ class StreamNote {
 
             const selectedText = this.selectedText.trim();
 
+            // 检测选中文本的来源面板
+            let sourcePanel = 'transcript'; // 默认
+            if (currentSelectedRange) {
+                const transcriptDiv = document.getElementById("transcript");
+                const translationDiv = document.getElementById("translation");
+
+                if (translationDiv?.contains(currentSelectedRange.commonAncestorContainer)) {
+                    sourcePanel = 'translation';
+                } else if (transcriptDiv?.contains(currentSelectedRange.commonAncestorContainer)) {
+                    sourcePanel = 'transcript';
+                }
+            }
+
             // 尝试使用保存的range，如果失效则尝试重建
             let rangeToUse = currentSelectedRange;
 
@@ -1352,13 +1378,18 @@ class StreamNote {
                 }
             }
 
-            // 添加高亮
+            // 添加高亮，并记录源面板
             const highlightResult = this.highlightManager.addSelectedTextAsHighlightWithRange(selectedText, rangeToUse);
 
             if (!highlightResult) {
                 this.showStatusMessage("Add highlight failed", 1500);
                 floatingMenu.classList.add("hidden");
                 return;
+            }
+
+            // 记录这个高亮词的源面板
+            if (this.keywordManager) {
+                this.keywordManager.wordSourcePanel[selectedText] = sourcePanel;
             }
 
             // 直接打开Highlights面板（复制showContent的逻辑）
@@ -1784,17 +1815,99 @@ class StreamNote {
     }
 
     /**
-     * 在转录文本中搜索词语并跳转到其位置
+     * 在指定面板（转录或译文）中搜索词语并跳转到其位置
      * @param {string} word - 要搜索的词语
+     * @param {string} sourcePanel - 源面板 ('transcript' 或 'translation')，默认 'transcript'
      */
-    scrollToWord(word) {
+    scrollToWord(word, sourcePanel = 'transcript') {
         if (!word) return;
 
-        const transcript = document.getElementById("transcript");
-        if (!transcript) return;
+        // 首先尝试使用已有的位置信息（如果有的话）
+        if (this.keywordManager && this.keywordManager.highlightPositions[word]) {
+            const positionInfo = this.keywordManager.highlightPositions[word];
 
-        // 获取转录文本（不含HTML标记）
-        const text = transcript.innerText;
+            // 尝试使用 sourceIndices 或 startIndex 来定位
+            if (positionInfo.sourceIndices && positionInfo.sourceIndices.length > 0) {
+                const targetIndex = positionInfo.sourceIndices[0]; // 使用第一个出现位置
+                if (this.scrollToWordByIndex(word, targetIndex, sourcePanel)) {
+                    return;
+                }
+            } else if (positionInfo.startIndex !== undefined) {
+                // 使用 startIndex 来定位
+                if (this.scrollToWordByIndex(word, positionInfo.startIndex, sourcePanel)) {
+                    return;
+                }
+            }
+        }
+
+        // 如果没有位置信息，或位置信息定位失败，则回退到文本搜索
+        this.scrollToWordByText(word, sourcePanel);
+    }
+
+    /**
+     * 通过index在面板中定位词语
+     * @param {string} word - 词语
+     * @param {number} targetIndex - 目标片段的index
+     * @param {string} sourcePanel - 源面板
+     * @returns {boolean} 是否成功定位
+     */
+    scrollToWordByIndex(word, targetIndex, sourcePanel) {
+        const transcript = document.getElementById("transcript");
+        const translation = document.getElementById("translation");
+
+        let primaryPanel = sourcePanel === 'translation' ? translation : transcript;
+        let secondaryPanel = sourcePanel === 'translation' ? transcript : translation;
+
+        if (!primaryPanel) return false;
+
+        // 查找指定index的段落元素
+        const targetParagraph = primaryPanel.querySelector(`p[data-index="${targetIndex}"]`);
+
+        if (!targetParagraph) {
+            return false;
+        }
+
+        // 滚动到该段落
+        targetParagraph.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // 高亮显示找到的词
+        this.highlightWordInElement(targetParagraph, word);
+
+        // 同时在另一个面板中高亮相同索引的段落（如果存在）
+        if (secondaryPanel) {
+            const secondaryParagraph = secondaryPanel.querySelector(`p[data-index="${targetIndex}"]`);
+            if (secondaryParagraph) {
+                this.highlightWordInElement(secondaryParagraph, word);
+            }
+        }
+
+        this.showStatusMessage(`Found "${word}" in ${sourcePanel}`, 1000);
+        return true;
+    }
+
+    /**
+     * 通过文本搜索在面板中定位词语
+     * @param {string} word - 词语
+     * @param {string} sourcePanel - 源面板
+     */
+    scrollToWordByText(word, sourcePanel = 'transcript') {
+        const transcript = document.getElementById("transcript");
+        const translation = document.getElementById("translation");
+
+        // 根据源面板决定搜索和滚动位置
+        let primaryPanel = sourcePanel === 'translation' ? translation : transcript;
+        let secondaryPanel = sourcePanel === 'translation' ? transcript : translation;
+
+        if (!primaryPanel) {
+            // 如果主面板不存在，尝试使用辅助面板
+            primaryPanel = secondaryPanel;
+            sourcePanel = sourcePanel === 'translation' ? 'transcript' : 'translation';
+        }
+
+        if (!primaryPanel) return;
+
+        // 获取面板文本（不含HTML标记）
+        const text = primaryPanel.innerText;
         const lowerText = text.toLowerCase();
         const lowerWord = word.toLowerCase();
 
@@ -1803,7 +1916,7 @@ class StreamNote {
         const match = regex.exec(lowerText);
 
         if (!match) {
-            this.showStatusMessage(`Word "${word}" not found in transcript`, 1500);
+            this.showStatusMessage(`Word "${word}" not found in ${sourcePanel}`, 1500);
             return;
         }
 
@@ -1811,8 +1924,9 @@ class StreamNote {
 
         // 找到包含这个单词的段落
         let cumulativeLength = 0;
-        const paragraphs = transcript.querySelectorAll("p");
+        const paragraphs = primaryPanel.querySelectorAll("p");
         let targetParagraph = null;
+        let targetIndex = null;
 
         for (const p of paragraphs) {
             const pText = p.innerText;
@@ -1820,6 +1934,7 @@ class StreamNote {
 
             if (matchPosition < nextCumulativeLength) {
                 targetParagraph = p;
+                targetIndex = p.getAttribute("data-index");
                 break;
             }
             cumulativeLength = nextCumulativeLength;
@@ -1833,10 +1948,18 @@ class StreamNote {
         // 滚动到该段落
         targetParagraph.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        // 高亮显示找到的词（临时）
+        // 高亮显示找到的词（临时）- 在目标面板
         this.highlightWordInElement(targetParagraph, word);
 
-        this.showStatusMessage(`Found "${word}" in transcript`, 1000);
+        // 同时在另一个面板中高亮相同索引的段落（如果存在）
+        if (secondaryPanel && targetIndex !== null) {
+            const secondaryParagraph = secondaryPanel.querySelector(`p[data-index="${targetIndex}"]`);
+            if (secondaryParagraph) {
+                this.highlightWordInElement(secondaryParagraph, word);
+            }
+        }
+
+        this.showStatusMessage(`Found "${word}" in ${sourcePanel}`, 1000);
     }
 
     /**
