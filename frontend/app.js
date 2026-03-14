@@ -1830,8 +1830,8 @@ class StreamNote {
             return false;
         }
 
-        // 滚动到该段落
-        targetParagraph.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // 跳转到该段落
+        targetParagraph.scrollIntoView({ behavior: 'auto', block: 'center' });
 
         // 高亮显示找到的词
         this.highlightWordInElement(targetParagraph, word);
@@ -1869,47 +1869,28 @@ class StreamNote {
 
         if (!primaryPanel) return;
 
-        // 获取面板文本（不含HTML标记）
-        const text = primaryPanel.innerText;
-        const lowerText = text.toLowerCase();
+        // 直接在每个段落中搜索词语，避免累计长度计算错误
         const lowerWord = word.toLowerCase();
-
-        // 搜索词语位置（使用单词边界匹配）
-        const regex = new RegExp(`\\b${this.escapeRegex(lowerWord)}\\b`);
-        const match = regex.exec(lowerText);
-
-        if (!match) {
-            this.showStatusMessage(`Word "${word}" not found in ${sourcePanel}`, 1500);
-            return;
-        }
-
-        const matchPosition = match.index;
-
-        // 找到包含这个单词的段落
-        let cumulativeLength = 0;
         const paragraphs = primaryPanel.querySelectorAll("p");
         let targetParagraph = null;
         let targetIndex = null;
 
         for (const p of paragraphs) {
-            const pText = p.innerText;
-            const nextCumulativeLength = cumulativeLength + pText.length + 1; // +1 for line break
-
-            if (matchPosition < nextCumulativeLength) {
+            const pText = p.innerText.toLowerCase();
+            if (pText.includes(lowerWord)) {
                 targetParagraph = p;
                 targetIndex = p.getAttribute("data-index");
                 break;
             }
-            cumulativeLength = nextCumulativeLength;
         }
 
         if (!targetParagraph) {
-            this.showStatusMessage(`Could not locate "${word}" in document`, 1500);
+            this.showStatusMessage(`Word "${word}" not found in ${sourcePanel}`, 1500);
             return;
         }
 
-        // 滚动到该段落
-        targetParagraph.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // 跳转到该段落
+        targetParagraph.scrollIntoView({ behavior: 'auto', block: 'center' });
 
         // 高亮显示找到的词（临时）- 在目标面板
         this.highlightWordInElement(targetParagraph, word);
@@ -1931,76 +1912,60 @@ class StreamNote {
      * @param {string} word - 要高亮的词
      */
     highlightWordInElement(element, word) {
-        // 清除之前的临时高亮（但要等待动画完成）
-        const previousHighlights = document.querySelectorAll(".temp-word-highlight");
-        previousHighlights.forEach(el => {
-            // 移除样式，让其恢复正常，然后移除元素
-            el.classList.remove("temp-word-highlight");
-            setTimeout(() => {
-                const parent = el.parentNode;
-                if (parent) {
-                    while (el.firstChild) {
-                        parent.insertBefore(el.firstChild, el);
-                    }
-                    parent.removeChild(el);
-                }
-            }, 100);
-        });
-
-        // 使用 TreeWalker 来遍历和高亮文本节点
-        const walker = document.createTreeWalker(
-            element,
-            NodeFilter.SHOW_TEXT,
-            null,
-            false
-        );
-
-        const nodesToReplace = [];
-        let textNode;
-        const regex = new RegExp(`\\b${this.escapeRegex(word)}\\b`, 'gi');
-
-        while ((textNode = walker.nextNode())) {
-            if (regex.test(textNode.textContent)) {
-                nodesToReplace.push(textNode);
-            }
+        if (!element || !word) {
+            return;
         }
 
-        // 替换文本节点
-        nodesToReplace.forEach(node => {
-            const fragment = document.createDocumentFragment();
-            const text = node.textContent;
-            const regex = new RegExp(`\\b${this.escapeRegex(word)}\\b`, 'gi');
-            let lastIndex = 0;
-            let match;
-
-            regex.lastIndex = 0;
-            while ((match = regex.exec(text))) {
-                // 添加匹配前的文本
-                if (match.index > lastIndex) {
-                    fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+        // 清除之前的所有临时高亮
+        const previousHighlights = element.querySelectorAll(".temp-word-highlight");
+        previousHighlights.forEach(el => {
+            const parent = el.parentNode;
+            if (parent) {
+                while (el.firstChild) {
+                    parent.insertBefore(el.firstChild, el);
                 }
-
-                // 添加高亮的词
-                const span = document.createElement('span');
-                span.className = 'temp-word-highlight';
-                span.textContent = match[0];
-                // 强制触发重排以开始动画
-                span.offsetHeight; // 触发浏览器重排
-                fragment.appendChild(span);
-
-                lastIndex = match.index + match[0].length;
+                parent.removeChild(el);
+                parent.normalize();
             }
-
-            // 添加剩余的文本
-            if (lastIndex < text.length) {
-                fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
-            }
-
-            // 替换原始节点
-            node.parentNode.replaceChild(fragment, node);
         });
 
-        // 设置定时器，在4秒后（给动画足够时间）移除高亮
+        const lowerWord = word.toLowerCase();
+
+        // 直接使用 innerHTML.replace() 处理高亮
+        try {
+            const originalHtml = element.innerHTML;
+
+            // 创建一个正则表达式来匹配词语（不区分大小写，使用单词边界）
+            const escapedWord = this.escapeRegex(word);
+            const regex = new RegExp(`\\b(${escapedWord})\\b`, 'gi');
+
+            let highlightCount = 0;
+            const newHtml = originalHtml.replace(regex, (match) => {
+                highlightCount++;
+                return `<span class="temp-word-highlight">${match}</span>`;
+            });
+
+            if (highlightCount > 0) {
+                element.innerHTML = newHtml;
+            } else {
+                // 备用方法：不使用单词边界
+                const regex2 = new RegExp(`(${escapedWord})`, 'gi');
+                let highlightCount2 = 0;
+                const newHtml2 = originalHtml.replace(regex2, (match) => {
+                    highlightCount2++;
+                    return `<span class="temp-word-highlight">${match}</span>`;
+                });
+
+                if (highlightCount2 > 0) {
+                    element.innerHTML = newHtml2;
+                }
+            }
+
+        } catch (e) {
+            return;
+        }
+
+        // 设置定时器，在4秒后移除高亮
         setTimeout(() => {
             const highlights = element.querySelectorAll(".temp-word-highlight");
             highlights.forEach(el => {
@@ -2010,7 +1975,6 @@ class StreamNote {
                         parent.insertBefore(el.firstChild, el);
                     }
                     parent.removeChild(el);
-                    // 合并相邻的文本节点
                     parent.normalize();
                 }
             });
