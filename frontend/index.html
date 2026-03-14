@@ -76,14 +76,21 @@
                     <!-- Session Panel Header -->
                     <div class="session-panel-header">
                         <h3>Sessions</h3>
-                        <div style="display: flex; gap: 4px;">
-                            <button id="newSessionBtn" class="btn-icon" title="New Session">+</button>
-                            <button id="toggleSessionPanel" class="btn-icon toggle-btn" title="Close Panel">✕</button>
-                        </div>
+                        <button id="toggleSessionPanel" class="btn-icon toggle-btn" title="Close Panel">✕</button>
                     </div>
-                    <!-- Current Session Name Input -->
-                    <div class="current-session-info">
-                        <input type="text" id="sessionNameInput" placeholder="Session name..." />
+                    <!-- Session Toolbar -->
+                    <div class="panel-toolbar">
+                        <button id="newSessionBtn" class="toolbar-btn" title="New Session">➕ New</button>
+                        <button id="renameSessionBtn" class="toolbar-btn" title="Rename session">✏️ Rename</button>
+                        <button id="sessionMenuBtn" class="toolbar-btn" title="More options">⋮</button>
+                    </div>
+                    <!-- Session Menu -->
+                    <div class="session-menu" id="sessionMenu" style="display: none;">
+                        <button class="session-menu-item" id="deleteSessionBtn" title="Delete current session">🗑️ Delete</button>
+                        <button class="session-menu-item" id="exportCurrentBtn" title="Export current session">📥 Export</button>
+                        <button class="session-menu-item" id="exportAllBtn" title="Export all sessions">📦 Export All</button>
+                        <button class="session-menu-item" id="importBtn" title="Import sessions">📤 Import</button>
+                        <button class="session-menu-item danger" id="clearAllBtn" title="Clear all sessions">🗑️ Clear All</button>
                     </div>
                     <!-- Session Panel Content -->
                     <div class="session-panel-content">
@@ -252,15 +259,6 @@
                                 </div>
                             </div>
 
-                            <!-- Session Management -->
-                            <div class="settings-section">
-                                <h4 class="settings-section-title">Session Management</h4>
-                                <button id="exportCurrentBtn" class="settings-item-btn">📄 Export Current
-                                    Session</button>
-                                <button id="exportAllBtn" class="settings-item-btn">📦 Export All Sessions</button>
-                                <button id="importBtn" class="settings-item-btn">📥 Import Sessions</button>
-                                <button id="clearAllBtn" class="settings-item-btn danger">🗑️ Clear All Data</button>
-                            </div>
                         </div>
                     </div>
                 </div>
