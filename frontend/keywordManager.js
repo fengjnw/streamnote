@@ -23,7 +23,7 @@ class KeywordManager {
         // 录制管理器引用（用于获取preciseResults）
         this.recordingManager = config.recordingManager || null;
         this.getTranscriptData = config.getTranscriptData || (() => ({}));
-        
+
         // 翻译管理器引用（用于获取翻译数据）
         this.translationManager = config.translationManager || null;
 
@@ -210,7 +210,7 @@ class KeywordManager {
         // 根据container确定使用转录数据还是翻译数据
         const isTranslationContext = positionInfo.container === 'translation';
         let dataSource = {};
-        
+
         if (isTranslationContext && this.translationManager) {
             // 使用翻译数据
             dataSource = this.translationManager.getTranslationData();
@@ -218,7 +218,7 @@ class KeywordManager {
             // 使用原始转录数据
             dataSource = this.getTranscriptData();
         }
-        
+
         const sourceIndices = positionInfo.sourceIndices;
 
         // 获取目标段落的文本
@@ -625,6 +625,14 @@ class KeywordManager {
         const historyContent = document.getElementById("historyContent");
         if (this.panelManager && historyContent) {
             this.panelManager.showSidePanelContent(historyContent, "Explanation");
+        }
+
+        // 自动跳转到转录文本中的词位置
+        if (window.streamNoteInstance && window.streamNoteInstance.scrollToWord) {
+            // 延迟跳转以确保面板已显示
+            setTimeout(() => {
+                window.streamNoteInstance.scrollToWord(word);
+            }, 300);
         }
 
         // 更新焦点视图内容

@@ -239,7 +239,7 @@ class HighlightManager {
             // 根据Range的位置自动识别
             const startContainer = range.startContainer;
             const endContainer = range.endContainer;
-            
+
             // 寻找最近的transcript或translation父元素
             let node = startContainer;
             while (node && node.nodeType !== Node.DOCUMENT_NODE) {
@@ -253,7 +253,7 @@ class HighlightManager {
                 }
                 node = node.parentNode;
             }
-            
+
             // 如果通过startContainer找不到，尝试endContainer
             if (!container) {
                 node = endContainer;
@@ -270,12 +270,12 @@ class HighlightManager {
                 }
             }
         }
-        
+
         // 如果仍未找到容器，默认使用transcript
         if (!container) {
             container = document.getElementById("transcript");
         }
-        
+
         if (!container) return null;
 
         const sourceIndices = new Set();

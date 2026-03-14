@@ -2046,4 +2046,25 @@ header h1 {
         font-size: 0.9em;
     }
 }
+
+/* 临时单词高亮样式 */
+.temp-word-highlight {
+    color: #1976d2;
+    font-weight: 600;
+    animation: wordHighlightPulse 0.5s ease-in-out;
+}
+
+@keyframes wordHighlightPulse {
+    0% {
+        color: #64b5f6;
+    }
+
+    50% {
+        color: #1976d2;
+    }
+
+    100% {
+        color: #1976d2;
+    }
+}
 }

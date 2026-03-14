@@ -1783,6 +1783,157 @@ class StreamNote {
         }, 50);
     }
 
+    /**
+     * 在转录文本中搜索词语并跳转到其位置
+     * @param {string} word - 要搜索的词语
+     */
+    scrollToWord(word) {
+        if (!word) return;
+
+        const transcript = document.getElementById("transcript");
+        if (!transcript) return;
+
+        // 获取转录文本（不含HTML标记）
+        const text = transcript.innerText;
+        const lowerText = text.toLowerCase();
+        const lowerWord = word.toLowerCase();
+
+        // 搜索词语位置（使用单词边界匹配）
+        const regex = new RegExp(`\\b${this.escapeRegex(lowerWord)}\\b`);
+        const match = regex.exec(lowerText);
+
+        if (!match) {
+            this.showStatusMessage(`Word "${word}" not found in transcript`, 1500);
+            return;
+        }
+
+        const matchPosition = match.index;
+
+        // 找到包含这个单词的段落
+        let cumulativeLength = 0;
+        const paragraphs = transcript.querySelectorAll("p");
+        let targetParagraph = null;
+
+        for (const p of paragraphs) {
+            const pText = p.innerText;
+            const nextCumulativeLength = cumulativeLength + pText.length + 1; // +1 for line break
+
+            if (matchPosition < nextCumulativeLength) {
+                targetParagraph = p;
+                break;
+            }
+            cumulativeLength = nextCumulativeLength;
+        }
+
+        if (!targetParagraph) {
+            this.showStatusMessage(`Could not locate "${word}" in document`, 1500);
+            return;
+        }
+
+        // 滚动到该段落
+        targetParagraph.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // 高亮显示找到的词（临时）
+        this.highlightWordInElement(targetParagraph, word);
+
+        this.showStatusMessage(`Found "${word}" in transcript`, 1000);
+    }
+
+    /**
+     * 在元素中高亮显示词语
+     * @param {HTMLElement} element - 要搜索的元素
+     * @param {string} word - 要高亮的词
+     */
+    highlightWordInElement(element, word) {
+        // 清除之前的临时高亮
+        const previousHighlights = document.querySelectorAll(".temp-word-highlight");
+        previousHighlights.forEach(el => {
+            const parent = el.parentNode;
+            while (el.firstChild) {
+                parent.insertBefore(el.firstChild, el);
+            }
+            if (parent.childNodes.length === 0) {
+                parent.textContent = parent.innerText;
+            } else {
+                parent.removeChild(el);
+            }
+        });
+
+        // 使用 TreeWalker 来遍历和高亮文本节点
+        const walker = document.createTreeWalker(
+            element,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+
+        const nodesToReplace = [];
+        let textNode;
+        const regex = new RegExp(`\\b${this.escapeRegex(word)}\\b`, 'gi');
+
+        while ((textNode = walker.nextNode())) {
+            if (regex.test(textNode.textContent)) {
+                nodesToReplace.push(textNode);
+            }
+        }
+
+        // 替换文本节点
+        nodesToReplace.forEach(node => {
+            const fragment = document.createDocumentFragment();
+            const text = node.textContent;
+            const regex = new RegExp(`\\b${this.escapeRegex(word)}\\b`, 'gi');
+            let lastIndex = 0;
+            let match;
+
+            regex.lastIndex = 0;
+            while ((match = regex.exec(text))) {
+                // 添加匹配前的文本
+                if (match.index > lastIndex) {
+                    fragment.appendChild(document.createTextNode(text.substring(lastIndex, match.index)));
+                }
+
+                // 添加高亮的词
+                const span = document.createElement('span');
+                span.className = 'temp-word-highlight';
+                span.textContent = match[0];
+                fragment.appendChild(span);
+
+                lastIndex = match.index + match[0].length;
+            }
+
+            // 添加剩余的文本
+            if (lastIndex < text.length) {
+                fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
+            }
+
+            // 替换原始节点
+            node.parentNode.replaceChild(fragment, node);
+        });
+
+        // 3秒后移除高亮
+        setTimeout(() => {
+            const highlights = element.querySelectorAll(".temp-word-highlight");
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                while (el.firstChild) {
+                    parent.insertBefore(el.firstChild, el);
+                }
+                parent.removeChild(el);
+                // 合并相邻的文本节点
+                parent.normalize();
+            });
+        }, 3000);
+    }
+
+    /**
+     * 转义正则表达式特殊字符
+     * @param {string} str - 要转义的字符串
+     * @returns {string} 转义后的字符串
+     */
+    escapeRegex(str) {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
     updateStatus(text) {
         document.getElementById("status").textContent = text;
     }
