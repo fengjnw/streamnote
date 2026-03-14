@@ -537,6 +537,7 @@ class PanelManager {
         const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
         const generateSummaryBtn = document.getElementById("generateSummaryBtn");
         const copySummaryBtn = document.getElementById("copySummaryBtn");
+        const explanationLangSelector = document.getElementById("defaultExplanationLanguage");
 
         if (autoExtractBtn) {
             autoExtractBtn.style.display = contentElement === keywordsContent ? 'block' : 'none';

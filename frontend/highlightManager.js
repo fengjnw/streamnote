@@ -58,17 +58,6 @@ class HighlightManager {
         // 存储高亮ID映射（用于后续删除）
         this.highlightIdMap[highlightText] = highlightId;
 
-        // 计算并保存位置信息
-        const positionInfo = this.calculateHighlightPosition(highlightText);
-        if (positionInfo) {
-            this.highlightPositions[highlightText] = positionInfo;
-
-            // 同时更新keywordManager中的highlightPositions
-            if (this.keywordManager && this.keywordManager.setHighlightPositions) {
-                this.keywordManager.setHighlightPositions(this.highlightPositions);
-            }
-        }
-
         // 更新所有显示
         this.keywordManager.updateAllKeywordDisplays();
 

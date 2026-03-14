@@ -1010,6 +1010,18 @@ class StreamNote {
             });
         }
 
+        // Highlight current explanation word button
+        const highlightCurrentWordBtn = document.getElementById("highlight-current-word-btn");
+        if (highlightCurrentWordBtn) {
+            highlightCurrentWordBtn.addEventListener("click", () => {
+                const currentWordEl = document.getElementById("current-explanation-word");
+                if (currentWordEl && currentWordEl.textContent) {
+                    const word = currentWordEl.textContent.trim();
+                    this.highlightManager?.addSelectedTextAsHighlight(word);
+                }
+            });
+        }
+
         const regenerateExplanationBtn = document.getElementById("regenerate-explanation-btn");
         if (regenerateExplanationBtn) {
             regenerateExplanationBtn.addEventListener("click", () => {
