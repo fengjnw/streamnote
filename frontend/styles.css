@@ -2050,20 +2050,33 @@ header h1 {
 .temp-word-highlight {
     color: #1976d2;
     font-weight: 600;
-    animation: wordHighlightPulse 0.5s ease-in-out;
+    animation: wordHighlightPulse 1.2s ease-in-out 2;
 }
 
 @keyframes wordHighlightPulse {
     0% {
         color: #64b5f6;
+        text-shadow: 0 0 4px rgba(25, 118, 210, 0.4);
+    }
+
+    25% {
+        color: #1976d2;
+        text-shadow: 0 0 8px rgba(25, 118, 210, 0.6);
     }
 
     50% {
+        color: #0d47a1;
+        text-shadow: 0 0 12px rgba(13, 71, 161, 0.8);
+    }
+
+    75% {
         color: #1976d2;
+        text-shadow: 0 0 8px rgba(25, 118, 210, 0.6);
     }
 
     100% {
-        color: #1976d2;
+        color: #64b5f6;
+        text-shadow: 0 0 4px rgba(25, 118, 210, 0.4);
     }
 }
 }

@@ -1968,18 +1968,20 @@ class StreamNote {
      * @param {string} word - 要高亮的词
      */
     highlightWordInElement(element, word) {
-        // 清除之前的临时高亮
+        // 清除之前的临时高亮（但要等待动画完成）
         const previousHighlights = document.querySelectorAll(".temp-word-highlight");
         previousHighlights.forEach(el => {
-            const parent = el.parentNode;
-            while (el.firstChild) {
-                parent.insertBefore(el.firstChild, el);
-            }
-            if (parent.childNodes.length === 0) {
-                parent.textContent = parent.innerText;
-            } else {
-                parent.removeChild(el);
-            }
+            // 移除样式，让其恢复正常，然后移除元素
+            el.classList.remove("temp-word-highlight");
+            setTimeout(() => {
+                const parent = el.parentNode;
+                if (parent) {
+                    while (el.firstChild) {
+                        parent.insertBefore(el.firstChild, el);
+                    }
+                    parent.removeChild(el);
+                }
+            }, 100);
         });
 
         // 使用 TreeWalker 来遍历和高亮文本节点
@@ -2019,6 +2021,8 @@ class StreamNote {
                 const span = document.createElement('span');
                 span.className = 'temp-word-highlight';
                 span.textContent = match[0];
+                // 强制触发重排以开始动画
+                span.offsetHeight; // 触发浏览器重排
                 fragment.appendChild(span);
 
                 lastIndex = match.index + match[0].length;
@@ -2033,19 +2037,21 @@ class StreamNote {
             node.parentNode.replaceChild(fragment, node);
         });
 
-        // 3秒后移除高亮
+        // 设置定时器，在4秒后（给动画足够时间）移除高亮
         setTimeout(() => {
             const highlights = element.querySelectorAll(".temp-word-highlight");
             highlights.forEach(el => {
                 const parent = el.parentNode;
-                while (el.firstChild) {
-                    parent.insertBefore(el.firstChild, el);
+                if (parent) {
+                    while (el.firstChild) {
+                        parent.insertBefore(el.firstChild, el);
+                    }
+                    parent.removeChild(el);
+                    // 合并相邻的文本节点
+                    parent.normalize();
                 }
-                parent.removeChild(el);
-                // 合并相邻的文本节点
-                parent.normalize();
             });
-        }, 3000);
+        }, 4000);
     }
 
     /**
