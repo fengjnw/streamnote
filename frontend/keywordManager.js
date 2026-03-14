@@ -112,11 +112,12 @@ class KeywordManager {
             return `
                     <div class="keyword-item-wrapper" data-keyword="${index}">
                         <div class="keyword-item">
-                            <span class="keyword-text" onclick="window.keywordManagerInstance.openExplanationForWord('${escapedItem}')"
-                                style="cursor: pointer; flex: 1;">
+                            <span class="keyword-text" onclick="window.keywordManagerInstance.scrollToKeyword('${escapedItem}')"
+                                style="cursor: pointer; flex: 1; text-decoration: underline;">
                                 ${this.escapeHtml(item)}
                             </span>
-                            <button class="keyword-delete-btn" onclick="window.keywordManagerInstance.${deleteHandlerName}('${escapedItem}')">×</button>
+                            <button class="keyword-explain-btn" onclick="window.keywordManagerInstance.openExplanationForWord('${escapedItem}')" title="View explanation">💡</button>
+                            <button class="keyword-delete-btn" onclick="window.keywordManagerInstance.${deleteHandlerName}('${escapedItem}')" title="Delete">×</button>
                         </div>
                     </div>
                 `;
@@ -181,6 +182,20 @@ class KeywordManager {
 
         // 保持向后兼容：更新 allCollectedKeywords
         this.allCollectedKeywords = [...this.highlights, ...this.extracts];
+    }
+
+    /**
+     * 定位关键词到原文或翻译中
+     * @param {string} keyword - 关键词
+     */
+    scrollToKeyword(keyword) {
+        // 确定词语来源
+        const sourcePanel = this.wordSourcePanel[keyword] || 'transcript';
+
+        // 调用全局的定位方法
+        if (window.streamNoteInstance && window.streamNoteInstance.scrollToWord) {
+            window.streamNoteInstance.scrollToWord(keyword, sourcePanel);
+        }
     }
 
     /**
