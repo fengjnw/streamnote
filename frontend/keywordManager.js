@@ -110,13 +110,12 @@ class KeywordManager {
             // Safely escape special characters in onclick attributes
             const escapedItem = item.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
             return `
-                    <div class="keyword-item-wrapper" data-keyword="${index}">
+                    <div class="keyword-item-wrapper" data-keyword="${index}" title="${this.escapeHtml(item)}">
                         <div class="keyword-item">
-                            <span class="keyword-text" onclick="window.keywordManagerInstance.scrollToKeyword('${escapedItem}')"
-                                style="cursor: pointer; flex: 1; text-decoration: underline;">
+                            <span class="keyword-text" onclick="window.keywordManagerInstance.scrollToKeyword('${escapedItem}')">
                                 ${this.escapeHtml(item)}
                             </span>
-                            <button class="keyword-explain-btn" onclick="window.keywordManagerInstance.openExplanationForWord('${escapedItem}')" title="View explanation">💡</button>
+                            <button class="keyword-explain-btn" onclick="window.keywordManagerInstance.openExplanationForWord('${escapedItem}')" title="View explanation">💡 Explain</button>
                             <button class="keyword-delete-btn" onclick="window.keywordManagerInstance.${deleteHandlerName}('${escapedItem}')" title="Delete">×</button>
                         </div>
                     </div>
