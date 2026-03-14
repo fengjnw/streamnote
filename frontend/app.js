@@ -1456,7 +1456,7 @@ class StreamNote {
     }
 
     clear() {
-        this.preciseResults = {};
+        this.recordingManager.clear();
         this.translationResults = {};
         this.translationManager.clear();
         this.chunkIndex = 0;
