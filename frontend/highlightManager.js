@@ -451,7 +451,7 @@ class HighlightManager {
         // 使用highlightPositions信息（如果存在）更精确地定位高亮
         // highlightPositions保存了高亮涉及的段落索引(sourceIndices)
         const positionInfo = this.highlightPositions[text];
-        
+
         if (positionInfo && positionInfo.sourceIndices) {
             // 基于已知的段落索引进行高亮（更精确）
             this._highlightInTranslationByIndices(translationDiv, text, positionInfo.sourceIndices, highlightId);
@@ -471,7 +471,7 @@ class HighlightManager {
 
         // 为每个涉及的段落构建虚拟全文
         const sortedIndices = sourceIndices.sort((a, b) => a - b);
-        
+
         // 收集这些段落的翻译文本
         const segmentTexts = sortedIndices.map(idx => {
             const translation = translationData[idx];
@@ -480,7 +480,7 @@ class HighlightManager {
 
         // 构建虚拟全文（用于查找）
         const virtualText = segmentTexts.join(" ");
-        
+
         // 在虚拟全文中查找
         const lowerVirtualText = virtualText.toLowerCase();
         const lowerText = text.toLowerCase();

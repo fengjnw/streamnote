@@ -1984,6 +1984,11 @@ header h1 {
     word-break: break-word;
 }
 
+.highlighted-word {
+    color: #d32f2f;
+    font-weight: 700;
+}
+
 .explanation-scroll {
     flex: 1;
     color: #555;

@@ -324,14 +324,28 @@ class KeywordManager {
         // 如果fullText为空，尝试从preciseResults中构建
         let searchText = fullText;
         if (!searchText) {
-            const preciseResults = this.getTranscriptData();
-            const sortedKeys = Object.keys(preciseResults).sort((a, b) => parseInt(a) - parseInt(b));
-            searchText = sortedKeys
-                .map(key => {
-                    const item = preciseResults[key];
-                    return item && item.text ? item.text.trim() : "";
-                })
-                .join(" ");
+            // 检查词的来源：是否来自翻译
+            const sourcePanel = this.wordSourcePanel[keyword];
+
+            if (sourcePanel === 'translation' && this.translationManager) {
+                // 从翻译数据中构建
+                const translationData = this.translationManager.getTranslationData();
+                const sortedKeys = Object.keys(translationData).sort((a, b) => parseInt(a) - parseInt(b));
+                searchText = sortedKeys
+                    .map(key => translationData[key])
+                    .filter(text => text)
+                    .join(" ");
+            } else {
+                // 从转录数据中构建（默认）
+                const preciseResults = this.getTranscriptData();
+                const sortedKeys = Object.keys(preciseResults).sort((a, b) => parseInt(a) - parseInt(b));
+                searchText = sortedKeys
+                    .map(key => {
+                        const item = preciseResults[key];
+                        return item && item.text ? item.text.trim() : "";
+                    })
+                    .join(" ");
+            }
         }
 
         if (!searchText) return "";  // 仍然无法获取文本
@@ -776,8 +790,74 @@ class KeywordManager {
      * @returns {string} 上下文
      */
     getContextForKeyword(keyword) {
-        // 直接调用extractKeywordContext，让它自动从preciseResults中构建文本
+        // 检查是否有位置信息 - 优先使用位置信息的容器信息
+        if (this.highlightPositions && this.highlightPositions[keyword]) {
+            const positionInfo = this.highlightPositions[keyword];
+            // 如果有container信息，说明这个词来自特定的面板
+            if (positionInfo.container) {
+                // 位置信息中的container字段会在extractContextByPosition中使用
+                return this.extractKeywordContext(keyword, "", 100);
+            }
+        }
+
+        // 如果没有位置信息，检查wordSourcePanel来判断词的来源
+        const sourcePanel = this.wordSourcePanel[keyword];
+        if (sourcePanel === 'translation') {
+            // 如果词来自翻译，需要从翻译数据中搜索
+            if (this.translationManager) {
+                const translationData = this.translationManager.getTranslationData();
+                const sortedKeys = Object.keys(translationData).sort((a, b) => parseInt(a) - parseInt(b));
+                const fullTranslation = sortedKeys
+                    .map(key => translationData[key])
+                    .filter(text => text)
+                    .join(" ");
+
+                if (fullTranslation) {
+                    // 在翻译文本中搜索
+                    const lowerText = fullTranslation.toLowerCase();
+                    const lowerKeyword = keyword.toLowerCase();
+                    const index = lowerText.indexOf(lowerKeyword);
+
+                    if (index !== -1) {
+                        const contextLength = 100;
+                        const contextStart = Math.max(0, index - contextLength);
+                        const contextEnd = Math.min(fullTranslation.length, index + keyword.length + contextLength);
+
+                        let context = fullTranslation.substring(contextStart, contextEnd);
+                        if (contextStart > 0) context = "..." + context;
+                        if (contextEnd < fullTranslation.length) context = context + "...";
+                        return context;
+                    }
+                }
+            }
+        }
+
+        // 默认从转录数据中提取
         return this.extractKeywordContext(keyword, "", 100);
+    }
+
+    /**
+     * 高亮文本中的目标词
+     * @param {string} text - 要处理的文本
+     * @param {string} keyword - 要高亮的关键词
+     * @returns {string} 包含高亮HTML的文本
+     */
+    highlightKeywordInText(text, keyword) {
+        if (!text || !keyword) return text;
+
+        // 转义特殊字符
+        const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+        // 创建正则表达式，不使用词边界（\b），因为中文文本不支持词边界）
+        // 使用全局和不区分大小写的模式
+        const regex = new RegExp(escapedKeyword, 'gi');
+
+        // 替换为带有高亮样式的HTML
+        const highlighted = text.replace(regex, (match) => {
+            return `<span class="highlighted-word">${match}</span>`;
+        });
+
+        return highlighted;
     }
 
     /**
@@ -793,7 +873,9 @@ class KeywordManager {
         const context = this.getContextForKeyword(keyword);
 
         if (context) {
-            contextText.textContent = context;
+            // 高亮context中的关键词
+            const highlightedContext = this.highlightKeywordInText(context, keyword);
+            contextText.innerHTML = highlightedContext;
             contextDiv.style.display = 'block';
         } else {
             contextDiv.style.display = 'none';
