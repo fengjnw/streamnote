@@ -30,7 +30,7 @@ class Translator(AIService):
             return
         
         if context:
-            system_message = f"You are a professional translator. Previous context for reference: '{context}'. Now translate the following text to {target_lang}, maintaining consistency with the context. Only provide the translation, no explanations."
+            system_message = f"You are a professional translator. Context from previous sentences (for reference only): {context}\n\nTranslate ONLY the following text to {target_lang}. Maintain terminology consistency with the context. Output ONLY the translation of the new text, do not repeat or reference the context in your output."
         else:
             system_message = f"You are a professional translator. Translate the following text to {target_lang}. Only provide the translation, no explanations."
         user_message = text

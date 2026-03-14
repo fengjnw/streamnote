@@ -62,9 +62,13 @@ def transcribe():
         }
         
         # 如果提供了上下文，将其作为prompt参数传递
-        # 这有助于Whisper识别领域术语和特定的词汇
+        # Whisper会使用这个上下文作为hint来改进转录准确率
+        # 注意：prompt只是参考信息，不应该在输出中出现
         if context and len(context) > 0:
-            transcribe_kwargs["prompt"] = context
+            # 创建一个更结构化的prompt，避免直接输出
+            # 格式："Reference text: ..." 让Whisper理解这是参考而非要转录的内容
+            structured_prompt = f"Previous transcripts: {context}"
+            transcribe_kwargs["prompt"] = structured_prompt
 
         result = client.audio.transcriptions.create(**transcribe_kwargs)
 

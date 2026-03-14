@@ -324,8 +324,9 @@ class RecordingManager {
     }
 
     /**
-     * 设置转录上下文 - 用于提高Whisper转录准确率
-     * 上下文会作为prompt参数传递给Whisper API
+     * 设置转录上下文 - 用于提高转录准确率
+     * 上下文会作为prompt参数传递给转录API
+     * 仅用作hint，不应出现在转录结果中
      */
     setTranscriptionContext(context) {
         this.transcriptionContext = context || "";
