@@ -697,26 +697,15 @@ class KeywordManager {
 
         const wordElement = document.getElementById("current-explanation-word");
         const contentElement = document.getElementById("explanation-content");
-        const positionElement = document.getElementById("explanation-position");
-        const previousBtn = document.getElementById("previous-word-btn");
-        const nextBtn = document.getElementById("next-word-btn");
+        const headerDiv = document.querySelector(".explanation-header");
 
         if (!wordElement || !contentElement) return;
 
         // 更新词语显示
         wordElement.textContent = word;
 
-        // 更新位置指示器
-        const currentIndex = this.explanations.indexOf(word);
-        positionElement.textContent = `${currentIndex + 1} / ${this.explanations.length}`;
-
-        // 更新导航按钮的禁用状态
-        if (previousBtn) {
-            previousBtn.disabled = currentIndex <= 0;
-        }
-        if (nextBtn) {
-            nextBtn.disabled = currentIndex >= this.explanations.length - 1;
-        }
+        // 显示标题容器
+        if (headerDiv) headerDiv.classList.remove("hidden");
 
         // 显示加载状态
         contentElement.innerHTML = '<p class="placeholder">Loading explanation...</p>';
@@ -893,38 +882,6 @@ class KeywordManager {
             contextDiv.style.display = 'block';
         } else {
             contextDiv.style.display = 'none';
-        }
-    }
-
-    /**
-     * 导航到下一个词的解释
-     */
-    goToNextExplanation() {
-        const currentWordEl = document.getElementById("current-explanation-word");
-        if (!currentWordEl) return;
-
-        const currentWord = currentWordEl.textContent;
-        const currentIndex = this.explanations.indexOf(currentWord);
-
-        if (currentIndex >= 0 && currentIndex < this.explanations.length - 1) {
-            const nextWord = this.explanations[currentIndex + 1];
-            this.displayExplanationFocusView(nextWord);
-        }
-    }
-
-    /**
-     * 导航到上一个词的解释
-     */
-    goToPreviousExplanation() {
-        const currentWordEl = document.getElementById("current-explanation-word");
-        if (!currentWordEl) return;
-
-        const currentWord = currentWordEl.textContent;
-        const currentIndex = this.explanations.indexOf(currentWord);
-
-        if (currentIndex > 0) {
-            const previousWord = this.explanations[currentIndex - 1];
-            this.displayExplanationFocusView(previousWord);
         }
     }
 

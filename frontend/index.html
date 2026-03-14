@@ -193,26 +193,21 @@
 
                     <!-- Explanation Content -->
                     <div id="historyContent" class="panel-content">
-                        <div class="panel-toolbar">
-                            <div class="toolbar-row toolbar-actions-row">
-                                <button id="highlight-current-word-btn" class="toolbar-btn" title="Add to highlights">✏️
-                                    Highlight</button>
-                                <button id="copy-explanation-btn" class="toolbar-btn" title="Copy explanation">📋
-                                    Copy</button>
-                                <button id="regenerate-explanation-btn" class="toolbar-btn"
-                                    title="Regenerate explanation">🔄 Regenerate</button>
-                                <button id="clearExplanationsBtn" class="toolbar-btn danger"
-                                    title="Clear explanation history">🗑️ Clear</button>
-                            </div>
-                            <div class="toolbar-row toolbar-nav-row">
-                                <button id="previous-word-btn" class="toolbar-btn" title="Go to previous word">←
-                                    Previous</button>
-                                <span id="explanation-position" class="position-indicator"></span>
-                                <button id="next-word-btn" class="toolbar-btn" title="Go to next word">Next →</button>
-                            </div>
+                        <div class="panel-toolbar" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            <button id="highlight-current-word-btn" class="toolbar-btn" title="Add to highlights"
+                                style="display: inline-flex;">✏️
+                                Highlight</button>
+                            <button id="copy-explanation-btn" class="toolbar-btn" title="Copy explanation"
+                                style="display: inline-flex;">📋
+                                Copy</button>
+                            <button id="regenerate-explanation-btn" class="toolbar-btn" title="Regenerate explanation"
+                                style="display: inline-flex;">🔄 Regenerate</button>
+                            <button id="clearExplanationsBtn" class="toolbar-btn" title="Clear explanation display"
+                                style="display: inline-flex; background: #fff3cd; border-color: #ffc107;">✕
+                                Clear</button>
                         </div>
                         <div id="explanation-focus-view" class="explanation-focus-view">
-                            <div class="explanation-header">
+                            <div class="explanation-header hidden">
                                 <h4 id="current-explanation-word" class="current-word"></h4>
                             </div>
                             <div class="explanation-body">

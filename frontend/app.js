@@ -989,20 +989,6 @@ class StreamNote {
         }
 
         // Explanation panel focus view button listeners
-        const previousWordBtn = document.getElementById("previous-word-btn");
-        if (previousWordBtn) {
-            previousWordBtn.addEventListener("click", () => {
-                this.keywordManager?.goToPreviousExplanation();
-            });
-        }
-
-        const nextWordBtn = document.getElementById("next-word-btn");
-        if (nextWordBtn) {
-            nextWordBtn.addEventListener("click", () => {
-                this.keywordManager?.goToNextExplanation();
-            });
-        }
-
         const copyExplanationBtn = document.getElementById("copy-explanation-btn");
         if (copyExplanationBtn) {
             copyExplanationBtn.addEventListener("click", () => {
@@ -1029,37 +1015,21 @@ class StreamNote {
             });
         }
 
-        // Clear explanations button
+        // Clear explanation display button
         const clearExplanationsBtn = document.getElementById("clearExplanationsBtn");
         if (clearExplanationsBtn) {
             clearExplanationsBtn.addEventListener("click", () => {
-                if (!this.keywordManager || this.keywordManager.explanations.length === 0) {
-                    this.showStatusMessage("No explanations to clear", 1500);
-                    return;
-                }
+                const currentWordEl = document.getElementById("current-explanation-word");
+                const contentEl = document.getElementById("explanation-content");
+                const contextDiv = document.getElementById("word-context");
+                const headerDiv = document.querySelector(".explanation-header");
 
-                if (confirm("Clear all explanation history? This cannot be undone.")) {
-                    this.keywordManager.explanations = [];
-                    this.keywordManager.explanationCache = {};
+                if (currentWordEl) currentWordEl.textContent = "";
+                if (contentEl) contentEl.innerHTML = '<p class="placeholder">Select a word to view its explanation</p>';
+                if (contextDiv) contextDiv.style.display = 'none';
+                if (headerDiv) headerDiv.classList.add("hidden");
 
-                    // 清空UI显示
-                    const currentWordEl = document.getElementById("current-explanation-word");
-                    const contentEl = document.getElementById("explanation-content");
-                    const positionEl = document.getElementById("explanation-position");
-                    const previousBtn = document.getElementById("previous-word-btn");
-                    const nextBtn = document.getElementById("next-word-btn");
-                    const contextDiv = document.getElementById("word-context");
-
-                    if (currentWordEl) currentWordEl.textContent = "";
-                    if (contentEl) contentEl.innerHTML = '<p class="placeholder">Select a word to view its explanation</p>';
-                    if (positionEl) positionEl.textContent = "";
-                    if (previousBtn) previousBtn.disabled = true;
-                    if (nextBtn) nextBtn.disabled = true;
-                    if (contextDiv) contextDiv.style.display = 'none';
-
-                    this.saveToSession();
-                    this.showStatusMessage("✓ Explanation history cleared", 1500);
-                }
+                this.showStatusMessage("✓ Explanation cleared", 1500);
             });
         }
 
