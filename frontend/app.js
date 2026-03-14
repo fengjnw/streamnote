@@ -1215,17 +1215,18 @@ class StreamNote {
             }
         };
 
-        // 监听选中变化（使用防抖避免频繁更新）
-        let selectionTimeout;
-        document.addEventListener("selectionchange", () => {
-            clearTimeout(selectionTimeout);
-            // 延迟更新，让浏览器完成选择后再响应
-            selectionTimeout = setTimeout(showFloatingMenu, 50);
-        });
-
-        // 监听鼠标释放，确保选择完成后立即显示菜单
+        // 仅在鼠标抬起时显示菜单，提供更流畅的选择体验
+        // 避免在拖动选择过程中菜单频繁闪现
         document.addEventListener("mouseup", () => {
             showFloatingMenu();
+        });
+
+        // 当选择被取消时立即隐藏菜单
+        document.addEventListener("selectionchange", () => {
+            const selection = window.getSelection();
+            if (selection.toString().trim().length === 0) {
+                floatingMenu.classList.add("hidden");
+            }
         });
 
         // 点击文档其他地方时隐藏菜单
