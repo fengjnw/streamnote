@@ -448,7 +448,152 @@ class HighlightManager {
         const translationDiv = document.getElementById("translation");
         if (!translationDiv) return;
 
-        // 从translationManager中构建虚拟全文
+        // 使用highlightPositions信息（如果存在）更精确地定位高亮
+        // highlightPositions保存了高亮涉及的段落索引(sourceIndices)
+        const positionInfo = this.highlightPositions[text];
+        
+        if (positionInfo && positionInfo.sourceIndices) {
+            // 基于已知的段落索引进行高亮（更精确）
+            this._highlightInTranslationByIndices(translationDiv, text, positionInfo.sourceIndices, highlightId);
+        } else {
+            // 降级到虚拟全文搜索方法
+            this._highlightInTranslationBySearch(translationDiv, text, highlightId);
+        }
+    }
+
+    /**
+     * 基于段落索引在翻译中进行高亮（精确方法）
+     * @private
+     */
+    _highlightInTranslationByIndices(translationDiv, text, sourceIndices, highlightId) {
+        const preciseResults = this.getTranscriptData();
+        const translationData = this.translationManager.getTranslationData();
+
+        // 为每个涉及的段落构建虚拟全文
+        const sortedIndices = sourceIndices.sort((a, b) => a - b);
+        
+        // 收集这些段落的翻译文本
+        const segmentTexts = sortedIndices.map(idx => {
+            const translation = translationData[idx];
+            return translation ? translation.trim() : "";
+        });
+
+        // 构建虚拟全文（用于查找）
+        const virtualText = segmentTexts.join(" ");
+        
+        // 在虚拟全文中查找
+        const lowerVirtualText = virtualText.toLowerCase();
+        const lowerText = text.toLowerCase();
+        const matchPos = lowerVirtualText.indexOf(lowerText);
+
+        if (matchPos === -1) return; // 未找到
+
+        // 建立位置映射
+        const textPositionMap = [];
+        let currentPos = 0;
+        segmentTexts.forEach((segmentText, mapIdx) => {
+            const startInVirtual = currentPos;
+            const endInVirtual = currentPos + segmentText.length;
+            textPositionMap.push({
+                startInVirtual,
+                endInVirtual,
+                sourceIndex: sortedIndices[mapIdx],
+                segmentText
+            });
+            currentPos = endInVirtual + 1; // +1 for separator
+        });
+
+        // 找出涉及的段落
+        const matchEnd = matchPos + text.length;
+        const affectedSegments = [];
+
+        textPositionMap.forEach(mapping => {
+            if (mapping.startInVirtual < matchEnd && mapping.endInVirtual > matchPos) {
+                const startInSegment = Math.max(0, matchPos - mapping.startInVirtual);
+                const endInSegment = Math.min(mapping.segmentText.length, matchEnd - mapping.startInVirtual);
+
+                affectedSegments.push({
+                    sourceIndex: mapping.sourceIndex,
+                    startInSegment,
+                    endInSegment
+                });
+            }
+        });
+
+        // 对每个涉及的段落进行高亮
+        affectedSegments.forEach(segment => {
+            const paragraph = translationDiv.querySelector(`p[data-index="${segment.sourceIndex}"]`);
+            if (!paragraph) return;
+
+            // 使用highlightRangeDirectly的逻辑来处理跨node的高亮
+            const range = this._createRangeInParagraph(paragraph, segment.startInSegment, segment.endInSegment);
+            if (range) {
+                this.highlightRangeDirectly(range, highlightId);
+            }
+        });
+    }
+
+    /**
+     * 在给定段落中创建一个Range对象
+     * @private
+     */
+    _createRangeInParagraph(paragraph, startOffset, endOffset) {
+        const textNodes = [];
+        const walker = document.createTreeWalker(
+            paragraph,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+
+        let node;
+        while (node = walker.nextNode()) {
+            textNodes.push(node);
+        }
+
+        if (textNodes.length === 0) return null;
+
+        // 找到起始和结束节点
+        let currentPos = 0;
+        let startNode = null;
+        let startNodeOffset = 0;
+        let endNode = null;
+        let endNodeOffset = 0;
+
+        for (let i = 0; i < textNodes.length; i++) {
+            const nodeLength = textNodes[i].textContent.length;
+
+            if (currentPos <= startOffset && startOffset < currentPos + nodeLength && !startNode) {
+                startNode = textNodes[i];
+                startNodeOffset = startOffset - currentPos;
+            }
+
+            if (currentPos <= endOffset && endOffset <= currentPos + nodeLength) {
+                endNode = textNodes[i];
+                endNodeOffset = endOffset - currentPos;
+                break;
+            }
+
+            currentPos += nodeLength;
+        }
+
+        if (!startNode || !endNode) return null;
+
+        const range = document.createRange();
+        try {
+            range.setStart(startNode, startNodeOffset);
+            range.setEnd(endNode, endNodeOffset);
+            return range;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    /**
+     * 基于文本搜索在翻译中进行高亮（降级方法）
+     * @private
+     */
+    _highlightInTranslationBySearch(translationDiv, text, highlightId) {
         const translationData = this.translationManager.getTranslationData();
         const preciseResults = this.getTranscriptData();
         const sortedKeys = Object.keys(preciseResults)
@@ -457,7 +602,6 @@ class HighlightManager {
         // 获取每个段落对应的翻译文本
         const translationTexts = sortedKeys.map(key => {
             const translation = translationData[key];
-            // 如果没有翻译，返回空字符串，这样段落存在但不会被搜索到
             return translation ? translation.trim() : "";
         });
 
@@ -465,7 +609,7 @@ class HighlightManager {
         let virtualFullText = translationTexts.join(" ");
 
         // 建立位置映射
-        const textPositionMap = []; // [{ startInVirtual, endInVirtual, sourceIndex }, ...]
+        const textPositionMap = [];
         let currentPos = 0;
         translationTexts.forEach((translationText, idx) => {
             const startInVirtual = currentPos;
@@ -476,23 +620,22 @@ class HighlightManager {
                 sourceIndex: idx,
                 translationText
             });
-            currentPos = endInVirtual + 1; // +1 for the space separator
+            currentPos = endInVirtual + 1;
         });
 
-        // 在虚拟全文中搜索（不区分大小写）
+        // 在虚拟全文中搜索
         const lowerVirtualText = virtualFullText.toLowerCase();
         const lowerText = text.toLowerCase();
         const matchPos = lowerVirtualText.indexOf(lowerText);
 
-        if (matchPos === -1) return; // 未找到
+        if (matchPos === -1) return;
 
         const matchEnd = matchPos + text.length;
 
         // 根据虚拟位置找到涉及的翻译段落
-        const affectedSources = []; // [{ sourceIndex, startInSource, endInSource }, ...]
+        const affectedSources = [];
 
         textPositionMap.forEach(mapping => {
-            // 检查是否重叠
             if (mapping.startInVirtual < matchEnd && mapping.endInVirtual > matchPos) {
                 const startInSource = Math.max(0, matchPos - mapping.startInVirtual);
                 const endInSource = Math.min(mapping.translationText.length, matchEnd - mapping.startInVirtual);
@@ -511,58 +654,10 @@ class HighlightManager {
             const paragraph = translationDiv.querySelector(`p[data-index="${key}"]`);
             if (!paragraph) return;
 
-            // 提取段落中的text nodes
-            const textNodes = [];
-            const walker = document.createTreeWalker(
-                paragraph,
-                NodeFilter.SHOW_TEXT,
-                null,
-                false
-            );
-
-            let node;
-            while (node = walker.nextNode()) {
-                textNodes.push(node);
-            }
-
-            if (textNodes.length === 0) return;
-
-            // 在text nodes中应用高亮
-            let currentPos = 0;
-            let matchStartNode = -1;
-            let matchStartIdx = -1;
-            let matchEndNode = -1;
-            let matchEndIdx = -1;
-
-            // 找到起始位置
-            for (let i = 0; i < textNodes.length; i++) {
-                const nodeLength = textNodes[i].textContent.length;
-                if (currentPos + nodeLength > source.startInSource && matchStartNode === -1) {
-                    matchStartNode = i;
-                    matchStartIdx = source.startInSource - currentPos;
-                }
-
-                if (currentPos + nodeLength >= source.endInSource) {
-                    matchEndNode = i;
-                    matchEndIdx = source.endInSource - currentPos;
-                    break;
-                }
-                currentPos += nodeLength;
-            }
-
-            if (matchStartNode === -1 || matchEndNode === -1) return;
-
-            // 进行高亮
-            if (matchStartNode === matchEndNode) {
-                // 同一个node内
-                this._highlightNodePortion(textNodes[matchStartNode], matchStartIdx, matchEndIdx, highlightId);
-            } else {
-                // 跨多个nodes
-                this._highlightNodePortion(textNodes[matchStartNode], matchStartIdx, textNodes[matchStartNode].textContent.length, highlightId);
-                for (let i = matchStartNode + 1; i < matchEndNode; i++) {
-                    this._highlightNodePortion(textNodes[i], 0, textNodes[i].textContent.length, highlightId);
-                }
-                this._highlightNodePortion(textNodes[matchEndNode], 0, matchEndIdx, highlightId);
+            // 获取段落中的Range并进行高亮
+            const range = this._createRangeInParagraph(paragraph, source.startInSource, source.endInSource);
+            if (range) {
+                this.highlightRangeDirectly(range, highlightId);
             }
         });
     }
