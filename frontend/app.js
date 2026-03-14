@@ -188,7 +188,38 @@ class StreamNote {
             if (this.translationEnabled) {
                 this.translationManager.translateText(text, index, sessionId);
             }
+
+            // 更新转录上下文 - 新转录的内容会被加入上下文
+            this.updateTranscriptionContext();
         }
+    }
+
+    /**
+     * 更新转录上下文 - 自动从现有转录内容生成
+     * 用于提高Whisper的转录准确率
+     */
+    updateTranscriptionContext() {
+        const transcriptData = this.recordingManager.getTranscriptData();
+        const indices = Object.keys(transcriptData).map(Number).sort((a, b) => a - b);
+
+        // 获取最近的转录内容作为上下文（最多保留最后5句）
+        const recentTranscripts = indices.slice(-5).map(idx => {
+            const { text } = transcriptData[idx];
+            return text;
+        }).filter(text => text && text.length > 0);
+
+        // 组合成上下文字符串
+        const context = recentTranscripts.join(' ');
+
+        // 设置上下文，限制长度防止超过API限制
+        const maxContextLength = 200;
+        const contextToUse = context.length > maxContextLength
+            ? context.substring(context.length - maxContextLength)
+            : context;
+
+        this.recordingManager.setTranscriptionContext(contextToUse);
+
+        console.log(`[INFO] Transcription context updated: "${contextToUse.substring(0, 100)}..."`);
     }
 
     /**
@@ -269,6 +300,9 @@ class StreamNote {
         // 加载转录内容到 RecordingManager
         this.recordingManager.setTranscriptData(session.transcripts || {});
         this.panelManager.setTranscriptData(session.transcripts || {});
+
+        // 更新转录上下文 - 从之前的转录内容生成
+        this.updateTranscriptionContext();
 
         // 加载当前语言的翻译内容到 TranslationManager
         const translationsForLanguage = (session.translations && session.translations[this.language])
@@ -1381,6 +1415,9 @@ class StreamNote {
             this.recordingSessionId = this.sessionManager.currentSessionId;
             this.updateRecordingIndicator();
 
+            // 确保上下文已更新
+            this.updateTranscriptionContext();
+
             await this.recordingManager.start(this.recordingSessionId);
 
             document.getElementById("startBtn").disabled = true;
@@ -1497,7 +1534,7 @@ class StreamNote {
         return Math.sqrt(sum / dataArray.length);
     }
 
-    async sendToWhisper() {
+    async submitForTranscription() {
         if (this.audioChunks.length === 0) {
             return;
         }

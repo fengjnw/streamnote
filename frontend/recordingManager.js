@@ -26,6 +26,9 @@ class RecordingManager {
         this.statsUpdateInterval = null;
         this.isTranscribing = false;  // 转录状态标志
 
+        // 转录上下文 - 用于Whisper的prompt参数，帮助提高准确率
+        this.transcriptionContext = "";
+
         // API 和回调
         this.transcribeApiUrl = config.transcribeApiUrl || "/api/transcribe";
         this.onTranscribeProgress = config.onTranscribeProgress || (() => { });
@@ -67,7 +70,7 @@ class RecordingManager {
             this.mediaRecorder.ondataavailable = (event) => {
                 if (event.data.size > 0) {
                     this.audioChunks.push(event.data);
-                    this.sendToWhisper(sessionId);
+                    this.submitForTranscription(sessionId);
                     this.audioChunks = [];
                 }
             };
@@ -204,7 +207,7 @@ class RecordingManager {
      * 发送音频到 Whisper API
      * @private
      */
-    async sendToWhisper(sessionId = null) {
+    async submitForTranscription(sessionId = null) {
         if (this.audioChunks.length === 0) {
             return;
         }
@@ -213,6 +216,11 @@ class RecordingManager {
         const audioBlob = new Blob(this.audioChunks, { type: "audio/webm" });
         const formData = new FormData();
         formData.append("file", audioBlob, "audio.webm");
+
+        // 添加上下文信息作为prompt参数，帮助Whisper更准确地转录
+        if (this.transcriptionContext) {
+            formData.append("context", this.transcriptionContext);
+        }
 
         const currentChunkIndex = this.chunkIndex;
         const sessionIdAtRequest = sessionId;
@@ -313,6 +321,21 @@ class RecordingManager {
     setTranscriptData(data) {
         this.preciseResults = { ...data };
         this.chunkIndex = Object.keys(this.preciseResults).length;
+    }
+
+    /**
+     * 设置转录上下文 - 用于提高Whisper转录准确率
+     * 上下文会作为prompt参数传递给Whisper API
+     */
+    setTranscriptionContext(context) {
+        this.transcriptionContext = context || "";
+    }
+
+    /**
+     * 获取转录上下文
+     */
+    getTranscriptionContext() {
+        return this.transcriptionContext;
     }
 
     /**

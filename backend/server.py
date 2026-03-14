@@ -52,10 +52,21 @@ def transcribe():
         audio_buffer = io.BytesIO(audio_data)
         audio_buffer.name = "audio.webm"
 
-        result = client.audio.transcriptions.create(
-            model="gpt-4o-mini-transcribe",  # 更快、更准确的新模型
-            file=audio_buffer,
-        )
+        # 获取上下文信息，用作Whisper的prompt参数以提高准确率
+        context = request.form.get("context", "").strip()
+        
+        # 构建Whisper API调用参数
+        transcribe_kwargs = {
+            "model": "gpt-4o-mini-transcribe",  # 更快、更准确的新模型
+            "file": audio_buffer,
+        }
+        
+        # 如果提供了上下文，将其作为prompt参数传递
+        # 这有助于Whisper识别领域术语和特定的词汇
+        if context and len(context) > 0:
+            transcribe_kwargs["prompt"] = context
+
+        result = client.audio.transcriptions.create(**transcribe_kwargs)
 
         text = result.text.strip()
         return jsonify({"text": text})
