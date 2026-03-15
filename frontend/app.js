@@ -1,37 +1,28 @@
 class StreamNote {
     constructor() {
-        this.mediaRecorder = null;
-        this.isRecording = false;
-        this.preciseResults = {};
-        this.chunkIndex = 0;
-        this.startTime = null;
-        this.audioChunks = [];
-        this.statsUpdateInterval = null;
-
-        // 停顿检测
-        this.audioContext = null;
-        this.analyser = null;
-        this.silenceStart = null;
-        this.voiceStart = null;
-        this.lastSendTime = null;
-        this.recordingStartTime = null;
-        this.hasVoice = false;
-        this.checkInterval = null;
-
-        // 关键词提取器
-        this.keywordExtractor = null;
-        this.currentTranscriptText = "";
-
         // Session 管理器
         this.sessionManager = null;
 
-        // 翻译功能
-        this.translationResults = {};
-        this.translationEnabled = true;
-        this.targetLanguage = "Chinese";
+        // 关键词管理器
+        this.keywordManager = null;
+        this.currentTranscriptText = "";
 
-        // 关键词解释功能 - 默认语言改为中文
-        this.keywordExplanationLanguage = "Chinese";
+        // 高亮ID映射
+        this.highlightIdMap = {};
+
+        // 翻译管理器
+        this.translationManager = null;
+        this.translationEnabled = true;
+
+        // 设置面板
+        this.settingsPanel = null;
+
+        // 高亮管理器
+        this.highlightManager = null;
+
+        // 语言设置（分别用于翻译和解释）
+        this.language = "Chinese";
+        this.explanationLanguage = "Chinese";
 
         // 总结缓存
         this.summaryCache = {};
@@ -40,30 +31,40 @@ class StreamNote {
         this.recordingSessionId = null;  // 记录当前正在转录的 session
         this.displaySessionId = null;    // 当前显示的 session（用户看到的）
 
-        // 同步滚动
-        this.isSyncingScroll = false;
-        this.scrollTimeout = null;
-
-        // 防止UI更新期间的滚动干扰
-        this.isUpdatingUI = false;
-
-        // 自动滚动开关
-        this.autoScroll = true;
-        this.isTogglingAutoScroll = false;  // 用户刚刚点击了自动滚动按钮
-
         // 文本选中菜单
         this.selectedText = "";
         this.selectedTextElement = null;
 
+        // 用户选择状态管理
+        this.hasActiveSelection = false;
+        this.pendingUpdates = false;
 
+        // 模态窗口状态
+        this.openModals = new Set();  // 跟踪打开的模态窗口
+
+        // 状态消息超时ID
+        this.statusMessageTimeout = null;
+
+        // === 初始化管理器 ===
         this.initSessionManager();
+        this.initRecordingManager();
+        this.initPanelManager();
+        this.initTranslationManager();
+        this.initSettingsPanel();
+        this.initKeywordManager();
+        this.initHighlightManager();
         this.setupUIListeners();
-        this.initKeywordExtractor();
+        this.initVisibilityHandlers();
+
+        // 在读取 session 前，先加载全局面板状态（作为默认值）
+        this.panelManager.loadPanelState();
+
+        // 加载 session 时会覆盖全局设置为 session 特定设置
         this.loadCurrentSession();
 
         // 延迟设置同步滚动，确保元素已加载
         setTimeout(() => {
-            this.setupSyncScroll();
+            this.panelManager.setupSyncScroll();
             this.initializeVisibility();
             // 设置容器为 auto 滚动行为（而不是 smooth）
             const transcript = document.getElementById("transcript");
@@ -78,39 +79,160 @@ class StreamNote {
     }
 
     /**
+     * 初始化录音管理器
+     */
+    initRecordingManager() {
+        this.recordingManager = new RecordingManager({
+            transcribeApiUrl: "/api/transcribe",
+            onTranscribeProgress: (data) => this.onTranscribeProgress(data),
+            onStatusUpdate: (status) => this.updateStatus(status),
+            onRecordingStateChange: (isRecording) => {
+                this.updateRecordingIndicator();
+                // 停止录音时刷新UI，移除转录状态占位符
+                if (!isRecording) {
+                    this.updateDisplay();
+                }
+            }
+        });
+    }
+
+    /**
+     * 初始化面板管理器
+     */
+    initPanelManager() {
+        this.panelManager = new PanelManager({
+            onLayoutChange: (layout) => {
+                const wasTranslationDisabled = !this.translationEnabled;
+                this.translationEnabled = layout.translationEnabled;
+                if (this.translationManager) {
+                    this.translationManager.setEnabled(this.translationEnabled);
+                    // 如果翻译从禁用改为启用，翻译缺失的内容
+                    if (wasTranslationDisabled && this.translationEnabled) {
+                        this.translationManager.translateMissingContent();
+                    }
+                }
+                this.saveSettingsToSession();
+                // 布局改变打全局，影响所有 session（由 panelManager.savePanelState() 处理）
+                this.updateDisplay();
+            },
+            onStatusUpdate: (status) => this.updateStatus(status)
+        });
+    }
+
+    /**
+     * 初始化翻译管理器
+     */
+    initTranslationManager() {
+        this.translationManager = new TranslationManager({
+            translateApiUrl: "/api/translate",
+            onTranslationProgress: (data) => {
+                // 翻译进度更新
+            },
+            onStatusUpdate: (status) => this.updateStatus(status),
+            onDisplayUpdate: () => this.updateDisplay(),
+            getSessionData: () => this.sessionManager.getCurrentSession(),
+            getPreciseResults: () => this.recordingManager.getTranscriptData(),
+            saveToSession: (sessionId) => this.saveToSession(sessionId)
+        });
+        // 设置初始语言
+        this.translationManager.setLanguage(this.language);
+        this.translationManager.setEnabled(this.translationEnabled);
+    }
+
+    /**
+     * 初始化设置面板
+     */
+    initSettingsPanel() {
+        this.settingsPanel = new SettingsPanel({
+            sessionManager: this.sessionManager,
+            onStatusUpdate: (status) => this.showStatusMessage(status, 2000),
+            onLanguageChange: (language) => {
+                this.language = language;
+            }
+        });
+    }
+
+    /**
+     * 初始化高亮管理器
+     */
+    initHighlightManager() {
+        this.highlightManager = new HighlightManager({
+            keywordManager: this.keywordManager,
+            translationManager: this.translationManager,
+            recordingManager: this.recordingManager,
+            sessionManager: this.sessionManager,
+            onStatusMessage: (message, duration) => this.showStatusMessage(message, duration),
+            getTranscriptData: () => this.recordingManager.getTranscriptData(),
+            highlightIdMap: this.highlightIdMap
+        });
+    }
+
+    /**
+     * 获取当前转录数据（快捷方法）
+     */
+    get preciseResults() {
+        return this.recordingManager.getTranscriptData();
+    }
+
+    /**
+     * 转录进度回调
+     */
+    onTranscribeProgress(data) {
+        const { index, text, timestamp, sessionId } = data;
+
+        // 获取当前 session
+        const currentSession = this.sessionManager.getCurrentSession();
+        const isCurrentSession = sessionId === this.sessionManager.currentSessionId;
+
+        if (isCurrentSession) {
+            // 只有在仍然在同一个 session 时，才更新本地显示
+            const transcriptData = this.recordingManager.getTranscriptData();
+            transcriptData[index] = { text, timestamp };
+            this.updateDisplay();
+
+            // 自动翻译 - 使用转录的上下文来改进翻译
+            if (this.translationEnabled) {
+                const translationContext = this.recordingManager.getTranscriptionContext();
+                this.translationManager.translateText(text, index, sessionId, translationContext);
+            }
+
+            // 更新转录上下文 - 新转录的内容会被加入上下文
+            this.updateTranscriptionContext();
+        }
+    }
+
+    /**
+     * 更新转录上下文 - 自动从现有转录内容生成
+     * 用于提高Whisper的转录准确率
+     */
+    updateTranscriptionContext() {
+        const transcriptData = this.recordingManager.getTranscriptData();
+        const indices = Object.keys(transcriptData).map(Number).sort((a, b) => a - b);
+
+        // 获取最近的转录内容作为上下文（最多保留最后5句）
+        const recentTranscripts = indices.slice(-5).map(idx => {
+            const { text } = transcriptData[idx];
+            return text;
+        }).filter(text => text && text.length > 0);
+
+        // 组合成上下文字符串
+        const context = recentTranscripts.join(' ');
+
+        // 设置上下文，限制长度防止超过API限制
+        const maxContextLength = 200;
+        const contextToUse = context.length > maxContextLength
+            ? context.substring(context.length - maxContextLength)
+            : context;
+
+        this.recordingManager.setTranscriptionContext(contextToUse);
+    }
+
+    /**
      * 初始化显示/隐藏状态
      */
     initializeVisibility() {
-        // 加载保存的布局偏好或使用默认的split view
-        this.loadPanelState();
-    }
-
-    /**
-     * 根据选定的布局应用相应的CSS类
-     */
-    setLayout(layoutType) {
-        const mainContent = document.querySelector(".main-content");
-        if (!mainContent) return;
-
-        // 移除所有布局类
-        mainContent.classList.remove("layout-full-transcript", "layout-split", "layout-full-translation");
-        // 添加新的布局类
-        mainContent.classList.add(`layout-${layoutType}`);
-        // 保存偏好
-        this.savePanelState();
-    }
-
-    /**
-     * 根据面板的实际状态（expanded/collapsed）更新按钮状态 (deprecated: 已被布局选择器替代)
-     */
-    updatePanelButtonState(button, panel) {
-        if (!button || !panel) return;
-
-        if (panel.classList.contains("expanded")) {
-            button.classList.add("active");
-        } else {
-            button.classList.remove("active");
-        }
+        // 应用高亮重新渲染
+        this.highlightManager.reapplyAllHighlights();
     }
 
     /**
@@ -139,97 +261,154 @@ class StreamNote {
         this.updateSessionInfo();
 
         // 不再自动停止转录，保持全局转录状态
-        // 如果有其他 session 在录制，显示提示
         if (this.recordingSessionId !== null && this.recordingSessionId !== this.sessionManager.currentSessionId) {
             const recordingSession = this.sessionManager.getSession(this.recordingSessionId);
             const recordingSessionName = recordingSession ? recordingSession.name : "Unknown";
-            this.showStatusMessage(`💬 Recording in "${recordingSessionName}" will continue in background`, 3000);
+            this.showStatusMessage(`Recording in "${recordingSessionName}" will continue in background`, 3000);
         }
 
         // 更新录制指示器UI
         this.updateRecordingIndicator();
 
-        // 恢复功能设置
-        if (session.settings) {
-            this.translationEnabled = session.settings.translationEnabled;
-            this.targetLanguage = session.settings.targetLanguage;
-            this.keywordExplanationLanguage = session.settings.keywordExplanationLanguage || "English";
+        // 重置转录状态（切换 session 意味着当前的转录已停止）
+        this.recordingManager.isTranscribing = false;
 
-            // 更新 UI 控件状态
-            const languageSelector = document.getElementById("target-language");
-            if (languageSelector) {
-                languageSelector.value = this.targetLanguage;
-            }
+        // 恢复功能设置，如果没有的话使用全局默认设置
+        const defaultSettings = this.sessionManager.getDefaultSettings();
 
-            const explanationLanguageSelector = document.getElementById("keyword-explanation-language");
-            if (explanationLanguageSelector) {
-                explanationLanguageSelector.value = this.keywordExplanationLanguage;
-            }
-
-            // 更新关键词提取器的设置
-            if (this.keywordExtractor) {
-                this.keywordExtractor.setEnabled(session.settings.keywordEnabled);
-
-                // 恢复解释缓存
-                if (session.settings.explanationCache) {
-                    this.keywordExtractor.explanationCache = { ...session.settings.explanationCache };
-                }
-
-                // 恢复查询历史
-                if (session.settings.queryHistory && Array.isArray(session.settings.queryHistory)) {
-                    this.keywordExtractor.queryHistory = [...session.settings.queryHistory];
-                    this.keywordExtractor.displayQueryHistory();
-                } else {
-                    this.keywordExtractor.queryHistory = [];
-                    this.keywordExtractor.displayQueryHistory();
-                }
-
-                // 恢复总结缓存
-                this.summaryCache = session.settings.summaryCache ? { ...session.settings.summaryCache } : {};
-            }
+        // 加载翻译语言
+        if (session.settings && session.settings.language) {
+            this.language = session.settings.language;
+        } else {
+            this.language = defaultSettings.defaultLanguage || "Chinese";
         }
 
-        // 加载转录内容
-        this.preciseResults = { ...session.transcripts };
-        this.chunkIndex = Object.keys(this.preciseResults).length;
+        // 加载解释语言
+        if (session.settings && session.settings.explanationLanguage) {
+            this.explanationLanguage = session.settings.explanationLanguage;
+        } else {
+            this.explanationLanguage = defaultSettings.defaultExplanationLanguage || "Chinese";
+        }
 
-        // 加载当前语言的翻译内容
-        const currentLang = this.targetLanguage || "Chinese";
-        this.translationResults = (session.translations && session.translations[currentLang])
-            ? { ...session.translations[currentLang] }
+        // 更新翻译语言选择器
+        const languageSelector = document.getElementById("target-language");
+        if (languageSelector) {
+            languageSelector.value = this.language;
+        }
+
+        // 更新总结语言选择器
+        const summaryLanguageSelector = document.getElementById("summary-language");
+        if (summaryLanguageSelector) {
+            summaryLanguageSelector.value = this.explanationLanguage;
+        }
+
+        // 加载转录内容到 RecordingManager
+        this.recordingManager.setTranscriptData(session.transcripts || {});
+        this.panelManager.setTranscriptData(session.transcripts || {});
+
+        // 更新转录上下文 - 从之前的转录内容生成
+        this.updateTranscriptionContext();
+
+        // 加载当前语言的翻译内容到 TranslationManager
+        const translationsForLanguage = (session.translations && session.translations[this.language])
+            ? { ...session.translations[this.language] }
             : {};
+        this.translationManager.setLanguage(this.language);
+        this.translationManager.setTranslationData(translationsForLanguage);
+        this.translationResults = translationsForLanguage; // 保留兼容性
 
-        // 更新显示（会应用当前的翻译开关状态）
-        this.initializeVisibility();
+        // 加载缓存数据
+        this.summaryCache = session.summaryCache ? { ...session.summaryCache } : {};
+
+        // 恢复高亮ID映射（如果存在）
+        if (session.highlightIdMap) {
+            this.highlightIdMap = { ...session.highlightIdMap };
+            if (this.highlightManager) {
+                this.highlightManager.setHighlightIdMap(this.highlightIdMap);
+            }
+        }
+        if (this.keywordManager) {
+            this.keywordManager.reset();
+
+            // 恢复自动提取的关键词（去重，防止列表中有重复词）
+            if (session.keywords && session.keywords.length > 0) {
+                this.keywordManager.extracts = [...new Set(session.keywords)];
+            }
+
+            // 恢复用户高亮的关键词（去重，防止列表中有重复词）
+            if (session.highlights && session.highlights.length > 0) {
+                this.keywordManager.highlights = [...new Set(session.highlights)];
+            } else {
+                this.keywordManager.highlights = [];
+            }
+
+            // 恢复高亮位置信息（用于精确提取上下文）
+            if (session.highlightPositions && Object.keys(session.highlightPositions).length > 0) {
+                this.keywordManager.setHighlightPositions({ ...session.highlightPositions });
+                if (this.highlightManager) {
+                    this.highlightManager.highlightPositions = { ...session.highlightPositions };
+                }
+            }
+
+            // 恢复在解释面板查询过的词
+            if (session.explanations && session.explanations.length > 0) {
+                this.keywordManager.explanations = [...session.explanations];
+            } else {
+                this.keywordManager.explanations = [];
+            }
+
+            // 恢复三个解释缓存
+            this.keywordManager.extractsCache = session.keywordCache ? { ...session.keywordCache } : {};
+            this.keywordManager.highlightCache = session.highlightCache ? { ...session.highlightCache } : {};
+            this.keywordManager.explanationCache = session.explanationCache ? { ...session.explanationCache } : {};
+
+            // 为所有高亮词生成highlightId（如果还没有）
+            if (this.highlightIdMap === undefined) {
+                this.highlightIdMap = {};
+            }
+            this.keywordManager.highlights.forEach(text => {
+                if (!this.highlightIdMap[text]) {
+                    this.highlightIdMap[text] = "hl-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+                }
+            });
+
+            // 更新显示
+            this.keywordManager.displayExplanations();
+        }
+
+        // 应用全局布局和翻译状态（而不是session特定的）
+        // panelManager 会自动从 localStorage 加载全局设置
+        // 所有 session 共享同一个当前布局
+        const mainContent = document.querySelector(".main-content");
+        if (mainContent) {
+            // 确保应用当前的全局布局
+            this.panelManager.setLayout(this.panelManager.currentLayout, true);
+        }
 
         // 清空 Summary 显示
         const summaryDisplay = document.getElementById("summary-display");
         if (summaryDisplay) {
-            // 检查当前语言是否有缓存，有就直接显示
-            if (this.summaryCache && this.summaryCache[this.keywordExplanationLanguage]) {
-                const cachedSummary = this.summaryCache[this.keywordExplanationLanguage];
-                summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
+            // 检查当前语言和风格是否有缓存，有就直接显示
+            const summarizeStyleSelect = document.getElementById("summarizeStyleSelect");
+            const selectedStyle = summarizeStyleSelect ? summarizeStyleSelect.value : "paragraph";
+            const cacheKey = `${this.explanationLanguage}-${selectedStyle}`;
+            if (this.summaryCache && this.summaryCache[cacheKey]) {
+                const cachedSummary = this.summaryCache[cacheKey];
+                summaryDisplay.innerHTML = this.formatSummaryDisplay(cachedSummary, selectedStyle);
             } else {
-                summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
+                summaryDisplay.innerHTML = '<p class="placeholder">Click Generate to generate a summary of your transcription</p>';
             }
         }
 
+        // 重置自动滚动状态为启用（切换 session 时应该重新启用自动滚动）
+        this.panelManager.autoScroll = true;
+        this.panelManager.updateAutoScrollButton();
+
         this.updateDisplay();
 
-        // 重置并恢复关键词
-        if (this.keywordExtractor) {
-            this.keywordExtractor.reset();
-
-            // 如果关键词功能开启且有保存的关键词，恢复它们
-            if (session.settings.keywordEnabled && session.keywords && session.keywords.length > 0) {
-                // 向后兼容：旧数据中没有来源标记，假设都是自动提取的
-                this.keywordExtractor.autoKeywords = [...session.keywords];
-                this.keywordExtractor.manualKeywords = [];
-                this.keywordExtractor.updateAllKeywordDisplays();
-            } else {
-                // 没有关键词，清空显示
-                this.keywordExtractor.updateAllKeywordDisplays();
-            }
+        // 更新关键词显示（高亮已在updateDisplay内的reapplyAllHighlights中应用）
+        if (this.keywordManager) {
+            this.keywordManager.updateAllKeywordDisplays();
         }
 
         this.updateStatus(`Loaded: ${session.name}`);
@@ -295,7 +474,7 @@ class StreamNote {
         }
 
         // 显示翻译语言
-        if (this.translationEnabled && this.targetLanguage) {
+        if (this.translationEnabled && this.language) {
             const translationStatusDisplay = document.getElementById('translationStatusDisplay');
             const translationLangDisplay = document.getElementById('translationLangDisplay');
             if (translationStatusDisplay) {
@@ -310,7 +489,7 @@ class StreamNote {
                     'Japanese': '日本語',
                     'Korean': '한국어'
                 };
-                translationLangDisplay.textContent = langNames[this.targetLanguage] || this.targetLanguage;
+                translationLangDisplay.textContent = langNames[this.language] || this.language;
             }
         } else {
             const translationStatusDisplay = document.getElementById('translationStatusDisplay');
@@ -337,27 +516,34 @@ class StreamNote {
         }
 
         // 保存转录内容
-        this.sessionManager.updateTranscriptsForSession(sessionId, this.preciseResults);
+        const transcripts = this.recordingManager.getTranscriptData();
+        this.sessionManager.updateTranscriptsForSession(sessionId, transcripts);
 
-        // 保存关键词
-        if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords) {
-            this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
+        // 分别保存词列表和缓存
+        if (this.keywordManager) {
+            this.sessionManager.updateCurrentKeywords(this.keywordManager.extracts);
+            this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
+            this.sessionManager.updateCurrentExplanations(this.keywordManager.explanations);
+
+            // 保存缓存
+            this.sessionManager.updateCurrentKeywordCache(this.keywordManager.extractsCache);
+            this.sessionManager.updateCurrentHighlightCache(this.keywordManager.highlightCache);
+            this.sessionManager.updateCurrentExplanationCache(this.keywordManager.explanationCache);
         }
 
         // 保存翻译（按当前语言保存）
-        if (this.translationResults) {
-            this.sessionManager.updateCurrentTranslations(this.translationResults, this.targetLanguage);
+        const translationData = this.translationManager.getTranslationData();
+        if (translationData && Object.keys(translationData).length > 0) {
+            this.sessionManager.updateCurrentTranslations(translationData, this.language);
         }
 
-        // 保存功能设置
+        // 保存总结缓存
+        this.sessionManager.updateCurrentSummaryCache(this.summaryCache);
+
+        // 保存设置
         const settings = {
             translationEnabled: this.translationEnabled,
-            targetLanguage: this.targetLanguage,
-            keywordEnabled: this.keywordExtractor ? this.keywordExtractor.enabled : true,
-            keywordExplanationLanguage: this.keywordExplanationLanguage,
-            explanationCache: this.keywordExtractor ? this.keywordExtractor.explanationCache : {},
-            queryHistory: this.keywordExtractor ? this.keywordExtractor.queryHistory : [],
-            summaryCache: this.summaryCache
+            language: this.language
         };
         this.sessionManager.updateCurrentSettings(settings);
     }
@@ -369,55 +555,52 @@ class StreamNote {
         if (!this.sessionManager) return;
 
         const settings = {
-            translationEnabled: this.translationEnabled,
-            targetLanguage: this.targetLanguage,
-            keywordEnabled: this.keywordExtractor ? this.keywordExtractor.enabled : true,
-            keywordExplanationLanguage: this.keywordExplanationLanguage,
-            explanationCache: this.keywordExtractor ? this.keywordExtractor.explanationCache : {},
-            queryHistory: this.keywordExtractor ? this.keywordExtractor.queryHistory : [],
-            summaryCache: this.summaryCache
+            language: this.language,
+            explanationLanguage: this.explanationLanguage
         };
         this.sessionManager.updateCurrentSettings(settings);
     }
 
     /**
-     * 保存布局选择状态
+     * 保存当前布局和翻译设置到会话
      */
     savePanelState() {
-        const layoutSelector = document.getElementById("layoutSelector");
-        if (layoutSelector) {
-            localStorage.setItem('layoutPreference', layoutSelector.value);
+        if (this.currentSession) {
+            this.sessionManager.updateCurrentSettings({
+                layout: this.panelManager.currentLayout,
+                translationEnabled: this.panelManager.translationEnabled,
+                translationLayout: this.panelManager.translationLayout
+            });
         }
+        // 同时保存到 localStorage 
+        this.panelManager.savePanelState();
     }
 
     /**
-     * 加载布局选择状态
+     * 加载布局和翻译状态（由 panelManager 处理）
      */
     loadPanelState() {
-        const layoutPreference = localStorage.getItem('layoutPreference') || 'split';
-        const layoutSelector = document.getElementById("layoutSelector");
-        if (layoutSelector) {
-            layoutSelector.value = layoutPreference;
-            this.setLayout(layoutPreference);
-        }
+        // 布局加载已由 panelManager 处理
     }
 
     /**
      * 初始化关键词提取器
      */
-    initKeywordExtractor() {
-        this.keywordExtractor = new KeywordExtractor({
+    initKeywordManager() {
+        this.keywordManager = new KeywordManager({
             apiUrl: "/api/extract-keywords",
             transcriptElement: document.getElementById("transcript"),
             keywordElement: document.getElementById("keywords-display"),
-            topK: 5
+            topK: 5,
+            panelManager: this.panelManager,
+            recordingManager: this.recordingManager,
+            getTranscriptData: () => this.recordingManager.getTranscriptData(),
+            translationManager: this.translationManager,
+            onStatusMessage: (message, duration) => this.showStatusMessage(message, duration)
         });
 
-        // 使 KeywordExtractor 全局可访问
-        window.keywordExtractorInstance = this.keywordExtractor;
-
-
-
+        // 使 KeywordManager 全局可访问
+        window.keywordManagerInstance = this.keywordManager;
     }
 
     setupUIListeners() {
@@ -425,54 +608,21 @@ class StreamNote {
         document.getElementById("stopBtn").addEventListener("click", () => this.stop());
         document.getElementById("clearBtn").addEventListener("click", () => this.clear());
 
-        // 布局选择器
-        const layoutSelector = document.getElementById("layoutSelector");
-        if (layoutSelector) {
-            layoutSelector.addEventListener("change", (e) => {
-                this.setLayout(e.target.value);
-            });
-        }
+        // 布局切换已由 PanelManager 处理
 
-        // 关闭面板按钮（保留这些用于边框上的关闭按钮）
-        const closeTranscriptPanelBtn = document.getElementById("closeTranscriptPanelBtn");
-        const closeTranslationPanelBtn = document.getElementById("closeTranslationPanelBtn");
-
-        if (closeTranscriptPanelBtn) {
-            closeTranscriptPanelBtn.addEventListener("click", () => {
-                // 点击关闭时切换到全译文布局
-                const layoutSelector = document.getElementById("layoutSelector");
-                if (layoutSelector) {
-                    layoutSelector.value = "full-translation";
-                    this.setLayout("full-translation");
-                }
-            });
-        }
-
-        if (closeTranslationPanelBtn) {
-            closeTranslationPanelBtn.addEventListener("click", () => {
-                // 点击关闭时切换到全原文布局
-                const layoutSelector = document.getElementById("layoutSelector");
-                if (layoutSelector) {
-                    layoutSelector.value = "full-transcript";
-                    this.setLayout("full-transcript");
-                }
-            });
-        }
-
-        // 添加语言选择
+        // 添加翻译语言选择
         const languageSelector = document.getElementById("target-language");
         if (languageSelector) {
             languageSelector.addEventListener("change", async (e) => {
-                const oldLanguage = this.targetLanguage;
-                this.targetLanguage = e.target.value;
-
+                this.language = e.target.value;
+                this.translationManager.setLanguage(this.language);
 
                 // 语言改变，重新翻译全部
                 if (this.translationEnabled) {
                     // 如果正在录制，提示用户
                     if (this.isRecording) {
                     }
-                    await this.retranslateAll();
+                    await this.translationManager.retranslateAll();
                 }
 
                 // 保存设置到 session
@@ -480,32 +630,56 @@ class StreamNote {
             });
         }
 
-        // 添加关键词解释语言选择
-        const explanationLanguageSelector = document.getElementById("keyword-explanation-language");
-        if (explanationLanguageSelector) {
-            explanationLanguageSelector.addEventListener("change", (e) => {
-                this.keywordExplanationLanguage = e.target.value;
+        // 添加解释语言选择
+        const keywordExplanationLangSelector = document.getElementById("keyword-explanation-language");
+        if (keywordExplanationLangSelector) {
+            keywordExplanationLangSelector.addEventListener("change", (e) => {
+                this.explanationLanguage = e.target.value;
 
-                // 更新 Summary 显示
-                const summaryDisplay = document.getElementById("summary-display");
-                if (summaryDisplay) {
-                    if (this.summaryCache && this.summaryCache[this.keywordExplanationLanguage]) {
-                        const cachedSummary = this.summaryCache[this.keywordExplanationLanguage];
-                        summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
-                    } else {
-                        summaryDisplay.innerHTML = '<p class="placeholder">Click the button to generate summary</p>';
-                    }
+                // 保存设置到 session
+                this.saveSettingsToSession();
+
+                // 同步总结语言选择器的值
+                const summaryLanguageSelector = document.getElementById("summary-language");
+                if (summaryLanguageSelector) {
+                    summaryLanguageSelector.value = this.explanationLanguage;
                 }
 
-                this.saveSettingsToSession();
+                // 同步设置面板的默认解释语言选择器
+                const defaultExplanationLanguageSelector = document.getElementById("defaultExplanationLanguage");
+                if (defaultExplanationLanguageSelector) {
+                    defaultExplanationLanguageSelector.value = this.explanationLanguage;
+                }
+
+                // 如果keyword manager存在，刷新显示
+                if (this.keywordManager) {
+                    this.keywordManager.displayExplanations();
+                    // 刷新所有已展开的解释（用新语言重新生成）
+                    this.keywordManager.refreshExpandedExplanations();
+                }
+
+                // 更新 Summary 显示 - 检查是否有该语言的缓存
+                const summaryDisplay = document.getElementById("summary-display");
+                const summarizeStyleSelect = document.getElementById("summarizeStyleSelect");
+                if (summaryDisplay) {
+                    const selectedStyle = summarizeStyleSelect ? summarizeStyleSelect.value : "paragraph";
+                    const cacheKey = `${this.explanationLanguage}-${selectedStyle}`;
+                    if (this.summaryCache && this.summaryCache[cacheKey]) {
+                        const cachedSummary = this.summaryCache[cacheKey];
+                        summaryDisplay.innerHTML = this.formatSummaryDisplay(cachedSummary, selectedStyle);
+                    } else {
+                        summaryDisplay.innerHTML = '<p class="placeholder">Click Generate to generate a summary of your transcription</p>';
+                    }
+                }
             });
         }
+
 
         // 自动提取关键词按钮（在Keywords面板中）
         const autoExtractKeywordsBtn = document.getElementById("autoExtractKeywordsBtn");
         if (autoExtractKeywordsBtn) {
             autoExtractKeywordsBtn.addEventListener("click", async () => {
-                if (!this.keywordExtractor) {
+                if (!this.keywordManager) {
                     this.showStatusMessage("Keyword extractor not initialized", 2000);
                     return;
                 }
@@ -541,24 +715,22 @@ class StreamNote {
         const sidePanelTitle = document.getElementById("sidePanelTitle");
         const keywordsContent = document.getElementById("keywordsContent");
         const summaryContent = document.getElementById("summaryContent");
-        const historyContent = document.getElementById("historyContent");
-        const settingsContent = document.getElementById("settingsContent");
+        const highlightsContent = document.getElementById("highlightsContent");
         const quickAccessKeywords = document.getElementById("quickAccessKeywords");
         const quickAccessSummary = document.getElementById("quickAccessSummary");
-        const quickAccessHistory = document.getElementById("quickAccessHistory");
         const quickAccessSettings = document.getElementById("quickAccessSettings");
+        const quickAccessHighlights = document.getElementById("quickAccessHighlights");
 
         // Hide all content
         const hideAllContent = () => {
             keywordsContent.classList.remove("active");
             summaryContent.classList.remove("active");
-            historyContent.classList.remove("active");
-            settingsContent.classList.remove("active");
+            highlightsContent.classList.remove("active");
             // Clear active state from all quick access buttons
             quickAccessKeywords.classList.remove("active");
             quickAccessSummary.classList.remove("active");
-            quickAccessHistory.classList.remove("active");
             quickAccessSettings.classList.remove("active");
+            quickAccessHighlights.classList.remove("active");
         };
 
         // Show specific content
@@ -572,36 +744,11 @@ class StreamNote {
                 quickAccessKeywords.classList.add("active");
             } else if (contentEl === summaryContent) {
                 quickAccessSummary.classList.add("active");
-            } else if (contentEl === historyContent) {
-                quickAccessHistory.classList.add("active");
-            } else if (contentEl === settingsContent) {
-                quickAccessSettings.classList.add("active");
+            } else if (contentEl === highlightsContent) {
+                quickAccessHighlights.classList.add("active");
             }
 
-            // Show/hide auto extract keywords button and explanation language selector based on active tab
-            const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
-            const generateSummaryBtn = document.getElementById("generateSummaryBtn");
-            const copySummaryBtn = document.getElementById("copySummaryBtn");
-            const explanationLangSelector = document.getElementById("keyword-explanation-language");
 
-            if (autoExtractBtn) {
-                if (contentEl === keywordsContent) {
-                    autoExtractBtn.style.display = 'block';
-                    autoExtractBtn.style.opacity = '1';
-                    autoExtractBtn.style.pointerEvents = 'auto';
-                } else {
-                    autoExtractBtn.style.display = 'none';
-                }
-            }
-            if (generateSummaryBtn) {
-                generateSummaryBtn.style.display = contentEl === summaryContent ? 'block' : 'none';
-            }
-            if (copySummaryBtn) {
-                copySummaryBtn.style.display = contentEl === summaryContent ? 'block' : 'none';
-            }
-            if (explanationLangSelector) {
-                explanationLangSelector.style.display = (contentEl === keywordsContent || contentEl === historyContent || contentEl === summaryContent) ? 'block' : 'none';
-            }
 
             // Set flag to prevent resize-induced scroll from closing autoScroll
             this.isUpdatingUI = true;
@@ -619,9 +766,9 @@ class StreamNote {
                 sidePanelsContainer.classList.remove("expanded");
                 // Remove active state from all quick access buttons
                 quickAccessKeywords.classList.remove("active");
-                quickAccessHistory.classList.remove("active");
                 quickAccessSummary.classList.remove("active");
                 quickAccessSettings.classList.remove("active");
+                quickAccessHighlights.classList.remove("active");
                 setTimeout(() => {
                     this.isUpdatingUI = false;
                 }, 350); // Match the 0.3s transition + buffer
@@ -642,25 +789,7 @@ class StreamNote {
                         this.isUpdatingUI = false;
                     }, 350);
                 } else {
-                    showContent(keywordsContent, "Keywords");
-                }
-            });
-        }
-
-        if (quickAccessHistory) {
-            quickAccessHistory.addEventListener("click", () => {
-                const isOpen = sidePanelsContainer.classList.contains("expanded");
-                const isActive = historyContent.classList.contains("active");
-
-                if (isOpen && isActive) {
-                    this.isUpdatingUI = true;
-                    sidePanelsContainer.classList.remove("expanded");
-                    quickAccessHistory.classList.remove("active");
-                    setTimeout(() => {
-                        this.isUpdatingUI = false;
-                    }, 350);
-                } else {
-                    showContent(historyContent, "History");
+                    showContent(keywordsContent, "Auto Keywords");
                 }
             });
         }
@@ -685,29 +814,38 @@ class StreamNote {
 
         if (quickAccessSettings) {
             quickAccessSettings.addEventListener("click", () => {
+                // 初始化设置面板的默认值
+                this.settingsPanel.initialize();
+                this.toggleModal("settingsModal");
+            });
+        }
+
+        if (quickAccessHighlights) {
+            quickAccessHighlights.addEventListener("click", () => {
                 const isOpen = sidePanelsContainer.classList.contains("expanded");
-                const isActive = settingsContent.classList.contains("active");
+                const isActive = highlightsContent.classList.contains("active");
 
                 if (isOpen && isActive) {
                     this.isUpdatingUI = true;
                     sidePanelsContainer.classList.remove("expanded");
-                    quickAccessSettings.classList.remove("active");
+                    quickAccessHighlights.classList.remove("active");
                     setTimeout(() => {
                         this.isUpdatingUI = false;
                     }, 350);
                 } else {
-                    showContent(settingsContent, "Settings");
+                    showContent(highlightsContent, "Highlights");
                 }
             });
         }
 
         // ===== Summary Feature =====
-        const generateSummaryBtn = document.getElementById("generateSummaryBtn");
+        const regenerateSummaryBtn = document.getElementById("regenerateSummaryBtn");
         const copySummaryBtn = document.getElementById("copySummaryBtn");
         const summaryDisplay = document.getElementById("summary-display");
+        const summarizeStyleSelect = document.getElementById("summarizeStyleSelect");
 
-        if (generateSummaryBtn) {
-            generateSummaryBtn.addEventListener("click", async () => {
+        if (regenerateSummaryBtn) {
+            regenerateSummaryBtn.addEventListener("click", async () => {
                 // 从当前session获取转录文本
                 const session = this.sessionManager.getCurrentSession();
                 let textToSummarize = "";
@@ -725,14 +863,16 @@ class StreamNote {
                     return;
                 }
 
-                generateSummaryBtn.disabled = true;
-                generateSummaryBtn.title = "Generating...";
+                regenerateSummaryBtn.disabled = true;
+                regenerateSummaryBtn.title = "Generating...";
                 copySummaryBtn.disabled = true;
 
                 try {
-                    const summary = await this.summarizeText(textToSummarize, true);  // forceRefresh=true
+                    // 获取选中的总结风格
+                    const selectedStyle = summarizeStyleSelect ? summarizeStyleSelect.value : "paragraph";
+                    const summary = await this.summarizeText(textToSummarize, true, selectedStyle);  // forceRefresh=true
                     if (summary) {
-                        summaryDisplay.innerHTML = `<p>${summary.replace(/\n/g, '<br>')}</p>`;
+                        summaryDisplay.innerHTML = this.formatSummaryDisplay(summary, selectedStyle);
                         copySummaryBtn.disabled = false;
                     } else {
                         summaryDisplay.innerHTML = '<p class="placeholder">Failed to generate summary</p>';
@@ -741,8 +881,8 @@ class StreamNote {
                     console.error("[SUMMARY] Error:", error);
                     summaryDisplay.innerHTML = `<p class="placeholder">Error: ${error.message}</p>`;
                 } finally {
-                    generateSummaryBtn.disabled = false;
-                    generateSummaryBtn.title = "Refresh Summary";
+                    regenerateSummaryBtn.disabled = false;
+                    regenerateSummaryBtn.title = "Regenerate Summary";
                 }
             });
         }
@@ -752,10 +892,206 @@ class StreamNote {
                 const summaryText = summaryDisplay.innerText;
                 if (summaryText && summaryText !== "Click the button to generate summary") {
                     navigator.clipboard.writeText(summaryText).then(() => {
-                        alert("Summary copied to clipboard!");
+                        const originalText = copySummaryBtn.textContent;
+                        copySummaryBtn.textContent = '✓ Copied';
+                        setTimeout(() => {
+                            copySummaryBtn.textContent = originalText;
+                        }, 2000);
                     }).catch(err => {
                         console.error("Failed to copy:", err);
+                        alert("Failed to copy summary");
                     });
+                } else {
+                    alert("Please generate a summary first");
+                }
+            });
+        }
+
+        // Summary style selector - load cached summary or show placeholder
+        if (summarizeStyleSelect) {
+            summarizeStyleSelect.addEventListener("change", () => {
+                const session = this.sessionManager.getCurrentSession();
+                const language = this.explanationLanguage;
+                const selectedStyle = summarizeStyleSelect.value;
+                const cacheKey = `${language}-${selectedStyle}`;
+
+                // 如果有缓存，显示缓存的总结
+                if (this.summaryCache[cacheKey]) {
+                    summaryDisplay.innerHTML = this.formatSummaryDisplay(this.summaryCache[cacheKey], selectedStyle);
+                } else {
+                    // 没有缓存，显示提示需要重新生成
+                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary in this format</p>';
+                }
+            });
+        }
+
+        // Summary language selector
+        const summaryLanguageSelector = document.getElementById("summary-language");
+        if (summaryLanguageSelector) {
+            summaryLanguageSelector.addEventListener("change", (e) => {
+                this.explanationLanguage = e.target.value;
+                const selectedStyle = summarizeStyleSelect ? summarizeStyleSelect.value : "paragraph";
+                const cacheKey = `${this.explanationLanguage}-${selectedStyle}`;
+
+                // 如果有缓存，显示缓存的总结
+                if (this.summaryCache[cacheKey]) {
+                    summaryDisplay.innerHTML = this.formatSummaryDisplay(this.summaryCache[cacheKey], selectedStyle);
+                } else {
+                    // 没有缓存，显示提示需要重新生成
+                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary in this format</p>';
+                }
+
+                // 更新其他地方的explanationLanguage选择器
+                const explanationLanguageSelector = document.getElementById("keyword-explanation-language");
+                if (explanationLanguageSelector) {
+                    explanationLanguageSelector.value = this.explanationLanguage;
+                }
+                const defaultExplanationLanguageSelector = document.getElementById("defaultExplanationLanguage");
+                if (defaultExplanationLanguageSelector) {
+                    defaultExplanationLanguageSelector.value = this.explanationLanguage;
+                }
+
+                // 保存设置到session
+                this.saveSettingsToSession();
+            });
+        }
+
+        // ===== Panel Toolbar Buttons =====
+
+        // Re-extract keywords button
+        const reExtractKeywordsBtn = document.getElementById("reExtractKeywordsBtn");
+        if (reExtractKeywordsBtn) {
+            reExtractKeywordsBtn.addEventListener("click", async () => {
+                if (!this.keywordManager) {
+                    this.showStatusMessage("Keyword extractor not initialized", 2000);
+                    return;
+                }
+
+                if (Object.keys(this.preciseResults).length === 0) {
+                    this.showStatusMessage("No transcript available to extract keywords from", 2000);
+                    return;
+                }
+
+                reExtractKeywordsBtn.disabled = true;
+                const originalText = reExtractKeywordsBtn.textContent;
+                reExtractKeywordsBtn.textContent = 'Extracting...';
+
+                try {
+                    await this.processKeywords(this.recordingSessionId || this.sessionManager.currentSessionId);
+                    this.showStatusMessage("✓ Keywords extracted", 1500);
+                } catch (error) {
+                    console.error("[StreamNote] Error extracting keywords:", error);
+                    this.showStatusMessage("✗ Failed to extract keywords", 2000);
+                } finally {
+                    reExtractKeywordsBtn.disabled = false;
+                    reExtractKeywordsBtn.textContent = originalText;
+                }
+            });
+        }
+
+        // Clear keywords button
+        const clearKeywordsBtn = document.getElementById("clearKeywordsBtn");
+        if (clearKeywordsBtn) {
+            clearKeywordsBtn.addEventListener("click", () => {
+                if (!this.keywordManager || this.keywordManager.extracts.length === 0) {
+                    this.showStatusMessage("No keywords to clear", 1500);
+                    return;
+                }
+
+                if (confirm("Clear all auto-extracted keywords? This cannot be undone.")) {
+                    this.keywordManager.extracts = [];
+                    this.keywordManager.extractsCache = {};
+                    this.keywordManager.displayExtracts();
+                    this.saveToSession();
+                    this.showStatusMessage("✓ Keywords cleared", 1500);
+                }
+            });
+        }
+
+        // Clear highlights button
+        const clearHighlightsBtn = document.getElementById("clearHighlightsBtn");
+        if (clearHighlightsBtn) {
+            clearHighlightsBtn.addEventListener("click", () => {
+                if (!this.keywordManager || this.keywordManager.highlights.length === 0) {
+                    this.showStatusMessage("No highlights to clear", 1500);
+                    return;
+                }
+
+                if (confirm("Clear all highlights? This cannot be undone.")) {
+                    this.keywordManager.highlights = [];
+                    this.keywordManager.highlightCache = {};
+                    this.highlightManager.reapplyAllHighlights();
+                    this.keywordManager.displayHighlights();
+                    this.saveToSession();
+                    this.showStatusMessage("✓ Highlights cleared", 1500);
+                }
+            });
+        }
+
+        // Highlight current explanation word button
+        const highlightCurrentWordBtn = document.getElementById("highlight-current-word-btn");
+        if (highlightCurrentWordBtn) {
+            highlightCurrentWordBtn.addEventListener("click", () => {
+                const currentWordEl = document.getElementById("current-explanation-word");
+                if (currentWordEl && currentWordEl.textContent) {
+                    const word = currentWordEl.textContent.trim();
+
+                    // 检查词是否已被高亮
+                    const isHighlighted = this.keywordManager?.highlights.includes(word);
+
+                    if (isHighlighted) {
+                        // 词已被高亮，执行移除操作
+                        const isHighlightedAfter = this.highlightManager?.toggleHighlight(word);
+                        this.updateHighlightButtonState(word, isHighlightedAfter);
+                    } else {
+                        // 词未被高亮，从临时高亮转移到永久高亮
+                        const isCommitted = this.highlightManager?.commitTemporaryHighlight(word);
+                        if (isCommitted) {
+                            this.updateHighlightButtonState(word, true);
+                        } else {
+                            // 如果没有临时高亮，使用降级方案
+                            const isAdded = this.highlightManager?.toggleHighlight(word);
+                            this.updateHighlightButtonState(word, isAdded);
+                        }
+                    }
+                }
+            });
+        }
+
+        const regenerateExplanationBtn = document.getElementById("regenerate-explanation-btn");
+        if (regenerateExplanationBtn) {
+            regenerateExplanationBtn.addEventListener("click", () => {
+                this.keywordManager?.regenerateCurrentExplanation();
+            });
+        }
+
+        // Clear explanation display button
+        const clearExplanationsBtn = document.getElementById("clearExplanationsBtn");
+        if (clearExplanationsBtn) {
+            clearExplanationsBtn.addEventListener("click", () => {
+                const currentWordEl = document.getElementById("current-explanation-word");
+                const contentEl = document.getElementById("explanation-content");
+                const contextDiv = document.getElementById("word-context");
+                const headerDiv = document.querySelector(".explanation-header");
+                const regenerateBtn = document.getElementById("regenerate-explanation-btn");
+
+                if (currentWordEl) currentWordEl.textContent = "";
+                if (contentEl) contentEl.innerHTML = '<p class="placeholder">Select a word to view its explanation</p>';
+                if (contextDiv) contextDiv.style.display = 'none';
+                if (headerDiv) headerDiv.classList.add("hidden");
+                if (regenerateBtn) regenerateBtn.disabled = true;
+
+                this.showStatusMessage("✓ Explanation cleared", 1500);
+            });
+        }
+
+        const clearSummaryBtn = document.getElementById("clearSummaryBtn");
+        if (clearSummaryBtn) {
+            clearSummaryBtn.addEventListener("click", () => {
+                const summaryDisplay = document.getElementById("summary-display");
+                if (summaryDisplay) {
+                    summaryDisplay.innerHTML = '<p class="placeholder">Click Generate to generate a summary of your transcription</p>';
+                    this.showStatusMessage("✓ Summary cleared", 1500);
                 }
             });
         }
@@ -805,6 +1141,35 @@ class StreamNote {
 
         // 初始化关键词标签页切换
         this.initKeywordsTabSwitcher();
+
+        // 监听用户选择变化
+        document.addEventListener('selectionchange', () => {
+            const selection = window.getSelection();
+            this.hasActiveSelection = selection.toString().length > 0;
+
+            // 当选择被取消且有待更新，立即刷新显示
+            if (!this.hasActiveSelection && this.pendingUpdates) {
+                this.pendingUpdates = false;
+                this.updateDisplay();
+            }
+        });
+
+        // === 模态窗口关闭按钮处理 ===
+        // Session Modal 关闭按钮
+        const closeSessionModalBtn = document.getElementById("closeSessionModal");
+        if (closeSessionModalBtn) {
+            closeSessionModalBtn.addEventListener("click", () => {
+                this.closeModal("sessionModal");
+            });
+        }
+
+        // Settings Modal 关闭按钮
+        const closeSettingsModalBtn = document.getElementById("closeSettingsModal");
+        if (closeSettingsModalBtn) {
+            closeSettingsModalBtn.addEventListener("click", () => {
+                this.closeModal("settingsModal");
+            });
+        }
     }
 
     /**
@@ -848,47 +1213,38 @@ class StreamNote {
     }
 
     /**
-     * 初始化文本选中菜单功能
-     */
-    /**
-     * 初始化文本工具功能
+     * 初始化文本选中菜单功能（浮动菜单）
      */
     initTextSelectionMenu() {
-        const explainBtn = document.getElementById("explainBtn");
-        const addKeywordBtn = document.getElementById("addKeywordBtn");
+        const floatingMenu = document.getElementById("textSelectionMenu");
+        const floatingExplainBtn = document.getElementById("floatingExplainBtn");
+        const floatingHighlightBtn = document.getElementById("floatingHighlightBtn");
 
-        // 获取侧边栏相关元素
-        const sidePanelsContainer = document.querySelector(".side-panels-container");
-        const sidePanelTitle = document.getElementById("sidePanelTitle");
         const keywordsContent = document.getElementById("keywordsContent");
-        const historyContent = document.getElementById("historyContent");
-        const settingsContent = document.getElementById("settingsContent");
+        const highlightsContent = document.getElementById("highlightsContent");
 
-        if (!explainBtn || !addKeywordBtn) return;
+        if (!floatingMenu || !floatingExplainBtn || !floatingHighlightBtn) return;
 
-        // Hide all content
-        const hideAllContent = () => {
-            keywordsContent.classList.remove("active");
-            historyContent.classList.remove("active");
-            settingsContent.classList.remove("active");
-        };
+        // 保存当前的选中range对象，用于菜单按钮点击时使用
+        let currentSelectedRange = null;
+        let rangeInfo = null;  // 保存range的详细信息以便重建
 
-        // 监听选中事件
-        document.addEventListener("selectionchange", () => {
+        /**
+         * 计算并显示浮动菜单
+         */
+        const showFloatingMenu = () => {
             const selection = window.getSelection();
             const selectedText = selection.toString().trim();
 
             if (!selectedText || selectedText.length === 0) {
-                explainBtn.disabled = true;
-                addKeywordBtn.disabled = true;
+                floatingMenu.classList.add("hidden");
                 return;
             }
 
             // 检查选中内容是否在转录或翻译区域
             const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
             if (!range) {
-                explainBtn.disabled = true;
-                addKeywordBtn.disabled = true;
+                floatingMenu.classList.add("hidden");
                 return;
             }
 
@@ -902,139 +1258,278 @@ class StreamNote {
                 this.selectedText = selectedText;
                 this.selectedTextElement = range.commonAncestorContainer;
 
-                // 启用按钮
-                explainBtn.disabled = false;
-                addKeywordBtn.disabled = false;
+                // 保存当前的range和其详细信息
+                currentSelectedRange = range.cloneRange();
+                rangeInfo = {
+                    startContainer: range.startContainer,
+                    startOffset: range.startOffset,
+                    endContainer: range.endContainer,
+                    endOffset: range.endOffset,
+                    commonAncestorContainer: range.commonAncestorContainer
+                };
+
+                // 先显示菜单，以便计算实际尺寸
+                floatingMenu.classList.remove("hidden");
+
+                // 获取选区和菜单的位置
+                const rangeRect = range.getBoundingClientRect();
+
+                // 使用requestAnimationFrame确保菜单已渲染
+                requestAnimationFrame(() => {
+                    // 获取菜单的实际尺寸
+                    const menuWidth = floatingMenu.offsetWidth || 180;
+                    const menuHeight = floatingMenu.offsetHeight || 100;
+
+                    // 计算菜单位置：显示在选中文本的右下方
+                    let menuX = rangeRect.right + 10;  // 选区右侧 + 10px间距
+                    let menuY = rangeRect.top;          // 选区顶部对齐
+
+                    // 检查菜单是否超出屏幕右边界，如果超出则显示在左边
+                    if (menuX + menuWidth > window.innerWidth - 10) {
+                        menuX = rangeRect.left - menuWidth - 10;  // 显示在左边
+                    }
+
+                    // 检查菜单是否超出屏幕底部，如果超出则显示在上方
+                    const viewportHeight = window.innerHeight;
+
+                    if (menuY + menuHeight > viewportHeight - 10) {
+                        menuY = rangeRect.bottom - menuHeight;  // 显示在上方
+                    }
+
+                    // 保证菜单不会超出屏幕顶部
+                    if (menuY < 10) {
+                        menuY = rangeRect.bottom + 10;
+                    }
+
+                    // 设置菜单位置
+                    floatingMenu.style.left = Math.max(10, menuX) + "px";
+                    floatingMenu.style.top = Math.max(10, menuY) + "px";
+                });
             } else {
-                explainBtn.disabled = true;
-                addKeywordBtn.disabled = true;
+                floatingMenu.classList.add("hidden");
+            }
+        };
+
+        // 仅在鼠标抬起时显示菜单，提供更流畅的选择体验
+        // 避免在拖动选择过程中菜单频繁闪现
+        document.addEventListener("mouseup", () => {
+            showFloatingMenu();
+        });
+
+        // 当选择被取消时立即隐藏菜单
+        document.addEventListener("selectionchange", () => {
+            const selection = window.getSelection();
+            if (selection.toString().trim().length === 0) {
+                floatingMenu.classList.add("hidden");
             }
         });
 
-        // 解释按钮事件
-        explainBtn.addEventListener("click", async () => {
+        // 点击文档其他地方时隐藏菜单
+        document.addEventListener("click", (e) => {
+            // 如果点击的是菜单内部，不要隐藏
+            if (floatingMenu.contains(e.target)) {
+                return;
+            }
+
+            // 检查是否点击了选中的文本，如果是，不隐藏菜单
+            const selection = window.getSelection();
+            if (selection.toString().trim().length > 0) {
+                return;
+            }
+
+            floatingMenu.classList.add("hidden");
+        });
+
+        // 解释按钮点击事件
+        floatingExplainBtn.addEventListener("click", async () => {
             if (this.selectedText.trim()) {
                 const term = this.selectedText.trim();
-                // 如果不在历史中，先加入
-                if (!this.keywordExtractor.queryHistory.includes(term)) {
-                    this.keywordExtractor.addToQueryHistory(term);
+
+                // 检测选中文本的来源面板
+                let sourcePanel = 'transcript'; // 默认
+                if (currentSelectedRange) {
+                    const transcriptDiv = document.getElementById("transcript");
+                    const translationDiv = document.getElementById("translation");
+
+                    if (translationDiv?.contains(currentSelectedRange.commonAncestorContainer)) {
+                        sourcePanel = 'translation';
+                    } else if (transcriptDiv?.contains(currentSelectedRange.commonAncestorContainer)) {
+                        sourcePanel = 'transcript';
+                    }
                 }
 
-                // 打开 History 面板并显示/隐藏按钮
-                if (historyContent && sidePanelTitle && sidePanelsContainer) {
-                    hideAllContent();
-                    historyContent.classList.add("active");
-                    sidePanelTitle.textContent = "History";
-
-                    // 更新按钮显示状态
-                    const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
-                    const generateSummaryBtn = document.getElementById("generateSummaryBtn");
-                    const copySummaryBtn = document.getElementById("copySummaryBtn");
-                    const explanationLangSelector = document.getElementById("keyword-explanation-language");
-
-                    if (autoExtractBtn) {
-                        autoExtractBtn.style.display = 'none';
-                    }
-                    if (generateSummaryBtn) {
-                        generateSummaryBtn.style.display = 'none';
-                    }
-                    if (copySummaryBtn) {
-                        copySummaryBtn.style.display = 'none';
-                    }
-                    if (explanationLangSelector) {
-                        explanationLangSelector.style.display = 'block';
-                    }
-
-                    this.isUpdatingUI = true;
-                    sidePanelsContainer.classList.add("expanded");
-                    setTimeout(() => {
-                        this.isUpdatingUI = false;
-                    }, 350);
-
-                    // 等待 DOM 更新后再展开
-                    setTimeout(() => {
-                        this.keywordExtractor.toggleExplanation(term);
-                    }, 50);
+                // 获取Range的位置信息（如果可用）
+                let positionInfo = null;
+                if (currentSelectedRange) {
+                    positionInfo = this.highlightManager.extractPositionFromRangePublic(currentSelectedRange);
                 }
 
-                // 禁用按钮 - 清除选中文本
-                explainBtn.disabled = true;
-                addKeywordBtn.disabled = true;
+                // 通过 KeywordManager 统一处理显示解释面板的逻辑，并传入位置信息和源面板
+                this.keywordManager.openExplanationForWord(term, positionInfo, sourcePanel);
             }
+            floatingMenu.classList.add("hidden");
+            // 清除选中文本
+            window.getSelection().removeAllRanges();
         });
 
-        // 添加关键词按钮事件
-        addKeywordBtn.addEventListener("click", () => {
-            if (this.selectedText.trim()) {
-                this.addSelectedTextAsKeyword();
-
-                // 打开 Keywords 面板并显示/隐藏按钮
-                if (keywordsContent && sidePanelTitle && sidePanelsContainer) {
-                    hideAllContent();
-                    keywordsContent.classList.add("active");
-                    sidePanelTitle.textContent = "Keywords";
-
-                    // 更新按钮显示状态
-                    const autoExtractBtn = document.getElementById("autoExtractKeywordsBtn");
-                    const generateSummaryBtn = document.getElementById("generateSummaryBtn");
-                    const copySummaryBtn = document.getElementById("copySummaryBtn");
-                    const explanationLangSelector = document.getElementById("keyword-explanation-language");
-
-                    if (autoExtractBtn) {
-                        autoExtractBtn.style.display = 'block';
-                        autoExtractBtn.style.opacity = '1';
-                        autoExtractBtn.style.pointerEvents = 'auto';
-                    }
-                    if (generateSummaryBtn) {
-                        generateSummaryBtn.style.display = 'none';
-                    }
-                    if (copySummaryBtn) {
-                        copySummaryBtn.style.display = 'none';
-                    }
-                    if (explanationLangSelector) {
-                        explanationLangSelector.style.display = 'block';
-                    }
-
-                    this.isUpdatingUI = true;
-                    sidePanelsContainer.classList.add("expanded");
-                    setTimeout(() => {
-                        this.isUpdatingUI = false;
-                    }, 350);
-                }
-
-                // 禁用按钮 - 清除选中文本
-                explainBtn.disabled = true;
-                addKeywordBtn.disabled = true;
+        // 高亮按钮点击事件
+        floatingHighlightBtn.addEventListener("click", () => {
+            // 使用保存的选中文本和range
+            if (!this.selectedText || !this.selectedText.trim()) {
+                this.showStatusMessage("No text selected", 1500);
+                floatingMenu.classList.add("hidden");
+                return;
             }
+
+            if (!currentSelectedRange && !rangeInfo) {
+                this.showStatusMessage("Cannot highlight: selection lost", 1500);
+                floatingMenu.classList.add("hidden");
+                return;
+            }
+
+            const selectedText = this.selectedText.trim();
+
+            // 检测选中文本的来源面板
+            let sourcePanel = 'transcript'; // 默认
+            if (currentSelectedRange) {
+                const transcriptDiv = document.getElementById("transcript");
+                const translationDiv = document.getElementById("translation");
+
+                if (translationDiv?.contains(currentSelectedRange.commonAncestorContainer)) {
+                    sourcePanel = 'translation';
+                } else if (transcriptDiv?.contains(currentSelectedRange.commonAncestorContainer)) {
+                    sourcePanel = 'transcript';
+                }
+            }
+
+            // 尝试使用保存的range，如果失效则尝试重建
+            let rangeToUse = currentSelectedRange;
+
+            if (!rangeToUse && rangeInfo) {
+                // 尝试从保存的信息重建range
+                try {
+                    rangeToUse = document.createRange();
+                    rangeToUse.setStart(rangeInfo.startContainer, rangeInfo.startOffset);
+                    rangeToUse.setEnd(rangeInfo.endContainer, rangeInfo.endOffset);
+                } catch (e) {
+                    this.showStatusMessage("Cannot highlight: range invalid", 1500);
+                    floatingMenu.classList.add("hidden");
+                    return;
+                }
+            }
+
+            // 添加高亮，并记录源面板
+            const highlightResult = this.highlightManager.addSelectedTextAsHighlightWithRange(selectedText, rangeToUse);
+
+            if (!highlightResult) {
+                this.showStatusMessage("Add highlight failed", 1500);
+                floatingMenu.classList.add("hidden");
+                return;
+            }
+
+            // 记录这个高亮词的源面板
+            if (this.keywordManager) {
+                this.keywordManager.wordSourcePanel[selectedText] = sourcePanel;
+            }
+
+            // 直接打开Highlights面板（复制showContent的逻辑）
+            const sidePanelsContainer = document.querySelector(".side-panels-container");
+            const sidePanelTitle = document.getElementById("sidePanelTitle");
+            const quickAccessHighlights = document.getElementById("quickAccessHighlights");
+            const quickAccessKeywords = document.getElementById("quickAccessKeywords");
+            const quickAccessSummary = document.getElementById("quickAccessSummary");
+            const quickAccessHistory = document.getElementById("quickAccessHistory");
+            const quickAccessSettings = document.getElementById("quickAccessSettings");
+
+            // 隐藏所有内容
+            const keywordsContent = document.getElementById("keywordsContent");
+            const historyContent = document.getElementById("historyContent");
+            const summaryContent = document.getElementById("summaryContent");
+            const settingsContent = document.getElementById("settingsContent");
+
+            [keywordsContent, historyContent, summaryContent, highlightsContent].forEach(el => {
+                if (el) el.classList.remove("active");
+            });
+
+            // 移除所有按钮的 active 状态
+            if (quickAccessKeywords) quickAccessKeywords.classList.remove("active");
+            if (quickAccessSummary) quickAccessSummary.classList.remove("active");
+            if (quickAccessHistory) quickAccessHistory.classList.remove("active");
+            if (quickAccessSettings) quickAccessSettings.classList.remove("active");
+            if (quickAccessHighlights) quickAccessHighlights.classList.remove("active");
+
+            // 显示高亮面板
+            highlightsContent.classList.add("active");
+            sidePanelTitle.textContent = "Highlights";
+
+            // 更新按钮状态
+            if (quickAccessHighlights) {
+                quickAccessHighlights.classList.add("active");
+            }
+
+
+
+            // 展开侧面板
+            this.isUpdatingUI = true;
+            sidePanelsContainer.classList.add("expanded");
+            setTimeout(() => {
+                this.isUpdatingUI = false;
+            }, 350);
+
+            floatingMenu.classList.add("hidden");
+            // 清除选中文本
+            window.getSelection().removeAllRanges();
         });
     }
 
     /**
-     * 将选中的文本添加为关键词
+     * 初始化窗口可见性处理器
+     * 当窗口重新获得焦点或文档变为可见时，如果自动滚动启用，重新滚动到底部
      */
-    addSelectedTextAsKeyword() {
-        if (!this.selectedText || !this.keywordExtractor) return;
+    initVisibilityHandlers() {
+        // 监听窗口获得焦点
+        window.addEventListener('focus', () => {
+            // 如果自动滚动启用，重新滚动到底部
+            if (this.panelManager && this.panelManager.autoScroll) {
+                setTimeout(() => {
+                    const transcript = document.getElementById("transcript");
+                    const translation = document.getElementById("translation");
+                    const keys = Object.keys(this.recordingManager.getTranscriptData());
 
-        const keyword = this.selectedText.trim();
+                    if (keys.length > 0) {
+                        const lastIndex = keys[keys.length - 1];
+                        if (transcript) {
+                            this.panelManager.scrollToLineBottom(transcript, lastIndex);
+                        }
+                        if (translation) {
+                            this.panelManager.scrollToLineBottom(translation, lastIndex);
+                        }
+                    }
+                }, 0);
+            }
+        });
 
-        // 检查是否已存在（手动或自动）
-        const allKeywords = [...this.keywordExtractor.manualKeywords, ...this.keywordExtractor.autoKeywords];
-        if (allKeywords.includes(keyword)) {
-            this.showStatusMessage("This keyword already exists", 1500);
-            return;
-        }
+        // 监听文档可见性变化
+        document.addEventListener('visibilitychange', () => {
+            // 当文档变为可见且自动滚动启用时，重新滚动到底部
+            if (!document.hidden && this.panelManager && this.panelManager.autoScroll) {
+                setTimeout(() => {
+                    const transcript = document.getElementById("transcript");
+                    const translation = document.getElementById("translation");
+                    const keys = Object.keys(this.recordingManager.getTranscriptData());
 
-        // 添加到手动关键词
-        this.keywordExtractor.manualKeywords.push(keyword);
-
-        // 更新所有显示
-        this.keywordExtractor.updateAllKeywordDisplays();
-
-        // 保存到 session
-        this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
-
-        this.showStatusMessage(`✓ Added "${keyword}" to keywords`, 1500);
-        this.selectedText = "";
+                    if (keys.length > 0) {
+                        const lastIndex = keys[keys.length - 1];
+                        if (transcript) {
+                            this.panelManager.scrollToLineBottom(transcript, lastIndex);
+                        }
+                        if (translation) {
+                            this.panelManager.scrollToLineBottom(translation, lastIndex);
+                        }
+                    }
+                }, 0);
+            }
+        });
     }
 
     async start() {
@@ -1051,106 +1546,22 @@ class StreamNote {
             this.recordingSessionId = this.sessionManager.currentSessionId;
             this.updateRecordingIndicator();
 
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // 确保上下文已更新
+            this.updateTranscriptionContext();
 
-            // 设置音量检测
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            this.analyser = this.audioContext.createAnalyser();
-            const source = this.audioContext.createMediaStreamSource(stream);
-            source.connect(this.analyser);
-            this.analyser.fftSize = 2048;
-
-            this.mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-            this.startTime = Date.now();
-            this.lastSendTime = Date.now();
-            this.recordingStartTime = Date.now();
-            // 只在第一次或清空后重置 chunkIndex，继续录制时保留
-            if (Object.keys(this.preciseResults).length === 0) {
-                this.chunkIndex = 0;
-            } else {
-                // 继续录制：chunkIndex 继续从上次结束的地方开始
-                this.chunkIndex = Math.max(...Object.keys(this.preciseResults).map(Number)) + 1;
-            }
-            this.isRecording = true;
-            this.audioChunks = [];
-            this.silenceStart = null;
-            this.voiceStart = null;
-            this.hasVoice = false;
-
-            this.mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    this.audioChunks.push(event.data);
-                    // 立即发送这个完整的音频块
-                    this.sendToWhisper();
-                    this.audioChunks = [];
-                }
-            };
-
-            this.mediaRecorder.onstop = () => {
-                // 停止时直接丢弃最后一段（通常是静音）
-                if (!this.isRecording) {
-                    this.audioChunks = [];
-                }
-            };
-
-            // 开始录制
-            this.mediaRecorder.start();
-
-            // 每 100ms 检测音量，停顿 600ms 或超过 10秒 就发送
-            this.checkInterval = setInterval(() => {
-                if (!this.isRecording) return;
-
-                const volume = this.getVolume();
-                const now = Date.now();
-                const timeSinceLastSend = now - this.lastSendTime;
-                const recordingDuration = now - this.recordingStartTime;
-
-
-                if (volume < 0.015) {  // 沉默（降低阈值，避免噪音干扰）
-                    this.voiceStart = null;
-
-                    if (!this.silenceStart) {
-                        this.silenceStart = now;
-                    } else if (now - this.silenceStart > 600 && recordingDuration > 1000 && this.hasVoice) {
-                        // 沉默 >600ms + 录制 >1s + 有真实语音 → 发送
-                        this.mediaRecorder.stop();
-                        this.mediaRecorder.start();
-                        this.recordingStartTime = Date.now();
-                        this.lastSendTime = Date.now();
-                        this.hasVoice = false;
-                        this.voiceStart = null;
-                        this.silenceStart = null;
-                    }
-                } else {  // 有声音
-                    this.silenceStart = null;
-
-                    if (!this.voiceStart) {
-                        this.voiceStart = now;
-                    } else if (!this.hasVoice && now - this.voiceStart > 600) {
-                        // 持续声音 >600ms → 确认为真实语音
-                        this.hasVoice = true;
-                    }
-                }
-
-                // 超过 10秒 + 有真实语音 → 强制发送
-                if (timeSinceLastSend > 10000 && this.hasVoice) {
-                    this.mediaRecorder.stop();
-                    this.mediaRecorder.start();
-                    this.recordingStartTime = Date.now();
-                    this.lastSendTime = Date.now();
-                    this.hasVoice = false;
-                    this.voiceStart = null;
-                    this.silenceStart = null;
-                }
-            }, 100);
+            await this.recordingManager.start(this.recordingSessionId);
 
             document.getElementById("startBtn").disabled = true;
             document.getElementById("stopBtn").disabled = false;
-            this.updateStatus("Recording...");
 
             // 每秒更新 session 统计信息
-            if (this.statsUpdateInterval) clearInterval(this.statsUpdateInterval);
-            this.statsUpdateInterval = setInterval(() => this.updateSessionStats(), 1000);
+            let statsInterval = setInterval(() => {
+                if (!this.recordingManager.isRecording) {
+                    clearInterval(statsInterval);
+                    return;
+                }
+                this.updateSessionStats();
+            }, 1000);
 
         } catch (error) {
             console.error("[ERROR] Microphone access:", error);
@@ -1159,37 +1570,15 @@ class StreamNote {
     }
 
     stop() {
-        if (this.mediaRecorder && this.isRecording) {
-            this.isRecording = false;
+        if (this.recordingManager && this.recordingManager.isRecording) {
+            this.recordingManager.stop();
 
             // 清除全局录制状态
             this.recordingSessionId = null;
             this.updateRecordingIndicator();
 
-            if (this.checkInterval) {
-                clearInterval(this.checkInterval);
-                this.checkInterval = null;
-            }
-
-            // 清除 stats 更新定时器
-            if (this.statsUpdateInterval) {
-                clearInterval(this.statsUpdateInterval);
-                this.statsUpdateInterval = null;
-            }
-
-            if (this.audioContext) {
-                this.audioContext.close();
-            }
-
-            this.mediaRecorder.stop();
-
-            if (this.mediaRecorder.stream) {
-                this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
-            }
-
             document.getElementById("startBtn").disabled = false;
             document.getElementById("stopBtn").disabled = true;
-            this.updateStatus("Stopped");
 
             // 停止时更新一次统计信息
             this.updateSessionStats();
@@ -1197,13 +1586,14 @@ class StreamNote {
     }
 
     clear() {
-        this.preciseResults = {};
+        this.recordingManager.clear();
         this.translationResults = {};
+        this.translationManager.clear();
         this.chunkIndex = 0;
         this.currentTranscriptText = "";
         this.updateDisplay();
-        if (this.keywordExtractor) {
-            this.keywordExtractor.reset();
+        if (this.keywordManager) {
+            this.keywordManager.reset();
         }
 
         this.updateStatus("Cleared");
@@ -1275,7 +1665,7 @@ class StreamNote {
         return Math.sqrt(sum / dataArray.length);
     }
 
-    async sendToWhisper() {
+    async submitForTranscription() {
         if (this.audioChunks.length === 0) {
             return;
         }
@@ -1326,7 +1716,8 @@ class StreamNote {
 
                         // 自动翻译（保存到原来的录制session）
                         if (this.translationEnabled) {
-                            this.translateText(text, currentChunkIndex, sessionIdAtRequest);
+                            const translationContext = this.recordingManager.getTranscriptionContext();
+                            this.translationManager.translateText(text, currentChunkIndex, sessionIdAtRequest, translationContext);
                         }
 
                         // 关键词提取改为手动触发，注释掉自动调用
@@ -1342,16 +1733,33 @@ class StreamNote {
         }
     }
 
+    /**
+     * 更新显示（使用RecordingManager的数据）
+     */
     updateDisplay() {
+        // 如果用户有活动选择，暂停更新（后台数据仍在更新）
+        if (this.hasActiveSelection) {
+            this.pendingUpdates = true;
+            return;
+        }
+
+        // 重置待更新标志
+        this.pendingUpdates = false;
+
+        // 在DOM更新前设置标志，防止滚动事件改变autoScroll状态
+        this.panelManager.isUpdatingUI = true;
+
         // 更新 session 统计信息
         this.updateSessionStats();
 
         const transcriptDiv = document.getElementById("transcript");
         const translationDiv = document.getElementById("translation");
+        const preciseResults = this.recordingManager.getTranscriptData();
+        const translationData = this.translationManager.getTranslationData();
 
         // 更新转录显示
-        const formattedLines = Object.keys(this.preciseResults).map(key => {
-            const item = this.preciseResults[key];
+        const formattedLines = Object.keys(preciseResults).map(key => {
+            const item = preciseResults[key];
             if (!item || !item.text) return null;
 
             const text = item.text.trim();
@@ -1362,18 +1770,29 @@ class StreamNote {
                 second: '2-digit'
             });
 
-            return `<p data-index="${key}">[${timestamp}] ${text}</p>`;
+            return `<p data-index="${key}" data-timestamp="[${timestamp}]">${text}</p>`;
         }).filter(line => line !== null);
 
         if (formattedLines.length > 0) {
-            transcriptDiv.innerHTML = formattedLines.join('');
+            let displayHTML = formattedLines.join('');
+            // 如果正在转录，添加转录中的占位符
+            if (this.recordingManager.isTranscribingActive()) {
+                displayHTML += '<p class="placeholder" style="opacity: 0.7;">Transcripting...</p>';
+            }
+            transcriptDiv.innerHTML = displayHTML;
+        } else if (this.recordingManager.isTranscribingActive()) {
+            // 如果没有转录内容但正在转录中
+            transcriptDiv.innerHTML = '<p class="placeholder">Transcripting...</p>';
+        } else if (this.recordingManager.isRecording) {
+            // 正在录音但还没有转录内容
+            transcriptDiv.innerHTML = '<p class="placeholder">Listening...</p>';
         } else {
-            transcriptDiv.innerHTML = '<p class="placeholder">Click "Start" to begin transcription</p>';
+            transcriptDiv.innerHTML = '<p class="placeholder">Click "Record" to begin transcription</p>';
         }
 
         // 更新翻译显示
-        const translationLines = Object.keys(this.preciseResults).map(key => {
-            const item = this.preciseResults[key];
+        const translationLines = Object.keys(preciseResults).map(key => {
+            const item = preciseResults[key];
             if (!item || !item.text) return null;
 
             const timestamp = item.timestamp || new Date().toLocaleTimeString('zh-CN', {
@@ -1383,48 +1802,561 @@ class StreamNote {
                 second: '2-digit'
             });
 
-            const translation = this.translationResults[key];
+            const translation = translationData[key];
             const translationText = translation || '<span class="placeholder">Translating...</span>';
 
-            return `<p data-index="${key}">[${timestamp}] ${translationText}</p>`;
+            return `<p data-index="${key}" data-timestamp="[${timestamp}]">${translationText}</p>`;
         }).filter(line => line !== null);
 
         if (translationLines.length > 0) {
             translationDiv.innerHTML = translationLines.join('');
         } else {
-            translationDiv.innerHTML = '<p class="placeholder">Click "Start" to begin translation</p>';
+            translationDiv.innerHTML = '<p class="placeholder">Translations will appear here as you record</p>';
         }
-        // 仅在自动滚动启用时滚动到底部（阻止同步滚动触发）
-        // 注意：要滚动外层容器，不是内容 div
-        if (this.autoScroll) {
-            this.isUpdatingUI = true;
+
+        // 重新应用所有高亮
+        this.highlightManager.reapplyAllHighlights();
+
+        // 仅在自动滚动启用时滚动到底部
+        if (this.panelManager.autoScroll) {
             const transcript = document.getElementById("transcript");
             const translation = document.getElementById("translation");
 
-            // 获取最后一行的索引，用于对齐滚动
-            const keys = Object.keys(this.preciseResults);
+            const keys = Object.keys(preciseResults);
             if (keys.length > 0) {
                 const lastIndex = keys[keys.length - 1];
 
-                // 使用 scrollToLineBottom 确保两个容器同步滚动到同一行
                 if (transcript) {
                     transcript.style.scrollBehavior = 'auto';
-                    this.scrollToLineBottom(transcript, lastIndex);
+                    this.panelManager.scrollToLineBottom(transcript, lastIndex);
                 }
                 if (translation) {
                     translation.style.scrollBehavior = 'auto';
-                    this.scrollToLineBottom(translation, lastIndex);
+                    this.panelManager.scrollToLineBottom(translation, lastIndex);
+                }
+            }
+        }
+
+        // DOM更新完毕后，清除标志并重新检查滚动（确保autoScroll状态准确）
+        setTimeout(() => {
+            this.panelManager.isUpdatingUI = false;
+
+            // 检查是否仍在底部，如果不在则确保autoScroll被正确禁用
+            const transcript = document.getElementById("transcript");
+            if (transcript && !this.panelManager.isScrolledToBottom(transcript)) {
+                this.panelManager.autoScroll = false;
+                this.panelManager.updateAutoScrollButton();
+            }
+        }, 50);
+    }
+
+    /**
+     * 在指定面板（转录或译文）中搜索词语并跳转到其位置
+     * @param {string} word - 要搜索的词语
+     * @param {string} sourcePanel - 源面板 ('transcript' 或 'translation')，默认 'transcript'
+     */
+    scrollToWord(word, sourcePanel = 'transcript') {
+        if (!word) return;
+
+        // 首先尝试使用已有的位置信息（如果有的话）
+        if (this.keywordManager && this.keywordManager.highlightPositions[word]) {
+            const positionInfo = this.keywordManager.highlightPositions[word];
+
+            // 尝试使用 sourceIndices 或 startIndex 来定位
+            if (positionInfo.sourceIndices && positionInfo.sourceIndices.length > 0) {
+                // 检查是否跨越多行（多个sourceIndices表示跨行词）
+                if (positionInfo.sourceIndices.length > 1) {
+                    // 跨行词：需要高亮所有涉及的段落
+                    if (this.scrollToWordByIndices(word, positionInfo.sourceIndices, sourcePanel)) {
+                        return;
+                    }
+                } else {
+                    // 单行词：使用第一个（也是唯一的）出现位置
+                    const targetIndex = positionInfo.sourceIndices[0];
+                    if (this.scrollToWordByIndex(word, targetIndex, sourcePanel)) {
+                        return;
+                    }
+                }
+            } else if (positionInfo.startIndex !== undefined) {
+                // 使用 startIndex 来定位
+                if (this.scrollToWordByIndex(word, positionInfo.startIndex, sourcePanel)) {
+                    return;
+                }
+            }
+        }
+
+        // 如果没有位置信息，或位置信息定位失败，则回退到文本搜索
+        this.scrollToWordByText(word, sourcePanel);
+    }
+
+    /**
+     * 通过index在面板中定位词语
+     * @param {string} word - 词语
+     * @param {number} targetIndex - 目标片段的index
+     * @param {string} sourcePanel - 源面板
+     * @returns {boolean} 是否成功定位
+     */
+    scrollToWordByIndex(word, targetIndex, sourcePanel) {
+        const transcript = document.getElementById("transcript");
+        const translation = document.getElementById("translation");
+
+        let primaryPanel = sourcePanel === 'translation' ? translation : transcript;
+        let secondaryPanel = sourcePanel === 'translation' ? transcript : translation;
+
+        if (!primaryPanel) return false;
+
+        // 查找指定index的段落元素
+        const targetParagraph = primaryPanel.querySelector(`p[data-index="${targetIndex}"]`);
+
+        if (!targetParagraph) {
+            return false;
+        }
+
+        // 跳转到该段落
+        targetParagraph.scrollIntoView({ behavior: 'auto', block: 'center' });
+
+        // 高亮显示找到的词
+        this.highlightWordInElement(targetParagraph, word);
+
+        // 同时在另一个面板中高亮相同索引的段落（如果存在）
+        if (secondaryPanel) {
+            const secondaryParagraph = secondaryPanel.querySelector(`p[data-index="${targetIndex}"]`);
+            if (secondaryParagraph) {
+                this.highlightWordInElement(secondaryParagraph, word);
+            }
+        }
+
+        this.showStatusMessage(`Found "${word}" in ${sourcePanel}`, 1000);
+        return true;
+    }
+
+    /**
+     * 通过多个index在面板中定位跨行词语
+     * @param {string} word - 词语
+     * @param {Array<number>} targetIndices - 目标片段的index数组（用于跨行词）
+     * @param {string} sourcePanel - 源面板
+     * @returns {boolean} 是否成功定位
+     */
+    scrollToWordByIndices(word, targetIndices, sourcePanel) {
+        if (!targetIndices || targetIndices.length === 0) {
+            return false;
+        }
+
+        const transcript = document.getElementById("transcript");
+        const translation = document.getElementById("translation");
+
+        let primaryPanel = sourcePanel === 'translation' ? translation : transcript;
+        let secondaryPanel = sourcePanel === 'translation' ? transcript : translation;
+
+        if (!primaryPanel) return false;
+
+        // 获取第一个段落用于滚动
+        const firstIndex = targetIndices[0];
+        const firstParagraph = primaryPanel.querySelector(`p[data-index="${firstIndex}"]`);
+
+        if (!firstParagraph) {
+            return false;
+        }
+
+        // 滚动到第一个段落
+        firstParagraph.scrollIntoView({ behavior: 'auto', block: 'center' });
+
+        // 在所有涉及的段落中高亮显示词
+        targetIndices.forEach(index => {
+            const paragraph = primaryPanel.querySelector(`p[data-index="${index}"]`);
+            if (paragraph) {
+                this.highlightWordInElement(paragraph, word);
+            }
+
+            // 同时在另一个面板的相同索引段落中高亮（如果存在）
+            if (secondaryPanel) {
+                const secondaryParagraph = secondaryPanel.querySelector(`p[data-index="${index}"]`);
+                if (secondaryParagraph) {
+                    this.highlightWordInElement(secondaryParagraph, word);
+                }
+            }
+        });
+
+        this.showStatusMessage(`Found "${word}" in ${sourcePanel}`, 1000);
+        return true;
+    }
+
+    /**
+     * 通过文本搜索在面板中定位词语（支持跨行搜索）
+     * @param {string} word - 词语
+     * @param {string} sourcePanel - 源面板
+     */
+    scrollToWordByText(word, sourcePanel = 'transcript') {
+        const transcript = document.getElementById("transcript");
+        const translation = document.getElementById("translation");
+
+        // 根据源面板决定搜索和滚动位置
+        let primaryPanel = sourcePanel === 'translation' ? translation : transcript;
+        let secondaryPanel = sourcePanel === 'translation' ? transcript : translation;
+
+        if (!primaryPanel) {
+            // 如果主面板不存在，尝试使用辅助面板
+            primaryPanel = secondaryPanel;
+            sourcePanel = sourcePanel === 'translation' ? 'transcript' : 'translation';
+        }
+
+        if (!primaryPanel) return;
+
+        // 直接在每个段落中搜索词语，避免累计长度计算错误
+        const lowerWord = word.toLowerCase();
+        const paragraphs = primaryPanel.querySelectorAll("p");
+        const paragraphArray = Array.from(paragraphs);
+        let targetParagraphs = [];
+        let targetIndices = [];
+
+        // 首先尝试在单个段落中找到完整的词
+        for (const p of paragraphArray) {
+            const pText = p.innerText.toLowerCase();
+            if (pText.includes(lowerWord)) {
+                targetParagraphs = [p];
+                targetIndices = [p.getAttribute("data-index")];
+                break;
+            }
+        }
+
+        // 如果单个段落中未找到，尝试跨行搜索（相邻段落）
+        if (targetParagraphs.length === 0) {
+            for (let i = 0; i < paragraphArray.length - 1; i++) {
+                const p1 = paragraphArray[i];
+                const p2 = paragraphArray[i + 1];
+                const combinedText = (p1.innerText + " " + p2.innerText).toLowerCase();
+
+                if (combinedText.includes(lowerWord)) {
+                    // 找到跨行的词，添加两个段落
+                    targetParagraphs = [p1, p2];
+                    targetIndices = [p1.getAttribute("data-index"), p2.getAttribute("data-index")];
+                    break;
+                }
+            }
+        }
+
+        if (targetParagraphs.length === 0) {
+            this.showStatusMessage(`Word "${word}" not found in ${sourcePanel}`, 1500);
+            return;
+        }
+
+        // 跳转到第一个段落
+        targetParagraphs[0].scrollIntoView({ behavior: 'auto', block: 'center' });
+
+        // 高亮显示找到的词 - 在目标面板的所有相关段落中
+        targetParagraphs.forEach(p => {
+            this.highlightWordInElement(p, word);
+        });
+
+        // 同时在另一个面板中高亮相同索引的段落（如果存在）
+        if (secondaryPanel && targetIndices.length > 0) {
+            targetIndices.forEach(index => {
+                if (index !== null) {
+                    const secondaryParagraph = secondaryPanel.querySelector(`p[data-index="${index}"]`);
+                    if (secondaryParagraph) {
+                        this.highlightWordInElement(secondaryParagraph, word);
+                    }
+                }
+            });
+        }
+
+        this.showStatusMessage(`Found "${word}" in ${sourcePanel}`, 1000);
+    }
+
+    /**
+     * 在元素中高亮显示词语
+     * @param {HTMLElement} element - 要搜索的元素
+     * @param {string} word - 要高亮的词（可以是多词组合如"human events"）
+     */
+    highlightWordInElement(element, word) {
+        if (!element || !word) {
+            return;
+        }
+
+        // 清除之前的所有临时高亮
+        const previousHighlights = element.querySelectorAll(".temp-word-highlight");
+        previousHighlights.forEach(el => {
+            const parent = el.parentNode;
+            if (parent) {
+                while (el.firstChild) {
+                    parent.insertBefore(el.firstChild, el);
+                }
+                parent.removeChild(el);
+                parent.normalize();
+            }
+        });
+
+        // 直接使用 innerHTML.replace() 处理高亮
+        try {
+            const originalHtml = element.innerHTML;
+            let newHtml = originalHtml;
+            let highlightCount = 0;
+
+            // 首先尝试匹配完整的短语（带单词边界）
+            const escapedWord = this.escapeRegex(word);
+            const regex1 = new RegExp(`\\b(${escapedWord})\\b`, 'gi');
+            let tempHtml = originalHtml.replace(regex1, (match) => {
+                highlightCount++;
+                return `<span class="temp-word-highlight">${match}</span>`;
+            });
+
+            if (highlightCount > 0) {
+                newHtml = tempHtml;
+            } else {
+                // 备用方法1：不使用单词边界尝试完整短语
+                const regex2 = new RegExp(`(${escapedWord})`, 'gi');
+                tempHtml = originalHtml.replace(regex2, (match) => {
+                    highlightCount++;
+                    return `<span class="temp-word-highlight">${match}</span>`;
+                });
+
+                if (highlightCount > 0) {
+                    newHtml = tempHtml;
+                } else {
+                    // 备用方法2：如果是多词组合，尝试单独匹配每个词
+                    // （用于处理跨行词，其中完整短语在单个段落中不存在）
+                    const words = word.split(/\s+/);
+                    if (words.length > 1) {
+                        let multiWordHtml = originalHtml;
+                        for (const singleWord of words) {
+                            const escapedSingleWord = this.escapeRegex(singleWord);
+                            // 先尝试词边界方式
+                            const singleRegex1 = new RegExp(`\\b(${escapedSingleWord})\\b`, 'gi');
+                            let singleHighlightCount = 0;
+                            const tempHtml2 = multiWordHtml.replace(singleRegex1, (match) => {
+                                singleHighlightCount++;
+                                return `<span class="temp-word-highlight">${match}</span>`;
+                            });
+
+                            // 如果词边界方式有效，就用它
+                            if (singleHighlightCount > 0) {
+                                multiWordHtml = tempHtml2;
+                                highlightCount += singleHighlightCount;
+                            } else {
+                                // 否则尝试不用词边界
+                                const singleRegex2 = new RegExp(`(${escapedSingleWord})`, 'gi');
+                                const tempHtml3 = multiWordHtml.replace(singleRegex2, (match) => {
+                                    singleHighlightCount++;
+                                    return `<span class="temp-word-highlight">${match}</span>`;
+                                });
+                                if (singleHighlightCount > 0) {
+                                    multiWordHtml = tempHtml3;
+                                    highlightCount += singleHighlightCount;
+                                }
+                            }
+                        }
+                        if (highlightCount > 0) {
+                            newHtml = multiWordHtml;
+                        }
+                    }
                 }
             }
 
-            setTimeout(() => {
-                this.isUpdatingUI = false;
-            }, 100);
+            if (highlightCount > 0) {
+                element.innerHTML = newHtml;
+            }
+        } catch (e) {
+            return;
         }
+
+        // 设置定时器，在4秒后移除高亮
+        setTimeout(() => {
+            const highlights = element.querySelectorAll(".temp-word-highlight");
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                if (parent) {
+                    while (el.firstChild) {
+                        parent.insertBefore(el.firstChild, el);
+                    }
+                    parent.removeChild(el);
+                    parent.normalize();
+                }
+            });
+        }, 4000);
+    }
+
+    /**
+     * 转义正则表达式特殊字符
+     * @param {string} str - 要转义的字符串
+     * @returns {string} 转义后的字符串
+     */
+    escapeRegex(str) {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    /**
+     * 格式化总结显示 - 根据不同风格进行HTML格式化
+     * @param {string} summary - 总结文本
+     * @param {string} style - 总结风格 (paragraph, key_takeaways, q&a, tldr)
+     * @returns {string} 格式化后的HTML
+     */
+    formatSummaryDisplay(summary, style) {
+        if (!summary) return '';
+
+        switch (style) {
+            case 'key_takeaways':
+                return this.formatKeyTakeaways(summary);
+            case 'q&a':
+                return this.formatQAFormat(summary);
+            case 'tldr':
+                return this.formatTLDR(summary);
+            case 'paragraph':
+            default:
+                return this.formatParagraph(summary);
+        }
+    }
+
+    /**
+     * 格式化段落风格
+     */
+    formatParagraph(summary) {
+        return `<p>${summary.replace(/\n/g, '<br>')}</p>`;
+    }
+
+    /**
+     * 格式化关键要点风格
+     */
+    formatKeyTakeaways(summary) {
+        // 按 dash (-) 或数字列表分割
+        const lines = summary.split(/\n/).filter(line => line.trim().length > 0);
+        const items = lines
+            .map(line => line.replace(/^[-•*]\s*/, '').trim())
+            .filter(line => line.length > 0);
+
+        if (items.length === 0) return `<p>${summary.replace(/\n/g, '<br>')}</p>`;
+
+        const listHTML = items
+            .map(item => `<li>${item.replace(/\n/g, '<br>')}</li>`)
+            .join('');
+        return `<ul>${listHTML}</ul>`;
+    }
+
+    /**
+     * 格式化Q&A风格
+     */
+    formatQAFormat(summary) {
+        const lines = summary.split(/\n/).filter(line => line.trim().length > 0);
+        let html = '';
+        let question = '';
+
+        for (const line of lines) {
+            if (line.trim().match(/^Q:|^问:|^Question:/i)) {
+                if (question) {
+                    html += `<div class="qa-pair"><div class="qa-question">${question}</div></div>`;
+                }
+                question = line.replace(/^Q:|^问:|^Question:/i, '').trim();
+            } else if (line.trim().match(/^A:|^答:|^Answer:/i)) {
+                if (question) {
+                    const answer = line.replace(/^A:|^答:|^Answer:/i, '').trim();
+                    html += `<div class="qa-pair"><div class="qa-question">${question}</div><div class="qa-answer">${answer.replace(/\n/g, '<br>')}</div></div>`;
+                    question = '';
+                }
+            }
+        }
+
+        if (question) {
+            html += `<div class="qa-pair"><div class="qa-question">${question}</div></div>`;
+        }
+
+        return html || `<p>${summary.replace(/\n/g, '<br>')}</p>`;
+    }
+
+    /**
+     * 格式化TLDR风格
+     */
+    formatTLDR(summary) {
+        const text = summary.trim();
+        return `<div class="tldr-content">${text.replace(/\n/g, '<br>')}</div>`;
     }
 
     updateStatus(text) {
         document.getElementById("status").textContent = text;
+    }
+
+    /**
+     * 切换模态窗口（打开或关闭）
+     */
+    toggleModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+
+        if (modal.style.display === "none" || modal.style.display === "") {
+            this.openModal(modalId);
+        } else {
+            this.closeModal(modalId);
+        }
+    }
+
+    /**
+     * 打开模态窗口
+     */
+    openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        const overlay = document.getElementById("modalOverlay");
+        const button = this.getModalButton(modalId);
+
+        if (!modal) return;
+
+        // 显示背景遮罩
+        if (overlay) {
+            overlay.style.display = "block";
+            // 添加背景点击关闭功能
+            overlay.onclick = () => this.closeModal(modalId);
+        }
+
+        // 显示模态窗口
+        modal.style.display = "flex";
+        this.openModals.add(modalId);
+
+        // 更新按钮激活状态
+        if (button) {
+            button.classList.add("active");
+        }
+
+        // 禁用body滚动
+        document.body.style.overflow = "hidden";
+    }
+
+    /**
+     * 关闭模态窗口
+     */
+    closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        const overlay = document.getElementById("modalOverlay");
+        const button = this.getModalButton(modalId);
+
+        if (!modal) return;
+
+        // 隐藏模态窗口
+        modal.style.display = "none";
+        this.openModals.delete(modalId);
+
+        // 更新按钮激活状态
+        if (button) {
+            button.classList.remove("active");
+        }
+
+        // 如果没有其他打开的模态，隐藏背景遮罩
+        if (this.openModals.size === 0) {
+            if (overlay) {
+                overlay.style.display = "none";
+                overlay.onclick = null;
+            }
+            // 恢复body滚动
+            document.body.style.overflow = "auto";
+        }
+    }
+
+    /**
+     * 获取模态对应的按钮
+     */
+    getModalButton(modalId) {
+        if (modalId === "sessionModal") {
+            return document.getElementById("openSessionPanel");
+        } else if (modalId === "settingsModal") {
+            return document.getElementById("quickAccessSettings");
+        }
+        return null;
     }
 
     /**
@@ -1434,14 +2366,39 @@ class StreamNote {
      */
     showStatusMessage(message, duration = 3000) {
         const statusEl = document.getElementById("status");
+
+        // 清除之前可能还在等待的状态消息超时
+        if (this.statusMessageTimeout) {
+            clearTimeout(this.statusMessageTimeout);
+        }
+
         const originalText = statusEl.textContent;
         statusEl.textContent = message;
 
-        setTimeout(() => {
+        this.statusMessageTimeout = setTimeout(() => {
             if (statusEl.textContent === message) {
                 statusEl.textContent = originalText;
             }
+            this.statusMessageTimeout = null;
         }, duration);
+    }
+
+    /**
+     * 更新highlight按钮的状态（文本和样式）
+     * @param {string} word - 词条
+     * @param {boolean} isHighlighted - 是否已高亮
+     */
+    updateHighlightButtonState(word, isHighlighted) {
+        const btn = document.getElementById("highlight-current-word-btn");
+        if (!btn) return;
+
+        if (isHighlighted) {
+            btn.textContent = "Remove";
+            btn.classList.add("active");
+        } else {
+            btn.textContent = "Highlight";
+            btn.classList.remove("active");
+        }
     }
 
     /**
@@ -1481,72 +2438,20 @@ class StreamNote {
     }
 
     /**
-     * 翻译文本 - 流式版本
-     */
-    async translateText(text, index, targetSessionId = null) {
-        if (!text || !this.translationEnabled) return;
-
-        try {
-            const response = await fetch("/api/translate", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    text: text,
-                    target_lang: this.targetLanguage
-                })
-            });
-
-            if (!response.ok) {
-                console.error(`[ERROR] Translation API error: ${response.status}`);
-                return;
-            }
-
-            // 处理流式响应
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let translation = "";
-
-            try {
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    const chunk = decoder.decode(value, { stream: true });
-                    translation += chunk;
-
-                    // 实时更新显示
-                    if (translation) {
-                        this.translationResults[index] = translation;
-                        this.updateDisplay();
-                        // 保存翻译到正确的session（录制中的session或当前session）
-                        this.saveToSession(targetSessionId);
-                    }
-                }
-            } finally {
-                reader.releaseLock();
-            }
-
-        } catch (error) {
-            console.error("[ERROR] Translation request failed:", error);
-        }
-    }
-
-    /**
      * 总结文本（使用用户选择的语言） - 流式版本
      */
-    async summarizeText(text, forceRefresh = false) {
+    async summarizeText(text, forceRefresh = false, style = "paragraph") {
         if (!text || text.trim().length < 50) {
             return null;
         }
 
         try {
-            const language = this.keywordExplanationLanguage;
+            const language = this.explanationLanguage;
+            const cacheKey = `${language}-${style}`;
 
-            // 检查该语言的缓存（除非强制刷新）
-            if (!forceRefresh && this.summaryCache[language]) {
-                return this.summaryCache[language];
+            // 检查该语言和风格组合的缓存（除非强制刷新）
+            if (!forceRefresh && this.summaryCache[cacheKey]) {
+                return this.summaryCache[cacheKey];
             }
 
             const response = await fetch("/api/summarize", {
@@ -1556,7 +2461,8 @@ class StreamNote {
                 },
                 body: JSON.stringify({
                     text: text,
-                    language: language
+                    language: language,
+                    style: style
                 })
             });
 
@@ -1580,15 +2486,29 @@ class StreamNote {
 
                     // 实时更新显示
                     if (summary) {
-                        // 按语言缓存结果
-                        this.summaryCache[language] = summary;
+                        // 按语言和风格缓存结果
+                        this.summaryCache[cacheKey] = summary;
                         // 立即保存到session
                         this.saveSettingsToSession();
                         // 实时更新显示
                         const summaryDisplay = document.getElementById("summary-display");
                         if (summaryDisplay) {
-                            summaryDisplay.innerHTML = `<p>${summary.replace(/\n/g, '<br>')}</p>`;
+                            summaryDisplay.innerHTML = this.formatSummaryDisplay(summary, style);
                         }
+                    }
+                }
+                // 刷新解码器缓冲区，获取最后的字符
+                const finalChunk = decoder.decode();
+                summary += finalChunk;
+                if (finalChunk) {
+                    // 按语言和风格缓存结果
+                    this.summaryCache[cacheKey] = summary;
+                    // 立即保存到session
+                    this.saveSettingsToSession();
+                    // 实时更新显示
+                    const summaryDisplay = document.getElementById("summary-display");
+                    if (summaryDisplay) {
+                        summaryDisplay.innerHTML = this.formatSummaryDisplay(summary, style);
                     }
                 }
             } finally {
@@ -1608,130 +2528,33 @@ class StreamNote {
     }
 
     /**
-     * 重新翻译所有内容（仅在语言切换或强制刷新时使用）
+     * 处理关键词提取 - 基于整个转录文本
      */
-    async retranslateAll() {
-        const session = this.sessionManager.getCurrentSession();
-        if (!session) return;
-
-        // 检查当前语言的缓存是否完整
-        const currentLangCache = session.translations[this.targetLanguage] || {};
-        let hasMissingTranslations = false;
-
-        // 检查是否所有转录都已翻译
-        const totalSegments = Object.keys(this.preciseResults).length;
-        const cachedSegments = Object.keys(currentLangCache).length;
-        const missingSegments = [];
-
-        for (const index of Object.keys(this.preciseResults)) {
-            if (!currentLangCache[index]) {
-                hasMissingTranslations = true;
-                missingSegments.push(index);
-            }
-        }
-
-        if (!hasMissingTranslations && cachedSegments > 0) {
-            // 缓存完整，直接使用
-            this.translationResults = { ...currentLangCache };
-            this.updateDisplay();
-
-            // 恢复或翻译关键词
-            if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
-                // 关键词翻译已删除
-            }
-            return;
-        }
-
-        // 缓存不完整，只翻译缺失的部分
-        const missingCount = missingSegments.length;
-
-        // 显示翻译进度提示
-        if (missingCount > 5) {
-            this.updateStatus(`Translating to ${this.targetLanguage}... (${missingCount} segments)`);
-        }
-
-        this.translationResults = { ...currentLangCache };  // 保留已有的翻译
-        this.updateDisplay();
-
-        // 翻译缺失的部分
-        let translated = 0;
-        for (const [index, item] of Object.entries(this.preciseResults)) {
-            if (item && item.text && !this.translationResults[index]) {
-                await this.translateText(item.text, index);
-                translated++;
-
-                // 更新进度（避免过于频繁）
-                if (missingCount > 5 && translated % 5 === 0) {
-                    this.updateStatus(`Translating... ${translated}/${missingCount}`);
-                }
-            }
-        }
-
-        // 翻译完成提示
-        if (missingCount > 5) {
-            this.updateStatus(`Translation complete (${this.targetLanguage})`);
-            setTimeout(() => {
-                if (!this.isRecording) {
-                    this.updateStatus("Ready");
-                }
-            }, 2000);
-        }
-
-        // 重新翻译关键词（保存到当前session）
-        if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
-            // 关键词翻译已删除
-        }
-    }
-
-    /**
-     * 只翻译缺失的内容（用于翻译开关重新打开时）
-     */
-    async translateMissingContent() {
-        const session = this.sessionManager.getCurrentSession();
-        if (!session) return;
-
-        // 加载当前语言的缓存
-        const currentLangCache = session.translations[this.targetLanguage] || {};
-        this.translationResults = { ...currentLangCache };
-
-        // 检查是否有未翻译的内容
-        let hasUntranslated = false;
-        for (const [index, item] of Object.entries(this.preciseResults)) {
-            if (item && item.text && !this.translationResults[index]) {
-                hasUntranslated = true;
-                await this.translateText(item.text, index);
-            }
-        }
-
-        // 如果没有未翻译的内容，只需要更新显示即可
-        if (!hasUntranslated) {
-            this.updateDisplay();
-        }
-
-        // 翻译并显示关键词（如果有）
-        if (this.keywordExtractor && this.keywordExtractor.allCollectedKeywords.length > 0) {
-            // 关键词翻译已删除
-        }
-    }
-
     /**
      * 处理关键词提取 - 基于整个转录文本
      */
     async processKeywords(targetSessionId = null) {
-        if (!this.keywordExtractor || !this.keywordExtractor.enabled) return;
+        if (!this.keywordManager) return;
 
         // 收集所有转录文本（保证准确率）
-        this.currentTranscriptText = Object.values(this.preciseResults)
+        const preciseResults = this.recordingManager.getTranscriptData();
+        this.currentTranscriptText = Object.values(preciseResults)
             .map(item => item && item.text ? item.text : "")
             .join(" ");
 
         if (this.currentTranscriptText.length > 10) {
 
             // 基于整个文本提取关键词
-            await this.keywordExtractor.processText(this.currentTranscriptText);
+            await this.keywordManager.processText(this.currentTranscriptText);
 
             // 更新所有显示
-            this.keywordExtractor.updateAllKeywordDisplays();
+            this.keywordManager.updateAllKeywordDisplays();
+
+            // 保存提取的关键词到当前 session
+            const sessionId = targetSessionId || this.recordingSessionId || this.sessionManager.currentSessionId;
+            if (sessionId && this.sessionManager) {
+                this.sessionManager.updateKeywordsForSession(sessionId, this.keywordManager.extracts);
+            }
         }
     }
 
@@ -1739,23 +2562,24 @@ class StreamNote {
      * 重新处理所有关键词（强度改变时使用）
      */
     async reprocessAllKeywords() {
-        if (!this.keywordExtractor || !this.keywordExtractor.enabled) return;
+        if (!this.keywordManager) return;
 
         // 获取当前的全文
-        this.currentTranscriptText = Object.values(this.preciseResults)
+        const preciseResults = this.recordingManager.getTranscriptData();
+        this.currentTranscriptText = Object.values(preciseResults)
             .map(item => item && item.text ? item.text : "")
             .join(" ");
 
         if (this.currentTranscriptText.length > 10) {
 
-            // 清空自动提取的关键词（保留手动添加的）
-            this.keywordExtractor.autoKeywords = [];
+            // 清空自动提取的关键词（保留高亮的）
+            this.keywordManager.extracts = [];
 
             // 重新提取
-            await this.keywordExtractor.processText(this.currentTranscriptText);
+            await this.keywordManager.processText(this.currentTranscriptText);
 
             // 更新所有显示
-            this.keywordExtractor.updateAllKeywordDisplays();
+            this.keywordManager.updateAllKeywordDisplays();
         }
     }
 
@@ -1955,25 +2779,28 @@ class StreamNote {
      * 删除关键词
      */
     deleteKeyword(keyword) {
-        if (!this.keywordExtractor) return;
+        if (!this.keywordManager) return;
 
-        // 从手动或自动关键词中删除
-        const manualIndex = this.keywordExtractor.manualKeywords.indexOf(keyword);
-        const autoIndex = this.keywordExtractor.autoKeywords.indexOf(keyword);
+        // 从高亮或自动提取的关键词中删除
+        const highlightIndex = this.keywordManager.highlights.indexOf(keyword);
+        const extractIndex = this.keywordManager.extracts.indexOf(keyword);
 
-        if (manualIndex > -1) {
-            this.keywordExtractor.manualKeywords.splice(manualIndex, 1);
-        } else if (autoIndex > -1) {
-            this.keywordExtractor.autoKeywords.splice(autoIndex, 1);
+        if (highlightIndex > -1) {
+            this.keywordManager.highlights.splice(highlightIndex, 1);
+            // 如果是高亮词，移除其高亮显示
+            this.highlightManager.removeHighlightFromTranscript(keyword);
+        } else if (extractIndex > -1) {
+            this.keywordManager.extracts.splice(extractIndex, 1);
         } else {
             return;  // 关键词不存在
         }
 
         // 更新所有显示
-        this.keywordExtractor.updateAllKeywordDisplays();
+        this.keywordManager.updateAllKeywordDisplays();
 
-        // 保存到 session
-        this.sessionManager.updateCurrentKeywords(this.keywordExtractor.allCollectedKeywords);
+        // 分别保存高亮和关键词
+        this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
+        this.sessionManager.updateCurrentKeywords(this.keywordManager.extracts);
 
         this.showStatusMessage(`✓ Removed "${keyword}"`, 1200);
     }
