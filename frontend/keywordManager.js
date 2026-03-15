@@ -47,6 +47,9 @@ class KeywordManager {
 
         // 面板管理器引用（用于显示解释面板）
         this.panelManager = config.panelManager || null;
+
+        // 状态消息回调
+        this.onStatusMessage = config.onStatusMessage || (() => { });
     }
 
     /**
@@ -319,7 +322,7 @@ class KeywordManager {
      * 从当前笔记文本中提取关键词的上下文
      * @param {string} keyword - 关键词
      * @param {string} fullText - 完整笔记文本
-     * @param {number} contextLength - 前后各取多少字符（默认100）
+     * @param {number} contextLength - 前后各取多少字符（默认100用于API）
      * @returns {string} 包含关键词的上下文
      */
     extractKeywordContext(keyword, fullText, contextLength = 100) {
@@ -637,6 +640,12 @@ class KeywordManager {
         word = word.trim();
         if (!word) return;
 
+        // 检查长度限制：解释最多 100 个字符
+        if (word.length > 100) {
+            alert("Please select less than 100 characters to explain");
+            return;
+        }
+
         // 如果没有提供sourcePanel，尝试从记录中读取
         if (!sourcePanel) {
             sourcePanel = this.wordSourcePanel[word] || 'transcript';
@@ -801,7 +810,7 @@ class KeywordManager {
     }
 
     /**
-     * 获取关键词的上下文（同时用于显示和API发送）
+     * 获取关键词的上下文（用于发送给API）
      * @param {string} keyword - 关键词
      * @returns {string} 上下文
      */
@@ -812,6 +821,7 @@ class KeywordManager {
             // 如果有container信息，说明这个词来自特定的面板
             if (positionInfo.container) {
                 // 位置信息中的container字段会在extractContextByPosition中使用
+                // API用途：使用原始的100字符范围
                 return this.extractKeywordContext(keyword, "", 100);
             }
         }
@@ -848,7 +858,7 @@ class KeywordManager {
             }
         }
 
-        // 默认从转录数据中提取
+        // 默认从转录数据中提取（API用途：使用100字符范围）
         return this.extractKeywordContext(keyword, "", 100);
     }
 
@@ -861,8 +871,15 @@ class KeywordManager {
     highlightKeywordInText(text, keyword) {
         if (!text || !keyword) return text;
 
+        // 规范化keyword，确保与context中的格式一致
+        let cleanedKeyword = keyword.trim();
+        cleanedKeyword = cleanedKeyword.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
+        cleanedKeyword = cleanedKeyword.replace(/\s+/g, ' ').trim();
+
+        if (!cleanedKeyword) return text;
+
         // 转义特殊字符
-        const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const escapedKeyword = cleanedKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
         // 创建正则表达式，不使用词边界（\b），因为中文文本不支持词边界）
         // 使用全局和不区分大小写的模式
@@ -886,25 +903,21 @@ class KeywordManager {
 
         if (!contextDiv || !contextText) return;
 
-        const context = this.getContextForKeyword(keyword);
+        // 获取显示用的context（使用较小范围：50字符）
+        let displayContext = "";
 
-        if (context) {
-            // 显示级别的字符裁剪：统一显示前后各100字符
-            let displayContext = context;
-            if (context.length > 300) {  // 前100 + 词 + 后100 = ~300字符
-                const lowerContext = context.toLowerCase();
-                const lowerKeyword = keyword.toLowerCase();
-                const keywordIndex = lowerContext.indexOf(lowerKeyword);
+        // 检查是否有位置信息
+        if (this.highlightPositions && this.highlightPositions[keyword]) {
+            const positionInfo = this.highlightPositions[keyword];
+            displayContext = this.extractContextByPosition(positionInfo, 50); // 显示用：50字符范围
+        } else {
+            // 降级方案：从完整文本搜索（用较小范围）
+            displayContext = this.extractKeywordContext(keyword, "", 50);
+        }
 
-                if (keywordIndex !== -1) {
-                    const start = Math.max(0, keywordIndex - 100);
-                    const end = Math.min(context.length, keywordIndex + keyword.length + 100);
-
-                    displayContext = (start > 0 ? "..." : "") +
-                        context.substring(start, end) +
-                        (end < context.length ? "..." : "");
-                }
-            }
+        if (displayContext) {
+            // 前后加上省略号，表示这是截断的内容
+            displayContext = "... " + displayContext + " ...";
 
             // 高亮displayContext中的关键词
             const highlightedContext = this.highlightKeywordInText(displayContext, keyword);

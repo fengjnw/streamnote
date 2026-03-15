@@ -765,14 +765,21 @@ class HighlightManager {
     toggleHighlight(text) {
         if (!text || !this.keywordManager) return false;
 
-        const isHighlighted = this.keywordManager.highlights.includes(text);
+        // 对输入文本进行相同的清理处理，确保与highlights中的内容匹配
+        let cleanedText = text.trim();
+        cleanedText = cleanedText.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
+        cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
+
+        if (!cleanedText) return false;
+
+        const isHighlighted = this.keywordManager.highlights.includes(cleanedText);
 
         if (isHighlighted) {
-            this.removeHighlightFromList(text);
-            this.onStatusMessage(`✓ Removed "${text}" from highlights`, 1500);
+            this.removeHighlightFromList(cleanedText);
+            this.onStatusMessage(`✓ Removed "${cleanedText}" from highlights`, 1500);
             return false;
         } else {
-            this.addSelectedTextAsHighlight(text);
+            this.addSelectedTextAsHighlight(cleanedText);
             return true;
         }
     }

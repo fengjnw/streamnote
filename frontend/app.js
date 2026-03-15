@@ -592,7 +592,8 @@ class StreamNote {
             panelManager: this.panelManager,
             recordingManager: this.recordingManager,
             getTranscriptData: () => this.recordingManager.getTranscriptData(),
-            translationManager: this.translationManager
+            translationManager: this.translationManager,
+            onStatusMessage: (message, duration) => this.showStatusMessage(message, duration)
         });
 
         // 使 KeywordManager 全局可访问
@@ -1844,9 +1845,18 @@ class StreamNote {
 
             // 尝试使用 sourceIndices 或 startIndex 来定位
             if (positionInfo.sourceIndices && positionInfo.sourceIndices.length > 0) {
-                const targetIndex = positionInfo.sourceIndices[0]; // 使用第一个出现位置
-                if (this.scrollToWordByIndex(word, targetIndex, sourcePanel)) {
-                    return;
+                // 检查是否跨越多行（多个sourceIndices表示跨行词）
+                if (positionInfo.sourceIndices.length > 1) {
+                    // 跨行词：需要高亮所有涉及的段落
+                    if (this.scrollToWordByIndices(word, positionInfo.sourceIndices, sourcePanel)) {
+                        return;
+                    }
+                } else {
+                    // 单行词：使用第一个（也是唯一的）出现位置
+                    const targetIndex = positionInfo.sourceIndices[0];
+                    if (this.scrollToWordByIndex(word, targetIndex, sourcePanel)) {
+                        return;
+                    }
                 }
             } else if (positionInfo.startIndex !== undefined) {
                 // 使用 startIndex 来定位
@@ -1902,7 +1912,58 @@ class StreamNote {
     }
 
     /**
-     * 通过文本搜索在面板中定位词语
+     * 通过多个index在面板中定位跨行词语
+     * @param {string} word - 词语
+     * @param {Array<number>} targetIndices - 目标片段的index数组（用于跨行词）
+     * @param {string} sourcePanel - 源面板
+     * @returns {boolean} 是否成功定位
+     */
+    scrollToWordByIndices(word, targetIndices, sourcePanel) {
+        if (!targetIndices || targetIndices.length === 0) {
+            return false;
+        }
+
+        const transcript = document.getElementById("transcript");
+        const translation = document.getElementById("translation");
+
+        let primaryPanel = sourcePanel === 'translation' ? translation : transcript;
+        let secondaryPanel = sourcePanel === 'translation' ? transcript : translation;
+
+        if (!primaryPanel) return false;
+
+        // 获取第一个段落用于滚动
+        const firstIndex = targetIndices[0];
+        const firstParagraph = primaryPanel.querySelector(`p[data-index="${firstIndex}"]`);
+
+        if (!firstParagraph) {
+            return false;
+        }
+
+        // 滚动到第一个段落
+        firstParagraph.scrollIntoView({ behavior: 'auto', block: 'center' });
+
+        // 在所有涉及的段落中高亮显示词
+        targetIndices.forEach(index => {
+            const paragraph = primaryPanel.querySelector(`p[data-index="${index}"]`);
+            if (paragraph) {
+                this.highlightWordInElement(paragraph, word);
+            }
+
+            // 同时在另一个面板的相同索引段落中高亮（如果存在）
+            if (secondaryPanel) {
+                const secondaryParagraph = secondaryPanel.querySelector(`p[data-index="${index}"]`);
+                if (secondaryParagraph) {
+                    this.highlightWordInElement(secondaryParagraph, word);
+                }
+            }
+        });
+
+        this.showStatusMessage(`Found "${word}" in ${sourcePanel}`, 1000);
+        return true;
+    }
+
+    /**
+     * 通过文本搜索在面板中定位词语（支持跨行搜索）
      * @param {string} word - 词语
      * @param {string} sourcePanel - 源面板
      */
@@ -1925,35 +1986,59 @@ class StreamNote {
         // 直接在每个段落中搜索词语，避免累计长度计算错误
         const lowerWord = word.toLowerCase();
         const paragraphs = primaryPanel.querySelectorAll("p");
-        let targetParagraph = null;
-        let targetIndex = null;
+        const paragraphArray = Array.from(paragraphs);
+        let targetParagraphs = [];
+        let targetIndices = [];
 
-        for (const p of paragraphs) {
+        // 首先尝试在单个段落中找到完整的词
+        for (const p of paragraphArray) {
             const pText = p.innerText.toLowerCase();
             if (pText.includes(lowerWord)) {
-                targetParagraph = p;
-                targetIndex = p.getAttribute("data-index");
+                targetParagraphs = [p];
+                targetIndices = [p.getAttribute("data-index")];
                 break;
             }
         }
 
-        if (!targetParagraph) {
+        // 如果单个段落中未找到，尝试跨行搜索（相邻段落）
+        if (targetParagraphs.length === 0) {
+            for (let i = 0; i < paragraphArray.length - 1; i++) {
+                const p1 = paragraphArray[i];
+                const p2 = paragraphArray[i + 1];
+                const combinedText = (p1.innerText + " " + p2.innerText).toLowerCase();
+
+                if (combinedText.includes(lowerWord)) {
+                    // 找到跨行的词，添加两个段落
+                    targetParagraphs = [p1, p2];
+                    targetIndices = [p1.getAttribute("data-index"), p2.getAttribute("data-index")];
+                    break;
+                }
+            }
+        }
+
+        if (targetParagraphs.length === 0) {
             this.showStatusMessage(`Word "${word}" not found in ${sourcePanel}`, 1500);
             return;
         }
 
-        // 跳转到该段落
-        targetParagraph.scrollIntoView({ behavior: 'auto', block: 'center' });
+        // 跳转到第一个段落
+        targetParagraphs[0].scrollIntoView({ behavior: 'auto', block: 'center' });
 
-        // 高亮显示找到的词（临时）- 在目标面板
-        this.highlightWordInElement(targetParagraph, word);
+        // 高亮显示找到的词 - 在目标面板的所有相关段落中
+        targetParagraphs.forEach(p => {
+            this.highlightWordInElement(p, word);
+        });
 
         // 同时在另一个面板中高亮相同索引的段落（如果存在）
-        if (secondaryPanel && targetIndex !== null) {
-            const secondaryParagraph = secondaryPanel.querySelector(`p[data-index="${targetIndex}"]`);
-            if (secondaryParagraph) {
-                this.highlightWordInElement(secondaryParagraph, word);
-            }
+        if (secondaryPanel && targetIndices.length > 0) {
+            targetIndices.forEach(index => {
+                if (index !== null) {
+                    const secondaryParagraph = secondaryPanel.querySelector(`p[data-index="${index}"]`);
+                    if (secondaryParagraph) {
+                        this.highlightWordInElement(secondaryParagraph, word);
+                    }
+                }
+            });
         }
 
         this.showStatusMessage(`Found "${word}" in ${sourcePanel}`, 1000);
@@ -1962,7 +2047,7 @@ class StreamNote {
     /**
      * 在元素中高亮显示词语
      * @param {HTMLElement} element - 要搜索的元素
-     * @param {string} word - 要高亮的词
+     * @param {string} word - 要高亮的词（可以是多词组合如"human events"）
      */
     highlightWordInElement(element, word) {
         if (!element || !word) {
@@ -1982,38 +2067,75 @@ class StreamNote {
             }
         });
 
-        const lowerWord = word.toLowerCase();
-
         // 直接使用 innerHTML.replace() 处理高亮
         try {
             const originalHtml = element.innerHTML;
-
-            // 创建一个正则表达式来匹配词语（不区分大小写，使用单词边界）
-            const escapedWord = this.escapeRegex(word);
-            const regex = new RegExp(`\\b(${escapedWord})\\b`, 'gi');
-
+            let newHtml = originalHtml;
             let highlightCount = 0;
-            const newHtml = originalHtml.replace(regex, (match) => {
+
+            // 首先尝试匹配完整的短语（带单词边界）
+            const escapedWord = this.escapeRegex(word);
+            const regex1 = new RegExp(`\\b(${escapedWord})\\b`, 'gi');
+            let tempHtml = originalHtml.replace(regex1, (match) => {
                 highlightCount++;
                 return `<span class="temp-word-highlight">${match}</span>`;
             });
 
             if (highlightCount > 0) {
-                element.innerHTML = newHtml;
+                newHtml = tempHtml;
             } else {
-                // 备用方法：不使用单词边界
+                // 备用方法1：不使用单词边界尝试完整短语
                 const regex2 = new RegExp(`(${escapedWord})`, 'gi');
-                let highlightCount2 = 0;
-                const newHtml2 = originalHtml.replace(regex2, (match) => {
-                    highlightCount2++;
+                tempHtml = originalHtml.replace(regex2, (match) => {
+                    highlightCount++;
                     return `<span class="temp-word-highlight">${match}</span>`;
                 });
 
-                if (highlightCount2 > 0) {
-                    element.innerHTML = newHtml2;
+                if (highlightCount > 0) {
+                    newHtml = tempHtml;
+                } else {
+                    // 备用方法2：如果是多词组合，尝试单独匹配每个词
+                    // （用于处理跨行词，其中完整短语在单个段落中不存在）
+                    const words = word.split(/\s+/);
+                    if (words.length > 1) {
+                        let multiWordHtml = originalHtml;
+                        for (const singleWord of words) {
+                            const escapedSingleWord = this.escapeRegex(singleWord);
+                            // 先尝试词边界方式
+                            const singleRegex1 = new RegExp(`\\b(${escapedSingleWord})\\b`, 'gi');
+                            let singleHighlightCount = 0;
+                            const tempHtml2 = multiWordHtml.replace(singleRegex1, (match) => {
+                                singleHighlightCount++;
+                                return `<span class="temp-word-highlight">${match}</span>`;
+                            });
+
+                            // 如果词边界方式有效，就用它
+                            if (singleHighlightCount > 0) {
+                                multiWordHtml = tempHtml2;
+                                highlightCount += singleHighlightCount;
+                            } else {
+                                // 否则尝试不用词边界
+                                const singleRegex2 = new RegExp(`(${escapedSingleWord})`, 'gi');
+                                const tempHtml3 = multiWordHtml.replace(singleRegex2, (match) => {
+                                    singleHighlightCount++;
+                                    return `<span class="temp-word-highlight">${match}</span>`;
+                                });
+                                if (singleHighlightCount > 0) {
+                                    multiWordHtml = tempHtml3;
+                                    highlightCount += singleHighlightCount;
+                                }
+                            }
+                        }
+                        if (highlightCount > 0) {
+                            newHtml = multiWordHtml;
+                        }
+                    }
                 }
             }
 
+            if (highlightCount > 0) {
+                element.innerHTML = newHtml;
+            }
         } catch (e) {
             return;
         }
