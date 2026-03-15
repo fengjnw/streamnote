@@ -718,6 +718,7 @@ class KeywordManager {
         const contentElement = document.getElementById("explanation-content");
         const headerDiv = document.querySelector(".explanation-header");
         const regenerateBtn = document.getElementById("regenerate-explanation-btn");
+        const contextDiv = document.getElementById("word-context");
 
         if (!wordElement || !contentElement) return;
 
@@ -734,8 +735,9 @@ class KeywordManager {
         const isHighlighted = this.highlights?.includes(word) || false;
         window.streamNoteInstance?.updateHighlightButtonState(word, isHighlighted);
 
-        // 显示加载状态
+        // 显示加载状态，先隐藏context
         contentElement.innerHTML = '<p class="placeholder">Loading explanation...</p>';
+        if (contextDiv) contextDiv.style.display = 'none';
 
         // 获取位置信息（使用已保存的，如果没有则检测）
         // 优先使用 highlightPositions 中的信息（在 openExplanationForWord 中保存的精确位置）
@@ -757,10 +759,7 @@ class KeywordManager {
         this.currentContextPositionInfo = positionInfo;
         this.currentContextWord = word;
 
-        // 立即显示上下文（使用拼接方式）
-        this.updateWordContext(word);
-
-        // 获取解释（会同时更新上下文）
+        // 获取解释（完成后会显示context）
         await this.fetchAndShowExplanationForFocusView(word, contentElement);
     }
 
@@ -777,7 +776,8 @@ class KeywordManager {
             // 检查缓存
             if (this.explanationCache[cacheKey]) {
                 contentElement.innerHTML = `<p>${this.explanationCache[cacheKey]}</p>`;
-                // 上下文已在displayExplanationFocusView中显示
+                // 解释加载完成后显示上下文
+                this.updateWordContext(keyword);
                 return;
             }
 
@@ -828,9 +828,15 @@ class KeywordManager {
             // 存入缓存
             this.explanationCache[cacheKey] = explanation;
             contentElement.innerHTML = `<p>${explanation}</p>`;
+
+            // 解释加载完成后显示上下文
+            this.updateWordContext(keyword);
         } catch (error) {
             console.error("[KeywordManager] Error fetching explanation:", error);
             contentElement.innerHTML = `<p class="error">Failed to load explanation: ${error.message}</p>`;
+
+            // 即使出错也显示上下文
+            this.updateWordContext(keyword);
         }
     }
 

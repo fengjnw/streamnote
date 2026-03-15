@@ -108,6 +108,8 @@
                             <option value="Japanese">日本語</option>
                             <option value="Korean">한국어</option>
                         </select>
+                        <button id="highlight-current-word-btn" class="toolbar-btn"
+                            title="Add to highlights">Highlight</button>
                         <button id="regenerate-explanation-btn" class="toolbar-btn" disabled
                             title="Regenerate explanation">Regenerate</button>
                         <button id="clearExplanationsBtn" class="toolbar-btn danger"
@@ -117,11 +119,7 @@
                     <div class="explanation-panel-content">
                         <div id="explanation-focus-view" class="explanation-focus-view">
                             <div class="explanation-header hidden">
-                                <div class="explanation-header-content">
-                                    <h4 id="current-explanation-word" class="current-word"></h4>
-                                    <button id="highlight-current-word-btn" class="toolbar-btn"
-                                        title="Add to highlights">Highlight</button>
-                                </div>
+                                <h4 id="current-explanation-word" class="current-word"></h4>
                             </div>
                             <div class="explanation-body">
                                 <div id="explanation-content" class="explanation-scroll">
