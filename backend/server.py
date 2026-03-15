@@ -5,6 +5,7 @@ from config import OPENAI_API_KEY, FLASK_CONFIG
 from keyword_manager import create_keyword_manager
 from translator import create_translator
 from summarizer import create_summarizer
+from file_processor import extract_text_from_file, validate_file
 import io
 import json
 import os
@@ -215,6 +216,56 @@ def summarize():
 @app.route("/health", methods=["GET"])
 def health_check():
     return {"status": "ok"}
+
+
+@app.route("/api/upload-file", methods=["POST"])
+def upload_file():
+    """
+    上传文本文件 API
+    支持格式：.txt, .md
+    
+    请求：
+        - 方法：POST
+        - 内容类型：multipart/form-data
+        - 参数：file (必需)
+        
+    响应：
+        - 成功 (200): {
+            "text": "提取的文本内容",
+            "fileName": "文件名",
+            "fileSize": 文件大小(字节),
+            "paragraphCount": 段落数
+          }
+        - 失败 (400/413): {
+            "error": "错误信息"
+          }
+    """
+    try:
+        # 检查是否有文件
+        if 'file' not in request.files:
+            return {"error": "No file part in the request"}, 400
+        
+        file = request.files['file']
+        
+        # 验证文件
+        validation = validate_file(file)
+        if not validation['valid']:
+            return {"error": validation['error']}, 400
+        
+        # 重置文件指针（在验证时被移动）
+        file.seek(0)
+        
+        # 提取文本
+        result = extract_text_from_file(file)
+        
+        return jsonify(result), 200
+    
+    except ValueError as e:
+        return {"error": str(e)}, 400
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"error": f"Server error: {str(e)}"}, 500
 
 
 if __name__ == "__main__":
