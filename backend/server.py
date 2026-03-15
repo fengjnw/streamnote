@@ -24,9 +24,14 @@ summarizer = create_summarizer(OPENAI_API_KEY)
 
 
 def _refine_transcription(text: str, context: str) -> str:
-    """用GPT根据上下文校准转录结果 - 移除重复、纠正术语、确保连贯性"""
-    system_prompt = "Remove duplicate content from context. Fix terms & names based on context. Return only refined text."
-    user_message = f"Context:\n{context}\n\nTranscription:\n{text}"
+    """用GPT根据上下文纠正转录错误 - 修正术语、专有名词、异常表述"""
+    system_prompt = """You are a transcription error corrector. Your job is:
+1. Use the context to identify and fix transcription errors
+2. Correct misspelled technical terms, names, or domain-specific words based on context
+3. Fix obvious speech-to-text mistakes (e.g., homophones, mishearings)
+4. Keep the original meaning and structure - only fix errors
+5. Return ONLY the corrected text"""
+    user_message = f"Context (for reference):\n{context[:500]}\n\nTranscription to correct:\n{text}"
     
     try:
         refined = client.chat.completions.create(
@@ -35,7 +40,7 @@ def _refine_transcription(text: str, context: str) -> str:
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message}
             ],
-            temperature=0.3,
+            temperature=0.1,
             max_tokens=2000
         )
         return refined.choices[0].message.content.strip()

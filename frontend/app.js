@@ -201,6 +201,9 @@ class StreamNote {
 
             // 更新转录上下文 - 新转录的内容会被加入上下文
             this.updateTranscriptionContext();
+
+            // 保存到 session - 确保新转录也被持久化
+            this.saveToSession();
         }
     }
 
@@ -1225,28 +1228,40 @@ class StreamNote {
      * @param {string} sourceType - 'file' 或 'edit'
      */
     importTextContent(preciseResults, sourceFile, sourceType) {
-        // 更新 recordingManager 的数据（这是所有工具共享的数据源）
-        if (this.recordingManager) {
-            this.recordingManager.setTranscriptData(preciseResults);
-        }
-
-        // 更新 panelManager 的数据
-        if (this.panelManager) {
-            this.panelManager.setTranscriptData(preciseResults);
-        }
-
-        // 更新当前 session 的转录数据
+        // 获取当前 session 并合并新内容（追加而不是覆盖）
         const currentSession = this.sessionManager.getCurrentSession();
         if (currentSession) {
-            currentSession.transcripts = { ...preciseResults };
+            // 找到现有转录中的最大索引
+            const existingIndices = Object.keys(currentSession.transcripts || {})
+                .map(k => parseInt(k))
+                .filter(k => !isNaN(k));
+            const maxIndex = existingIndices.length > 0 ? Math.max(...existingIndices) : -1;
+
+            // 重新编号新内容的索引（接在现有内容后面）
+            const mergedTranscripts = { ...(currentSession.transcripts || {}) };
+            Object.entries(preciseResults).forEach(([key, value], idx) => {
+                const newIndex = maxIndex + 1 + idx;
+                mergedTranscripts[newIndex] = value;
+            });
+
+            currentSession.transcripts = mergedTranscripts;
             currentSession.contentMetadata = {
-                source: 'text',
+                source: 'mixed',
                 sourceFile: sourceFile,
                 sourceType: sourceType,
                 uploadTime: new Date().toISOString(),
-                paragraphCount: Object.keys(preciseResults).length
+                paragraphCount: Object.keys(mergedTranscripts).length
             };
             this.sessionManager.saveSessions();
+        }
+
+        // 更新所有工具的数据（使用合并后的完整数据）
+        const mergedData = currentSession?.transcripts || preciseResults;
+        if (this.recordingManager) {
+            this.recordingManager.setTranscriptData(mergedData);
+        }
+        if (this.panelManager) {
+            this.panelManager.setTranscriptData(mergedData);
         }
 
         // 刷新转录显示（会自动在正确的位置渲染）
