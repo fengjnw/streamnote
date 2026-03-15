@@ -42,6 +42,9 @@ class StreamNote {
         // 模态窗口状态
         this.openModals = new Set();  // 跟踪打开的模态窗口
 
+        // 状态消息超时ID
+        this.statusMessageTimeout = null;
+
         // === 初始化管理器 ===
         this.initSessionManager();
         this.initRecordingManager();
@@ -2363,13 +2366,20 @@ class StreamNote {
      */
     showStatusMessage(message, duration = 3000) {
         const statusEl = document.getElementById("status");
+
+        // 清除之前可能还在等待的状态消息超时
+        if (this.statusMessageTimeout) {
+            clearTimeout(this.statusMessageTimeout);
+        }
+
         const originalText = statusEl.textContent;
         statusEl.textContent = message;
 
-        setTimeout(() => {
+        this.statusMessageTimeout = setTimeout(() => {
             if (statusEl.textContent === message) {
                 statusEl.textContent = originalText;
             }
+            this.statusMessageTimeout = null;
         }, duration);
     }
 

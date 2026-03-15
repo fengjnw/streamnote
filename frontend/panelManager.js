@@ -142,6 +142,16 @@ class PanelManager {
                 window.streamNoteInstance.highlightManager.clearTemporaryHighlight();
             }
 
+            // 清理状态消息和其超时计时器
+            const statusEl = document.getElementById("status");
+            if (statusEl) {
+                statusEl.textContent = "";
+            }
+            if (window.streamNoteInstance && window.streamNoteInstance.statusMessageTimeout) {
+                clearTimeout(window.streamNoteInstance.statusMessageTimeout);
+                window.streamNoteInstance.statusMessageTimeout = null;
+            }
+
             explanationPanel.classList.add("collapsed");
             explanationPanel.classList.remove("expanded");
             if (quickAccessHistory) {
