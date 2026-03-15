@@ -794,7 +794,7 @@ class StreamNote {
             quickAccessSettings.addEventListener("click", () => {
                 // 初始化设置面板的默认值
                 this.settingsPanel.initialize();
-                this.openModal("settingsModal");
+                this.toggleModal("settingsModal");
             });
         }
 
@@ -2084,11 +2084,26 @@ class StreamNote {
     }
 
     /**
+     * 切换模态窗口（打开或关闭）
+     */
+    toggleModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+
+        if (modal.style.display === "none" || modal.style.display === "") {
+            this.openModal(modalId);
+        } else {
+            this.closeModal(modalId);
+        }
+    }
+
+    /**
      * 打开模态窗口
      */
     openModal(modalId) {
         const modal = document.getElementById(modalId);
         const overlay = document.getElementById("modalOverlay");
+        const button = this.getModalButton(modalId);
 
         if (!modal) return;
 
@@ -2103,6 +2118,11 @@ class StreamNote {
         modal.style.display = "flex";
         this.openModals.add(modalId);
 
+        // 更新按钮激活状态
+        if (button) {
+            button.classList.add("active");
+        }
+
         // 禁用body滚动
         document.body.style.overflow = "hidden";
     }
@@ -2113,12 +2133,18 @@ class StreamNote {
     closeModal(modalId) {
         const modal = document.getElementById(modalId);
         const overlay = document.getElementById("modalOverlay");
+        const button = this.getModalButton(modalId);
 
         if (!modal) return;
 
         // 隐藏模态窗口
         modal.style.display = "none";
         this.openModals.delete(modalId);
+
+        // 更新按钮激活状态
+        if (button) {
+            button.classList.remove("active");
+        }
 
         // 如果没有其他打开的模态，隐藏背景遮罩
         if (this.openModals.size === 0) {
@@ -2129,6 +2155,18 @@ class StreamNote {
             // 恢复body滚动
             document.body.style.overflow = "auto";
         }
+    }
+
+    /**
+     * 获取模态对应的按钮
+     */
+    getModalButton(modalId) {
+        if (modalId === "sessionModal") {
+            return document.getElementById("openSessionPanel");
+        } else if (modalId === "settingsModal") {
+            return document.getElementById("quickAccessSettings");
+        }
+        return null;
     }
 
     /**

@@ -615,7 +615,7 @@ class SessionManager {
         if (openBtn) {
             openBtn.addEventListener('click', () => {
                 if (window.streamNoteInstance) {
-                    window.streamNoteInstance.openModal('sessionModal');
+                    window.streamNoteInstance.toggleModal('sessionModal');
                 }
             });
         }
