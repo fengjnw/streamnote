@@ -107,7 +107,6 @@ header h1 {
     border-right: 1px solid #e9ecef;
     display: flex;
     flex-direction: column;
-    transition: width 0.3s ease;
     overflow: hidden;
 }
 
@@ -665,7 +664,6 @@ header h1 {
     overflow: hidden;
     background: white;
     border-right: 1px solid #e9ecef;
-    transition: flex 0.3s ease;
 }
 
 .text-panel.collapsed {
@@ -1146,7 +1144,6 @@ header h1 {
     overflow: hidden;
     background: white;
     border-left: 1px solid #e9ecef;
-    transition: width 0.3s ease;
 }
 
 .side-panels-container.expanded {
