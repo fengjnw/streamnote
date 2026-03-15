@@ -35,38 +35,46 @@
         <div class="main-wrapper">
             <nav class="control-panel">
                 <!-- Group 1: Session Management -->
-                <div class="nav-group">
+                <div class="nav-group nav-group-section">
                     <button id="openSessionPanel" class="control-btn control-btn-secondary"
                         title="Open Sessions">Sessions</button>
                 </div>
 
-                <!-- Group 2: Recording Controls -->
-                <div class="nav-group">
+                <!-- Group 2: Recording Controls (Core Workflow) -->
+                <div class="nav-group nav-group-section nav-group-primary">
                     <button id="startBtn" class="control-btn control-btn-primary" title="Record">Record</button>
                     <button id="stopBtn" class="control-btn control-btn-danger" disabled
                         title="Stop Recording">Stop</button>
                     <button id="clearBtn" class="control-btn control-btn-secondary" title="Clear">Clear</button>
                 </div>
 
-                <!-- Group 3: Translation Toggle -->
-                <div class="nav-group">
+                <!-- Group 3: Real-time Assistance -->
+                <div class="nav-group nav-group-section">
                     <button id="translationToggleBtn" class="control-btn control-btn-secondary active"
                         title="Toggle Translation">Translation</button>
+                </div>
+
+                <!-- Group 4: In-class Features -->
+                <div class="nav-group nav-group-section">
+                    <button id="quickAccessHistory" class="control-btn control-btn-secondary"
+                        title="Explanation">Explanation</button>
+                    <button id="quickAccessHighlights" class="control-btn control-btn-secondary"
+                        title="Highlights">Highlights</button>
+                </div>
+
+                <!-- Group 5: Post-class Analysis -->
+                <div class="nav-group nav-group-section">
+                    <button id="quickAccessKeywords" class="control-btn control-btn-secondary"
+                        title="Auto Keywords">Auto Keywords</button>
+                    <button id="quickAccessSummary" class="control-btn control-btn-secondary"
+                        title="Summary">Summary</button>
                 </div>
 
                 <!-- Spacer -->
                 <div class="control-spacer"></div>
 
-                <!-- Group 4: Quick Access Panels -->
-                <div class="nav-group">
-                    <button id="quickAccessHistory" class="control-btn control-btn-secondary"
-                        title="Explanation">Explanation</button>
-                    <button id="quickAccessHighlights" class="control-btn control-btn-secondary"
-                        title="Highlights">Highlights</button>
-                    <button id="quickAccessKeywords" class="control-btn control-btn-secondary"
-                        title="Auto Keywords">Auto Keywords</button>
-                    <button id="quickAccessSummary" class="control-btn control-btn-secondary"
-                        title="Summary">Summary</button>
+                <!-- Group 6: System Settings -->
+                <div class="nav-group nav-group-section nav-group-settings">
                     <button id="quickAccessSettings" class="control-btn control-btn-secondary"
                         title="Settings">Settings</button>
                 </div>

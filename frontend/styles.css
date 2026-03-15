@@ -570,15 +570,35 @@ header h1 {
     gap: var(--spacing-xs);
     align-items: center;
     flex-shrink: 0;
-    padding-right: var(--spacing-sm);
-    border-right: 1px solid #dee2e6;
-    margin-right: var(--spacing-sm);
+    padding-right: var(--spacing-md);
+    border-right: 1px solid #e9ecef;
+    margin-right: var(--spacing-md);
+}
+
+/* Section-based grouping for workflow visualization */
+.nav-group-section {
+    /* Keep default border and spacing styling */
+}
+
+.nav-group-primary {
+    /* Core recording controls - no special background, just normal styling */
+    border-right: 1px solid #e9ecef;
+}
+
+.nav-group-settings {
+    /* Distinct styling for settings - moved to the right */
+    border-right: none;
+    padding-right: 0;
+    margin-right: 0;
 }
 
 .nav-group:last-of-type {
     border-right: none;
     padding-right: 0;
     margin-right: 0;
+}
+
+margin-right: 0;
 }
 
 .nav-group-last {
