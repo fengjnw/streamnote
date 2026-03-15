@@ -2758,3 +2758,24 @@ header h1 {
         color: currentColor;
     }
 }
+
+/* ========================= 模式选择器样式 ========================= */
+
+.mode-selector {
+    user-select: none;
+}
+
+.mode-tab {
+    color: #666;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.mode-tab:hover {
+    background: #eeeeee !important;
+}
+
+.mode-tab.active {
+    color: var(--color-primary) !important;
+    border-bottom-color: var(--color-primary) !important;
+}
