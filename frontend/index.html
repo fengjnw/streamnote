@@ -242,13 +242,13 @@
                     </div>
                 </div>
 
-                <div class="main-content layout-split" id="transcriptMode">
+                <div class="main-content layout-split">
                     <!-- Transcript Panel (Left) -->
                     <div class="text-panel transcript-panel expanded">
                         <!-- Panel Content -->
                         <div class="text-panel-content">
                             <div id="transcript" class="transcript">
-                                <p class="placeholder">Click "Record" to begin transcription</p>
+                                <p class="placeholder">Start recording or upload text</p>
                             </div>
                         </div>
                     </div>
@@ -282,7 +282,7 @@
                         <!-- Panel Content -->
                         <div class="text-panel-content">
                             <div id="translation" class="translation">
-                                <p class="placeholder">Translations will appear here as you record</p>
+                                <p class="placeholder">Translations will appear here</p>
                             </div>
                         </div>
                     </div>
@@ -291,44 +291,6 @@
                     <button id="floatingAutoScrollBtn" class="floating-auto-scroll-btn" title="Click to jump to latest">
                         Back to Latest
                     </button>
-                </div>
-
-                <!-- Text Mode Content -->
-                <div class="main-content" id="textMode" style="display: none; flex-direction: column; padding: 20px;">
-                    <!-- Text Display/Edit Area -->
-                    <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; overflow: hidden;">
-                        <!-- Display View -->
-                        <div id="textDisplay" class="text-panel-content" style="
-                            flex: 1;
-                            overflow-y: auto;
-                            padding: 15px;
-                            border: 1px solid #e0e0e0;
-                            border-radius: 4px;
-                            background: white;
-                        ">
-                            <p class="placeholder">Upload or paste text to begin</p>
-                        </div>
-
-                        <!-- Edit View (Hidden by default) -->
-                        <textarea id="textEditArea" style="
-                            display: none;
-                            flex: 1;
-                            padding: 15px;
-                            border: 1px solid #e0e0e0;
-                            border-radius: 4px;
-                            font-family: monospace;
-                            font-size: 14px;
-                            resize: none;
-                        " placeholder="Edit your text here..."></textarea>
-
-                        <!-- Edit Mode Buttons (Hidden by default) -->
-                        <div id="editModeButtons" style="display: none; gap: 10px;">
-                            <button id="saveEditBtn" class="control-btn control-btn-primary"
-                                style="padding: 8px 16px;">Save</button>
-                            <button id="cancelEditBtn" class="control-btn control-btn-secondary"
-                                style="padding: 8px 16px;">Cancel</button>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Collapsible Side Panels (Right) -->
