@@ -146,12 +146,12 @@ class SessionManager {
             if (currentId && this.sessions[currentId]) {
                 this.currentSessionId = currentId;
             } else {
-                // 创建默认 session
-                this.createNewSession("Default Session");
+                // 创建默认 session，使用当前时间作为名称
+                this.createNewSession();
             }
         } catch (error) {
             console.error('[SessionManager] Load error:', error);
-            this.createNewSession("Default Session");
+            this.createNewSession();
         }
     }
 
