@@ -136,6 +136,12 @@ class PanelManager {
 
         if (explanationPanel) {
             this.isUpdatingUI = true;
+
+            // 清理临时高亮（用户没有点"Add Highlight"就关闭面板）
+            if (window.streamNoteInstance && window.streamNoteInstance.highlightManager) {
+                window.streamNoteInstance.highlightManager.clearTemporaryHighlight();
+            }
+
             explanationPanel.classList.add("collapsed");
             explanationPanel.classList.remove("expanded");
             if (quickAccessHistory) {

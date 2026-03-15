@@ -1032,9 +1032,25 @@ class StreamNote {
                 const currentWordEl = document.getElementById("current-explanation-word");
                 if (currentWordEl && currentWordEl.textContent) {
                     const word = currentWordEl.textContent.trim();
-                    const isNowHighlighted = this.highlightManager?.toggleHighlight(word);
-                    // 更新按钮状态
-                    this.updateHighlightButtonState(word, isNowHighlighted);
+
+                    // 检查词是否已被高亮
+                    const isHighlighted = this.keywordManager?.highlights.includes(word);
+
+                    if (isHighlighted) {
+                        // 词已被高亮，执行移除操作
+                        const isHighlightedAfter = this.highlightManager?.toggleHighlight(word);
+                        this.updateHighlightButtonState(word, isHighlightedAfter);
+                    } else {
+                        // 词未被高亮，从临时高亮转移到永久高亮
+                        const isCommitted = this.highlightManager?.commitTemporaryHighlight(word);
+                        if (isCommitted) {
+                            this.updateHighlightButtonState(word, true);
+                        } else {
+                            // 如果没有临时高亮，使用降级方案
+                            const isAdded = this.highlightManager?.toggleHighlight(word);
+                            this.updateHighlightButtonState(word, isAdded);
+                        }
+                    }
                 }
             });
         }

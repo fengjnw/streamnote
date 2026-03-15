@@ -20,6 +20,14 @@ class HighlightManager {
         // 高亮位置信息映射：{ "highlightText": { sourceIndices: [...], startIndex: ..., endIndex: ... } }
         // 用于精确提取上下文，而不是重新搜索
         this.highlightPositions = config.highlightPositions || {};
+
+        // 临时高亮列表：用户在解释面板打开时显示的临时高亮
+        // 结构：{ "word": { highlightId, positionInfo } }
+        // 只有用户点"Add Highlight"才会移到永久highlights列表
+        this.temporaryHighlights = {};
+
+        // 当前临时高亮的词
+        this.currentTemporaryWord = null;
     }
 
     /**
@@ -142,6 +150,80 @@ class HighlightManager {
         this.onStatusMessage(`✓ Highlighted "${highlightText}"`, 1500);
 
         return highlightText;
+    }
+
+    /**
+     * 从上下文位置信息添加高亮（用于解释面板）
+     * 直接使用记录的position信息，避免重新搜索
+     * @param {string} highlightText - 高亮文本
+     * @param {Object} positionInfo - 位置信息 { sourceIndices, container, sourcePanel }
+     * @returns {boolean} 是否成功添加高亮
+     */
+    addHighlightFromContextPosition(highlightText, positionInfo) {
+        if (!highlightText || !positionInfo || !positionInfo.sourceIndices) {
+            this.onStatusMessage("Cannot highlight: invalid position info", 1500);
+            return false;
+        }
+
+        let cleanedText = highlightText.trim();
+        // 移除所有时间戳
+        cleanedText = cleanedText.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
+        cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
+
+        if (!cleanedText) {
+            this.onStatusMessage("No valid text to highlight", 1500);
+            return false;
+        }
+
+        // 检查是否已存在
+        if (this.keywordManager.highlights.includes(cleanedText)) {
+            this.onStatusMessage("This highlight already exists", 1500);
+            return false;
+        }
+
+        // 生成唯一的高亮ID
+        const highlightId = "hl-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+
+        // 添加到高亮列表
+        this.keywordManager.highlights.push(cleanedText);
+
+        // 存储高亮ID映射
+        this.highlightIdMap[cleanedText] = highlightId;
+
+        // 保存位置信息（来自源的准确位置）
+        this.highlightPositions[cleanedText] = {
+            sourceIndices: positionInfo.sourceIndices,
+            container: positionInfo.container || 'transcript'
+        };
+
+        // 同时更新keywordManager中的highlightPositions
+        if (this.keywordManager && this.keywordManager.setHighlightPositions) {
+            this.keywordManager.setHighlightPositions(this.highlightPositions);
+        }
+
+        // 在原文和翻译中进行高亮显示
+        // 如果positionInfo中有container信息，优先在该面板中高亮
+        const container = positionInfo.container || 'transcript';
+
+        if (container === 'translation') {
+            this.highlightTextInTranslation(cleanedText, highlightId);
+        } else {
+            this.highlightTextInTranscript(cleanedText, highlightId);
+        }
+
+        // 更新显示和保存
+        this.keywordManager.updateAllKeywordDisplays();
+        this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
+        this.sessionManager.updateCurrentKeywords(this.keywordManager.extracts);
+
+        // 保存高亮位置信息到session
+        if (this.sessionManager) {
+            this.sessionManager.updateHighlightPositions(this.highlightPositions);
+        }
+
+        this.onStatusMessage(`✓ Highlighted "${cleanedText}"`, 1500);
+
+        return true;
     }
 
     /**
@@ -309,22 +391,116 @@ class HighlightManager {
         const transcriptDiv = document.getElementById("transcript");
         if (!transcriptDiv) return;
 
-        // 从原始数据构建纯文本版本，item之间用空格连接
+        // 使用highlightPositions信息（如果存在）更精确地定位高亮
+        // highlightPositions保存了高亮涉及的段落索引(sourceIndices)
+        const positionInfo = this.highlightPositions[text];
+
+        if (positionInfo && positionInfo.sourceIndices) {
+            // 基于已知的段落索引进行高亮（更精确）
+            this._highlightInTranscriptByIndices(transcriptDiv, text, positionInfo.sourceIndices, highlightId);
+        } else {
+            // 降级到虚拟全文搜索方法（需要清理文本以匹配）
+            this._highlightInTranscriptBySearch(transcriptDiv, text, highlightId);
+        }
+    }
+
+    /**
+     * 基于段落索引在原文中进行高亮（精确方法）
+     * @private
+     */
+    _highlightInTranscriptByIndices(transcriptDiv, text, sourceIndices, highlightId) {
+        const preciseResults = this.getTranscriptData();
+
+        // 为每个涉及的段落构建虚拟全文
+        const sortedIndices = sourceIndices.sort((a, b) => a - b);
+        const sortedKeys = Object.keys(preciseResults).sort((a, b) => parseInt(a) - parseInt(b));
+
+        // 收集这些段落的源文本
+        const segmentTexts = sortedIndices.map(idx => {
+            const sourceText = preciseResults[sortedKeys[idx]]?.text || "";
+            return sourceText.trim();
+        });
+
+        // 构建虚拟全文（用于查找）
+        const virtualText = segmentTexts.join(" ");
+
+        // 在虚拟全文中查找
+        const lowerVirtualText = virtualText.toLowerCase();
+        const lowerText = text.toLowerCase();
+        const matchPos = lowerVirtualText.indexOf(lowerText);
+
+        if (matchPos === -1) return; // 未找到
+
+        // 建立位置映射
+        const textPositionMap = [];
+        let currentPos = 0;
+        segmentTexts.forEach((segmentText, mapIdx) => {
+            const startInVirtual = currentPos;
+            const endInVirtual = currentPos + segmentText.length;
+            textPositionMap.push({
+                startInVirtual,
+                endInVirtual,
+                sourceIndex: sortedIndices[mapIdx],
+                segmentText
+            });
+            currentPos = endInVirtual + 1; // +1 for separator
+        });
+
+        // 找出涉及的段落
+        const matchEnd = matchPos + text.length;
+        const affectedSegments = [];
+
+        textPositionMap.forEach(mapping => {
+            if (mapping.startInVirtual < matchEnd && mapping.endInVirtual > matchPos) {
+                const startInSegment = Math.max(0, matchPos - mapping.startInVirtual);
+                const endInSegment = Math.min(mapping.segmentText.length, matchEnd - mapping.startInVirtual);
+
+                affectedSegments.push({
+                    sourceIndex: mapping.sourceIndex,
+                    startInSegment,
+                    endInSegment
+                });
+            }
+        });
+
+        // 对每个涉及的段落进行高亮
+        affectedSegments.forEach(segment => {
+            const key = sortedKeys[segment.sourceIndex];
+            const paragraph = transcriptDiv.querySelector(`p[data-index="${key}"]`);
+            if (!paragraph) return;
+
+            // 使用highlightRangeDirectly的逻辑来处理跨node的高亮
+            const range = this._createRangeInParagraph(paragraph, segment.startInSegment, segment.endInSegment);
+            if (range) {
+                this.highlightRangeDirectly(range, highlightId);
+            }
+        });
+    }
+
+    /**
+     * 基于文本搜索在原文中进行高亮（降级方法）
+     * @private
+     */
+    _highlightInTranscriptBySearch(transcriptDiv, text, highlightId) {
         const preciseResults = this.getTranscriptData();
         const sortedKeys = Object.keys(preciseResults)
             .sort((a, b) => parseInt(a) - parseInt(b));
 
-        // 获取并trim每个sourceText
+        // 获取每个段落的源文本，清理以匹配搜索词
         const sourceTexts = sortedKeys.map(key => {
-            const text = preciseResults[key]?.text || "";
-            return text.trim();
+            let sourceText = preciseResults[key]?.text || "";
+            // 清理文本以匹配detectWordPosition和addHighlightFromContextPosition中的清理方式
+            sourceText = sourceText.trim();
+            sourceText = sourceText.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
+            sourceText = sourceText.replace(/\s+/g, ' ').trim();
+            return sourceText;
         });
 
-        // 构建虚拟全文，item之间用单个空格连接
+        // 构建虚拟全文
         let virtualFullText = sourceTexts.join(" ");
 
         // 建立位置映射
-        const textPositionMap = []; // [{ startInVirtual, endInVirtual, sourceIndex }, ...]
+        const textPositionMap = [];
         let currentPos = 0;
         sourceTexts.forEach((sourceText, idx) => {
             const startInVirtual = currentPos;
@@ -335,23 +511,22 @@ class HighlightManager {
                 sourceIndex: idx,
                 sourceText
             });
-            currentPos = endInVirtual + 1; // +1 for the space separator
+            currentPos = endInVirtual + 1;
         });
 
-        // 在虚拟全文中搜索（不区分大小写）
+        // 在虚拟全文中搜索
         const lowerVirtualText = virtualFullText.toLowerCase();
         const lowerText = text.toLowerCase();
         const matchPos = lowerVirtualText.indexOf(lowerText);
 
-        if (matchPos === -1) return; // 未找到
+        if (matchPos === -1) return;
 
         const matchEnd = matchPos + text.length;
 
-        // 根据虚拟位置找到涉及的源文本
-        const affectedSources = []; // [{ sourceIndex, startInSource, endInSource }, ...]
+        // 根据虚拟位置找到涉及的源段落
+        const affectedSources = [];
 
         textPositionMap.forEach(mapping => {
-            // 检查是否重叠
             if (mapping.startInVirtual < matchEnd && mapping.endInVirtual > matchPos) {
                 const startInSource = Math.max(0, matchPos - mapping.startInVirtual);
                 const endInSource = Math.min(mapping.sourceText.length, matchEnd - mapping.startInVirtual);
@@ -364,64 +539,16 @@ class HighlightManager {
             }
         });
 
-        // 现在在DOM中找到这些源对应的段落，并进行高亮
+        // 在DOM中找到这些段落，并进行高亮
         affectedSources.forEach(source => {
             const key = sortedKeys[source.sourceIndex];
             const paragraph = transcriptDiv.querySelector(`p[data-index="${key}"]`);
             if (!paragraph) return;
 
-            // 提取段落中的text nodes（排除时间戳部分）
-            const textNodes = [];
-            const walker = document.createTreeWalker(
-                paragraph,
-                NodeFilter.SHOW_TEXT,
-                null,
-                false
-            );
-
-            let node;
-            while (node = walker.nextNode()) {
-                // 时间戳已用伪元素显示，不在DOM中，无需特殊过滤
-                textNodes.push(node);
-            }
-
-            // 在text nodes中应用高亮
-            if (textNodes.length === 0) return;
-
-            let currentPos = 0;
-            let matchStartNode = -1;
-            let matchStartIdx = -1;
-            let matchEndNode = -1;
-            let matchEndIdx = -1;
-
-            // 找到起始位置
-            for (let i = 0; i < textNodes.length; i++) {
-                const nodeLength = textNodes[i].textContent.length;
-                if (currentPos + nodeLength > source.startInSource && matchStartNode === -1) {
-                    matchStartNode = i;
-                    matchStartIdx = source.startInSource - currentPos;
-                }
-                if (currentPos + nodeLength >= source.endInSource) {
-                    matchEndNode = i;
-                    matchEndIdx = source.endInSource - currentPos;
-                    break;
-                }
-                currentPos += nodeLength;
-            }
-
-            if (matchStartNode === -1 || matchEndNode === -1) return;
-
-            // 进行高亮
-            if (matchStartNode === matchEndNode) {
-                // 同一个node内
-                this._highlightNodePortion(textNodes[matchStartNode], matchStartIdx, matchEndIdx, highlightId);
-            } else {
-                // 跨多个nodes
-                this._highlightNodePortion(textNodes[matchStartNode], matchStartIdx, textNodes[matchStartNode].textContent.length, highlightId);
-                for (let i = matchStartNode + 1; i < matchEndNode; i++) {
-                    this._highlightNodePortion(textNodes[i], 0, textNodes[i].textContent.length, highlightId);
-                }
-                this._highlightNodePortion(textNodes[matchEndNode], 0, matchEndIdx, highlightId);
+            // 获取段落中的Range并进行高亮
+            const range = this._createRangeInParagraph(paragraph, source.startInSource, source.endInSource);
+            if (range) {
+                this.highlightRangeDirectly(range, highlightId);
             }
         });
     }
@@ -684,6 +811,87 @@ class HighlightManager {
     }
 
     /**
+     * 检测并记录词在原文中的位置信息（用于解释面板）
+     * 不进行实际的高亮显示，只记录位置供后续使用
+     * @param {string} word - 要检测的词
+     * @param {string} sourcePanel - 词的来源面板 ('transcript' 或 'translation')
+     * @returns {Object} 位置信息 { sourceIndices, container } 或 null
+     */
+    detectWordPosition(word, sourcePanel = 'transcript') {
+        if (!word) return null;
+
+        // 清理文本
+        let cleanedWord = word.trim();
+        cleanedWord = cleanedWord.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
+        cleanedWord = cleanedWord.replace(/\s+/g, ' ').trim();
+
+        if (!cleanedWord) return null;
+
+        const transcript = document.getElementById("transcript");
+        const translation = document.getElementById("translation");
+
+        let primaryPanel = sourcePanel === 'translation' ? translation : transcript;
+        if (!primaryPanel) {
+            primaryPanel = sourcePanel === 'translation' ? transcript : translation;
+        }
+        if (!primaryPanel) return null;
+
+        // 从原始数据构建纯文本版本
+        const preciseResults = this.getTranscriptData();
+        const sortedKeys = Object.keys(preciseResults).sort((a, b) => parseInt(a) - parseInt(b));
+
+        // 获取并trim每个sourceText
+        const sourceTexts = sortedKeys.map(key => {
+            const text = preciseResults[key]?.text || "";
+            return text.trim();
+        });
+
+        // 构建虚拟全文
+        let virtualFullText = sourceTexts.join(" ");
+
+        // 建立位置映射
+        const textPositionMap = [];
+        let currentPos = 0;
+        sourceTexts.forEach((sourceText, idx) => {
+            const startInVirtual = currentPos;
+            const endInVirtual = currentPos + sourceText.length;
+            textPositionMap.push({
+                startInVirtual,
+                endInVirtual,
+                sourceIndex: idx,
+                sourceText
+            });
+            currentPos = endInVirtual + 1; // +1 for the space separator
+        });
+
+        // 在虚拟全文中搜索（不区分大小写）
+        const lowerVirtualText = virtualFullText.toLowerCase();
+        const lowerWord = cleanedWord.toLowerCase();
+        const matchPos = lowerVirtualText.indexOf(lowerWord);
+
+        if (matchPos === -1) return null; // 未找到
+
+        const matchEnd = matchPos + cleanedWord.length;
+
+        // 根据虚拟位置找到涉及的源文本
+        const affectedSourceIndices = [];
+
+        textPositionMap.forEach(mapping => {
+            // 检查是否重叠
+            if (mapping.startInVirtual < matchEnd && mapping.endInVirtual > matchPos) {
+                affectedSourceIndices.push(mapping.sourceIndex);
+            }
+        });
+
+        if (affectedSourceIndices.length === 0) return null;
+
+        return {
+            sourceIndices: affectedSourceIndices.sort((a, b) => a - b),
+            container: sourcePanel
+        };
+    }
+
+    /**
      * 移除高亮显示（从原文和翻译区都移除）
      * @param {string} text - 要移除高亮的文本
      */
@@ -865,5 +1073,200 @@ class HighlightManager {
      */
     setHighlightIdMap(map) {
         this.highlightIdMap = { ...map };
+    }
+
+    /**
+     * 显示词的临时高亮（在解释面板打开时）
+     * 使用已检测到的位置信息，不进行搜索
+     * @param {string} word - 临时高亮的词
+     * @param {Object} positionInfo - 位置信息 { sourceIndices, container }
+     * @returns {boolean} 是否成功应用临时高亮
+     */
+    showTemporaryHighlight(word, positionInfo) {
+        if (!word || !positionInfo || !positionInfo.sourceIndices) {
+            return false;
+        }
+
+        let cleanedWord = word.trim();
+        cleanedWord = cleanedWord.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
+        cleanedWord = cleanedWord.replace(/\s+/g, ' ').trim();
+
+        if (!cleanedWord) return false;
+
+        // 如果已有其他临时高亮，先清理它
+        if (this.currentTemporaryWord && this.currentTemporaryWord !== cleanedWord) {
+            this.clearTemporaryHighlight();
+        }
+
+        // 生成临时高亮ID
+        const tempHighlightId = "temp-hl-" + Date.now();
+
+        // 保存临时高亮信息
+        this.temporaryHighlights[cleanedWord] = {
+            highlightId: tempHighlightId,
+            positionInfo: positionInfo
+        };
+        this.currentTemporaryWord = cleanedWord;
+
+        // 在原文和翻译中应用临时高亮
+        const container = positionInfo.container || 'transcript';
+        if (container === 'translation') {
+            this._highlightInTranslationByIndices(
+                document.getElementById("translation"),
+                cleanedWord,
+                positionInfo.sourceIndices,
+                tempHighlightId
+            );
+        } else {
+            this._highlightInTranscriptByIndices(
+                document.getElementById("transcript"),
+                cleanedWord,
+                positionInfo.sourceIndices,
+                tempHighlightId
+            );
+        }
+
+        // 将临时高亮span的className改为 temp-highlight（而不是 text-highlight）
+        const transcriptDiv = document.getElementById("transcript");
+        const translationDiv = document.getElementById("translation");
+
+        if (transcriptDiv) {
+            const tempSpans = transcriptDiv.querySelectorAll(`[data-highlight-id="${tempHighlightId}"]`);
+            tempSpans.forEach(span => {
+                span.className = "temp-highlight";
+            });
+        }
+
+        if (translationDiv) {
+            const tempSpans = translationDiv.querySelectorAll(`[data-highlight-id="${tempHighlightId}"]`);
+            tempSpans.forEach(span => {
+                span.className = "temp-highlight";
+            });
+        }
+
+        return true;
+    }
+
+    /**
+     * 清除所有临时高亮
+     */
+    clearTemporaryHighlight() {
+        if (!this.currentTemporaryWord) return;
+
+        const word = this.currentTemporaryWord;
+        const tempInfo = this.temporaryHighlights[word];
+
+        if (tempInfo && tempInfo.highlightId) {
+            const tempId = tempInfo.highlightId;
+
+            // 从原文移除临时高亮
+            const transcriptDiv = document.getElementById("transcript");
+            if (transcriptDiv) {
+                const highlights = transcriptDiv.querySelectorAll(`[data-highlight-id="${tempId}"]`);
+                highlights.forEach(span => {
+                    const textNode = document.createTextNode(span.textContent);
+                    span.parentNode.replaceChild(textNode, span);
+                });
+                this.mergeAdjacentTextNodes(transcriptDiv);
+            }
+
+            // 从翻译移除临时高亮
+            const translationDiv = document.getElementById("translation");
+            if (translationDiv) {
+                const highlights = translationDiv.querySelectorAll(`[data-highlight-id="${tempId}"]`);
+                highlights.forEach(span => {
+                    const textNode = document.createTextNode(span.textContent);
+                    span.parentNode.replaceChild(textNode, span);
+                });
+                this.mergeAdjacentTextNodes(translationDiv);
+            }
+        }
+
+        delete this.temporaryHighlights[word];
+        this.currentTemporaryWord = null;
+    }
+
+    /**
+     * 将临时高亮转换为永久高亮
+     * @param {string} word - 要保存的词
+     * @returns {boolean} 是否成功
+     */
+    commitTemporaryHighlight(word) {
+        if (!word) return false;
+
+        let cleanedWord = word.trim();
+        cleanedWord = cleanedWord.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
+        cleanedWord = cleanedWord.replace(/\s+/g, ' ').trim();
+
+        if (!cleanedWord) return false;
+
+        // 检查是否有临时高亮
+        const tempInfo = this.temporaryHighlights[cleanedWord];
+        if (!tempInfo) return false;
+
+        // 检查是否已在永久列表中
+        if (this.keywordManager?.highlights.includes(cleanedWord)) {
+            this.onStatusMessage("This highlight already exists", 1500);
+            return false;
+        }
+
+        // 生成永久高亮ID
+        const permanentHighlightId = "hl-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+
+        // 替换高亮ID（从临时改为永久）并改变样式
+        const tempId = tempInfo.highlightId;
+        const positionInfo = tempInfo.positionInfo;
+
+        // 在原文中替换ID和className
+        const transcriptDiv = document.getElementById("transcript");
+        if (transcriptDiv) {
+            const tempSpans = transcriptDiv.querySelectorAll(`[data-highlight-id="${tempId}"]`);
+            tempSpans.forEach(span => {
+                span.setAttribute("data-highlight-id", permanentHighlightId);
+                span.className = "text-highlight";  // 改为永久高亮样式
+            });
+        }
+
+        // 在翻译中替换ID和className
+        const translationDiv = document.getElementById("translation");
+        if (translationDiv) {
+            const tempSpans = translationDiv.querySelectorAll(`[data-highlight-id="${tempId}"]`);
+            tempSpans.forEach(span => {
+                span.setAttribute("data-highlight-id", permanentHighlightId);
+                span.className = "text-highlight";  // 改为永久高亮样式
+            });
+        }
+
+        // 添加到永久列表
+        if (this.keywordManager) {
+            this.keywordManager.highlights.push(cleanedWord);
+        }
+
+        // 保存高亮ID映射和位置信息
+        this.highlightIdMap[cleanedWord] = permanentHighlightId;
+        this.highlightPositions[cleanedWord] = positionInfo;
+
+        // 同时更新keywordManager中的highlightPositions
+        if (this.keywordManager?.setHighlightPositions) {
+            this.keywordManager.setHighlightPositions(this.highlightPositions);
+        }
+
+        // 清无临时数据
+        delete this.temporaryHighlights[cleanedWord];
+        this.currentTemporaryWord = null;
+
+        // 更新显示和保存
+        if (this.keywordManager) {
+            this.keywordManager.updateAllKeywordDisplays();
+        }
+        this.sessionManager?.updateCurrentHighlights(this.keywordManager?.highlights || []);
+        this.sessionManager?.updateCurrentKeywords(this.keywordManager?.extracts || []);
+        if (this.sessionManager) {
+            this.sessionManager.updateHighlightPositions(this.highlightPositions);
+        }
+
+        this.onStatusMessage(`✓ Highlighted "${cleanedWord}"`, 1500);
+
+        return true;
     }
 }

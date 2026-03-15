@@ -50,6 +50,11 @@ class KeywordManager {
 
         // 状态消息回调
         this.onStatusMessage = config.onStatusMessage || (() => { });
+
+        // 当前解释面板显示的上下文的位置信息
+        // 用于直接高亮，避免重新搜索
+        this.currentContextPositionInfo = null;  // { sourceIndices, container, sourcePanel }
+        this.currentContextWord = null;         // 当前显示上下文的词
     }
 
     /**
@@ -732,7 +737,27 @@ class KeywordManager {
         // 显示加载状态
         contentElement.innerHTML = '<p class="placeholder">Loading explanation...</p>';
 
-        // 立即显示上下文（用于用户快速预览）
+        // 获取位置信息（使用已保存的，如果没有则检测）
+        // 优先使用 highlightPositions 中的信息（在 openExplanationForWord 中保存的精确位置）
+        let positionInfo = null;
+        if (this.highlightPositions && this.highlightPositions[word]) {
+            positionInfo = this.highlightPositions[word];
+        } else if (window.streamNoteInstance && window.streamNoteInstance.highlightManager) {
+            // 如果没有已保存位置，才进行检测搜索
+            const sourcePanel = this.wordSourcePanel[word] || 'transcript';
+            positionInfo = window.streamNoteInstance.highlightManager.detectWordPosition(word, sourcePanel);
+        }
+
+        // 如果找到位置信息，立即显示临时高亮
+        if (positionInfo && window.streamNoteInstance && window.streamNoteInstance.highlightManager) {
+            window.streamNoteInstance.highlightManager.showTemporaryHighlight(word, positionInfo);
+        }
+
+        // 保存位置信息供后续使用
+        this.currentContextPositionInfo = positionInfo;
+        this.currentContextWord = word;
+
+        // 立即显示上下文（使用拼接方式）
         this.updateWordContext(word);
 
         // 获取解释（会同时更新上下文）
@@ -894,7 +919,7 @@ class KeywordManager {
     }
 
     /**
-     * 更新词语的上下文显示
+     * 更新词语的上下文显示（使用拼接方式：前50字+词+后50字）
      * @param {string} keyword - 关键词
      */
     updateWordContext(keyword) {
@@ -903,29 +928,322 @@ class KeywordManager {
 
         if (!contextDiv || !contextText) return;
 
-        // 获取显示用的context（使用较小范围：50字符）
         let displayContext = "";
 
-        // 检查是否有位置信息
-        if (this.highlightPositions && this.highlightPositions[keyword]) {
+        // 优先使用已记录的currentContextPositionInfo或highlightPositions
+        if (this.currentContextPositionInfo && this.currentContextWord === keyword) {
+            displayContext = this._buildContextByPosition(
+                this.currentContextPositionInfo,
+                keyword,
+                50  // 前后各50字符
+            );
+        } else if (this.highlightPositions && this.highlightPositions[keyword]) {
             const positionInfo = this.highlightPositions[keyword];
-            displayContext = this.extractContextByPosition(positionInfo, 50); // 显示用：50字符范围
+            displayContext = this._buildContextByPosition(positionInfo, keyword, 50);
         } else {
-            // 降级方案：从完整文本搜索（用较小范围）
-            displayContext = this.extractKeywordContext(keyword, "", 50);
+            // 降级方案：从全文搜索（用较小范围）
+            displayContext = this._buildContextBySearch(keyword, 50);
         }
 
         if (displayContext) {
-            // 前后加上省略号，表示这是截断的内容
-            displayContext = "... " + displayContext + " ...";
-
-            // 高亮displayContext中的关键词
-            const highlightedContext = this.highlightKeywordInText(displayContext, keyword);
-            contextText.innerHTML = highlightedContext;
+            contextText.innerHTML = displayContext;
             contextDiv.style.display = 'block';
         } else {
             contextDiv.style.display = 'none';
         }
+    }
+
+    /**
+     * 基于位置信息构建context（前50字+加粗词+后50字，支持跨段）
+     * 始终保留本段的完整内容，从前后段落补充
+     * @private
+     */
+    _buildContextByPosition(positionInfo, keyword, contextLength = 50) {
+        if (!positionInfo || !positionInfo.sourceIndices || positionInfo.sourceIndices.length === 0) {
+            return "";
+        }
+
+        // 根据container确定数据源
+        const isTranslationContext = positionInfo.container === 'translation';
+        let dataSource = {};
+
+        if (isTranslationContext && this.translationManager) {
+            dataSource = this.translationManager.getTranslationData();
+        } else {
+            dataSource = this.getTranscriptData();
+        }
+
+        const sourceIndices = positionInfo.sourceIndices;
+        const firstIdx = sourceIndices[0];
+        const lastIdx = sourceIndices[sourceIndices.length - 1];
+
+        // 清理keyword以进行匹配
+        let cleanedKeyword = keyword.trim();
+        cleanedKeyword = cleanedKeyword.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
+        cleanedKeyword = cleanedKeyword.replace(/\s+/g, ' ').trim();
+
+        // 获取目标段落的文本（始终保留）
+        const sourceTexts = sourceIndices.map(idx => {
+            if (isTranslationContext) {
+                const translatedText = dataSource[idx];
+                return translatedText ? translatedText.trim() : "";
+            } else {
+                const item = dataSource[idx];
+                return item ? item.text.trim() : "";
+            }
+        });
+
+        // 构建本段（目标段落）的虚拟文本
+        let targetText = sourceTexts.join(" ");
+
+        // 在本段文本中找到词的位置
+        const lowerTargetText = targetText.toLowerCase();
+        const lowerKeyword = cleanedKeyword.toLowerCase();
+        const matchPos = lowerTargetText.indexOf(lowerKeyword);
+
+        if (matchPos === -1) return "";
+
+        const matchEnd = matchPos + cleanedKeyword.length;
+
+        // 获取全局的第一个和最后一个索引
+        const allKeys = Object.keys(dataSource).sort((a, b) => parseInt(a) - parseInt(b));
+        const globalFirstIdx = parseInt(allKeys[0]);
+        const globalLastIdx = parseInt(allKeys[allKeys.length - 1]);
+
+        // **前context**：从本段向前取50字 + 前面段落补充
+        let contextBefore = "";
+
+        // 第一步：从本段开始向前取最多50字
+        let beforeInTarget = targetText.substring(Math.max(0, matchPos - contextLength), matchPos);
+        contextBefore = beforeInTarget;
+
+        // 第二步：如果前context不足50字，从前面段落补充
+        if (contextBefore.length < contextLength && firstIdx > globalFirstIdx) {
+            let needChars = contextLength - contextBefore.length;
+            let prevIdx = firstIdx - 1;
+            let prevTexts = [];
+            let prevChars = 0;
+
+            // 从前向后收集前面段落的文本
+            while (prevChars < needChars && prevIdx >= globalFirstIdx) {
+                let prevText = "";
+                if (isTranslationContext) {
+                    prevText = dataSource[prevIdx] ? dataSource[prevIdx].trim() : "";
+                } else {
+                    const item = dataSource[prevIdx];
+                    prevText = item ? item.text.trim() : "";
+                }
+
+                if (prevText) {
+                    prevTexts.unshift(prevText);
+                    prevChars += prevText.length;
+                }
+                prevIdx--;
+            }
+
+            // 组合前面的文本，从尾部截取需要的长度（拼接时加空格）
+            let allPrevText = prevTexts.join(" ");
+            if (allPrevText.length > needChars) {
+                contextBefore = allPrevText.substring(allPrevText.length - needChars) + " " + contextBefore;
+            } else if (allPrevText.length > 0) {
+                contextBefore = allPrevText + " " + contextBefore;
+            }
+        }
+
+        // **后context**：从本段向后取50字 + 后面段落补充
+        let contextAfter = "";
+
+        // 第一步：从词结束向后取最多50字
+        let afterInTarget = targetText.substring(matchEnd, Math.min(targetText.length, matchEnd + contextLength));
+        contextAfter = afterInTarget;
+
+        // 第二步：如果后context不足50字，从后面段落补充
+        if (contextAfter.length < contextLength && lastIdx < globalLastIdx) {
+            let needChars = contextLength - contextAfter.length;
+            let nextIdx = lastIdx + 1;
+            let nextTexts = [];
+            let nextChars = 0;
+
+            // 从前向后收集后面段落的文本
+            while (nextChars < needChars && nextIdx <= globalLastIdx) {
+                let nextText = "";
+                if (isTranslationContext) {
+                    nextText = dataSource[nextIdx] ? dataSource[nextIdx].trim() : "";
+                } else {
+                    const item = dataSource[nextIdx];
+                    nextText = item ? item.text.trim() : "";
+                }
+
+                if (nextText) {
+                    nextTexts.push(nextText);
+                    nextChars += nextText.length;
+                }
+                nextIdx++;
+            }
+
+            // 组合后面的文本，从头部截取需要的长度（拼接时加空格）
+            let allNextText = nextTexts.join(" ");
+            if (allNextText.length > needChars) {
+                contextAfter = contextAfter + " " + allNextText.substring(0, needChars);
+            } else if (allNextText.length > 0) {
+                contextAfter = contextAfter + " " + allNextText;
+            }
+        }
+
+        // 拼接：... + 前文 + <span>词</span> + 后文 + ...
+        // 省略号规则：除非在全文头/尾或尾部是句号，否则都加上
+        const highlightedKeyword = `<span class="highlighted-word">${cleanedKeyword}</span>`;
+        const prefix = (firstIdx > globalFirstIdx) ? "... " : "";
+        const suffix = (lastIdx < globalLastIdx) || !contextAfter.endsWith("。") ? " ..." : "";
+        return prefix + contextBefore + highlightedKeyword + contextAfter + suffix;
+    }
+
+    /**
+     * 基于搜索构建context（降级方案，前50字+加粗词+后50字，支持跨段）
+     * 始终保留本段的完整内容，从前后段落补充
+     * @private
+     */
+    _buildContextBySearch(keyword, contextLength = 50) {
+        let cleanedKeyword = keyword.trim();
+        cleanedKeyword = cleanedKeyword.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
+        cleanedKeyword = cleanedKeyword.replace(/\s+/g, ' ').trim();
+
+        if (!cleanedKeyword) return "";
+
+        // 根据词的来源决定搜索的数据源
+        const sourcePanel = this.wordSourcePanel[keyword];
+        let dataSource = {};
+        let sortedKeys = [];
+
+        if (sourcePanel === 'translation' && this.translationManager) {
+            dataSource = this.translationManager.getTranslationData();
+            sortedKeys = Object.keys(dataSource).sort((a, b) => parseInt(a) - parseInt(b));
+        } else {
+            // 从原始转录数据构建
+            const preciseResults = this.getTranscriptData();
+            dataSource = preciseResults;
+            sortedKeys = Object.keys(preciseResults).sort((a, b) => parseInt(a) - parseInt(b));
+        }
+
+        // 构建清理后的全文和位置映射
+        let fullText = "";
+        let segments = []; // [{ text, srcIndex, startPos, endPos }, ...]
+        let currentPos = 0;
+
+        sortedKeys.forEach(key => {
+            let text = "";
+            if (sourcePanel === 'translation' && this.translationManager) {
+                text = dataSource[key] ? dataSource[key].trim() : "";
+            } else {
+                const item = dataSource[key];
+                text = item?.text || "";
+                text = text.trim();
+                text = text.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
+                text = text.replace(/\s+/g, ' ').trim();
+            }
+
+            if (text) {
+                segments.push({
+                    text: text,
+                    srcIndex: parseInt(key),
+                    startPos: currentPos,
+                    endPos: currentPos + text.length
+                });
+                fullText += text + " ";
+                currentPos = fullText.length;
+            }
+        });
+
+        // 在全文中搜索
+        const lowerFullText = fullText.toLowerCase();
+        const lowerKeyword = cleanedKeyword.toLowerCase();
+        const matchPos = lowerFullText.indexOf(lowerKeyword);
+
+        if (matchPos === -1) return "";
+
+        const matchEnd = matchPos + cleanedKeyword.length;
+
+        // 找到包含匹配词的段落（本段）
+        let targetSegment = null;
+        for (let seg of segments) {
+            if (seg.startPos <= matchPos && matchEnd <= seg.endPos + 1) {
+                targetSegment = seg;
+                break;
+            }
+        }
+
+        if (!targetSegment) return "";
+
+        // 获取全局的第一个和最后一个索引
+        const globalFirstSegment = segments[0];
+        const globalLastSegment = segments[segments.length - 1];
+
+        // **前context**：从本段向前取最多50字 + 前面段落的补充
+        let contextBefore = "";
+
+        // 第一步：从本段内开始向前取最多50字
+        const posInSegment = matchPos - targetSegment.startPos;
+        let beforeInSegment = targetSegment.text.substring(Math.max(0, posInSegment - contextLength), posInSegment);
+        contextBefore = beforeInSegment;
+
+        // 第二步：如果前context不足50字，从前面段落补充
+        if (contextBefore.length < contextLength && targetSegment.srcIndex > globalFirstSegment.srcIndex) {
+            let needChars = contextLength - contextBefore.length;
+            let prevChars = 0;
+            let prevTexts = [];
+
+            // 从本段向前遍历段落
+            const targetIdx = segments.indexOf(targetSegment);
+            for (let i = targetIdx - 1; i >= 0 && prevChars < needChars; i--) {
+                prevTexts.unshift(segments[i].text);
+                prevChars += segments[i].text.length;
+            }
+
+            // 组合前面的文本，从尾部截取需要的长度（拼接时加空格）
+            let allPrevText = prevTexts.join(" ");
+            if (allPrevText.length > needChars) {
+                contextBefore = allPrevText.substring(allPrevText.length - needChars) + " " + contextBefore;
+            } else if (allPrevText.length > 0) {
+                contextBefore = allPrevText + " " + contextBefore;
+            }
+        }
+
+        // **后context**：从本段向后取最多50字 + 后面段落的补充
+        let contextAfter = "";
+
+        // 第一步：从词结束向后取最多50字
+        const endPosInSegment = posInSegment + cleanedKeyword.length;
+        let afterInSegment = targetSegment.text.substring(endPosInSegment, Math.min(targetSegment.text.length, endPosInSegment + contextLength));
+        contextAfter = afterInSegment;
+
+        // 第二步：如果后context不足50字，从后面段落补充
+        if (contextAfter.length < contextLength && targetSegment.srcIndex < globalLastSegment.srcIndex) {
+            let needChars = contextLength - contextAfter.length;
+            let nextChars = 0;
+            let nextTexts = [];
+
+            // 从本段向后遍历段落
+            const targetIdx = segments.indexOf(targetSegment);
+            for (let i = targetIdx + 1; i < segments.length && nextChars < needChars; i++) {
+                nextTexts.push(segments[i].text);
+                nextChars += segments[i].text.length;
+            }
+
+            // 组合后面的文本，从头部截取需要的长度（拼接时加空格）
+            let allNextText = nextTexts.join(" ");
+            if (allNextText.length > needChars) {
+                contextAfter = contextAfter + " " + allNextText.substring(0, needChars);
+            } else if (allNextText.length > 0) {
+                contextAfter = contextAfter + " " + allNextText;
+            }
+        }
+
+        // 拼接：... + 前文 + <span>词</span> + 后文 + ...
+        // 省略号规则：除非在全文头/尾或尾部是句号，否则都加上
+        const highlightedKeyword = `<span class="highlighted-word">${cleanedKeyword}</span>`;
+        const prefix = (targetSegment.srcIndex > globalFirstSegment.srcIndex) ? "... " : "";
+        const suffix = (targetSegment.srcIndex < globalLastSegment.srcIndex) || !contextAfter.endsWith("。") ? " ..." : "";
+        return prefix + contextBefore + highlightedKeyword + contextAfter + suffix;
     }
 
     /**

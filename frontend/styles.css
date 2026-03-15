@@ -2380,6 +2380,26 @@ header h1 {
     -webkit-box-decoration-break: clone;
 }
 
+/* 临时高亮（在解释面板显示时） */
+.temp-highlight {
+    background-color: #fffde7;
+    color: inherit;
+    animation: temp-highlight-pulse 2s ease-in-out infinite;
+}
+
+/* 临时高亮的脉动动画 - 仅背景颜色变化 */
+@keyframes temp-highlight-pulse {
+
+    0%,
+    100% {
+        background-color: #fffde7;
+    }
+
+    50% {
+        background-color: #fff9c4;
+    }
+}
+
 /* ==================== Panel Toolbar ==================== */
 .panel-toolbar {
     display: flex;
