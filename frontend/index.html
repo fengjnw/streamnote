@@ -86,6 +86,51 @@
                 <!-- Modal Overlay Layer -->
                 <div id="modalOverlay" class="modal-overlay" style="display: none;"></div>
 
+                <!-- Explanation Panel (Left) - for word explanations -->
+                <div class="explanation-panel-left collapsed">
+                    <!-- Panel Header -->
+                    <div class="explanation-panel-header">
+                        <h3>Explanation</h3>
+                        <button id="closeExplanationPanelBtn" class="btn-icon toggle-btn" title="Close Panel">✕</button>
+                    </div>
+                    <!-- Panel Toolbar -->
+                    <div class="panel-toolbar explanation-panel-toolbar">
+                        <select id="keyword-explanation-language" class="language-selector toolbar-language">
+                            <option value="Chinese">中文</option>
+                            <option value="English">English</option>
+                            <option value="Spanish">Español</option>
+                            <option value="French">Français</option>
+                            <option value="Japanese">日本語</option>
+                            <option value="Korean">한국어</option>
+                        </select>
+                        <button id="regenerate-explanation-btn" class="toolbar-btn" disabled
+                            title="Regenerate explanation">Regenerate</button>
+                        <button id="clearExplanationsBtn" class="toolbar-btn danger"
+                            title="Clear explanation display">Clear</button>
+                    </div>
+                    <!-- Panel Content -->
+                    <div class="explanation-panel-content">
+                        <div id="explanation-focus-view" class="explanation-focus-view">
+                            <div class="explanation-header hidden">
+                                <div class="explanation-header-content">
+                                    <h4 id="current-explanation-word" class="current-word"></h4>
+                                    <button id="highlight-current-word-btn" class="toolbar-btn"
+                                        title="Add to highlights">Highlight</button>
+                                </div>
+                            </div>
+                            <div class="explanation-body">
+                                <div id="explanation-content" class="explanation-scroll">
+                                    <p class="placeholder">Select a word to view its explanation</p>
+                                </div>
+                                <div id="word-context" class="word-context" style="display: none;">
+                                    <div class="context-label">Context:</div>
+                                    <p id="context-text" class="context-text"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Session Modal -->
                 <div id="sessionModal" class="floating-modal session-modal" style="display: none;">
                     <div class="floating-modal-header">
@@ -256,43 +301,6 @@
                             <p class="placeholder">Click Generate to generate a summary of your transcription</p>
                         </div>
                     </div>
-
-                    <!-- Explanation Content -->
-                    <div id="historyContent" class="panel-content">
-                        <div class="panel-toolbar">
-                            <select id="keyword-explanation-language" class="language-selector toolbar-language">
-                                <option value="Chinese">中文</option>
-                                <option value="English">English</option>
-                                <option value="Spanish">Español</option>
-                                <option value="French">Français</option>
-                                <option value="Japanese">日本語</option>
-                                <option value="Korean">한국어</option>
-                            </select>
-                            <button id="regenerate-explanation-btn" class="toolbar-btn" disabled
-                                title="Regenerate explanation">Regenerate</button>
-                            <button id="clearExplanationsBtn" class="toolbar-btn danger"
-                                title="Clear explanation display">Clear</button>
-                        </div>
-                        <div id="explanation-focus-view" class="explanation-focus-view">
-                            <div class="explanation-header hidden">
-                                <div class="explanation-header-content">
-                                    <h4 id="current-explanation-word" class="current-word"></h4>
-                                    <button id="highlight-current-word-btn" class="toolbar-btn"
-                                        title="Add to highlights">Highlight</button>
-                                </div>
-                            </div>
-                            <div class="explanation-body">
-                                <div id="explanation-content" class="explanation-scroll">
-                                    <p class="placeholder">Select a word to view its explanation</p>
-                                </div>
-                                <div id="word-context" class="word-context" style="display: none;">
-                                    <div class="context-label">Context:</div>
-                                    <p id="context-text" class="context-text"></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
 
                 </div>
             </div>

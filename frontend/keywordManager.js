@@ -695,6 +695,11 @@ class KeywordManager {
         const focusView = document.getElementById("explanation-focus-view");
         if (!focusView) return;
 
+        // 自动展开左侧解释面板
+        if (window.streamNoteInstance && window.streamNoteInstance.panelManager) {
+            window.streamNoteInstance.panelManager.showExplanationPanel();
+        }
+
         const wordElement = document.getElementById("current-explanation-word");
         const contentElement = document.getElementById("explanation-content");
         const headerDiv = document.querySelector(".explanation-header");

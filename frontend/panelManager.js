@@ -74,6 +74,89 @@ class PanelManager {
             });
             this.updateAutoScrollButton();
         }
+
+        // 设置左侧解释面板的控制
+        this.setupExplanationPanelControls();
+    }
+
+    /**
+     * 初始化左侧解释面板控制
+     * @private
+     */
+    setupExplanationPanelControls() {
+        const explanationPanel = document.querySelector(".explanation-panel-left");
+        const closeExplanationPanelBtn = document.getElementById("closeExplanationPanelBtn");
+        const quickAccessHistory = document.getElementById("quickAccessHistory");
+
+        if (closeExplanationPanelBtn) {
+            closeExplanationPanelBtn.addEventListener("click", () => {
+                this.hideExplanationPanel();
+            });
+        }
+
+        // Explanation按钮关联到左侧面板
+        if (quickAccessHistory) {
+            quickAccessHistory.addEventListener("click", () => {
+                const isOpen = explanationPanel && explanationPanel.classList.contains("expanded");
+                if (isOpen) {
+                    this.hideExplanationPanel();
+                } else {
+                    this.showExplanationPanel();
+                }
+            });
+        }
+    }
+
+    /**
+     * 显示左侧解释面板
+     */
+    showExplanationPanel() {
+        const explanationPanel = document.querySelector(".explanation-panel-left");
+        const quickAccessHistory = document.getElementById("quickAccessHistory");
+
+        if (explanationPanel) {
+            this.isUpdatingUI = true;
+            explanationPanel.classList.remove("collapsed");
+            explanationPanel.classList.add("expanded");
+            if (quickAccessHistory) {
+                quickAccessHistory.classList.add("active");
+            }
+            setTimeout(() => {
+                this.isUpdatingUI = false;
+            }, 0);
+        }
+    }
+
+    /**
+     * 隐藏左侧解释面板
+     */
+    hideExplanationPanel() {
+        const explanationPanel = document.querySelector(".explanation-panel-left");
+        const quickAccessHistory = document.getElementById("quickAccessHistory");
+
+        if (explanationPanel) {
+            this.isUpdatingUI = true;
+            explanationPanel.classList.add("collapsed");
+            explanationPanel.classList.remove("expanded");
+            if (quickAccessHistory) {
+                quickAccessHistory.classList.remove("active");
+            }
+            setTimeout(() => {
+                this.isUpdatingUI = false;
+            }, 0);
+        }
+    }
+
+    /**
+     * 切换左侧解释面板的显示/隐藏
+     */
+    toggleExplanationPanel() {
+        const explanationPanel = document.querySelector(".explanation-panel-left");
+        if (explanationPanel && explanationPanel.classList.contains("expanded")) {
+            this.hideExplanationPanel();
+        } else {
+            this.showExplanationPanel();
+        }
     }
 
     /**
@@ -428,7 +511,6 @@ class PanelManager {
         const closeSidePanelBtn = document.getElementById("closeSidePanelBtn");
         const quickAccessButtons = {
             keywords: document.getElementById("quickAccessKeywords"),
-            history: document.getElementById("quickAccessHistory"),
             summary: document.getElementById("quickAccessSummary"),
             settings: document.getElementById("quickAccessSettings"),
             highlights: document.getElementById("quickAccessHighlights")
@@ -476,7 +558,6 @@ class PanelManager {
         };
 
         setupQuickAccessBtn('keywords', 'keywords');
-        setupQuickAccessBtn('history', 'history');
         setupQuickAccessBtn('summary', 'summary');
         setupQuickAccessBtn('settings', 'settings');
         setupQuickAccessBtn('highlights', 'highlights');
@@ -490,27 +571,23 @@ class PanelManager {
         const sidePanelTitle = document.getElementById("sidePanelTitle");
         const keywordsContent = document.getElementById("keywordsContent");
         const summaryContent = document.getElementById("summaryContent");
-        const historyContent = document.getElementById("historyContent");
         const settingsContent = document.getElementById("settingsContent");
         const highlightsContent = document.getElementById("highlightsContent");
 
         // 隐藏所有内容
         if (keywordsContent) keywordsContent.classList.remove("active");
         if (summaryContent) summaryContent.classList.remove("active");
-        if (historyContent) historyContent.classList.remove("active");
         if (settingsContent) settingsContent.classList.remove("active");
         if (highlightsContent) highlightsContent.classList.remove("active");
 
         // 移除所有按钮的 active 状态
         const quickAccessKeywords = document.getElementById("quickAccessKeywords");
         const quickAccessSummary = document.getElementById("quickAccessSummary");
-        const quickAccessHistory = document.getElementById("quickAccessHistory");
         const quickAccessSettings = document.getElementById("quickAccessSettings");
         const quickAccessHighlights = document.getElementById("quickAccessHighlights");
 
         if (quickAccessKeywords) quickAccessKeywords.classList.remove("active");
         if (quickAccessSummary) quickAccessSummary.classList.remove("active");
-        if (quickAccessHistory) quickAccessHistory.classList.remove("active");
         if (quickAccessSettings) quickAccessSettings.classList.remove("active");
         if (quickAccessHighlights) quickAccessHighlights.classList.remove("active");
 
@@ -525,8 +602,6 @@ class PanelManager {
             quickAccessKeywords.classList.add("active");
         } else if (contentElement === summaryContent && quickAccessSummary) {
             quickAccessSummary.classList.add("active");
-        } else if (contentElement === historyContent && quickAccessHistory) {
-            quickAccessHistory.classList.add("active");
         } else if (contentElement === settingsContent && quickAccessSettings) {
             quickAccessSettings.classList.add("active");
         } else if (contentElement === highlightsContent && quickAccessHighlights) {
@@ -549,7 +624,7 @@ class PanelManager {
             copySummaryBtn.style.display = contentElement === summaryContent ? 'block' : 'none';
         }
         if (explanationLangSelector) {
-            explanationLangSelector.style.display = (contentElement === keywordsContent || contentElement === historyContent || contentElement === highlightsContent || contentElement === summaryContent) ? 'block' : 'none';
+            explanationLangSelector.style.display = (contentElement === keywordsContent || contentElement === highlightsContent || contentElement === summaryContent) ? 'block' : 'none';
         }
 
         // 更新 UI 状态

@@ -1160,6 +1160,70 @@ margin-right: 0;
     padding: 0;
 }
 
+/* ================ Explanation Panel (Left) ================ */
+.explanation-panel-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 0;
+    overflow: hidden;
+    background: white;
+    border-right: 1px solid #e9ecef;
+}
+
+.explanation-panel-left.expanded {
+    width: 300px;
+}
+
+.explanation-panel-left.collapsed {
+    width: 0;
+}
+
+.explanation-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px var(--spacing-md);
+    background: var(--color-primary);
+    color: white;
+    flex-shrink: 0;
+    gap: var(--spacing-sm);
+    border-bottom: 1px solid #e9ecef;
+    min-height: 32px;
+    order: 0;
+}
+
+.explanation-panel-header h3 {
+    margin: 0;
+    font-size: 0.85em;
+    font-weight: 600;
+    flex: 1;
+}
+
+.explanation-panel-toolbar {
+    display: flex;
+    gap: var(--spacing-xs);
+    padding: 8px var(--spacing-md);
+    background: var(--color-bg-light);
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    order: 1;
+}
+
+.explanation-panel-content {
+    flex: 1;
+    overflow: hidden;
+    padding: 0;
+    background: white;
+    min-height: 0;
+    order: 2;
+}
+
+.explanation-panel-content #explanation-focus-view {
+    padding: 0;
+}
+
 /* Side Panels Container */
 .side-panels-container {
     display: flex;
@@ -1235,11 +1299,6 @@ margin-right: 0;
     overflow-y: auto;
     padding: 0;
     min-height: 0;
-}
-
-/* Explanation focus view should NOT have the default padding */
-#historyContent .explanation-focus-view {
-    padding: 0;
 }
 
 #keywordsContent.active {

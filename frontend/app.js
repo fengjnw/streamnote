@@ -693,11 +693,9 @@ class StreamNote {
         const sidePanelTitle = document.getElementById("sidePanelTitle");
         const keywordsContent = document.getElementById("keywordsContent");
         const summaryContent = document.getElementById("summaryContent");
-        const historyContent = document.getElementById("historyContent");
         const highlightsContent = document.getElementById("highlightsContent");
         const quickAccessKeywords = document.getElementById("quickAccessKeywords");
         const quickAccessSummary = document.getElementById("quickAccessSummary");
-        const quickAccessHistory = document.getElementById("quickAccessHistory");
         const quickAccessSettings = document.getElementById("quickAccessSettings");
         const quickAccessHighlights = document.getElementById("quickAccessHighlights");
 
@@ -705,12 +703,10 @@ class StreamNote {
         const hideAllContent = () => {
             keywordsContent.classList.remove("active");
             summaryContent.classList.remove("active");
-            historyContent.classList.remove("active");
             highlightsContent.classList.remove("active");
             // Clear active state from all quick access buttons
             quickAccessKeywords.classList.remove("active");
             quickAccessSummary.classList.remove("active");
-            quickAccessHistory.classList.remove("active");
             quickAccessSettings.classList.remove("active");
             quickAccessHighlights.classList.remove("active");
         };
@@ -726,8 +722,6 @@ class StreamNote {
                 quickAccessKeywords.classList.add("active");
             } else if (contentEl === summaryContent) {
                 quickAccessSummary.classList.add("active");
-            } else if (contentEl === historyContent) {
-                quickAccessHistory.classList.add("active");
             } else if (contentEl === highlightsContent) {
                 quickAccessHighlights.classList.add("active");
             }
@@ -750,7 +744,6 @@ class StreamNote {
                 sidePanelsContainer.classList.remove("expanded");
                 // Remove active state from all quick access buttons
                 quickAccessKeywords.classList.remove("active");
-                quickAccessHistory.classList.remove("active");
                 quickAccessSummary.classList.remove("active");
                 quickAccessSettings.classList.remove("active");
                 quickAccessHighlights.classList.remove("active");
@@ -775,24 +768,6 @@ class StreamNote {
                     }, 350);
                 } else {
                     showContent(keywordsContent, "Auto Keywords");
-                }
-            });
-        }
-
-        if (quickAccessHistory) {
-            quickAccessHistory.addEventListener("click", () => {
-                const isOpen = sidePanelsContainer.classList.contains("expanded");
-                const isActive = historyContent.classList.contains("active");
-
-                if (isOpen && isActive) {
-                    this.isUpdatingUI = true;
-                    sidePanelsContainer.classList.remove("expanded");
-                    quickAccessHistory.classList.remove("active");
-                    setTimeout(() => {
-                        this.isUpdatingUI = false;
-                    }, 350);
-                } else {
-                    showContent(historyContent, "Explanation");
                 }
             });
         }
