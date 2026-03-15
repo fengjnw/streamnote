@@ -250,7 +250,7 @@ class RecordingManager {
             // 转录完成，回到监听状态（在通知上层之前设置）
             this.isTranscribing = false;
 
-            // 计算当前时刻的秒数（从 00:00:00 开始）
+            // 获取当前时钟时间（HH:MM:SS 转换为秒数）
             const now = new Date();
             const timestamp = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 

@@ -1682,7 +1682,7 @@ class StreamNote {
                 (typeof timestamp === 'string' && /^\d+$/.test(timestamp) ? parseInt(timestamp) : null);
 
             if (seconds !== null && seconds >= 0) {
-                const hours = Math.floor(seconds / 3600);
+                const hours = Math.floor(seconds / 3600) % 24;
                 const minutes = Math.floor((seconds % 3600) / 60);
                 const secs = seconds % 60;
                 displayTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
@@ -2545,7 +2545,7 @@ class StreamNote {
                     if (/^\d{2}:\d{2}:\d{2}$/.test(timeValue)) {
                         timestamp_str = timeValue;
                     } else {
-                        // 尝试解析为毫秒数字
+                        // 尝试解析为秒数
                         timeValue = parseInt(timeValue);
                     }
                 }
@@ -2554,19 +2554,18 @@ class StreamNote {
                 if (timestamp_str) {
                     timestamp = timestamp_str;
                 } else if (typeof timeValue === 'number' && !isNaN(timeValue)) {
-                    const date = new Date(timeValue);
-                    const hours = String(date.getHours()).padStart(2, '0');
-                    const minutes = String(date.getMinutes()).padStart(2, '0');
-                    const seconds = String(date.getSeconds()).padStart(2, '0');
+                    // 直接从秒数转换成 HH:MM:SS（输入的是当前时钟的秒数）
+                    const hours = String(Math.floor(timeValue / 3600) % 24).padStart(2, '0');
+                    const minutes = String(Math.floor((timeValue % 3600) / 60)).padStart(2, '0');
+                    const seconds = String(timeValue % 60).padStart(2, '0');
                     timestamp = `${hours}:${minutes}:${seconds}`;
                 } else {
                     // 无法解析，使用当前时间
-                    timestamp = new Date().toLocaleTimeString('zh-CN', {
-                        hour12: false,
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    });
+                    const now = new Date();
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const seconds = String(now.getSeconds()).padStart(2, '0');
+                    timestamp = `${hours}:${minutes}:${seconds}`;
                 }
             } else {
                 timestamp = new Date().toLocaleTimeString('zh-CN', {
