@@ -411,6 +411,10 @@ class StreamNote {
             this.keywordManager.updateAllKeywordDisplays();
         }
 
+        // 恢复输入模式（默认 transcript）
+        const savedMode = session.inputMode || "transcript";
+        this.switchMode(savedMode);
+
         this.updateStatus(`Loaded: ${session.name}`);
     }
 
@@ -1170,11 +1174,206 @@ class StreamNote {
                 this.closeModal("settingsModal");
             });
         }
+
+        // === 模式切换功能 ===
+        // 模式标签页切换
+        const modeTabs = document.querySelectorAll(".mode-tab");
+        modeTabs.forEach(tab => {
+            tab.addEventListener("click", () => {
+                const mode = tab.getAttribute("data-mode");
+                this.switchMode(mode);
+            });
+        });
+
+        // 文本模式：文件上传
+        const uploadFileBtn = document.getElementById("uploadFileBtn");
+        const textFileInput = document.getElementById("textFileInput");
+        
+        if (uploadFileBtn && textFileInput) {
+            uploadFileBtn.addEventListener("click", () => {
+                textFileInput.click();
+            });
+
+            textFileInput.addEventListener("change", async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    try {
+                        const preciseResults = await TextProcessor.processFile(file);
+                        this.importTextContent(preciseResults, file.name, "file");
+                        this.showStatusMessage(`✓ Imported ${file.name}`, 2000);
+                    } catch (error) {
+                        console.error("Error processing file:", error);
+                        this.showStatusMessage(`✗ Failed to import file: ${error.message}`, 2000);
+                    }
+                }
+                // 重置 input 以便重新选择同一文件
+                textFileInput.value = "";
+            });
+        }
+
+        // 文本模式：粘贴文本
+        const pasteTextBtn = document.getElementById("pasteTextBtn");
+        if (pasteTextBtn) {
+            pasteTextBtn.addEventListener("click", async () => {
+                try {
+                    const clipboardText = await navigator.clipboard.readText();
+                    if (clipboardText.trim()) {
+                        const preciseResults = TextProcessor.convertToPreciseResults(clipboardText);
+                        this.importTextContent(preciseResults, "clipboard", "paste");
+                        this.showStatusMessage("✓ Pasted text imported", 2000);
+                    } else {
+                        this.showStatusMessage("✗ Clipboard is empty", 1500);
+                    }
+                } catch (error) {
+                    console.error("Error reading clipboard:", error);
+                    this.showStatusMessage("✗ Failed to read clipboard", 1500);
+                }
+            });
+        }
+
+        // 文本模式：编辑功能
+        const editTextBtn = document.getElementById("editTextBtn");
+        const textDisplay = document.getElementById("textDisplay");
+        const textEditArea = document.getElementById("textEditArea");
+        const saveEditBtn = document.getElementById("saveEditBtn");
+        const cancelEditBtn = document.getElementById("cancelEditBtn");
+
+        if (editTextBtn && textDisplay && textEditArea) {
+            editTextBtn.addEventListener("click", () => {
+                // 从显示区域获取当前文本，填充到编辑区域
+                if (textDisplay.textContent) {
+                    textEditArea.value = textDisplay.textContent;
+                    textDisplay.classList.add("hidden");
+                    textEditArea.classList.remove("hidden");
+                    textEditArea.focus();
+                    editTextBtn.classList.add("hidden");
+                }
+            });
+        }
+
+        if (saveEditBtn && textEditArea) {
+            saveEditBtn.addEventListener("click", () => {
+                const editedText = textEditArea.value;
+                if (editedText.trim()) {
+                    const preciseResults = TextProcessor.convertToPreciseResults(editedText);
+                    this.importTextContent(preciseResults, "edited", "edit");
+                    
+                    // 更新显示区域并切换回显示模式
+                    textDisplay.textContent = editedText;
+                    textDisplay.classList.remove("hidden");
+                    textEditArea.classList.add("hidden");
+                    editTextBtn.classList.remove("hidden");
+                    this.showStatusMessage("✓ Text updated", 1500);
+                } else {
+                    this.showStatusMessage("✗ Cannot save empty text", 1500);
+                }
+            });
+        }
+
+        if (cancelEditBtn && textEditArea) {
+            cancelEditBtn.addEventListener("click", () => {
+                textDisplay.classList.remove("hidden");
+                textEditArea.classList.add("hidden");
+                editTextBtn.classList.remove("hidden");
+            });
+        }
     }
 
     /**
-     * 初始化关键词标签页切换功能
+     * 切换输入模式（Transcript Mode vs Text Mode）
+     * @param {string} mode - 'transcript' 或 'text'
      */
+    switchMode(mode) {
+        const recordingControls = document.getElementById("recordingControls");
+        const textControls = document.getElementById("textControls");
+        const transcriptMode = document.getElementById("transcriptMode");
+        const textMode = document.getElementById("textMode");
+        const modeTabs = document.querySelectorAll(".mode-tab");
+
+        // 更新标签页活跃状态
+        modeTabs.forEach(tab => {
+            if (tab.getAttribute("data-mode") === mode) {
+                tab.classList.add("active");
+            } else {
+                tab.classList.remove("active");
+            }
+        });
+
+        // 切换控制组和内容区域
+        if (mode === "transcript") {
+            // 显示录音模式
+            if (recordingControls) recordingControls.classList.remove("hidden");
+            if (textControls) textControls.classList.add("hidden");
+            if (transcriptMode) transcriptMode.classList.remove("hidden");
+            if (textMode) textMode.classList.add("hidden");
+        } else if (mode === "text") {
+            // 显示文本模式
+            if (recordingControls) recordingControls.classList.add("hidden");
+            if (textControls) textControls.classList.remove("hidden");
+            if (transcriptMode) transcriptMode.classList.add("hidden");
+            if (textMode) textMode.classList.remove("hidden");
+        }
+
+        // 保存模式选择到 session
+        const currentSession = this.sessionManager.getCurrentSession();
+        if (currentSession) {
+            currentSession.inputMode = mode;
+            this.sessionManager.saveSession(currentSession);
+        }
+    }
+
+    /**
+     * 导入文本内容到当前 session
+     * @param {Object} preciseResults - 由 TextProcessor 返回的精确结果对象
+     * @param {string} sourceFile - 文件名或来源标识
+     * @param {string} sourceType - 'file', 'paste', 或 'edit'
+     */
+    importTextContent(preciseResults, sourceFile, sourceType) {
+        // 合并新导入的文本到当前 session 的转录记录中
+        const currentSession = this.sessionManager.getCurrentSession();
+        if (!currentSession) {
+            this.showStatusMessage("No active session", 1500);
+            return;
+        }
+
+        // 更新 preciseResults（替换或追加取决于实现策略，这里选择替换）
+        this.preciseResults = preciseResults;
+
+        // 更新 session 的 contentMetadata
+        currentSession.contentMetadata = {
+            source: 'text',
+            sourceFile: sourceFile,
+            sourceType: sourceType,  // 'file', 'paste', 或 'edit'
+            uploadTime: new Date().toISOString(),
+            paragraphCount: Object.keys(preciseResults).length
+        };
+
+        // 保存 session
+        this.sessionManager.saveSession(currentSession);
+
+        // 更新显示（转录区域和文本显示区域）
+        const textDisplay = document.getElementById("textDisplay");
+        const allText = Object.values(preciseResults)
+            .map(item => item.text)
+            .join("\n\n");
+        
+        if (textDisplay) {
+            textDisplay.textContent = allText;
+        }
+
+        // 使用 recordingManager 更新 preciseResults（确保工具可用）
+        if (this.recordingManager) {
+            this.recordingManager.preciseResults = this.preciseResults;
+        }
+
+        // 刷新转录显示
+        this.updateDisplay();
+
+        // 自动生成数据以供关键词提取
+        this.saveToSession();
+    }
+
+    /**
     initKeywordsTabSwitcher() {
         const tabBtns = document.querySelectorAll(".keywords-tab-btn");
         const tabContents = document.querySelectorAll(".keywords-tab-content");
