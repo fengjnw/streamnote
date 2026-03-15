@@ -864,7 +864,7 @@ class StreamNote {
                 }
 
                 regenerateSummaryBtn.disabled = true;
-                regenerateSummaryBtn.title = "Generating...";
+                regenerateSummaryBtn.textContent = "Generating...";
                 copySummaryBtn.disabled = true;
 
                 try {
@@ -882,7 +882,7 @@ class StreamNote {
                     summaryDisplay.innerHTML = `<p class="placeholder">Error: ${error.message}</p>`;
                 } finally {
                     regenerateSummaryBtn.disabled = false;
-                    regenerateSummaryBtn.title = "Regenerate Summary";
+                    regenerateSummaryBtn.textContent = "Generate";
                 }
             });
         }
