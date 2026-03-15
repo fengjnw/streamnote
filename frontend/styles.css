@@ -676,6 +676,10 @@ header h1 {
     border-right: none;
 }
 
+.transcript-panel {
+    border-right: none;
+}
+
 /* ===== Layout Presets ===== */
 .main-content.layout-full-transcript .transcript-panel {
     flex: 1 1 100%;
@@ -1520,13 +1524,13 @@ header h1 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px var(--spacing-lg);
+    padding: 6px var(--spacing-lg);
     background: var(--color-bg-light);
     border-top: 1px solid var(--color-border);
     font-size: 0.85em;
     color: var(--color-text-light);
     height: auto;
-    min-height: 40px;
+    min-height: 28px;
     flex-shrink: 0;
     gap: var(--spacing-lg);
 }
