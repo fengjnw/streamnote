@@ -56,6 +56,9 @@ class StreamNote {
         this.setupUIListeners();
         this.initVisibilityHandlers();
 
+        // 初始化录制按钮状态
+        this.updateRecordingButtonState();
+
         // 在读取 session 前，先加载全局面板状态（作为默认值）
         this.panelManager.loadPanelState();
 
@@ -270,6 +273,9 @@ class StreamNote {
 
         // 更新录制指示器UI
         this.updateRecordingIndicator();
+
+        // 更新录制按钮状态
+        this.updateRecordingButtonState();
 
         // 重置转录状态（切换 session 意味着当前的转录已停止）
         this.recordingManager.isTranscribing = false;
@@ -605,9 +611,7 @@ class StreamNote {
     }
 
     setupUIListeners() {
-        document.getElementById("startBtn").addEventListener("click", () => this.start());
-        document.getElementById("stopBtn").addEventListener("click", () => this.stop());
-        document.getElementById("clearBtn").addEventListener("click", () => this.clear());
+        document.getElementById("recordBtn").addEventListener("click", () => this.toggleRecording());
 
         // 布局切换已由 PanelManager 处理
 
@@ -1852,6 +1856,19 @@ class StreamNote {
         });
     }
 
+    /**
+     * 切换录音状态（开始或停止）
+     */
+    async toggleRecording() {
+        if (this.recordingManager && this.recordingManager.isRecording) {
+            // 正在录制，停止
+            this.stop();
+        } else {
+            // 未录制，开始
+            await this.start();
+        }
+    }
+
     async start() {
         try {
             // 检查是否已有其他 session 在录制
@@ -1871,8 +1888,7 @@ class StreamNote {
 
             await this.recordingManager.start(this.recordingSessionId);
 
-            document.getElementById("startBtn").disabled = true;
-            document.getElementById("stopBtn").disabled = false;
+            this.updateRecordingButtonState();
 
             // 每秒更新 session 统计信息
             let statsInterval = setInterval(() => {
@@ -1897,11 +1913,28 @@ class StreamNote {
             this.recordingSessionId = null;
             this.updateRecordingIndicator();
 
-            document.getElementById("startBtn").disabled = false;
-            document.getElementById("stopBtn").disabled = true;
+            this.updateRecordingButtonState();
 
             // 停止时更新一次统计信息
             this.updateSessionStats();
+        }
+    }
+
+    /**
+     * 更新录制按钮的状态和外观
+     */
+    updateRecordingButtonState() {
+        const recordBtn = document.getElementById("recordBtn");
+        if (recordBtn) {
+            if (this.recordingManager && this.recordingManager.isRecording) {
+                recordBtn.textContent = "Stop";
+                recordBtn.classList.add("recording");
+                recordBtn.style.backgroundColor = "#ff4444";
+            } else {
+                recordBtn.textContent = "Record";
+                recordBtn.classList.remove("recording");
+                recordBtn.style.backgroundColor = "";
+            }
         }
     }
 
