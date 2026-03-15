@@ -1206,10 +1206,43 @@ class StreamNote {
             });
         }
 
-        // 文本模式：编辑功能 - 隐藏
+        // 文本编辑功能 - 使用预定义的 editModal
         const editTextBtn = document.getElementById("editTextBtn");
         if (editTextBtn) {
-            editTextBtn.style.display = "none";
+            editTextBtn.addEventListener("click", () => {
+                this.showEditTranscriptDialog();
+            });
+        }
+
+        // 编辑 modal 关闭/保存处理
+        const editModalBackdrop = document.getElementById("editModalBackdrop");
+        const editModal = document.getElementById("editModal");
+        const closeEditModalBtn = document.getElementById("closeEditModal");
+        const editModalCancelBtn = document.getElementById("editModalCancelBtn");
+        const editModalSaveBtn = document.getElementById("editModalSaveBtn");
+
+        const closeEditModal = () => {
+            if (editModalBackdrop) editModalBackdrop.style.display = "none";
+            if (editModal) editModal.style.display = "none";
+        };
+
+        if (closeEditModalBtn) {
+            closeEditModalBtn.addEventListener("click", closeEditModal);
+        }
+        if (editModalCancelBtn) {
+            editModalCancelBtn.addEventListener("click", closeEditModal);
+        }
+        if (editModalSaveBtn) {
+            editModalSaveBtn.addEventListener("click", () => {
+                this.saveEditedTranscript();
+            });
+        }
+        if (editModalBackdrop) {
+            editModalBackdrop.addEventListener("click", (e) => {
+                if (e.target === editModalBackdrop) {
+                    closeEditModal();
+                }
+            });
         }
 
         // 添加纯文本 - 快速输入对话框
@@ -1481,10 +1514,11 @@ class StreamNote {
             // 生成 preciseResults
             const preciseResults = {};
             const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const timestamp = `${hours}:${minutes}:${seconds}`;
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            // 存储秒数（从 00:00:00 开始计算）
+            const timestamp = hours * 3600 + minutes * 60 + seconds;
 
             lines.forEach((line, idx) => {
                 preciseResults[idx] = {
@@ -1509,6 +1543,373 @@ class StreamNote {
         setTimeout(() => {
             textArea.focus();
         }, 100);
+    }
+
+    /**
+     * 显示编辑转录对话框
+     */
+    showEditTranscriptDialog() {
+        const transcriptData = this.recordingManager.getTranscriptData();
+
+        if (!transcriptData || Object.keys(transcriptData).length === 0) {
+            this.showStatusMessage("No transcript to edit", 1500);
+            return;
+        }
+
+        const editRowsContainer = document.getElementById("editRowsContainer");
+        if (!editRowsContainer) return;
+
+        // 清空容器
+        editRowsContainer.innerHTML = "";
+
+        // 创建工具栏
+        const toolbar = document.createElement("div");
+        toolbar.className = "floating-modal-toolbar";
+        toolbar.style.cssText = `
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e9ecef;
+            flex-shrink: 0;
+            background: #fafafa;
+        `;
+
+        const addItemBtn = document.createElement("button");
+        addItemBtn.className = "control-btn control-btn-secondary";
+        addItemBtn.textContent = "+ Add Item";
+
+        const clearAllBtn = document.createElement("button");
+        clearAllBtn.className = "control-btn control-btn-secondary";
+        clearAllBtn.textContent = "Clear All";
+        clearAllBtn.style.color = "#d32f2f";
+
+        toolbar.appendChild(addItemBtn);
+        toolbar.appendChild(clearAllBtn);
+        editRowsContainer.appendChild(toolbar);
+
+        // 创建编辑项容器
+        const itemsContainer = document.createElement("div");
+        itemsContainer.style.cssText = `
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            padding: 0;
+            width: 100%;
+        `;
+        editRowsContainer.appendChild(itemsContainer);
+
+        // 保存编辑数据
+        this.editInputs = {};
+        this.editTimestamps = {};
+
+        // 初始化行
+        const indices = Object.keys(transcriptData).map(Number).sort((a, b) => a - b);
+        indices.forEach(idx => {
+            const item = transcriptData[idx];
+            const text = item?.text || '';
+            const timestamp = item?.timestamp || '';
+            this._createEditItem(itemsContainer, idx, text, timestamp);
+        });
+
+        // Add Item 按钮
+        addItemBtn.addEventListener("click", () => {
+            const newIdx = Math.max(...indices, -1) + 1;
+            const now = new Date();
+            // 计算当前时刻的秒数（从 00:00:00 开始）
+            const timestamp = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+            this._createEditItem(itemsContainer, newIdx, '', timestamp);
+        });
+
+        // Clear All 按钮
+        clearAllBtn.addEventListener("click", () => {
+            if (confirm("Clear all items?")) {
+                itemsContainer.innerHTML = "";
+                this.editInputs = {};
+                this.editTimestamps = {};
+            }
+        });
+
+        // 显示 modal
+        const backdrop = document.getElementById("editModalBackdrop");
+        const modal = document.getElementById("editModal");
+        if (backdrop && modal) {
+            backdrop.style.display = "block";
+            modal.style.display = "flex";
+        }
+    }
+
+    /**
+     * 创建编辑项
+     */
+    _createEditItem(container, idx, text, timestamp) {
+        const item = document.createElement("div");
+        item.style.cssText = `
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: flex-start;
+            background: #fff;
+            transition: background-color 0.2s;
+            overflow: visible;
+        `;
+        item.id = `edit-item-${idx}`;
+
+        // 索引和时间戳
+        const metaContainer = document.createElement("div");
+        metaContainer.style.cssText = `
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex-shrink: 0;
+            min-width: 90px;
+        `;
+
+        const idxLabel = document.createElement("div");
+        idxLabel.style.cssText = `
+            font-weight: 600;
+            color: #5a7c99;
+            font-size: 12px;
+            padding-top: 2px;
+        `;
+        idxLabel.textContent = `[${idx}]`;
+
+        // 转换时间戳格式（秒数 → HH:MM:SS）
+        let displayTime = "00:00:00";
+        if (timestamp) {
+            // 秒数格式（数字或字符串数字）
+            const seconds = typeof timestamp === 'number' ? timestamp :
+                (typeof timestamp === 'string' && /^\d+$/.test(timestamp) ? parseInt(timestamp) : null);
+
+            if (seconds !== null && seconds >= 0) {
+                const hours = Math.floor(seconds / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                const secs = seconds % 60;
+                displayTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }
+            // 如果已经是 HH:MM:SS 格式
+            else if (typeof timestamp === 'string' && /^\d{2}:\d{2}:\d{2}$/.test(timestamp)) {
+                displayTime = timestamp;
+            }
+        }
+
+        const timestampInput = document.createElement("input");
+        timestampInput.type = "text";
+        timestampInput.value = displayTime;
+        timestampInput.placeholder = "HH:MM:SS";
+        timestampInput.style.cssText = `
+            width: 100%;
+            padding: 5px 6px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-family: "Monaco", "Menlo", monospace;
+            font-size: 11px;
+            text-align: center;
+            box-sizing: border-box;
+            min-width: 85px;
+        `;
+        timestampInput.addEventListener("blur", (e) => {
+            const val = e.target.value.trim();
+            if (!val) {
+                // 空值时恢复原值
+                e.target.value = displayTime;
+                e.target.style.borderColor = "#ddd";
+            } else if (!/^\d{2}:\d{2}:\d{2}$/.test(val)) {
+                // 格式不对，高亮边框并恢复
+                e.target.style.borderColor = "#d32f2f";
+                e.target.value = displayTime;
+                this.showStatusMessage("Invalid timestamp format (use HH:MM:SS, e.g., 12:34:56)", 2000);
+            } else {
+                // 验证时间范围
+                const [h, m, s] = val.split(':').map(Number);
+                if (h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59) {
+                    e.target.style.borderColor = "#d32f2f";
+                    e.target.value = displayTime;
+                    this.showStatusMessage("Invalid time: hours must be 00-23, minutes 00-59, seconds 00-59", 2500);
+                } else {
+                    // 格式和范围都正确
+                    e.target.style.borderColor = "#ddd";
+                }
+            }
+        });
+        timestampInput.addEventListener("focus", (e) => {
+            e.target.style.borderColor = "#5a7c99";
+        });
+
+        metaContainer.appendChild(idxLabel);
+        metaContainer.appendChild(timestampInput);
+
+        // 文本编辑区域
+        const contentContainer = document.createElement("div");
+        contentContainer.style.cssText = `
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            min-width: 0;
+        `;
+
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.placeholder = "Enter text...";
+        textarea.style.cssText = `
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-family: inherit;
+            font-size: 13px;
+            resize: vertical;
+            min-height: 60px;
+            font-weight: 400;
+            line-height: 1.5;
+            box-sizing: border-box;
+            max-width: 100%;
+        `;
+
+        contentContainer.appendChild(textarea);
+
+        // 删除按钮
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "✕";
+        deleteBtn.style.cssText = `
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            min-height: 28px;
+            flex-shrink: 0;
+            padding: 0;
+            border: 1px solid #ddd;
+            background: #f5f5f5;
+            border-radius: 3px;
+            cursor: pointer;
+            color: #d32f2f;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s;
+        `;
+        deleteBtn.addEventListener("mouseenter", (e) => {
+            e.target.style.backgroundColor = "#ffebee";
+            e.target.style.borderColor = "#d32f2f";
+        });
+        deleteBtn.addEventListener("mouseleave", (e) => {
+            e.target.style.backgroundColor = "#f5f5f5";
+            e.target.style.borderColor = "#ddd";
+        });
+        deleteBtn.addEventListener("click", () => {
+            item.remove();
+            delete this.editInputs[idx];
+            delete this.editTimestamps[idx];
+        });
+
+        // 保存引用
+        this.editInputs[idx] = textarea;
+        this.editTimestamps[idx] = timestampInput;
+
+        // 组装
+        item.appendChild(metaContainer);
+        item.appendChild(contentContainer);
+        item.appendChild(deleteBtn);
+        container.appendChild(item);
+    }
+
+    /**
+     * 保存编辑后的转录
+     */
+    saveEditedTranscript() {
+        if (!this.editInputs) return;
+
+        const updatedData = {};
+        const transcriptData = this.recordingManager.getTranscriptData();
+        let hasError = false;
+        let errorMsg = "";
+
+        // 辅助函数：将 HH:MM:SS 格式转换为秒数
+        const timeToSeconds = (timeStr) => {
+            if (!timeStr) return 0;
+            const [h, m, s] = timeStr.split(':').map(Number);
+            return h * 3600 + m * 60 + s;
+        };
+
+        // 第一步：验证所有时间戳格式和范围
+        for (const [idx, timestampInput] of Object.entries(this.editTimestamps)) {
+            const timestamp = timestampInput.value.trim();
+
+            // 检查格式
+            if (timestamp && !/^\d{2}:\d{2}:\d{2}$/.test(timestamp)) {
+                hasError = true;
+                errorMsg = `Invalid timestamp format at item [${idx}]: "${timestamp}". Use format HH:MM:SS (e.g., 12:34:56)`;
+                timestampInput.style.borderColor = "#d32f2f";
+                break;
+            }
+
+            // 检查时间范围
+            if (timestamp) {
+                const [h, m, s] = timestamp.split(':').map(Number);
+                if (h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59) {
+                    hasError = true;
+                    errorMsg = `Invalid time at item [${idx}]: hours must be 00-23, minutes 00-59, seconds 00-59`;
+                    timestampInput.style.borderColor = "#d32f2f";
+                    break;
+                }
+            }
+        }
+
+        if (hasError) {
+            this.showStatusMessage(errorMsg, 2500);
+            return;
+        }
+
+        // 第二步：收集数据并转换时间戳为秒数
+        Object.entries(this.editInputs).forEach(([idx, textarea]) => {
+            const text = textarea.value.trim();
+            if (text.length > 0) {
+                const timestampInput = this.editTimestamps?.[idx];
+                const timeStr = timestampInput ? timestampInput.value.trim() : '';
+                // 转换 HH:MM:SS 为秒数
+                const timestamp = timeToSeconds(timeStr);
+
+                updatedData[idx] = {
+                    text: text,
+                    timestamp: timestamp,
+                    source: transcriptData[idx]?.source || 'edited'
+                };
+            }
+        });
+
+        if (Object.keys(updatedData).length === 0) {
+            this.showStatusMessage("Transcript cannot be empty", 1500);
+            return;
+        }
+
+        // 更新数据
+        this.recordingManager.setTranscriptData(updatedData);
+        const currentSession = this.sessionManager.getCurrentSession();
+        if (currentSession) {
+            currentSession.transcripts = updatedData;
+            this.sessionManager.saveSessions();
+        }
+        if (this.panelManager) {
+            this.panelManager.setTranscriptData(updatedData);
+        }
+
+        // 刷新显示
+        this.updateDisplay();
+        this.saveToSession();
+        this.showStatusMessage("Transcript updated", 1500);
+
+        // 关闭 modal
+        const backdrop = document.getElementById("editModalBackdrop");
+        const modal = document.getElementById("editModal");
+        if (backdrop && modal) {
+            backdrop.style.display = "none";
+            modal.style.display = "none";
+        }
+
+        // 清理
+        this.editInputs = null;
+        this.editTimestamps = null;
+        this.editItems = null;
     }
 
     /**

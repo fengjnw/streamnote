@@ -63,6 +63,8 @@
                             title="Upload .txt/.md file">Upload File</button>
                         <button id="addTextBtn" class="control-btn control-btn-secondary" title="Add text manually">Add
                             Text</button>
+                        <button id="editTextBtn" class="control-btn control-btn-secondary"
+                            title="Edit transcript">Edit</button>
                     </div>
                 </div>
 
@@ -174,12 +176,12 @@
 
                 <!-- Edit Modal -->
                 <div id="editModal" class="floating-modal edit-modal"
-                    style="display: none; width: 90%; max-width: 850px; height: 80vh; flex-direction: column;">
+                    style="display: none; width: 90%; max-width: 850px; height: 80vh; flex-direction: column; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000;">
                     <div class="floating-modal-header" style="flex-shrink: 0;">
                         <h3>Edit Text</h3>
                         <button id="closeEditModal" class="btn-icon toggle-btn" title="Close">✕</button>
                     </div>
-                    <div class="floating-modal-content" style="padding: 12px; overflow-y: auto; flex: 1;">
+                    <div class="floating-modal-content" style="padding: 0; overflow-y: auto; flex: 1;">
                         <div id="editRowsContainer" style="display: flex; flex-direction: column; gap: 0;">
                             <!-- Toolbar and edit rows will be rendered here -->
                         </div>

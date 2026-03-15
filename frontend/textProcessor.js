@@ -13,13 +13,7 @@ class TextProcessor {
         // 1. 规范换行（Windows CRLF → Unix LF）
         text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-        // 2. 移除多余空格（保留换行）
-        text = text.replace(/[ \t]+/g, ' ');
-
-        // 3. 规范段落间距（多个空行 → 两个）
-        text = text.replace(/\n\n+/g, '\n\n');
-
-        // 4. 清理首尾空格
+        // 2. 清理首尾空格
         text = text.trim();
 
         return text;
@@ -103,26 +97,29 @@ class TextProcessor {
      * @returns {Object} preciseResults 格式的数据
      */
     static convertToPreciseResults(text) {
-        // 按段落分割
-        const paragraphs = text
-            .split('\n\n')
-            .map(p => p.trim())
-            .filter(p => p.length > 0);
+        // 按行分割（每行成为一个item）
+        const lines = text
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
 
-        const importTime = Date.now();
+        // 获取当前时间作为所有导入项的时间戳（从 00:00:00 开始的秒数）
+        const now = new Date();
+        const timestamp = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+
         const preciseResults = {};
 
-        paragraphs.forEach((para, index) => {
+        lines.forEach((line, index) => {
             preciseResults[index] = {
-                text: para,
-                timestamp: importTime,
+                text: line,
+                timestamp: timestamp,
                 source: 'text'
             };
         });
 
         return {
             data: preciseResults,
-            paragraphCount: Object.keys(preciseResults).length
+            lineCount: Object.keys(preciseResults).length
         };
     }
 
@@ -148,7 +145,7 @@ class TextProcessor {
             preciseResults: result.data,
             fileName: file.name,
             fileSize: file.size,
-            paragraphCount: result.paragraphCount,
+            lineCount: result.lineCount,
             uploadTime: Date.now()
         };
     }

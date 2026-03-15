@@ -250,12 +250,16 @@ class RecordingManager {
             // 转录完成，回到监听状态（在通知上层之前设置）
             this.isTranscribing = false;
 
+            // 计算当前时刻的秒数（从 00:00:00 开始）
+            const now = new Date();
+            const timestamp = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+
             if (!text) {
                 // 即使没有文本，也要通知上层刷新UI（特别是当停止录音时）
                 this.onTranscribeProgress({
                     index: currentChunkIndex,
                     text: "",
-                    timestamp: Date.now(),
+                    timestamp: timestamp,
                     sessionId: sessionIdAtRequest
                 });
                 // 清除转录进行中的状态
@@ -264,8 +268,6 @@ class RecordingManager {
                 }
                 return;
             }
-
-            const timestamp = Date.now();
 
             this.preciseResults[currentChunkIndex] = { text, timestamp };
             this.chunkIndex += 1;
