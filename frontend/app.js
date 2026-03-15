@@ -1212,260 +1212,480 @@ class StreamNote {
             });
         }
 
-        // 文本模式：编辑功能 - 行编辑器（直接在 transcript 内编辑）
+        // 文本模式：编辑功能 - 模态框方式
         const editTextBtn = document.getElementById("editTextBtn");
-        const transcript = document.getElementById("transcript");
+        const editModal = document.getElementById("editModal");
+        const editModalBackdrop = document.getElementById("editModalBackdrop");
+        const editRowsContainer = document.getElementById("editRowsContainer");
+        const editModalSaveBtn = document.getElementById("editModalSaveBtn");
+        const editModalCancelBtn = document.getElementById("editModalCancelBtn");
+        const closeEditModalBtn = document.getElementById("closeEditModal");
 
-        if (editTextBtn && transcript) {
+        if (editTextBtn && editModal && editRowsContainer) {
+            // 创建编辑行的工厂函数
+            const createRowEditor = (timestamp, text, originalTimestamp = null) => {
+                const row = document.createElement("div");
+                row.className = "edit-row";
+                row.style.cssText = `
+                    display: grid;
+                    grid-template-columns: 24px 70px 1fr 32px;
+                    gap: 8px;
+                    align-items: start;
+                    padding: 8px;
+                    background: #fff;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    transition: background-color 0.2s;
+                `;
+                row.dataset.originalTimestamp = originalTimestamp || timestamp;
+
+                // 多选 checkbox
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.style.cssText = `
+                    width: 18px;
+                    height: 18px;
+                    cursor: pointer;
+                    margin: 2px 0 0 0;
+                `;
+                checkbox.addEventListener("change", (e) => {
+                    if (e.target.checked) {
+                        row.style.backgroundColor = "#f0f7ff";
+                    } else {
+                        row.style.backgroundColor = "#fff";
+                    }
+                });
+
+                // 时间戳输入框
+                const timeInput = document.createElement("input");
+                timeInput.type = "text";
+                timeInput.value = timestamp;
+                timeInput.placeholder = "HH:MM:SS";
+                timeInput.maxLength = "8";
+                timeInput.style.cssText = `
+                    padding: 4px 6px;
+                    border: 1px solid #ddd;
+                    border-radius: 3px;
+                    font-family: 'Courier New', monospace;
+                    font-size: 12px;
+                `;
+
+                // 时间戳格式验证
+                timeInput.addEventListener("input", (e) => {
+                    let val = e.target.value.replace(/[^0-9:]/g, '');
+                    if (val.length > 2 && val[2] !== ':') val = val.slice(0, 2) + ':' + val.slice(2);
+                    if (val.length > 5 && val[5] !== ':') val = val.slice(0, 5) + ':' + val.slice(5);
+                    if (val.length > 8) val = val.slice(0, 8);
+                    e.target.value = val;
+                });
+
+                // 文本输入框 - 支持多行
+                const textInput = document.createElement("textarea");
+                textInput.value = text;
+                textInput.placeholder = "Text content...";
+                textInput.style.cssText = `
+                    padding: 4px 6px;
+                    border: 1px solid #ddd;
+                    border-radius: 3px;
+                    font-family: inherit;
+                    font-size: 12px;
+                    resize: vertical;
+                    min-height: 32px;
+                    line-height: 1.4;
+                `;
+
+                // 回车组合键逻辑：Ctrl+Enter 或 Shift+Enter 新增行
+                textInput.addEventListener("keydown", (e) => {
+                    if ((e.ctrlKey || e.shiftKey) && e.key === "Enter") {
+                        e.preventDefault();
+                        const now = new Date();
+                        const h = String(now.getHours()).padStart(2, '0');
+                        const m = String(now.getMinutes()).padStart(2, '0');
+                        const s = String(now.getSeconds()).padStart(2, '0');
+                        const newRow = createRowEditor(`${h}:${m}:${s}`, "");
+                        editRowsContainer.appendChild(newRow);
+                        setTimeout(() => {
+                            newRow.querySelector('textarea').focus();
+                        }, 10);
+                    }
+                });
+
+                // 删除按钮
+                const deleteBtn = document.createElement("button");
+                deleteBtn.textContent = "✕";
+                deleteBtn.style.cssText = `
+                    width: 28px;
+                    height: 28px;
+                    padding: 0;
+                    border: 1px solid #ddd;
+                    border-radius: 3px;
+                    background: #fee;
+                    color: #c33;
+                    cursor: pointer;
+                    font-size: 12px;
+                    font-weight: bold;
+                    transition: all 0.2s;
+                `;
+                deleteBtn.addEventListener("mouseenter", () => {
+                    deleteBtn.style.background = "#fdd";
+                });
+                deleteBtn.addEventListener("mouseleave", () => {
+                    deleteBtn.style.background = "#fee";
+                });
+                deleteBtn.addEventListener("click", () => {
+                    row.remove();
+                });
+
+                row.appendChild(checkbox);
+                row.appendChild(timeInput);
+                row.appendChild(textInput);
+                row.appendChild(deleteBtn);
+                return row;
+            };
+
+            // 打开编辑模态框
             editTextBtn.addEventListener("click", () => {
-                // 检查是否已经在编辑模式
-                if (transcript.querySelector("#textEditContainer")) {
+                if (Object.keys(this.preciseResults || {}).length === 0) {
+                    this.showStatusMessage("No text to edit", 1500);
                     return;
                 }
 
-                // 从当前的 preciseResults 构建行编辑器
-                if (Object.keys(this.preciseResults || {}).length > 0) {
-                    const originalContent = transcript.innerHTML;
-                    const rows = Object.values(this.preciseResults).map(item => {
-                        let timestamp_str;
-                        
-                        // 处理不同格式的时间戳
-                        if (typeof item.timestamp === 'string' && /^\d{2}:\d{2}:\d{2}$/.test(item.timestamp)) {
-                            // 已经是 HH:MM:SS 格式，直接使用
-                            timestamp_str = item.timestamp;
-                        } else if (typeof item.timestamp === 'number') {
-                            // 毫秒数字，转换为 HH:MM:SS
-                            const time = new Date(item.timestamp);
-                            const hours = String(time.getHours()).padStart(2, '0');
-                            const minutes = String(time.getMinutes()).padStart(2, '0');
-                            const seconds = String(time.getSeconds()).padStart(2, '0');
-                            timestamp_str = `${hours}:${minutes}:${seconds}`;
-                        } else {
-                            // 无法识别，使用当前时间
-                            const time = new Date();
-                            const hours = String(time.getHours()).padStart(2, '0');
-                            const minutes = String(time.getMinutes()).padStart(2, '0');
-                            const seconds = String(time.getSeconds()).padStart(2, '0');
-                            timestamp_str = `${hours}:${minutes}:${seconds}`;
-                        }
-                        
-                        return {
-                            timestamp: timestamp_str,
-                            text: item.text,
-                            originalTimestamp: item.timestamp  // 保存原始时间戳（可能是字符串或毫秒）
-                        };
-                    });
+                // 清空容器
+                editRowsContainer.innerHTML = "";
 
-                    // 创建编辑容器
-                    const editContainer = document.createElement("div");
-                    editContainer.id = "textEditContainer";
-                    editContainer.style.cssText = `
-                        display: flex;
-                        flex-direction: column;
-                        gap: 8px;
-                        height: 100%;
-                        overflow-y: auto;
-                        font-family: 'Courier New', monospace;
-                        font-size: 13px;
-                    `;
+                // 创建 toolbar
+                const toolbar = document.createElement("div");
+                toolbar.style.cssText = `
+                    display: flex;
+                    gap: 8px;
+                    padding: 8px 0;
+                    margin-bottom: 8px;
+                    border-bottom: 1px solid #ddd;
+                    align-items: center;
+                `;
 
-                    // 行编辑器表格
-                    const rowsContainer = document.createElement("div");
-                    rowsContainer.style.cssText = "flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;";
+                // 添加新行按钮
+                const addBtn = document.createElement("button");
+                addBtn.textContent = "+ Add Row";
+                addBtn.style.cssText = `
+                    padding: 4px 10px;
+                    border: 1px solid #ddd;
+                    background: #f5f5f5;
+                    border-radius: 3px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    transition: all 0.2s;
+                `;
+                addBtn.addEventListener("mouseenter", () => {
+                    addBtn.style.background = "#e8e8e8";
+                });
+                addBtn.addEventListener("mouseleave", () => {
+                    addBtn.style.background = "#f5f5f5";
+                });
+                addBtn.addEventListener("click", () => {
+                    const now = new Date();
+                    const h = String(now.getHours()).padStart(2, '0');
+                    const m = String(now.getMinutes()).padStart(2, '0');
+                    const s = String(now.getSeconds()).padStart(2, '0');
+                    const newRow = createRowEditor(`${h}:${m}:${s}`, "");
+                    const rows = document.querySelectorAll(".edit-row");
+                    if (rows.length > 0) {
+                        rows[rows.length - 1].after(newRow);
+                    } else {
+                        editRowsContainer.appendChild(newRow);
+                    }
+                    setTimeout(() => {
+                        newRow.querySelector('textarea').focus();
+                    }, 10);
+                });
 
-                    const createRowEditor = (timestamp, text, isNewRow = false, originalTimestamp = null) => {
-                        const row = document.createElement("div");
-                        row.className = "edit-row";
-                        row.style.cssText = `
-                            display: flex;
-                            gap: 8px;
-                            align-items: center;
-                            padding: 8px;
-                            background: #f9f9f9;
-                            border: 1px solid #ddd;
-                            border-radius: 4px;
-                        `;
-                        // 保存原始时间戳
-                        row.dataset.originalTimestamp = originalTimestamp || timestamp;
-
-                        // 时间戳输入框 - 只允许 HH:MM:SS 格式
-                        const timeInput = document.createElement("input");
-                        timeInput.type = "text";
-                        timeInput.value = timestamp;
-                        timeInput.placeholder = "HH:MM:SS";
-                        timeInput.maxLength = "8";
-                        timeInput.style.cssText = `
-                            width: 85px;
-                            padding: 6px;
-                            border: 1px solid #ddd;
-                            border-radius: 3px;
-                            font-family: 'Courier New', monospace;
-                        `;
-
-                        // 时间戳格式验证
-                        timeInput.addEventListener("input", (e) => {
-                            let val = e.target.value.replace(/[^0-9:]/g, '');
-                            // 强制 HH:MM:SS 格式
-                            if (val.length > 2 && val[2] !== ':') val = val.slice(0, 2) + ':' + val.slice(2);
-                            if (val.length > 5 && val[5] !== ':') val = val.slice(0, 5) + ':' + val.slice(5);
-                            if (val.length > 8) val = val.slice(0, 8);
-                            e.target.value = val;
-                        });
-
-                        // 文本输入框
-                        const textInput = document.createElement("input");
-                        textInput.type = "text";
-                        textInput.value = text;
-                        textInput.placeholder = "Text content...";
-                        textInput.style.cssText = `
-                            flex: 1;
-                            padding: 6px;
-                            border: 1px solid #ddd;
-                            border-radius: 3px;
-                        `;
-
-                        // 回车自动新增行（仅最后一行）
-                        textInput.addEventListener("keydown", (e) => {
-                            if (e.key === "Enter") {
-                                e.preventDefault();
-                                // 如果是最后一行，自动新增
-                                if (row === rowsContainer.lastChild) {
-                                    const now = new Date();
-                                    const h = String(now.getHours()).padStart(2, '0');
-                                    const m = String(now.getMinutes()).padStart(2, '0');
-                                    const s = String(now.getSeconds()).padStart(2, '0');
-                                    const newRow = createRowEditor(`${h}:${m}:${s}`, "", true);
-                                    rowsContainer.appendChild(newRow);
-                                    // 自动焦点到新行文本框
-                                    setTimeout(() => {
-                                        newRow.querySelector('input[type="text"]:last-of-type').focus();
-                                    }, 10);
-                                }
-                            }
-                        });
-
-                        // 删除按钮
-                        const deleteBtn = document.createElement("button");
-                        deleteBtn.textContent = "✕";
-                        deleteBtn.style.cssText = `
-                            width: 32px;
-                            height: 32px;
-                            padding: 0;
-                            border: 1px solid #ddd;
-                            border-radius: 3px;
-                            background: #fee;
-                            color: #c33;
-                            cursor: pointer;
-                            font-size: 14px;
-                            font-weight: bold;
-                        `;
-                        deleteBtn.addEventListener("click", () => {
+                // 删除选中按钮
+                const deleteSelectedBtn = document.createElement("button");
+                deleteSelectedBtn.textContent = "🗑 Delete Selected";
+                deleteSelectedBtn.style.cssText = `
+                    padding: 4px 10px;
+                    border: 1px solid #ddd;
+                    background: #ffe8e8;
+                    border-radius: 3px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    transition: all 0.2s;
+                `;
+                deleteSelectedBtn.addEventListener("mouseenter", () => {
+                    deleteSelectedBtn.style.background = "#ffcccc";
+                });
+                deleteSelectedBtn.addEventListener("mouseleave", () => {
+                    deleteSelectedBtn.style.background = "#ffe8e8";
+                });
+                deleteSelectedBtn.addEventListener("click", () => {
+                    const rows = document.querySelectorAll(".edit-row");
+                    rows.forEach(row => {
+                        const checkbox = row.querySelector('input[type="checkbox"]');
+                        if (checkbox && checkbox.checked) {
                             row.remove();
-                        });
-
-                        row.appendChild(timeInput);
-                        row.appendChild(textInput);
-                        row.appendChild(deleteBtn);
-                        return row;
-                    };
-
-                    // 创建所有行
-                    rows.forEach(r => {
-                        rowsContainer.appendChild(createRowEditor(r.timestamp, r.text, false, r.originalTimestamp));
+                        }
                     });
+                });
 
-                    // 按钮容器
-                    const buttonContainer = document.createElement("div");
-                    buttonContainer.style.cssText = "display: flex; gap: 8px; justify-content: flex-end; padding-top: 8px; border-top: 1px solid #ddd;";
-
-                    const saveBtn = document.createElement("button");
-                    saveBtn.textContent = "Save";
-                    saveBtn.className = "control-btn control-btn-primary";
-                    saveBtn.style.padding = "6px 16px";
-
-                    const cancelBtn = document.createElement("button");
-                    cancelBtn.textContent = "Cancel";
-                    cancelBtn.className = "control-btn control-btn-secondary";
-                    cancelBtn.style.padding = "6px 16px";
-
-                    buttonContainer.appendChild(saveBtn);
-                    buttonContainer.appendChild(cancelBtn);
-
-                    editContainer.appendChild(rowsContainer);
-                    editContainer.appendChild(buttonContainer);
-
-                    // 替换内容
-                    transcript.innerHTML = "";
-                    transcript.appendChild(editContainer);
-
-                    // Save 事件
-                    saveBtn.addEventListener("click", () => {
-                        try {
-                            const preciseResults = {};
-                            const editRows = transcript.querySelectorAll(".edit-row");
-                            let index = 0;
-
-                            editRows.forEach((row, idx) => {
-                                const timeInput = row.querySelector('input[type="text"]:first-of-type');
-                                const textInput = row.querySelector('input[type="text"]:last-of-type');
-                                const timeStr = timeInput.value.trim();
-                                const textStr = textInput.value.trim();
-                                const originalTimestamp = row.dataset.originalTimestamp;
-
-                                // 验证时间戳格式
-                                if (timeStr && /^\d{2}:\d{2}:\d{2}$/.test(timeStr)) {
-                                    if (textStr) {
-                                        // 时间戳格式有效，检查是否与原始值相同
-                                        let timestamp;
-                                        if (originalTimestamp === timeStr) {
-                                            // 用户没有改变时间，使用原始的时间戳值
-                                            // 如果原始是字符串格式，保留为字符串；如果是毫秒，保留为毫秒
-                                            const originalValue = Object.values(this.preciseResults)[idx]?.timestamp;
-                                            timestamp = originalValue;
-                                        } else {
-                                            // 用户改变了时间，重新计算为毫秒
-                                            const [h, m, s] = timeStr.split(':').map(Number);
-                                            const now = new Date();
-                                            const time = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s);
-                                            timestamp = time.getTime();
-                                        }
-                                        
-                                        preciseResults[index] = {
-                                            text: textStr,
-                                            timestamp: timestamp,
-                                            source: 'text'
-                                        };
-                                        index++;
-                                    }
-                                } else if (textStr) {
-                                    // 没有时间戳或格式错误，使用当前时间
-                                    preciseResults[index] = {
-                                        text: textStr,
-                                        timestamp: Date.now(),
-                                        source: 'text'
-                                    };
-                                    index++;
-                                }
-                            });
-
-                            if (index > 0) {
-                                this.importTextContent(preciseResults, "edited", "edit");
-                                this.showStatusMessage("✓ Text updated", 1500);
-                            } else {
-                                this.showStatusMessage("✗ No valid text content to save", 1500);
-                            }
-                        } catch (error) {
-                            console.error("Error updating text:", error);
-                            this.showStatusMessage("✗ Failed to update text", 1500);
+                // 全选/全不选按钮
+                const toggleSelectBtn = document.createElement("button");
+                toggleSelectBtn.textContent = "☐ Select All";
+                toggleSelectBtn.style.cssText = `
+                    padding: 4px 10px;
+                    border: 1px solid #ddd;
+                    background: #e8f5ff;
+                    border-radius: 3px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    transition: all 0.2s;
+                `;
+                toggleSelectBtn.addEventListener("mouseenter", () => {
+                    toggleSelectBtn.style.background = "#d0e8ff";
+                });
+                toggleSelectBtn.addEventListener("mouseleave", () => {
+                    toggleSelectBtn.style.background = "#e8f5ff";
+                });
+                toggleSelectBtn.addEventListener("click", () => {
+                    const rows = document.querySelectorAll(".edit-row");
+                    let allChecked = true;
+                    rows.forEach(row => {
+                        const checkbox = row.querySelector('input[type="checkbox"]');
+                        if (checkbox && !checkbox.checked) {
+                            allChecked = false;
                         }
                     });
 
-                    // Cancel 事件
-                    cancelBtn.addEventListener("click", () => {
-                        transcript.innerHTML = originalContent;
+                    rows.forEach(row => {
+                        const checkbox = row.querySelector('input[type="checkbox"]');
+                        if (checkbox) {
+                            checkbox.checked = !allChecked;
+                            checkbox.dispatchEvent(new Event('change'));
+                        }
                     });
-                } else {
-                    this.showStatusMessage("No text to edit", 1500);
+
+                    toggleSelectBtn.textContent = allChecked ? "☐ Select All" : "☑ Deselect All";
+                });
+
+                toolbar.appendChild(addBtn);
+                toolbar.appendChild(deleteSelectedBtn);
+                toolbar.appendChild(toggleSelectBtn);
+                editRowsContainer.appendChild(toolbar);
+
+                // 创建行容器
+                const rowsWrapper = document.createElement("div");
+                rowsWrapper.style.cssText = `
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                `;
+                rowsWrapper.id = "editRowsWrapper";
+
+                // 渲染所有行
+                Object.values(this.preciseResults).forEach(item => {
+                    let timestamp_str;
+                    if (typeof item.timestamp === 'string' && /^\d{2}:\d{2}:\d{2}$/.test(item.timestamp)) {
+                        timestamp_str = item.timestamp;
+                    } else if (typeof item.timestamp === 'number') {
+                        const time = new Date(item.timestamp);
+                        const hours = String(time.getHours()).padStart(2, '0');
+                        const minutes = String(time.getMinutes()).padStart(2, '0');
+                        const seconds = String(time.getSeconds()).padStart(2, '0');
+                        timestamp_str = `${hours}:${minutes}:${seconds}`;
+                    } else {
+                        const time = new Date();
+                        const hours = String(time.getHours()).padStart(2, '0');
+                        const minutes = String(time.getMinutes()).padStart(2, '0');
+                        const seconds = String(time.getSeconds()).padStart(2, '0');
+                        timestamp_str = `${hours}:${minutes}:${seconds}`;
+                    }
+                    rowsWrapper.appendChild(createRowEditor(timestamp_str, item.text, item.timestamp));
+                });
+
+                editRowsContainer.appendChild(rowsWrapper);
+
+                // 创建快速输入区域
+                const quickInputSection = document.createElement("div");
+                quickInputSection.style.cssText = `
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    padding-top: 12px;
+                    margin-top: 12px;
+                    border-top: 2px solid #ddd;
+                `;
+
+                // 快速输入说明
+                const quickInputLabel = document.createElement("label");
+                quickInputLabel.textContent = "Quick Import (paste plain text, one line = one item):";
+                quickInputLabel.style.cssText = `
+                    font-size: 12px;
+                    font-weight: 500;
+                    color: #666;
+                `;
+
+                // 快速输入文本框
+                const quickInputArea = document.createElement("textarea");
+                quickInputArea.placeholder = "Paste multiple lines here...\nEach line will be converted to a timestamped item";
+                quickInputArea.style.cssText = `
+                    padding: 8px;
+                    border: 1px solid #ddd;
+                    border-radius: 3px;
+                    font-size: 12px;
+                    font-family: inherit;
+                    resize: vertical;
+                    min-height: 80px;
+                    line-height: 1.4;
+                `;
+
+                // 快速导入按钮
+                const quickImportBtn = document.createElement("button");
+                quickImportBtn.textContent = "📥 Import & Convert";
+                quickImportBtn.style.cssText = `
+                    padding: 6px 12px;
+                    border: 1px solid #ddd;
+                    background: #e8f5ff;
+                    border-radius: 3px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    font-weight: 500;
+                    transition: all 0.2s;
+                `;
+                quickImportBtn.addEventListener("mouseenter", () => {
+                    quickImportBtn.style.background = "#d0e8ff";
+                });
+                quickImportBtn.addEventListener("mouseleave", () => {
+                    quickImportBtn.style.background = "#e8f5ff";
+                });
+                quickImportBtn.addEventListener("click", () => {
+                    const inputText = quickInputArea.value.trim();
+                    if (!inputText) {
+                        return;
+                    }
+
+                    // 按换行符分割文本
+                    const lines = inputText.split('\n').filter(line => line.trim().length > 0);
+
+                    if (lines.length === 0) {
+                        return;
+                    }
+
+                    // 获取当前时间作为所有导入项的时间戳
+                    const now = new Date();
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const seconds = String(now.getSeconds()).padStart(2, '0');
+                    const timestamp = `${hours}:${minutes}:${seconds}`;
+
+                    // 为每一行创建新的edit row，使用相同的时间戳
+                    lines.forEach((line) => {
+                        const newRow = createRowEditor(timestamp, line.trim());
+                        rowsWrapper.appendChild(newRow);
+                    });
+
+                    // 清空输入框
+                    quickInputArea.value = "";
+                    quickInputArea.placeholder = "✓ Imported! Paste more above";
+                    setTimeout(() => {
+                        quickInputArea.placeholder = "Paste multiple lines here...\nEach line will be converted to a timestamped item";
+                    }, 2000);
+                });
+
+                quickInputSection.appendChild(quickInputLabel);
+                quickInputSection.appendChild(quickInputArea);
+                quickInputSection.appendChild(quickImportBtn);
+                editRowsContainer.appendChild(quickInputSection);
+
+                // 显示模态框和遮罩
+                editModalBackdrop.style.display = "block";
+                editModal.style.display = "flex";
+                editModal.style.position = "fixed";
+                editModal.style.top = "50%";
+                editModal.style.left = "50%";
+                editModal.style.transform = "translate(-50%, -50%)";
+                editModal.style.zIndex = "10000";
+                editModal.style.backgroundColor = "white";
+                editModal.style.boxShadow = "0 4px 20px rgba(0,0,0,0.3)";
+            });
+
+            // 保存编辑
+            editModalSaveBtn.addEventListener("click", () => {
+                try {
+                    const preciseResults = {};
+                    const editRows = editRowsContainer.querySelectorAll(".edit-row");
+                    let index = 0;
+
+                    editRows.forEach((row, idx) => {
+                        const timeInput = row.querySelector('input[type="text"]');
+                        const textInput = row.querySelector('textarea');
+
+                        if (!timeInput || !textInput) {
+                            return; // 跳过toolbar行
+                        }
+
+                        const timeStr = timeInput.value.trim();
+                        const textStr = textInput.value.trim();
+                        const originalValue = Object.values(this.preciseResults)[idx]?.timestamp;
+
+                        if (timeStr && /^\d{2}:\d{2}:\d{2}$/.test(timeStr)) {
+                            if (textStr) {
+                                let timestamp;
+                                if (row.dataset.originalTimestamp === timeStr) {
+                                    timestamp = originalValue;
+                                } else {
+                                    const [h, m, s] = timeStr.split(':').map(Number);
+                                    const now = new Date();
+                                    const time = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s);
+                                    timestamp = time.getTime();
+                                }
+
+                                preciseResults[index] = {
+                                    text: textStr,
+                                    timestamp: timestamp,
+                                    source: 'text'
+                                };
+                                index++;
+                            }
+                        } else if (textStr) {
+                            preciseResults[index] = {
+                                text: textStr,
+                                timestamp: Date.now(),
+                                source: 'text'
+                            };
+                            index++;
+                        }
+                    });
+
+                    if (index > 0) {
+                        this.importTextContent(preciseResults, "edited", "edit");
+                        this.showStatusMessage("✓ Text updated", 1500);
+                    } else {
+                        this.showStatusMessage("✗ No valid text content to save", 1500);
+                    }
+
+                    editModalBackdrop.style.display = "none";
+                    editModal.style.display = "none";
+                } catch (error) {
+                    console.error("Error updating text:", error);
+                    this.showStatusMessage("✗ Failed to update text", 1500);
+                    editModalBackdrop.style.display = "none";
+                    editModal.style.display = "none";
+                }
+            });
+
+            // 取消编辑
+            const closeEditModal = () => {
+                editModalBackdrop.style.display = "none";
+                editModal.style.display = "none";
+            };
+
+            editModalCancelBtn.addEventListener("click", closeEditModal);
+            closeEditModalBtn.addEventListener("click", closeEditModal);
+
+            // 点击遮罩或模态框外部关闭
+            editModalBackdrop.addEventListener("click", closeEditModal);
+            editModal.addEventListener("click", (e) => {
+                if (e.target === editModal) {
+                    closeEditModal();
                 }
             });
         }
@@ -2151,13 +2371,13 @@ class StreamNote {
             if (!item || !item.text) return null;
 
             const text = item.text.trim();
-            
+
             // 格式化时间戳为 HH:MM:SS
             let timestamp;
             if (item.timestamp) {
                 let timeValue = item.timestamp;
                 let timestamp_str = null;
-                
+
                 // 处理字符串格式的时间戳
                 if (typeof timeValue === 'string') {
                     // 检查是否为 HH:MM:SS 格式
@@ -2168,7 +2388,7 @@ class StreamNote {
                         timeValue = parseInt(timeValue);
                     }
                 }
-                
+
                 // 使用字符串格式或转换数字格式
                 if (timestamp_str) {
                     timestamp = timestamp_str;
@@ -2226,7 +2446,7 @@ class StreamNote {
             if (item.timestamp) {
                 let timeValue = item.timestamp;
                 let timestamp_str = null;
-                
+
                 // 处理字符串格式的时间戳
                 if (typeof timeValue === 'string') {
                     // 检查是否为 HH:MM:SS 格式
@@ -2237,7 +2457,7 @@ class StreamNote {
                         timeValue = parseInt(timeValue);
                     }
                 }
-                
+
                 // 使用字符串格式或转换数字格式
                 if (timestamp_str) {
                     timestamp = timestamp_str;

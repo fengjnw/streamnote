@@ -203,6 +203,30 @@
                     </div>
                 </div>
 
+                <!-- Edit Modal Backdrop -->
+                <div id="editModalBackdrop"
+                    style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 9999;">
+                </div>
+
+                <!-- Edit Modal -->
+                <div id="editModal" class="floating-modal edit-modal"
+                    style="display: none; width: 90%; max-width: 850px; height: 80vh; flex-direction: column;">
+                    <div class="floating-modal-header" style="flex-shrink: 0;">
+                        <h3>Edit Text</h3>
+                        <button id="closeEditModal" class="btn-icon toggle-btn" title="Close">✕</button>
+                    </div>
+                    <div class="floating-modal-content" style="padding: 12px; overflow-y: auto; flex: 1;">
+                        <div id="editRowsContainer" style="display: flex; flex-direction: column; gap: 0;">
+                            <!-- Toolbar and edit rows will be rendered here -->
+                        </div>
+                    </div>
+                    <div class="floating-modal-footer"
+                        style="padding: 12px 16px; border-top: 1px solid #e0e0e0; display: flex; gap: 8px; justify-content: flex-end; flex-shrink: 0;">
+                        <button id="editModalCancelBtn" class="control-btn control-btn-secondary">Cancel</button>
+                        <button id="editModalSaveBtn" class="control-btn control-btn-primary">Save</button>
+                    </div>
+                </div>
+
                 <!-- Settings Modal -->
                 <div id="settingsModal" class="floating-modal settings-modal" style="display: none;">
                     <div class="floating-modal-header">
