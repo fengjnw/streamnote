@@ -258,7 +258,7 @@ class StreamNote {
         if (this.recordingSessionId !== null && this.recordingSessionId !== this.sessionManager.currentSessionId) {
             const recordingSession = this.sessionManager.getSession(this.recordingSessionId);
             const recordingSessionName = recordingSession ? recordingSession.name : "Unknown";
-            this.showStatusMessage(`💬 Recording in "${recordingSessionName}" will continue in background`, 3000);
+            this.showStatusMessage(`Recording in "${recordingSessionName}" will continue in background`, 3000);
         }
 
         // 更新录制指示器UI
@@ -959,7 +959,7 @@ class StreamNote {
 
                 reExtractKeywordsBtn.disabled = true;
                 const originalText = reExtractKeywordsBtn.textContent;
-                reExtractKeywordsBtn.textContent = '🔄 Extracting...';
+                reExtractKeywordsBtn.textContent = 'Extracting...';
 
                 try {
                     await this.processKeywords(this.recordingSessionId || this.sessionManager.currentSessionId);
@@ -2131,10 +2131,10 @@ class StreamNote {
         if (!btn) return;
 
         if (isHighlighted) {
-            btn.textContent = "✕ Remove";
+            btn.textContent = "Remove";
             btn.classList.add("active");
         } else {
-            btn.textContent = "✏️ Highlight";
+            btn.textContent = "Highlight";
             btn.classList.remove("active");
         }
     }

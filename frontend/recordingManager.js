@@ -88,14 +88,14 @@ class RecordingManager {
                 this._checkSilenceAndSend();
             }, 100);
 
-            this.onStatusUpdate("🎤 Listening...");
+            this.onStatusUpdate("Listening...");
             this.onRecordingStateChange(true);
 
             // 每秒更新统计信息（当不在转录中时）
             if (this.statsUpdateInterval) clearInterval(this.statsUpdateInterval);
             this.statsUpdateInterval = setInterval(() => {
                 if (this.isRecording && !this.isTranscribing) {
-                    this.onStatusUpdate("🎤 Listening...");
+                    this.onStatusUpdate("Listening...");
                 }
             }, 1000);
 
@@ -239,7 +239,7 @@ class RecordingManager {
                 console.error(`[ERROR] API error: ${response.status}`);
                 this.isTranscribing = false;
                 if (this.isRecording) {
-                    this.onStatusUpdate("🎤 Listening...");
+                    this.onStatusUpdate("Listening...");
                 }
                 return;
             }
@@ -285,7 +285,7 @@ class RecordingManager {
 
             // 恢复监听状态 - 只有在还在录音时才显示"Listening"
             if (this.isRecording) {
-                this.onStatusUpdate("🎤 Listening...");
+                this.onStatusUpdate("Listening...");
             } else {
                 // 停止录音后，清除"Transcripting"状态
                 this.onStatusUpdate("");
@@ -295,7 +295,7 @@ class RecordingManager {
             console.error("[ERROR] Whisper request failed:", error);
             this.isTranscribing = false;
             if (this.isRecording) {
-                this.onStatusUpdate("🎤 Listening...");
+                this.onStatusUpdate("Listening...");
             }
         }
     }

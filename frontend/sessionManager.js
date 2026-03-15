@@ -832,8 +832,8 @@ class SessionManager {
                     <div class="session-main">
                         <div class="session-name">${session.name}</div>
                         <div class="session-brief">
-                            <span class="brief-item">📅 ${createdDate}</span>
-                            <span class="brief-item">📄 ${itemCount}</span>
+                            <span class="brief-item">${createdDate}</span>
+                            <span class="brief-item">${itemCount} items</span>
                         </div>
                     </div>
                     <div class="session-time">${lastModified}</div>

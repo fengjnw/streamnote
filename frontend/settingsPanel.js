@@ -40,7 +40,7 @@ class SettingsPanel {
             this.sessionManager.updateDefaultSettings({
                 defaultLanguage: e.target.value
             });
-            this.onStatusUpdate(`📋 Default translation language set to ${e.target.value}`);
+            this.onStatusUpdate(`Default translation language set to ${e.target.value}`);
         });
 
         // 添加解释语言选择器的变化事件
@@ -49,7 +49,7 @@ class SettingsPanel {
                 this.sessionManager.updateDefaultSettings({
                     defaultExplanationLanguage: e.target.value
                 });
-                this.onStatusUpdate(`📋 Default explanation language set to ${e.target.value}`);
+                this.onStatusUpdate(`Default explanation language set to ${e.target.value}`);
             });
         }
 

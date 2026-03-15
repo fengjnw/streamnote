@@ -113,7 +113,7 @@ class PanelManager {
     updateTranslationButton() {
         const translationToggleBtn = document.getElementById("translationToggleBtn");
         if (translationToggleBtn) {
-            translationToggleBtn.textContent = '🌐 Translation';
+            translationToggleBtn.textContent = 'Translation';
             if (this.translationEnabled) {
                 translationToggleBtn.classList.add('active');
             } else {

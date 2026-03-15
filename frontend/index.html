@@ -16,11 +16,14 @@
                 style="flex: 1; display: flex; gap: 30px; font-size: 0.95em; opacity: 0.9; align-items: center;">
                 <div id="sessionNameDisplay" style="font-weight: 600; min-width: 150px;"></div>
                 <div id="sessionStatsDisplay" style="display: flex; gap: 25px; font-size: 0.9em;">
-                    <div><span style="opacity: 0.8;">📅</span> <span id="sessionDateDisplay">-</span></div>
-                    <div><span style="opacity: 0.8;">📄</span> <span id="sessionItemCountDisplay">0</span> items</div>
-                    <div><span style="opacity: 0.8;">🔑</span> <span id="sessionKeywordCountDisplay">0</span> keywords
+                    <div><span style="opacity: 0.8;">Date</span> <span id="sessionDateDisplay">-</span></div>
+                    <div><span style="opacity: 0.8;">Items</span> <span id="sessionItemCountDisplay">0</span> items
                     </div>
-                    <div id="translationStatusDisplay" style="display: none;"><span style="opacity: 0.8;">🌐</span>
+                    <div><span style="opacity: 0.8;">Keywords</span> <span id="sessionKeywordCountDisplay">0</span>
+                        keywords
+                    </div>
+                    <div id="translationStatusDisplay" style="display: none;"><span
+                            style="opacity: 0.8;">Translate</span>
                         <span id="translationLangDisplay">中文</span>
                     </div>
                 </div>
@@ -33,23 +36,22 @@
             <nav class="control-panel">
                 <!-- Group 1: Session Management -->
                 <div class="nav-group">
-                    <button id="openSessionPanel" class="control-btn control-btn-secondary" title="Open Sessions">📋
-                        Sessions</button>
+                    <button id="openSessionPanel" class="control-btn control-btn-secondary"
+                        title="Open Sessions">Sessions</button>
                 </div>
 
                 <!-- Group 2: Recording Controls -->
                 <div class="nav-group">
-                    <button id="startBtn" class="control-btn control-btn-primary" title="Record">🎙️
-                        Record</button>
-                    <button id="stopBtn" class="control-btn control-btn-danger" disabled title="Stop Recording">⏹️
-                        Stop</button>
-                    <button id="clearBtn" class="control-btn control-btn-secondary" title="Clear">🗑️ Clear</button>
+                    <button id="startBtn" class="control-btn control-btn-primary" title="Record">Record</button>
+                    <button id="stopBtn" class="control-btn control-btn-danger" disabled
+                        title="Stop Recording">Stop</button>
+                    <button id="clearBtn" class="control-btn control-btn-secondary" title="Clear">Clear</button>
                 </div>
 
                 <!-- Group 3: Translation Toggle -->
                 <div class="nav-group">
                     <button id="translationToggleBtn" class="control-btn control-btn-secondary active"
-                        title="Toggle Translation">🌐 Translation</button>
+                        title="Toggle Translation">Translation</button>
                 </div>
 
                 <!-- Spacer -->
@@ -57,16 +59,16 @@
 
                 <!-- Group 4: Quick Access Panels -->
                 <div class="nav-group">
-                    <button id="quickAccessHistory" class="control-btn control-btn-secondary" title="Explanation">💡
-                        Explanation</button>
-                    <button id="quickAccessHighlights" class="control-btn control-btn-secondary" title="Highlights">✏️
-                        Highlights</button>
-                    <button id="quickAccessKeywords" class="control-btn control-btn-secondary" title="Auto Keywords">📌
-                        Auto Keywords</button>
-                    <button id="quickAccessSummary" class="control-btn control-btn-secondary" title="Summary">✨
-                        Summary</button>
-                    <button id="quickAccessSettings" class="control-btn control-btn-secondary" title="Settings">⚙️
-                        Settings</button>
+                    <button id="quickAccessHistory" class="control-btn control-btn-secondary"
+                        title="Explanation">Explanation</button>
+                    <button id="quickAccessHighlights" class="control-btn control-btn-secondary"
+                        title="Highlights">Highlights</button>
+                    <button id="quickAccessKeywords" class="control-btn control-btn-secondary"
+                        title="Auto Keywords">Auto Keywords</button>
+                    <button id="quickAccessSummary" class="control-btn control-btn-secondary"
+                        title="Summary">Summary</button>
+                    <button id="quickAccessSettings" class="control-btn control-btn-secondary"
+                        title="Settings">Settings</button>
                 </div>
             </nav>
 
@@ -80,20 +82,20 @@
                     </div>
                     <!-- Session Toolbar -->
                     <div class="panel-toolbar">
-                        <button id="newSessionBtn" class="toolbar-btn" title="New Session">➕ New</button>
-                        <button id="renameSessionBtn" class="toolbar-btn" title="Rename session">✏️ Rename</button>
-                        <button id="sessionMenuBtn" class="toolbar-btn" title="More options">⋮</button>
+                        <button id="newSessionBtn" class="toolbar-btn" title="New Session">New</button>
+                        <button id="renameSessionBtn" class="toolbar-btn" title="Rename session">Rename</button>
+                        <button id="sessionMenuBtn" class="toolbar-btn" title="More options">Menu</button>
                     </div>
                     <!-- Session Menu -->
                     <div class="session-menu" id="sessionMenu" style="display: none;">
-                        <button class="session-menu-item" id="deleteSessionBtn" title="Delete current session">🗑️
-                            Delete</button>
-                        <button class="session-menu-item" id="exportCurrentBtn" title="Export current session">📥
-                            Export</button>
-                        <button class="session-menu-item" id="exportAllBtn" title="Export all sessions">📦 Export
+                        <button class="session-menu-item" id="deleteSessionBtn"
+                            title="Delete current session">Delete</button>
+                        <button class="session-menu-item" id="exportCurrentBtn"
+                            title="Export current session">Export</button>
+                        <button class="session-menu-item" id="exportAllBtn" title="Export all sessions">Export
                             All</button>
-                        <button class="session-menu-item" id="importBtn" title="Import sessions">📤 Import</button>
-                        <button class="session-menu-item danger" id="clearAllBtn" title="Clear all sessions">🗑️ Clear
+                        <button class="session-menu-item" id="importBtn" title="Import sessions">Import</button>
+                        <button class="session-menu-item danger" id="clearAllBtn" title="Clear all sessions">Clear
                             All</button>
                     </div>
                     <!-- Session Panel Content -->
@@ -153,7 +155,7 @@
 
                     <!-- Floating Auto Scroll Button -->
                     <button id="floatingAutoScrollBtn" class="floating-auto-scroll-btn" title="Click to jump to latest">
-                        ↓ Back to Latest
+                        Back to Latest
                     </button>
                 </div>
 
@@ -168,8 +170,8 @@
                     <!-- Highlights Content -->
                     <div id="highlightsContent" class="panel-content">
                         <div class="panel-toolbar">
-                            <button id="clearHighlightsBtn" class="toolbar-btn danger" title="Clear all highlights">🗑️
-                                Clear All</button>
+                            <button id="clearHighlightsBtn" class="toolbar-btn danger"
+                                title="Clear all highlights">Clear All</button>
                         </div>
                         <div id="manual-keywords-display" class="keywords-items">
                             <p class="placeholder">Select text to highlight and add to this panel</p>
@@ -179,10 +181,10 @@
                     <!-- Keywords Content -->
                     <div id="keywordsContent" class="panel-content active">
                         <div class="panel-toolbar">
-                            <button id="reExtractKeywordsBtn" class="toolbar-btn" title="Extract keywords">🔄
-                                Extract</button>
-                            <button id="clearKeywordsBtn" class="toolbar-btn danger" title="Clear all keywords">🗑️
-                                Clear All</button>
+                            <button id="reExtractKeywordsBtn" class="toolbar-btn"
+                                title="Extract keywords">Extract</button>
+                            <button id="clearKeywordsBtn" class="toolbar-btn danger" title="Clear all keywords">Clear
+                                All</button>
                         </div>
                         <!-- Auto-extracted Keywords Section -->
                         <div id="auto-keywords-display" class="keywords-tab-content active">
@@ -199,11 +201,10 @@
                                 <option value="q&a">Q&A Format</option>
                                 <option value="tldr">TLDR</option>
                             </select>
-                            <button id="regenerateSummaryBtn" class="toolbar-btn" title="Generate summary">🔄
-                                Generate</button>
-                            <button id="copySummaryBtn" class="toolbar-btn" title="Copy summary">📋 Copy</button>
-                            <button id="clearSummaryBtn" class="toolbar-btn danger" title="Clear summary">🗑️
-                                Clear</button>
+                            <button id="regenerateSummaryBtn" class="toolbar-btn"
+                                title="Generate summary">Regenerate</button>
+                            <button id="copySummaryBtn" class="toolbar-btn" title="Copy summary">Copy</button>
+                            <button id="clearSummaryBtn" class="toolbar-btn danger" title="Clear summary">Clear</button>
                         </div>
                         <div id="summary-display" class="summary-text">
                             <p class="placeholder">Click Generate to generate a summary of your transcription</p>
@@ -222,17 +223,16 @@
                                 <option value="Korean">한국어</option>
                             </select>
                             <button id="regenerate-explanation-btn" class="toolbar-btn" disabled
-                                title="Regenerate explanation">🔄 Regenerate</button>
+                                title="Regenerate explanation">Regenerate</button>
                             <button id="clearExplanationsBtn" class="toolbar-btn danger"
-                                title="Clear explanation display">🗑️
-                                Clear</button>
+                                title="Clear explanation display">Clear</button>
                         </div>
                         <div id="explanation-focus-view" class="explanation-focus-view">
                             <div class="explanation-header hidden">
                                 <div class="explanation-header-content">
                                     <h4 id="current-explanation-word" class="current-word"></h4>
                                     <button id="highlight-current-word-btn" class="toolbar-btn"
-                                        title="Add to highlights">✏️ Highlight</button>
+                                        title="Add to highlights">Highlight</button>
                                 </div>
                             </div>
                             <div class="explanation-body">
@@ -253,7 +253,7 @@
                         <div class="settings-scroll-container">
                             <!-- Default Settings for New Session -->
                             <div class="settings-section">
-                                <h4 class="settings-section-title">📋 New Session Defaults</h4>
+                                <h4 class="settings-section-title">New Session Defaults</h4>
                                 <div class="settings-item">
                                     <label for="defaultLanguage">Default Translation Language:</label>
                                     <select id="defaultLanguage" class="language-selector"
@@ -296,11 +296,9 @@
     <!-- Floating Context Menu for Text Selection -->
     <div id="textSelectionMenu" class="floating-menu hidden">
         <button id="floatingExplainBtn" class="floating-menu-item" title="Explain selected text">
-            <span class="menu-icon">💡</span>
             <span class="menu-label">Explain</span>
         </button>
         <button id="floatingHighlightBtn" class="floating-menu-item" title="Highlight selected text">
-            <span class="menu-icon">✏️</span>
             <span class="menu-label">Highlight</span>
         </button>
     </div>
