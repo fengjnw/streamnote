@@ -610,42 +610,20 @@ class SessionManager {
             });
         }
 
-        // Toggle session 面板
-        const toggleBtn = document.getElementById('toggleSessionPanel');
+        // Session modal 打开按钮
         const openBtn = document.getElementById('openSessionPanel');
-        const sessionPanel = document.querySelector('.session-panel');
-
-        const togglePanel = () => {
-            sessionPanel.classList.toggle('expanded');
-
-            // Update button active state
-            const isExpanded = sessionPanel.classList.contains('expanded');
-            if (isExpanded) {
-                openBtn.classList.add('active');
-            } else {
-                openBtn.classList.remove('active');
-            }
-
-            // Set flag to prevent resize-induced scroll from affecting auto-scroll/content
-            if (window.streamNoteInstance) {
-                window.streamNoteInstance.isSyncingScroll = true;
-                setTimeout(() => {
-                    window.streamNoteInstance.isSyncingScroll = false;
-                }, 350); // Match the 0.3s transition + buffer
-            }
-        };
-
-        if (toggleBtn && sessionPanel) {
-            toggleBtn.addEventListener('click', togglePanel);
+        if (openBtn) {
+            openBtn.addEventListener('click', () => {
+                if (window.streamNoteInstance) {
+                    window.streamNoteInstance.openModal('sessionModal');
+                }
+            });
         }
 
-        if (openBtn && sessionPanel) {
-            openBtn.addEventListener('click', togglePanel);
-        }
-
-        // 初始化按钮状态
-        if (sessionPanel && sessionPanel.classList.contains('expanded') && openBtn) {
-            openBtn.classList.add('active');
+        // Session modal 关闭按钮（如果需要在 sessionManager 中处理）
+        const toggleBtn = document.getElementById('closeSessionModal');
+        if (toggleBtn) {
+            // 这个按钮的事件处理已经在 streamNote 中添加了
         }
 
         // Session 名称编辑模式切换

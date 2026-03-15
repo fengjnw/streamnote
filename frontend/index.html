@@ -81,20 +81,22 @@
             </nav>
 
             <div class="content-wrapper">
-                <!-- Session Management Panel (Left) -->
-                <div class="session-panel">
-                    <!-- Session Panel Header -->
-                    <div class="session-panel-header">
+                <input type="file" id="importFileInput" accept=".json" style="display: none;" />
+
+                <!-- Modal Overlay Layer -->
+                <div id="modalOverlay" class="modal-overlay" style="display: none;"></div>
+
+                <!-- Session Modal -->
+                <div id="sessionModal" class="floating-modal session-modal" style="display: none;">
+                    <div class="floating-modal-header">
                         <h3>Sessions</h3>
-                        <button id="toggleSessionPanel" class="btn-icon toggle-btn" title="Close Panel">✕</button>
+                        <button id="closeSessionModal" class="btn-icon toggle-btn" title="Close Panel">✕</button>
                     </div>
-                    <!-- Session Toolbar -->
-                    <div class="panel-toolbar">
+                    <div class="floating-modal-toolbar">
                         <button id="newSessionBtn" class="toolbar-btn" title="New Session">New</button>
                         <button id="renameSessionBtn" class="toolbar-btn" title="Rename session">Rename</button>
                         <button id="sessionMenuBtn" class="toolbar-btn" title="More options">…</button>
                     </div>
-                    <!-- Session Menu -->
                     <div class="session-menu" id="sessionMenu" style="display: none;">
                         <button class="session-menu-item" id="deleteSessionBtn"
                             title="Delete current session">Delete</button>
@@ -106,15 +108,51 @@
                         <button class="session-menu-item danger" id="clearAllBtn" title="Clear all sessions">Clear
                             All</button>
                     </div>
-                    <!-- Session Panel Content -->
-                    <div class="session-panel-content">
+                    <div class="floating-modal-content">
                         <div class="session-list" id="sessionList">
                             <!-- Sessions will be rendered here -->
                         </div>
                     </div>
                 </div>
 
-                <input type="file" id="importFileInput" accept=".json" style="display: none;" />
+                <!-- Settings Modal -->
+                <div id="settingsModal" class="floating-modal settings-modal" style="display: none;">
+                    <div class="floating-modal-header">
+                        <h3>Settings</h3>
+                        <button id="closeSettingsModal" class="btn-icon toggle-btn" title="Close Panel">✕</button>
+                    </div>
+                    <div class="floating-modal-content">
+                        <div class="settings-scroll-container">
+                            <div class="settings-section">
+                                <h4 class="settings-section-title">New Session Defaults</h4>
+                                <div class="settings-item">
+                                    <label for="defaultLanguage">Default Translation Language:</label>
+                                    <select id="defaultLanguage" class="language-selector"
+                                        style="width: 100%; margin-top: 4px;">
+                                        <option value="Chinese">中文</option>
+                                        <option value="English">English</option>
+                                        <option value="Spanish">Español</option>
+                                        <option value="French">Français</option>
+                                        <option value="Japanese">日本語</option>
+                                        <option value="Korean">한국어</option>
+                                    </select>
+                                </div>
+                                <div class="settings-item">
+                                    <label for="defaultExplanationLanguage">Default Explanation Language:</label>
+                                    <select id="defaultExplanationLanguage" class="language-selector"
+                                        style="width: 100%; margin-top: 4px;">
+                                        <option value="Chinese">中文</option>
+                                        <option value="English">English</option>
+                                        <option value="Spanish">Español</option>
+                                        <option value="French">Français</option>
+                                        <option value="Japanese">日本語</option>
+                                        <option value="Korean">한국어</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="main-content layout-split">
                     <!-- Transcript Panel (Left) -->
@@ -255,41 +293,7 @@
                         </div>
                     </div>
 
-                    <!-- Settings Content -->
-                    <div id="settingsContent" class="panel-content">
-                        <!-- Settings Scroll Container -->
-                        <div class="settings-scroll-container">
-                            <!-- Default Settings for New Session -->
-                            <div class="settings-section">
-                                <h4 class="settings-section-title">New Session Defaults</h4>
-                                <div class="settings-item">
-                                    <label for="defaultLanguage">Default Translation Language:</label>
-                                    <select id="defaultLanguage" class="language-selector"
-                                        style="width: 100%; margin-top: 4px;">
-                                        <option value="Chinese">中文</option>
-                                        <option value="English">English</option>
-                                        <option value="Spanish">Español</option>
-                                        <option value="French">Français</option>
-                                        <option value="Japanese">日本語</option>
-                                        <option value="Korean">한국어</option>
-                                    </select>
-                                </div>
-                                <div class="settings-item">
-                                    <label for="defaultExplanationLanguage">Default Explanation Language:</label>
-                                    <select id="defaultExplanationLanguage" class="language-selector"
-                                        style="width: 100%; margin-top: 4px;">
-                                        <option value="Chinese">中文</option>
-                                        <option value="English">English</option>
-                                        <option value="Spanish">Español</option>
-                                        <option value="French">Français</option>
-                                        <option value="Japanese">日本語</option>
-                                        <option value="Korean">한국어</option>
-                                    </select>
-                                </div>
-                            </div>
 
-                        </div>
-                    </div>
                 </div>
             </div>
 

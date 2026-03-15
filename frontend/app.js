@@ -39,6 +39,9 @@ class StreamNote {
         this.hasActiveSelection = false;
         this.pendingUpdates = false;
 
+        // 模态窗口状态
+        this.openModals = new Set();  // 跟踪打开的模态窗口
+
         // === 初始化管理器 ===
         this.initSessionManager();
         this.initRecordingManager();
@@ -691,7 +694,6 @@ class StreamNote {
         const keywordsContent = document.getElementById("keywordsContent");
         const summaryContent = document.getElementById("summaryContent");
         const historyContent = document.getElementById("historyContent");
-        const settingsContent = document.getElementById("settingsContent");
         const highlightsContent = document.getElementById("highlightsContent");
         const quickAccessKeywords = document.getElementById("quickAccessKeywords");
         const quickAccessSummary = document.getElementById("quickAccessSummary");
@@ -704,7 +706,6 @@ class StreamNote {
             keywordsContent.classList.remove("active");
             summaryContent.classList.remove("active");
             historyContent.classList.remove("active");
-            settingsContent.classList.remove("active");
             highlightsContent.classList.remove("active");
             // Clear active state from all quick access buttons
             quickAccessKeywords.classList.remove("active");
@@ -727,8 +728,6 @@ class StreamNote {
                 quickAccessSummary.classList.add("active");
             } else if (contentEl === historyContent) {
                 quickAccessHistory.classList.add("active");
-            } else if (contentEl === settingsContent) {
-                quickAccessSettings.classList.add("active");
             } else if (contentEl === highlightsContent) {
                 quickAccessHighlights.classList.add("active");
             }
@@ -818,21 +817,9 @@ class StreamNote {
 
         if (quickAccessSettings) {
             quickAccessSettings.addEventListener("click", () => {
-                const isOpen = sidePanelsContainer.classList.contains("expanded");
-                const isActive = settingsContent.classList.contains("active");
-
-                if (isOpen && isActive) {
-                    this.isUpdatingUI = true;
-                    sidePanelsContainer.classList.remove("expanded");
-                    quickAccessSettings.classList.remove("active");
-                    setTimeout(() => {
-                        this.isUpdatingUI = false;
-                    }, 350);
-                } else {
-                    // 初始化设置面板的默认值
-                    this.settingsPanel.initialize();
-                    showContent(settingsContent, "Settings");
-                }
+                // 初始化设置面板的默认值
+                this.settingsPanel.initialize();
+                this.openModal("settingsModal");
             });
         }
 
@@ -1122,6 +1109,23 @@ class StreamNote {
                 this.updateDisplay();
             }
         });
+
+        // === 模态窗口关闭按钮处理 ===
+        // Session Modal 关闭按钮
+        const closeSessionModalBtn = document.getElementById("closeSessionModal");
+        if (closeSessionModalBtn) {
+            closeSessionModalBtn.addEventListener("click", () => {
+                this.closeModal("sessionModal");
+            });
+        }
+
+        // Settings Modal 关闭按钮
+        const closeSettingsModalBtn = document.getElementById("closeSettingsModal");
+        if (closeSettingsModalBtn) {
+            closeSettingsModalBtn.addEventListener("click", () => {
+                this.closeModal("settingsModal");
+            });
+        }
     }
 
     /**
@@ -1399,7 +1403,7 @@ class StreamNote {
             const summaryContent = document.getElementById("summaryContent");
             const settingsContent = document.getElementById("settingsContent");
 
-            [keywordsContent, historyContent, summaryContent, settingsContent, highlightsContent].forEach(el => {
+            [keywordsContent, historyContent, summaryContent, highlightsContent].forEach(el => {
                 if (el) el.classList.remove("active");
             });
 
@@ -2102,6 +2106,54 @@ class StreamNote {
 
     updateStatus(text) {
         document.getElementById("status").textContent = text;
+    }
+
+    /**
+     * 打开模态窗口
+     */
+    openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        const overlay = document.getElementById("modalOverlay");
+
+        if (!modal) return;
+
+        // 显示背景遮罩
+        if (overlay) {
+            overlay.style.display = "block";
+            // 添加背景点击关闭功能
+            overlay.onclick = () => this.closeModal(modalId);
+        }
+
+        // 显示模态窗口
+        modal.style.display = "flex";
+        this.openModals.add(modalId);
+
+        // 禁用body滚动
+        document.body.style.overflow = "hidden";
+    }
+
+    /**
+     * 关闭模态窗口
+     */
+    closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        const overlay = document.getElementById("modalOverlay");
+
+        if (!modal) return;
+
+        // 隐藏模态窗口
+        modal.style.display = "none";
+        this.openModals.delete(modalId);
+
+        // 如果没有其他打开的模态，隐藏背景遮罩
+        if (this.openModals.size === 0) {
+            if (overlay) {
+                overlay.style.display = "none";
+                overlay.onclick = null;
+            }
+            // 恢复body滚动
+            document.body.style.overflow = "auto";
+        }
     }
 
     /**
