@@ -293,6 +293,12 @@ class StreamNote {
             languageSelector.value = this.language;
         }
 
+        // 更新总结语言选择器
+        const summaryLanguageSelector = document.getElementById("summary-language");
+        if (summaryLanguageSelector) {
+            summaryLanguageSelector.value = this.explanationLanguage;
+        }
+
         // 加载转录内容到 RecordingManager
         this.recordingManager.setTranscriptData(session.transcripts || {});
         this.panelManager.setTranscriptData(session.transcripts || {});
@@ -629,6 +635,18 @@ class StreamNote {
                 // 保存设置到 session
                 this.saveSettingsToSession();
 
+                // 同步总结语言选择器的值
+                const summaryLanguageSelector = document.getElementById("summary-language");
+                if (summaryLanguageSelector) {
+                    summaryLanguageSelector.value = this.explanationLanguage;
+                }
+
+                // 同步设置面板的默认解释语言选择器
+                const defaultExplanationLanguageSelector = document.getElementById("defaultExplanationLanguage");
+                if (defaultExplanationLanguageSelector) {
+                    defaultExplanationLanguageSelector.value = this.explanationLanguage;
+                }
+
                 // 如果keyword manager存在，刷新显示
                 if (this.keywordManager) {
                     this.keywordManager.displayExplanations();
@@ -900,6 +918,37 @@ class StreamNote {
                     // 没有缓存，显示提示需要重新生成
                     summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary in this format</p>';
                 }
+            });
+        }
+
+        // Summary language selector
+        const summaryLanguageSelector = document.getElementById("summary-language");
+        if (summaryLanguageSelector) {
+            summaryLanguageSelector.addEventListener("change", (e) => {
+                this.explanationLanguage = e.target.value;
+                const selectedStyle = summarizeStyleSelect ? summarizeStyleSelect.value : "paragraph";
+                const cacheKey = `${this.explanationLanguage}-${selectedStyle}`;
+
+                // 如果有缓存，显示缓存的总结
+                if (this.summaryCache[cacheKey]) {
+                    summaryDisplay.innerHTML = this.formatSummaryDisplay(this.summaryCache[cacheKey], selectedStyle);
+                } else {
+                    // 没有缓存，显示提示需要重新生成
+                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary in this format</p>';
+                }
+
+                // 更新其他地方的explanationLanguage选择器
+                const explanationLanguageSelector = document.getElementById("keyword-explanation-language");
+                if (explanationLanguageSelector) {
+                    explanationLanguageSelector.value = this.explanationLanguage;
+                }
+                const defaultExplanationLanguageSelector = document.getElementById("defaultExplanationLanguage");
+                if (defaultExplanationLanguageSelector) {
+                    defaultExplanationLanguageSelector.value = this.explanationLanguage;
+                }
+
+                // 保存设置到session
+                this.saveSettingsToSession();
             });
         }
 
