@@ -211,8 +211,9 @@ class StreamNote {
 
         // 获取最近的转录内容作为上下文（最多保留最后5句）
         const recentTranscripts = indices.slice(-5).map(idx => {
-            const { text } = transcriptData[idx];
-            return text;
+            const item = transcriptData[idx];
+            // 安全地获取文本，处理可能不存在的数据
+            return (item && item.text) ? item.text : '';
         }).filter(text => text && text.length > 0);
 
         // 组合成上下文字符串
@@ -1188,7 +1189,7 @@ class StreamNote {
         // 文本模式：文件上传
         const uploadFileBtn = document.getElementById("uploadFileBtn");
         const textFileInput = document.getElementById("textFileInput");
-        
+
         if (uploadFileBtn && textFileInput) {
             uploadFileBtn.addEventListener("click", () => {
                 textFileInput.click();
@@ -1198,8 +1199,8 @@ class StreamNote {
                 const file = e.target.files[0];
                 if (file) {
                     try {
-                        const preciseResults = await TextProcessor.processFile(file);
-                        this.importTextContent(preciseResults, file.name, "file");
+                        const result = await TextProcessor.processFile(file);
+                        this.importTextContent(result.preciseResults, file.name, "file");
                         this.showStatusMessage(`✓ Imported ${file.name}`, 2000);
                     } catch (error) {
                         console.error("Error processing file:", error);
@@ -1211,42 +1212,33 @@ class StreamNote {
             });
         }
 
-        // 文本模式：粘贴文本
-        const pasteTextBtn = document.getElementById("pasteTextBtn");
-        if (pasteTextBtn) {
-            pasteTextBtn.addEventListener("click", async () => {
-                try {
-                    const clipboardText = await navigator.clipboard.readText();
-                    if (clipboardText.trim()) {
-                        const preciseResults = TextProcessor.convertToPreciseResults(clipboardText);
-                        this.importTextContent(preciseResults, "clipboard", "paste");
-                        this.showStatusMessage("✓ Pasted text imported", 2000);
-                    } else {
-                        this.showStatusMessage("✗ Clipboard is empty", 1500);
-                    }
-                } catch (error) {
-                    console.error("Error reading clipboard:", error);
-                    this.showStatusMessage("✗ Failed to read clipboard", 1500);
-                }
-            });
-        }
-
         // 文本模式：编辑功能
         const editTextBtn = document.getElementById("editTextBtn");
         const textDisplay = document.getElementById("textDisplay");
         const textEditArea = document.getElementById("textEditArea");
+        const editModeButtons = document.getElementById("editModeButtons");
         const saveEditBtn = document.getElementById("saveEditBtn");
         const cancelEditBtn = document.getElementById("cancelEditBtn");
 
         if (editTextBtn && textDisplay && textEditArea) {
             editTextBtn.addEventListener("click", () => {
-                // 从显示区域获取当前文本，填充到编辑区域
-                if (textDisplay.textContent) {
-                    textEditArea.value = textDisplay.textContent;
-                    textDisplay.classList.add("hidden");
-                    textEditArea.classList.remove("hidden");
+                // 从当前的 preciseResults 构建编辑内容（包括时间戳）
+                if (Object.keys(this.preciseResults || {}).length > 0) {
+                    const editContent = Object.values(this.preciseResults)
+                        .map(item => {
+                            const timestamp = new Date(item.timestamp).toLocaleString();
+                            return `[${timestamp}] ${item.text}`;
+                        })
+                        .join("\n\n");
+
+                    textEditArea.value = editContent;
+                    textDisplay.style.display = "none";
+                    textEditArea.style.display = "block";
+                    if (editModeButtons) editModeButtons.style.display = "flex";
+                    editTextBtn.style.display = "none";
                     textEditArea.focus();
-                    editTextBtn.classList.add("hidden");
+                } else {
+                    this.showStatusMessage("No text to edit", 1500);
                 }
             });
         }
@@ -1255,15 +1247,50 @@ class StreamNote {
             saveEditBtn.addEventListener("click", () => {
                 const editedText = textEditArea.value;
                 if (editedText.trim()) {
-                    const preciseResults = TextProcessor.convertToPreciseResults(editedText);
-                    this.importTextContent(preciseResults, "edited", "edit");
-                    
-                    // 更新显示区域并切换回显示模式
-                    textDisplay.textContent = editedText;
-                    textDisplay.classList.remove("hidden");
-                    textEditArea.classList.add("hidden");
-                    editTextBtn.classList.remove("hidden");
-                    this.showStatusMessage("✓ Text updated", 1500);
+                    try {
+                        // 解析编辑的文本（支持时间戳格式 [时间] 文本）
+                        const lines = editedText.split('\n\n').filter(l => l.trim());
+                        const preciseResults = {};
+                        let index = 0;
+
+                        lines.forEach(line => {
+                            // 匹配 [timestamp] text 格式
+                            const match = line.match(/^\[(.*?)\]\s+(.*)$/);
+                            if (match) {
+                                const timestamp = new Date(match[1]).getTime();
+                                const text = match[2];
+                                preciseResults[index] = {
+                                    text: text,
+                                    timestamp: isNaN(timestamp) ? Date.now() : timestamp,
+                                    source: 'text'
+                                };
+                            } else {
+                                // 没有时间戳的行，使用当前时间
+                                preciseResults[index] = {
+                                    text: line.trim(),
+                                    timestamp: Date.now(),
+                                    source: 'text'
+                                };
+                            }
+                            index++;
+                        });
+
+                        this.importTextContent(preciseResults, "edited", "edit");
+
+                        // 更新显示区域并切换回显示模式
+                        const displayText = Object.values(preciseResults)
+                            .map(item => item.text)
+                            .join("\n\n");
+                        textDisplay.textContent = displayText;
+                        textDisplay.style.display = "";
+                        textEditArea.style.display = "none";
+                        if (editModeButtons) editModeButtons.style.display = "none";
+                        editTextBtn.style.display = "";
+                        this.showStatusMessage("✓ Text updated", 1500);
+                    } catch (error) {
+                        console.error("Error updating text:", error);
+                        this.showStatusMessage("✗ Failed to update text", 1500);
+                    }
                 } else {
                     this.showStatusMessage("✗ Cannot save empty text", 1500);
                 }
@@ -1272,11 +1299,21 @@ class StreamNote {
 
         if (cancelEditBtn && textEditArea) {
             cancelEditBtn.addEventListener("click", () => {
-                textDisplay.classList.remove("hidden");
-                textEditArea.classList.add("hidden");
-                editTextBtn.classList.remove("hidden");
+                textDisplay.style.display = "";
+                textEditArea.style.display = "none";
+                if (editModeButtons) editModeButtons.style.display = "none";
+                editTextBtn.style.display = "";
             });
         }
+
+        // 初始化 Edit 按钮状态（有内容时启用）
+        this.updateEditButtonState = () => {
+            if (editTextBtn && Object.keys(this.preciseResults || {}).length > 0) {
+                editTextBtn.disabled = false;
+            } else {
+                editTextBtn.disabled = true;
+            }
+        };
     }
 
     /**
@@ -1302,68 +1339,70 @@ class StreamNote {
         // 切换控制组和内容区域
         if (mode === "transcript") {
             // 显示录音模式
-            if (recordingControls) recordingControls.classList.remove("hidden");
-            if (textControls) textControls.classList.add("hidden");
-            if (transcriptMode) transcriptMode.classList.remove("hidden");
-            if (textMode) textMode.classList.add("hidden");
+            if (recordingControls) recordingControls.style.display = "flex";
+            if (textControls) textControls.style.display = "none";
+            if (transcriptMode) transcriptMode.style.display = "";
+            if (textMode) textMode.style.display = "none";
         } else if (mode === "text") {
             // 显示文本模式
-            if (recordingControls) recordingControls.classList.add("hidden");
-            if (textControls) textControls.classList.remove("hidden");
-            if (transcriptMode) transcriptMode.classList.add("hidden");
-            if (textMode) textMode.classList.remove("hidden");
+            if (recordingControls) recordingControls.style.display = "none";
+            if (textControls) textControls.style.display = "flex";
+            if (transcriptMode) transcriptMode.style.display = "none";
+            if (textMode) textMode.style.display = "";
         }
 
         // 保存模式选择到 session
         const currentSession = this.sessionManager.getCurrentSession();
         if (currentSession) {
             currentSession.inputMode = mode;
-            this.sessionManager.saveSession(currentSession);
+            this.sessionManager.saveSessions();
         }
     }
 
     /**
      * 导入文本内容到当前 session
-     * @param {Object} preciseResults - 由 TextProcessor 返回的精确结果对象
+     * @param {Object} preciseResults - 精确结果对象 {index: {text, timestamp, source}}
      * @param {string} sourceFile - 文件名或来源标识
-     * @param {string} sourceType - 'file', 'paste', 或 'edit'
+     * @param {string} sourceType - 'file' 或 'edit'
      */
     importTextContent(preciseResults, sourceFile, sourceType) {
-        // 合并新导入的文本到当前 session 的转录记录中
-        const currentSession = this.sessionManager.getCurrentSession();
-        if (!currentSession) {
-            this.showStatusMessage("No active session", 1500);
-            return;
+        // 更新 recordingManager 的数据（这是所有工具共享的数据源）
+        if (this.recordingManager) {
+            this.recordingManager.setTranscriptData(preciseResults);
         }
 
-        // 更新 preciseResults（替换或追加取决于实现策略，这里选择替换）
-        this.preciseResults = preciseResults;
+        // 更新 panelManager 的数据
+        if (this.panelManager) {
+            this.panelManager.setTranscriptData(preciseResults);
+        }
 
-        // 更新 session 的 contentMetadata
-        currentSession.contentMetadata = {
-            source: 'text',
-            sourceFile: sourceFile,
-            sourceType: sourceType,  // 'file', 'paste', 或 'edit'
-            uploadTime: new Date().toISOString(),
-            paragraphCount: Object.keys(preciseResults).length
-        };
+        // 更新当前 session 的转录数据
+        const currentSession = this.sessionManager.getCurrentSession();
+        if (currentSession) {
+            currentSession.transcripts = { ...preciseResults };
+            currentSession.contentMetadata = {
+                source: 'text',
+                sourceFile: sourceFile,
+                sourceType: sourceType,
+                uploadTime: new Date().toISOString(),
+                paragraphCount: Object.keys(preciseResults).length
+            };
+            this.sessionManager.saveSessions();
+        }
 
-        // 保存 session
-        this.sessionManager.saveSession(currentSession);
-
-        // 更新显示（转录区域和文本显示区域）
+        // 更新 Text Mode 显示区域
         const textDisplay = document.getElementById("textDisplay");
         const allText = Object.values(preciseResults)
             .map(item => item.text)
             .join("\n\n");
-        
+
         if (textDisplay) {
             textDisplay.textContent = allText;
         }
 
-        // 使用 recordingManager 更新 preciseResults（确保工具可用）
-        if (this.recordingManager) {
-            this.recordingManager.preciseResults = this.preciseResults;
+        // 更新 Edit 按钮状态
+        if (this.updateEditButtonState) {
+            this.updateEditButtonState();
         }
 
         // 刷新转录显示
@@ -1374,6 +1413,8 @@ class StreamNote {
     }
 
     /**
+     * 初始化关键词标签页切换功能
+     */
     initKeywordsTabSwitcher() {
         const tabBtns = document.querySelectorAll(".keywords-tab-btn");
         const tabContents = document.querySelectorAll(".keywords-tab-content");

@@ -63,13 +63,14 @@
                             title="Stop Recording">Stop</button>
                         <button id="clearBtn" class="control-btn control-btn-secondary" title="Clear">Clear</button>
                     </div>
-                    
+
                     <!-- Text Mode Controls -->
                     <div id="textControls" style="display: none; gap: 8px;">
-                        <button id="uploadFileBtn" class="control-btn control-btn-primary" title="Upload File">Upload</button>
-                        <button id="pasteTextBtn" class="control-btn control-btn-secondary" title="Paste Text">Paste</button>
-                        <button id="editTextBtn" class="control-btn control-btn-secondary" title="Edit Text" disabled>Edit</button>
-                        <button id="clearTextBtn" class="control-btn control-btn-secondary" title="Clear">Clear</button>
+                        <button id="uploadFileBtn" class="control-btn control-btn-primary"
+                            title="Upload .txt/.md file">📤 Upload</button>
+
+                        <button id="editTextBtn" class="control-btn control-btn-secondary" title="Edit imported text">✏️
+                            Edit</button>
                     </div>
                 </div>
 
@@ -87,6 +88,33 @@
                 </div>
 
                 <!-- Spacer -->
+                <!-- Mode Selector (Group 1) -->
+                <div class="nav-group nav-group-mode" style="display: flex; gap: 0; align-items: center;">
+                    <button class="mode-tab active" data-mode="transcript" style="
+                        padding: 6px 12px;
+                        border: 1px solid #ddd;
+                        background: white;
+                        cursor: pointer;
+                        border-radius: 4px 0 0 4px;
+                        font-size: 12px;
+                        font-weight: 500;
+                        transition: all 0.2s;
+                        color: #333;
+                    " title="Recording Mode">🎙️ Rec</button>
+                    <button class="mode-tab" data-mode="text" style="
+                        padding: 6px 12px;
+                        border: 1px solid #ddd;
+                        border-left: none;
+                        background: #f5f5f5;
+                        cursor: pointer;
+                        border-radius: 0 4px 4px 0;
+                        font-size: 12px;
+                        font-weight: 500;
+                        transition: all 0.2s;
+                        color: #666;
+                    " title="Text Import Mode">📝 Text</button>
+                </div>
+
                 <div class="control-spacer"></div>
 
                 <!-- Group 5: System Settings -->
@@ -98,29 +126,7 @@
 
             <div class="content-wrapper">
                 <input type="file" id="importFileInput" accept=".json" style="display: none;" />
-                <input type="file" id="textFileInput" accept=".txt,.md,.text" style="display: none;" />
-
-                <!-- Mode Selector Tabs -->
-                <div class="mode-selector" style="display: flex; gap: 0; border-bottom: 1px solid #e0e0e0; padding: 0 20px; background: #f5f5f5;">
-                    <button class="mode-tab active" data-mode="transcript" style="
-                        padding: 12px 20px;
-                        border: none;
-                        background: transparent;
-                        cursor: pointer;
-                        border-bottom: 3px solid transparent;
-                        font-weight: 500;
-                        transition: all 0.2s;
-                    ">🎙️ Transcript</button>
-                    <button class="mode-tab" data-mode="text" style="
-                        padding: 12px 20px;
-                        border: none;
-                        background: transparent;
-                        cursor: pointer;
-                        border-bottom: 3px solid transparent;
-                        font-weight: 500;
-                        transition: all 0.2s;
-                    ">📝 Text</button>
-                </div>
+                <input type="file" id="textFileInput" accept=".txt,.md,.text,.markdown" style="display: none;" />
 
                 <!-- Modal Overlay Layer -->
                 <div id="modalOverlay" class="modal-overlay" style="display: none;"></div>
@@ -302,7 +308,7 @@
                         ">
                             <p class="placeholder">Upload or paste text to begin</p>
                         </div>
-                        
+
                         <!-- Edit View (Hidden by default) -->
                         <textarea id="textEditArea" style="
                             display: none;
@@ -314,11 +320,13 @@
                             font-size: 14px;
                             resize: none;
                         " placeholder="Edit your text here..."></textarea>
-                        
+
                         <!-- Edit Mode Buttons (Hidden by default) -->
                         <div id="editModeButtons" style="display: none; gap: 10px;">
-                            <button id="saveEditBtn" class="control-btn control-btn-primary" style="padding: 8px 16px;">Save</button>
-                            <button id="cancelEditBtn" class="control-btn control-btn-secondary" style="padding: 8px 16px;">Cancel</button>
+                            <button id="saveEditBtn" class="control-btn control-btn-primary"
+                                style="padding: 8px 16px;">Save</button>
+                            <button id="cancelEditBtn" class="control-btn control-btn-secondary"
+                                style="padding: 8px 16px;">Cancel</button>
                         </div>
                     </div>
                 </div>

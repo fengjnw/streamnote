@@ -201,7 +201,7 @@ class SessionManager {
 
             // 核心内容
             transcripts: {},
-            
+
             // 内容元数据（记录当前内容的来源）
             contentMetadata: {
                 source: 'transcript',  // 'transcript' 或 'text'

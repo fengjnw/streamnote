@@ -12,16 +12,16 @@ class TextProcessor {
     static cleanText(text) {
         // 1. 规范换行（Windows CRLF → Unix LF）
         text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-        
+
         // 2. 移除多余空格（保留换行）
         text = text.replace(/[ \t]+/g, ' ');
-        
+
         // 3. 规范段落间距（多个空行 → 两个）
         text = text.replace(/\n\n+/g, '\n\n');
-        
+
         // 4. 清理首尾空格
         text = text.trim();
-        
+
         return text;
     }
 
