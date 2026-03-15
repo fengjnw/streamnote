@@ -376,10 +376,13 @@ class StreamNote {
         // 清空 Summary 显示
         const summaryDisplay = document.getElementById("summary-display");
         if (summaryDisplay) {
-            // 检查当前语言是否有缓存，有就直接显示
-            if (this.summaryCache && this.summaryCache[this.explanationLanguage]) {
-                const cachedSummary = this.summaryCache[this.explanationLanguage];
-                summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
+            // 检查当前语言和风格是否有缓存，有就直接显示
+            const summarizeStyleSelect = document.getElementById("summarizeStyleSelect");
+            const selectedStyle = summarizeStyleSelect ? summarizeStyleSelect.value : "paragraph";
+            const cacheKey = `${this.explanationLanguage}-${selectedStyle}`;
+            if (this.summaryCache && this.summaryCache[cacheKey]) {
+                const cachedSummary = this.summaryCache[cacheKey];
+                summaryDisplay.innerHTML = this.formatSummaryDisplay(cachedSummary, selectedStyle);
             } else {
                 summaryDisplay.innerHTML = '<p class="placeholder">Click Generate to generate a summary of your transcription</p>';
             }
@@ -632,10 +635,13 @@ class StreamNote {
 
                 // 更新 Summary 显示 - 检查是否有该语言的缓存
                 const summaryDisplay = document.getElementById("summary-display");
+                const summarizeStyleSelect = document.getElementById("summarizeStyleSelect");
                 if (summaryDisplay) {
-                    if (this.summaryCache && this.summaryCache[this.explanationLanguage]) {
-                        const cachedSummary = this.summaryCache[this.explanationLanguage];
-                        summaryDisplay.innerHTML = `<p>${cachedSummary.replace(/\n/g, '<br>')}</p>`;
+                    const selectedStyle = summarizeStyleSelect ? summarizeStyleSelect.value : "paragraph";
+                    const cacheKey = `${this.explanationLanguage}-${selectedStyle}`;
+                    if (this.summaryCache && this.summaryCache[cacheKey]) {
+                        const cachedSummary = this.summaryCache[cacheKey];
+                        summaryDisplay.innerHTML = this.formatSummaryDisplay(cachedSummary, selectedStyle);
                     } else {
                         summaryDisplay.innerHTML = '<p class="placeholder">Click Generate to generate a summary of your transcription</p>';
                     }
@@ -852,6 +858,7 @@ class StreamNote {
         const regenerateSummaryBtn = document.getElementById("regenerateSummaryBtn");
         const copySummaryBtn = document.getElementById("copySummaryBtn");
         const summaryDisplay = document.getElementById("summary-display");
+        const summarizeStyleSelect = document.getElementById("summarizeStyleSelect");
 
         if (regenerateSummaryBtn) {
             regenerateSummaryBtn.addEventListener("click", async () => {
@@ -877,9 +884,11 @@ class StreamNote {
                 copySummaryBtn.disabled = true;
 
                 try {
-                    const summary = await this.summarizeText(textToSummarize, true);  // forceRefresh=true
+                    // 获取选中的总结风格
+                    const selectedStyle = summarizeStyleSelect ? summarizeStyleSelect.value : "paragraph";
+                    const summary = await this.summarizeText(textToSummarize, true, selectedStyle);  // forceRefresh=true
                     if (summary) {
-                        summaryDisplay.innerHTML = `<p>${summary.replace(/\n/g, '<br>')}</p>`;
+                        summaryDisplay.innerHTML = this.formatSummaryDisplay(summary, selectedStyle);
                         copySummaryBtn.disabled = false;
                     } else {
                         summaryDisplay.innerHTML = '<p class="placeholder">Failed to generate summary</p>';
@@ -910,6 +919,24 @@ class StreamNote {
                     });
                 } else {
                     alert("Please generate a summary first");
+                }
+            });
+        }
+
+        // Summary style selector - load cached summary or show placeholder
+        if (summarizeStyleSelect) {
+            summarizeStyleSelect.addEventListener("change", () => {
+                const session = this.sessionManager.getCurrentSession();
+                const language = this.explanationLanguage;
+                const selectedStyle = summarizeStyleSelect.value;
+                const cacheKey = `${language}-${selectedStyle}`;
+
+                // 如果有缓存，显示缓存的总结
+                if (this.summaryCache[cacheKey]) {
+                    summaryDisplay.innerHTML = this.formatSummaryDisplay(this.summaryCache[cacheKey], selectedStyle);
+                } else {
+                    // 没有缓存，显示提示需要重新生成
+                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary in this format</p>';
                 }
             });
         }
@@ -1988,6 +2015,91 @@ class StreamNote {
         return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
+    /**
+     * 格式化总结显示 - 根据不同风格进行HTML格式化
+     * @param {string} summary - 总结文本
+     * @param {string} style - 总结风格 (paragraph, key_takeaways, q&a, tldr)
+     * @returns {string} 格式化后的HTML
+     */
+    formatSummaryDisplay(summary, style) {
+        if (!summary) return '';
+
+        switch (style) {
+            case 'key_takeaways':
+                return this.formatKeyTakeaways(summary);
+            case 'q&a':
+                return this.formatQAFormat(summary);
+            case 'tldr':
+                return this.formatTLDR(summary);
+            case 'paragraph':
+            default:
+                return this.formatParagraph(summary);
+        }
+    }
+
+    /**
+     * 格式化段落风格
+     */
+    formatParagraph(summary) {
+        return `<p>${summary.replace(/\n/g, '<br>')}</p>`;
+    }
+
+    /**
+     * 格式化关键要点风格
+     */
+    formatKeyTakeaways(summary) {
+        // 按 dash (-) 或数字列表分割
+        const lines = summary.split(/\n/).filter(line => line.trim().length > 0);
+        const items = lines
+            .map(line => line.replace(/^[-•*]\s*/, '').trim())
+            .filter(line => line.length > 0);
+
+        if (items.length === 0) return `<p>${summary.replace(/\n/g, '<br>')}</p>`;
+
+        const listHTML = items
+            .map(item => `<li>${item.replace(/\n/g, '<br>')}</li>`)
+            .join('');
+        return `<ul>${listHTML}</ul>`;
+    }
+
+    /**
+     * 格式化Q&A风格
+     */
+    formatQAFormat(summary) {
+        const lines = summary.split(/\n/).filter(line => line.trim().length > 0);
+        let html = '';
+        let question = '';
+
+        for (const line of lines) {
+            if (line.trim().match(/^Q:|^问:|^Question:/i)) {
+                if (question) {
+                    html += `<div class="qa-pair"><div class="qa-question">${question}</div></div>`;
+                }
+                question = line.replace(/^Q:|^问:|^Question:/i, '').trim();
+            } else if (line.trim().match(/^A:|^答:|^Answer:/i)) {
+                if (question) {
+                    const answer = line.replace(/^A:|^答:|^Answer:/i, '').trim();
+                    html += `<div class="qa-pair"><div class="qa-question">${question}</div><div class="qa-answer">${answer.replace(/\n/g, '<br>')}</div></div>`;
+                    question = '';
+                }
+            }
+        }
+
+        if (question) {
+            html += `<div class="qa-pair"><div class="qa-question">${question}</div></div>`;
+        }
+
+        return html || `<p>${summary.replace(/\n/g, '<br>')}</p>`;
+    }
+
+    /**
+     * 格式化TLDR风格
+     */
+    formatTLDR(summary) {
+        const text = summary.trim();
+        return `<div class="tldr-content">${text.replace(/\n/g, '<br>')}</div>`;
+    }
+
     updateStatus(text) {
         document.getElementById("status").textContent = text;
     }
@@ -2066,17 +2178,18 @@ class StreamNote {
     /**
      * 总结文本（使用用户选择的语言） - 流式版本
      */
-    async summarizeText(text, forceRefresh = false) {
+    async summarizeText(text, forceRefresh = false, style = "paragraph") {
         if (!text || text.trim().length < 50) {
             return null;
         }
 
         try {
             const language = this.explanationLanguage;
+            const cacheKey = `${language}-${style}`;
 
-            // 检查该语言的缓存（除非强制刷新）
-            if (!forceRefresh && this.summaryCache[language]) {
-                return this.summaryCache[language];
+            // 检查该语言和风格组合的缓存（除非强制刷新）
+            if (!forceRefresh && this.summaryCache[cacheKey]) {
+                return this.summaryCache[cacheKey];
             }
 
             const response = await fetch("/api/summarize", {
@@ -2086,7 +2199,8 @@ class StreamNote {
                 },
                 body: JSON.stringify({
                     text: text,
-                    language: language
+                    language: language,
+                    style: style
                 })
             });
 
@@ -2110,14 +2224,14 @@ class StreamNote {
 
                     // 实时更新显示
                     if (summary) {
-                        // 按语言缓存结果
-                        this.summaryCache[language] = summary;
+                        // 按语言和风格缓存结果
+                        this.summaryCache[cacheKey] = summary;
                         // 立即保存到session
                         this.saveSettingsToSession();
                         // 实时更新显示
                         const summaryDisplay = document.getElementById("summary-display");
                         if (summaryDisplay) {
-                            summaryDisplay.innerHTML = `<p>${summary.replace(/\n/g, '<br>')}</p>`;
+                            summaryDisplay.innerHTML = this.formatSummaryDisplay(summary, style);
                         }
                     }
                 }
@@ -2125,14 +2239,14 @@ class StreamNote {
                 const finalChunk = decoder.decode();
                 summary += finalChunk;
                 if (finalChunk) {
-                    // 按语言缓存结果
-                    this.summaryCache[language] = summary;
+                    // 按语言和风格缓存结果
+                    this.summaryCache[cacheKey] = summary;
                     // 立即保存到session
                     this.saveSettingsToSession();
                     // 实时更新显示
                     const summaryDisplay = document.getElementById("summary-display");
                     if (summaryDisplay) {
-                        summaryDisplay.innerHTML = `<p>${summary.replace(/\n/g, '<br>')}</p>`;
+                        summaryDisplay.innerHTML = this.formatSummaryDisplay(summary, style);
                     }
                 }
             } finally {

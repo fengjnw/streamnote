@@ -181,19 +181,20 @@ def explain_keyword():
 def summarize():
     """
     生成文本总结 API (AI 驱动 - OpenAI) - 流式响应版本
-    支持指定语言的总结
+    支持指定语言和风格的总结
     """
     try:
         data = request.json
         text = data.get("text", "").strip()
         language = data.get("language", "English")  # 用户选择的语言
+        style = data.get("style", "paragraph")  # 总结风格
         
         if not text or len(text) < 50:
             return Response('', mimetype='text/plain')
         
         def generate():
             try:
-                yield from summarizer.summarize(text, language)
+                yield from summarizer.summarize(text, language, style)
             except Exception as e:
                 print(f"[ERROR] Stream error: {e}")
                 yield f"[ERROR] {str(e)}"

@@ -1017,6 +1017,33 @@ header h1 {
     font-weight: 500;
 }
 
+/* Toolbar select dropdown */
+.panel-toolbar .toolbar-select {
+    flex: 1;
+    min-width: auto;
+    padding: var(--spacing-xs) 10px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    background: white;
+    color: #333;
+    font-size: 0.8em;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.panel-toolbar .toolbar-select:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.panel-toolbar .toolbar-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
 .toggle-panel-btn {
     background: var(--color-primary);
     color: white;
@@ -2321,8 +2348,102 @@ header h1 {
     overflow-y: auto;
     min-height: 200px;
     background: white;
-    display: flex;
-    flex-direction: column;
+    padding: var(--spacing-md);
+    color: #555;
+    line-height: 1.8;
+    font-size: 0.95em;
+    word-break: break-word;
+}
+
+.summary-text p {
+    margin: 0 0 12px 0;
+    line-height: 1.8;
+    color: #333;
+    font-size: 0.95em;
+    word-break: break-word;
+    padding: 0;
+    background: #fafbfc;
+    padding: 12px;
+    border-radius: 4px;
+}
+
+.summary-text p:last-child {
+    margin-bottom: 0;
+}
+
+/* Placeholder text - keep default styling */
+.summary-text .placeholder {
+    color: var(--color-text-lighter);
+    font-style: italic;
+    font-size: 0.9em;
+    text-align: center;
+    padding: 40px var(--spacing-md);
+    margin: 0;
+    line-height: 1.6;
+    background: transparent;
+    border-radius: 0;
+}
+
+/* Key Takeaways style - display as list items */
+.summary-text ul {
+    margin: 0 0 0 var(--spacing-lg);
+    padding: 0;
+    list-style: disc;
+}
+
+.summary-text li {
+    margin: 0 0 8px 0;
+    line-height: 1.6;
+    color: #333;
+    font-size: 0.95em;
+    padding: 0;
+    background: #fafbfc;
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+.summary-text li:last-child {
+    margin-bottom: 0;
+}
+
+/* Q&A format styling */
+.summary-text .qa-pair {
+    display: block;
+    margin-bottom: 12px;
+    background: #fafbfc;
+    padding: 12px;
+    border-radius: 4px;
+}
+
+.summary-text .qa-pair:last-child {
+    margin-bottom: 0;
+}
+
+.summary-text .qa-question {
+    font-weight: 600;
+    color: #5a7c99;
+    font-size: 0.95em;
+    margin: 0 0 6px 0;
+    padding: 0;
+}
+
+.summary-text .qa-answer {
+    color: #666;
+    font-size: 0.9em;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0 0 0 var(--spacing-md);
+}
+
+/* TLDR style - single highlighted statement */
+.summary-text .tldr-content {
+    color: #333;
+    font-size: 0.95em;
+    line-height: 1.8;
+    margin: 0;
+    padding: 12px;
+    background: #fafbfc;
+    border-radius: 4px;
 }
 
 .explanation-scroll {
