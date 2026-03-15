@@ -1227,14 +1227,32 @@ class StreamNote {
                 if (Object.keys(this.preciseResults || {}).length > 0) {
                     const originalContent = transcript.innerHTML;
                     const rows = Object.values(this.preciseResults).map(item => {
-                        const time = new Date(item.timestamp);
-                        const hours = String(time.getHours()).padStart(2, '0');
-                        const minutes = String(time.getMinutes()).padStart(2, '0');
-                        const seconds = String(time.getSeconds()).padStart(2, '0');
+                        let timestamp_str;
+                        
+                        // 处理不同格式的时间戳
+                        if (typeof item.timestamp === 'string' && /^\d{2}:\d{2}:\d{2}$/.test(item.timestamp)) {
+                            // 已经是 HH:MM:SS 格式，直接使用
+                            timestamp_str = item.timestamp;
+                        } else if (typeof item.timestamp === 'number') {
+                            // 毫秒数字，转换为 HH:MM:SS
+                            const time = new Date(item.timestamp);
+                            const hours = String(time.getHours()).padStart(2, '0');
+                            const minutes = String(time.getMinutes()).padStart(2, '0');
+                            const seconds = String(time.getSeconds()).padStart(2, '0');
+                            timestamp_str = `${hours}:${minutes}:${seconds}`;
+                        } else {
+                            // 无法识别，使用当前时间
+                            const time = new Date();
+                            const hours = String(time.getHours()).padStart(2, '0');
+                            const minutes = String(time.getMinutes()).padStart(2, '0');
+                            const seconds = String(time.getSeconds()).padStart(2, '0');
+                            timestamp_str = `${hours}:${minutes}:${seconds}`;
+                        }
+                        
                         return {
-                            timestamp: `${hours}:${minutes}:${seconds}`,
+                            timestamp: timestamp_str,
                             text: item.text,
-                            originalTime: item.timestamp
+                            originalTimestamp: item.timestamp  // 保存原始时间戳（可能是字符串或毫秒）
                         };
                     });
 
@@ -1255,7 +1273,7 @@ class StreamNote {
                     const rowsContainer = document.createElement("div");
                     rowsContainer.style.cssText = "flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;";
 
-                    const createRowEditor = (timestamp, text, isNewRow = false) => {
+                    const createRowEditor = (timestamp, text, isNewRow = false, originalTimestamp = null) => {
                         const row = document.createElement("div");
                         row.className = "edit-row";
                         row.style.cssText = `
@@ -1267,6 +1285,8 @@ class StreamNote {
                             border: 1px solid #ddd;
                             border-radius: 4px;
                         `;
+                        // 保存原始时间戳
+                        row.dataset.originalTimestamp = originalTimestamp || timestamp;
 
                         // 时间戳输入框 - 只允许 HH:MM:SS 格式
                         const timeInput = document.createElement("input");
@@ -1351,7 +1371,7 @@ class StreamNote {
 
                     // 创建所有行
                     rows.forEach(r => {
-                        rowsContainer.appendChild(createRowEditor(r.timestamp, r.text));
+                        rowsContainer.appendChild(createRowEditor(r.timestamp, r.text, false, r.originalTimestamp));
                     });
 
                     // 按钮容器
@@ -1390,16 +1410,29 @@ class StreamNote {
                                 const textInput = row.querySelector('input[type="text"]:last-of-type');
                                 const timeStr = timeInput.value.trim();
                                 const textStr = textInput.value.trim();
+                                const originalTimestamp = row.dataset.originalTimestamp;
 
                                 // 验证时间戳格式
                                 if (timeStr && /^\d{2}:\d{2}:\d{2}$/.test(timeStr)) {
                                     if (textStr) {
-                                        const [h, m, s] = timeStr.split(':').map(Number);
-                                        const now = new Date();
-                                        const time = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s);
+                                        // 时间戳格式有效，检查是否与原始值相同
+                                        let timestamp;
+                                        if (originalTimestamp === timeStr) {
+                                            // 用户没有改变时间，使用原始的时间戳值
+                                            // 如果原始是字符串格式，保留为字符串；如果是毫秒，保留为毫秒
+                                            const originalValue = Object.values(this.preciseResults)[idx]?.timestamp;
+                                            timestamp = originalValue;
+                                        } else {
+                                            // 用户改变了时间，重新计算为毫秒
+                                            const [h, m, s] = timeStr.split(':').map(Number);
+                                            const now = new Date();
+                                            const time = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s);
+                                            timestamp = time.getTime();
+                                        }
+                                        
                                         preciseResults[index] = {
                                             text: textStr,
-                                            timestamp: time.getTime(),
+                                            timestamp: timestamp,
                                             source: 'text'
                                         };
                                         index++;
@@ -2118,12 +2151,50 @@ class StreamNote {
             if (!item || !item.text) return null;
 
             const text = item.text.trim();
-            const timestamp = item.timestamp || new Date().toLocaleTimeString('zh-CN', {
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
+            
+            // 格式化时间戳为 HH:MM:SS
+            let timestamp;
+            if (item.timestamp) {
+                let timeValue = item.timestamp;
+                let timestamp_str = null;
+                
+                // 处理字符串格式的时间戳
+                if (typeof timeValue === 'string') {
+                    // 检查是否为 HH:MM:SS 格式
+                    if (/^\d{2}:\d{2}:\d{2}$/.test(timeValue)) {
+                        timestamp_str = timeValue;
+                    } else {
+                        // 尝试解析为毫秒数字
+                        timeValue = parseInt(timeValue);
+                    }
+                }
+                
+                // 使用字符串格式或转换数字格式
+                if (timestamp_str) {
+                    timestamp = timestamp_str;
+                } else if (typeof timeValue === 'number' && !isNaN(timeValue)) {
+                    const date = new Date(timeValue);
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const seconds = String(date.getSeconds()).padStart(2, '0');
+                    timestamp = `${hours}:${minutes}:${seconds}`;
+                } else {
+                    // 无法解析，使用当前时间
+                    timestamp = new Date().toLocaleTimeString('zh-CN', {
+                        hour12: false,
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                }
+            } else {
+                timestamp = new Date().toLocaleTimeString('zh-CN', {
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+            }
 
             return `<p data-index="${key}" data-timestamp="[${timestamp}]">${text}</p>`;
         }).filter(line => line !== null);
@@ -2150,12 +2221,49 @@ class StreamNote {
             const item = preciseResults[key];
             if (!item || !item.text) return null;
 
-            const timestamp = item.timestamp || new Date().toLocaleTimeString('zh-CN', {
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
+            // 格式化时间戳为 HH:MM:SS
+            let timestamp;
+            if (item.timestamp) {
+                let timeValue = item.timestamp;
+                let timestamp_str = null;
+                
+                // 处理字符串格式的时间戳
+                if (typeof timeValue === 'string') {
+                    // 检查是否为 HH:MM:SS 格式
+                    if (/^\d{2}:\d{2}:\d{2}$/.test(timeValue)) {
+                        timestamp_str = timeValue;
+                    } else {
+                        // 尝试解析为毫秒数字
+                        timeValue = parseInt(timeValue);
+                    }
+                }
+                
+                // 使用字符串格式或转换数字格式
+                if (timestamp_str) {
+                    timestamp = timestamp_str;
+                } else if (typeof timeValue === 'number' && !isNaN(timeValue)) {
+                    const date = new Date(timeValue);
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const seconds = String(date.getSeconds()).padStart(2, '0');
+                    timestamp = `${hours}:${minutes}:${seconds}`;
+                } else {
+                    // 无法解析，使用当前时间
+                    timestamp = new Date().toLocaleTimeString('zh-CN', {
+                        hour12: false,
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                }
+            } else {
+                timestamp = new Date().toLocaleTimeString('zh-CN', {
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+            }
 
             const translation = translationData[key];
             const translationText = translation || '<span class="placeholder">Translating...</span>';

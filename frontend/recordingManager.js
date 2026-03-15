@@ -255,7 +255,7 @@ class RecordingManager {
                 this.onTranscribeProgress({
                     index: currentChunkIndex,
                     text: "",
-                    timestamp: "",
+                    timestamp: Date.now(),
                     sessionId: sessionIdAtRequest
                 });
                 // 清除转录进行中的状态
@@ -265,12 +265,7 @@ class RecordingManager {
                 return;
             }
 
-            const timestamp = new Date().toLocaleTimeString('zh-CN', {
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
+            const timestamp = Date.now();
 
             this.preciseResults[currentChunkIndex] = { text, timestamp };
             this.chunkIndex += 1;
