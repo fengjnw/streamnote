@@ -571,52 +571,32 @@ header h1 {
     gap: var(--spacing-xs);
     align-items: center;
     flex-shrink: 0;
-    padding-right: var(--spacing-md);
-    border-right: 1px solid #e9ecef;
-    margin-right: var(--spacing-md);
+    padding: 4px var(--spacing-sm);
+    background: transparent;
+    border-radius: 4px;
+}
+
+/* 按钮组之间的分隔 - 使用spacer处理，这里不再添加margin */
+.nav-group:not(.nav-group-settings) {
+    /* Regular spacing handled by control-spacer */
 }
 
 /* Section-based grouping for workflow visualization */
 .nav-group-section {
-    /* Keep default border and spacing styling */
+    /* Base styling for button groups */
 }
 
+/* 核心功能组 - 突出显示 */
 .nav-group-primary {
-    /* Core recording controls - no special background, just normal styling */
-    border-right: 1px solid #e9ecef;
+    background: rgba(90, 124, 153, 0.08);
+    border: 1px solid rgba(90, 124, 153, 0.15);
+    padding: 4px var(--spacing-sm);
 }
 
-/* Visual grouping: Left side panels (Sessions + Explanation) */
-.control-panel>.nav-group-section:nth-child(1),
-.control-panel>.nav-group-section:nth-child(3) {
-    background: rgba(90, 124, 153, 0.04);
-}
-
-/* Visual grouping: Right Panel (Highlights, Keywords, Summary) */
-.control-panel>.nav-group-section:nth-child(6) {
-    background: rgba(90, 124, 153, 0.04);
-}
-
+/* 设置按钮组 - 右侧对齐 */
 .nav-group-settings {
-    /* Distinct styling for settings - moved to the right */
-    border-right: none;
-    padding-right: 0;
-    margin-right: 0;
-}
-
-.nav-group:last-of-type {
-    border-right: none;
-    padding-right: 0;
-    margin-right: 0;
-}
-
-margin-right: 0;
-}
-
-.nav-group-last {
-    border-right: none !important;
-    padding-right: 0 !important;
-    margin-right: 0 !important;
+    margin-left: auto;
+    padding: 4px var(--spacing-sm);
 }
 
 /* 新控制按钮 - 纯文字版本 */
@@ -979,6 +959,8 @@ margin-right: 0;
 
 .control-spacer {
     flex: 1;
+    margin: 0 var(--spacing-sm);
+    border-right: 1px solid var(--color-border);
 }
 
 .spacer {
