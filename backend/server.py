@@ -23,6 +23,27 @@ translator = create_translator(OPENAI_API_KEY)
 summarizer = create_summarizer(OPENAI_API_KEY)
 
 
+def _refine_transcription(text: str, context: str) -> str:
+    """用GPT根据上下文校准转录结果 - 移除重复、纠正术语、确保连贯性"""
+    system_prompt = "Remove duplicate content from context. Fix terms & names based on context. Return only refined text."
+    user_message = f"Context:\n{context}\n\nTranscription:\n{text}"
+    
+    try:
+        refined = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message}
+            ],
+            temperature=0.3,
+            max_tokens=2000
+        )
+        return refined.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"[ERROR] Refinement error: {e}")
+        raise
+
+
 @app.route("/", methods=["GET"])
 def index():
     """Serve the frontend index.html"""
@@ -58,29 +79,28 @@ def transcribe():
         audio_buffer = io.BytesIO(audio_data)
         audio_buffer.name = "audio.webm"
 
-        # 获取上下文信息，用作Whisper的prompt参数以提高准确率
+        # 获取上下文信息，用于转录后校准
         context = request.form.get("context", "").strip()
         
-        # 构建Whisper API调用参数
+        # 构建Whisper API调用参数 - 不使用prompt，让转录干净自然
         transcribe_kwargs = {
             "model": "gpt-4o-mini-transcribe",  # 更快、更准确的新模型
             "file": audio_buffer,
             "language": "en",  # 硬编码为英文 - 根据用户测试99%情况都是英文输入
                                 # 如果需要支持其他语言或自动检测，可在此改为从前端传入或移除此参数
         }
-        
-        # 如果提供了上下文，将其作为prompt参数传递
-        # Whisper会使用这个上下文作为hint来改进转录准确率
-        # 注意：prompt只是参考信息，不应该在输出中出现
-        if context and len(context) > 0:
-            # 创建一个更结构化的prompt，避免直接输出
-            # 格式："Reference text: ..." 让Whisper理解这是参考而非要转录的内容
-            structured_prompt = f"Previous transcripts: {context}"
-            transcribe_kwargs["prompt"] = structured_prompt
 
         result = client.audio.transcriptions.create(**transcribe_kwargs)
-
         text = result.text.strip()
+        
+        # 如果有上下文，用GPT校准转录结果（移除重复、纠正术语、确保连贯性）
+        if context and len(context) > 0 and len(text) > 0:
+            try:
+                text = _refine_transcription(text, context)
+            except Exception as e:
+                # 校准失败时返回原始转录，不中断流程
+                print(f"[WARNING] Transcription refinement failed: {e}")
+        
         return jsonify({"text": text})
 
     except Exception as e:
