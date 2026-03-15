@@ -54,23 +54,17 @@
                 <!-- Spacer -->
                 <div class="control-spacer"></div>
 
-                <!-- Group 3: Input Mode Controls (Transcript or Text) -->
+                <!-- Group 3: Input Mode Controls (Recording + Import) -->
                 <div class="nav-group nav-group-section nav-group-primary">
-                    <!-- Transcript Mode Controls -->
                     <div id="recordingControls" style="display: flex; gap: 8px;">
                         <button id="startBtn" class="control-btn control-btn-primary" title="Record">Record</button>
                         <button id="stopBtn" class="control-btn control-btn-danger" disabled
                             title="Stop Recording">Stop</button>
                         <button id="clearBtn" class="control-btn control-btn-secondary" title="Clear">Clear</button>
-                    </div>
-
-                    <!-- Text Mode Controls -->
-                    <div id="textControls" style="display: none; gap: 8px;">
                         <button id="uploadFileBtn" class="control-btn control-btn-primary"
-                            title="Upload .txt/.md file">📤 Upload</button>
-
-                        <button id="editTextBtn" class="control-btn control-btn-secondary" title="Edit imported text">✏️
-                            Edit</button>
+                            title="Upload .txt/.md file">Upload</button>
+                        <button id="addTextBtn" class="control-btn control-btn-primary"
+                            title="Add text manually">Add Text</button>
                     </div>
                 </div>
 
@@ -85,34 +79,6 @@
                         title="Auto Keywords">Keywords</button>
                     <button id="quickAccessSummary" class="control-btn control-btn-secondary"
                         title="Summary">Summary</button>
-                </div>
-
-                <!-- Spacer -->
-                <!-- Mode Selector (Group 1) -->
-                <div class="nav-group nav-group-mode" style="display: flex; gap: 0; align-items: center;">
-                    <button class="mode-tab active" data-mode="transcript" style="
-                        padding: 6px 12px;
-                        border: 1px solid #ddd;
-                        background: white;
-                        cursor: pointer;
-                        border-radius: 4px 0 0 4px;
-                        font-size: 12px;
-                        font-weight: 500;
-                        transition: all 0.2s;
-                        color: #333;
-                    " title="Recording Mode">🎙️ Rec</button>
-                    <button class="mode-tab" data-mode="text" style="
-                        padding: 6px 12px;
-                        border: 1px solid #ddd;
-                        border-left: none;
-                        background: #f5f5f5;
-                        cursor: pointer;
-                        border-radius: 0 4px 4px 0;
-                        font-size: 12px;
-                        font-weight: 500;
-                        transition: all 0.2s;
-                        color: #666;
-                    " title="Text Import Mode">📝 Text</button>
                 </div>
 
                 <div class="control-spacer"></div>

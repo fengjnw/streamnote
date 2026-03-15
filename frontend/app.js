@@ -412,10 +412,6 @@ class StreamNote {
             this.keywordManager.updateAllKeywordDisplays();
         }
 
-        // 恢复输入模式（默认 transcript）
-        const savedMode = session.inputMode || "transcript";
-        this.switchMode(savedMode);
-
         this.updateStatus(`Loaded: ${session.name}`);
     }
 
@@ -700,10 +696,10 @@ class StreamNote {
 
                 try {
                     await this.processKeywords(this.recordingSessionId || this.sessionManager.currentSessionId);
-                    this.showStatusMessage("✓ Keywords extracted", 1500);
+                    this.showStatusMessage("Keywords extracted", 1500);
                 } catch (error) {
                     console.error("[StreamNote] Error extracting keywords:", error);
-                    this.showStatusMessage("✗ Failed to extract keywords", 2000);
+                    this.showStatusMessage("Failed to extract keywords", 2000);
                 } finally {
                     autoExtractKeywordsBtn.disabled = false;
                     autoExtractKeywordsBtn.title = originalTitle;
@@ -898,7 +894,7 @@ class StreamNote {
                 if (summaryText && summaryText !== "Click the button to generate summary") {
                     navigator.clipboard.writeText(summaryText).then(() => {
                         const originalText = copySummaryBtn.textContent;
-                        copySummaryBtn.textContent = '✓ Copied';
+                        copySummaryBtn.textContent = 'Copied';
                         setTimeout(() => {
                             copySummaryBtn.textContent = originalText;
                         }, 2000);
@@ -983,10 +979,10 @@ class StreamNote {
 
                 try {
                     await this.processKeywords(this.recordingSessionId || this.sessionManager.currentSessionId);
-                    this.showStatusMessage("✓ Keywords extracted", 1500);
+                    this.showStatusMessage("Keywords extracted", 1500);
                 } catch (error) {
                     console.error("[StreamNote] Error extracting keywords:", error);
-                    this.showStatusMessage("✗ Failed to extract keywords", 2000);
+                    this.showStatusMessage("Failed to extract keywords", 2000);
                 } finally {
                     reExtractKeywordsBtn.disabled = false;
                     reExtractKeywordsBtn.textContent = originalText;
@@ -1008,7 +1004,7 @@ class StreamNote {
                     this.keywordManager.extractsCache = {};
                     this.keywordManager.displayExtracts();
                     this.saveToSession();
-                    this.showStatusMessage("✓ Keywords cleared", 1500);
+                    this.showStatusMessage("Keywords cleared", 1500);
                 }
             });
         }
@@ -1028,7 +1024,7 @@ class StreamNote {
                     this.highlightManager.reapplyAllHighlights();
                     this.keywordManager.displayHighlights();
                     this.saveToSession();
-                    this.showStatusMessage("✓ Highlights cleared", 1500);
+                    this.showStatusMessage("Highlights cleared", 1500);
                 }
             });
         }
@@ -1086,7 +1082,7 @@ class StreamNote {
                 if (headerDiv) headerDiv.classList.add("hidden");
                 if (regenerateBtn) regenerateBtn.disabled = true;
 
-                this.showStatusMessage("✓ Explanation cleared", 1500);
+                this.showStatusMessage("Explanation cleared", 1500);
             });
         }
 
@@ -1096,7 +1092,7 @@ class StreamNote {
                 const summaryDisplay = document.getElementById("summary-display");
                 if (summaryDisplay) {
                     summaryDisplay.innerHTML = '<p class="placeholder">Click Generate to generate a summary of your transcription</p>';
-                    this.showStatusMessage("✓ Summary cleared", 1500);
+                    this.showStatusMessage("Summary cleared", 1500);
                 }
             });
         }
@@ -1177,16 +1173,7 @@ class StreamNote {
         }
 
         // === 模式切换功能 ===
-        // 模式标签页切换
-        const modeTabs = document.querySelectorAll(".mode-tab");
-        modeTabs.forEach(tab => {
-            tab.addEventListener("click", () => {
-                const mode = tab.getAttribute("data-mode");
-                this.switchMode(mode);
-            });
-        });
-
-        // 文本模式：文件上传
+        // 文件上传
         const uploadFileBtn = document.getElementById("uploadFileBtn");
         const textFileInput = document.getElementById("textFileInput");
 
@@ -1201,10 +1188,10 @@ class StreamNote {
                     try {
                         const result = await TextProcessor.processFile(file);
                         this.importTextContent(result.preciseResults, file.name, "file");
-                        this.showStatusMessage(`✓ Imported ${file.name}`, 2000);
+                        this.showStatusMessage(`Imported ${file.name}`, 2000);
                     } catch (error) {
                         console.error("Error processing file:", error);
-                        this.showStatusMessage(`✗ Failed to import file: ${error.message}`, 2000);
+                        this.showStatusMessage(`Failed to import file: ${error.message}`, 2000);
                     }
                 }
                 // 重置 input 以便重新选择同一文件
@@ -1212,528 +1199,18 @@ class StreamNote {
             });
         }
 
-        // 文本模式：编辑功能 - 模态框方式
+        // 文本模式：编辑功能 - 隐藏
         const editTextBtn = document.getElementById("editTextBtn");
-        const editModal = document.getElementById("editModal");
-        const editModalBackdrop = document.getElementById("editModalBackdrop");
-        const editRowsContainer = document.getElementById("editRowsContainer");
-        const editModalSaveBtn = document.getElementById("editModalSaveBtn");
-        const editModalCancelBtn = document.getElementById("editModalCancelBtn");
-        const closeEditModalBtn = document.getElementById("closeEditModal");
-
-        if (editTextBtn && editModal && editRowsContainer) {
-            // 创建编辑行的工厂函数
-            const createRowEditor = (timestamp, text, originalTimestamp = null) => {
-                const row = document.createElement("div");
-                row.className = "edit-row";
-                row.style.cssText = `
-                    display: grid;
-                    grid-template-columns: 24px 70px 1fr 32px;
-                    gap: 8px;
-                    align-items: start;
-                    padding: 8px;
-                    background: #fff;
-                    border: 1px solid #ddd;
-                    border-radius: 4px;
-                    transition: background-color 0.2s;
-                `;
-                row.dataset.originalTimestamp = originalTimestamp || timestamp;
-
-                // 多选 checkbox
-                const checkbox = document.createElement("input");
-                checkbox.type = "checkbox";
-                checkbox.style.cssText = `
-                    width: 18px;
-                    height: 18px;
-                    cursor: pointer;
-                    margin: 2px 0 0 0;
-                `;
-                checkbox.addEventListener("change", (e) => {
-                    if (e.target.checked) {
-                        row.style.backgroundColor = "#f0f7ff";
-                    } else {
-                        row.style.backgroundColor = "#fff";
-                    }
-                });
-
-                // 时间戳输入框
-                const timeInput = document.createElement("input");
-                timeInput.type = "text";
-                timeInput.value = timestamp;
-                timeInput.placeholder = "HH:MM:SS";
-                timeInput.maxLength = "8";
-                timeInput.style.cssText = `
-                    padding: 4px 6px;
-                    border: 1px solid #ddd;
-                    border-radius: 3px;
-                    font-family: 'Courier New', monospace;
-                    font-size: 12px;
-                `;
-
-                // 时间戳格式验证
-                timeInput.addEventListener("input", (e) => {
-                    let val = e.target.value.replace(/[^0-9:]/g, '');
-                    if (val.length > 2 && val[2] !== ':') val = val.slice(0, 2) + ':' + val.slice(2);
-                    if (val.length > 5 && val[5] !== ':') val = val.slice(0, 5) + ':' + val.slice(5);
-                    if (val.length > 8) val = val.slice(0, 8);
-                    e.target.value = val;
-                });
-
-                // 文本输入框 - 支持多行
-                const textInput = document.createElement("textarea");
-                textInput.value = text;
-                textInput.placeholder = "Text content...";
-                textInput.style.cssText = `
-                    padding: 4px 6px;
-                    border: 1px solid #ddd;
-                    border-radius: 3px;
-                    font-family: inherit;
-                    font-size: 12px;
-                    resize: vertical;
-                    min-height: 32px;
-                    line-height: 1.4;
-                `;
-
-                // 回车组合键逻辑：Ctrl+Enter 或 Shift+Enter 新增行
-                textInput.addEventListener("keydown", (e) => {
-                    if ((e.ctrlKey || e.shiftKey) && e.key === "Enter") {
-                        e.preventDefault();
-                        const now = new Date();
-                        const h = String(now.getHours()).padStart(2, '0');
-                        const m = String(now.getMinutes()).padStart(2, '0');
-                        const s = String(now.getSeconds()).padStart(2, '0');
-                        const newRow = createRowEditor(`${h}:${m}:${s}`, "");
-                        editRowsContainer.appendChild(newRow);
-                        setTimeout(() => {
-                            newRow.querySelector('textarea').focus();
-                        }, 10);
-                    }
-                });
-
-                // 删除按钮
-                const deleteBtn = document.createElement("button");
-                deleteBtn.textContent = "✕";
-                deleteBtn.style.cssText = `
-                    width: 28px;
-                    height: 28px;
-                    padding: 0;
-                    border: 1px solid #ddd;
-                    border-radius: 3px;
-                    background: #fee;
-                    color: #c33;
-                    cursor: pointer;
-                    font-size: 12px;
-                    font-weight: bold;
-                    transition: all 0.2s;
-                `;
-                deleteBtn.addEventListener("mouseenter", () => {
-                    deleteBtn.style.background = "#fdd";
-                });
-                deleteBtn.addEventListener("mouseleave", () => {
-                    deleteBtn.style.background = "#fee";
-                });
-                deleteBtn.addEventListener("click", () => {
-                    row.remove();
-                });
-
-                row.appendChild(checkbox);
-                row.appendChild(timeInput);
-                row.appendChild(textInput);
-                row.appendChild(deleteBtn);
-                return row;
-            };
-
-            // 打开编辑模态框
-            editTextBtn.addEventListener("click", () => {
-                if (Object.keys(this.preciseResults || {}).length === 0) {
-                    this.showStatusMessage("No text to edit", 1500);
-                    return;
-                }
-
-                // 清空容器
-                editRowsContainer.innerHTML = "";
-
-                // 创建 toolbar
-                const toolbar = document.createElement("div");
-                toolbar.style.cssText = `
-                    display: flex;
-                    gap: 8px;
-                    padding: 8px 0;
-                    margin-bottom: 8px;
-                    border-bottom: 1px solid #ddd;
-                    align-items: center;
-                `;
-
-                // 添加新行按钮
-                const addBtn = document.createElement("button");
-                addBtn.textContent = "+ Add Row";
-                addBtn.style.cssText = `
-                    padding: 4px 10px;
-                    border: 1px solid #ddd;
-                    background: #f5f5f5;
-                    border-radius: 3px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    transition: all 0.2s;
-                `;
-                addBtn.addEventListener("mouseenter", () => {
-                    addBtn.style.background = "#e8e8e8";
-                });
-                addBtn.addEventListener("mouseleave", () => {
-                    addBtn.style.background = "#f5f5f5";
-                });
-                addBtn.addEventListener("click", () => {
-                    const now = new Date();
-                    const h = String(now.getHours()).padStart(2, '0');
-                    const m = String(now.getMinutes()).padStart(2, '0');
-                    const s = String(now.getSeconds()).padStart(2, '0');
-                    const newRow = createRowEditor(`${h}:${m}:${s}`, "");
-                    const rows = document.querySelectorAll(".edit-row");
-                    if (rows.length > 0) {
-                        rows[rows.length - 1].after(newRow);
-                    } else {
-                        editRowsContainer.appendChild(newRow);
-                    }
-                    setTimeout(() => {
-                        newRow.querySelector('textarea').focus();
-                    }, 10);
-                });
-
-                // 删除选中按钮
-                const deleteSelectedBtn = document.createElement("button");
-                deleteSelectedBtn.textContent = "🗑 Delete Selected";
-                deleteSelectedBtn.style.cssText = `
-                    padding: 4px 10px;
-                    border: 1px solid #ddd;
-                    background: #ffe8e8;
-                    border-radius: 3px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    transition: all 0.2s;
-                `;
-                deleteSelectedBtn.addEventListener("mouseenter", () => {
-                    deleteSelectedBtn.style.background = "#ffcccc";
-                });
-                deleteSelectedBtn.addEventListener("mouseleave", () => {
-                    deleteSelectedBtn.style.background = "#ffe8e8";
-                });
-                deleteSelectedBtn.addEventListener("click", () => {
-                    const rows = document.querySelectorAll(".edit-row");
-                    rows.forEach(row => {
-                        const checkbox = row.querySelector('input[type="checkbox"]');
-                        if (checkbox && checkbox.checked) {
-                            row.remove();
-                        }
-                    });
-                });
-
-                // 全选/全不选按钮
-                const toggleSelectBtn = document.createElement("button");
-                toggleSelectBtn.textContent = "☐ Select All";
-                toggleSelectBtn.style.cssText = `
-                    padding: 4px 10px;
-                    border: 1px solid #ddd;
-                    background: #e8f5ff;
-                    border-radius: 3px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    transition: all 0.2s;
-                `;
-                toggleSelectBtn.addEventListener("mouseenter", () => {
-                    toggleSelectBtn.style.background = "#d0e8ff";
-                });
-                toggleSelectBtn.addEventListener("mouseleave", () => {
-                    toggleSelectBtn.style.background = "#e8f5ff";
-                });
-                toggleSelectBtn.addEventListener("click", () => {
-                    const rows = document.querySelectorAll(".edit-row");
-                    let allChecked = true;
-                    rows.forEach(row => {
-                        const checkbox = row.querySelector('input[type="checkbox"]');
-                        if (checkbox && !checkbox.checked) {
-                            allChecked = false;
-                        }
-                    });
-
-                    rows.forEach(row => {
-                        const checkbox = row.querySelector('input[type="checkbox"]');
-                        if (checkbox) {
-                            checkbox.checked = !allChecked;
-                            checkbox.dispatchEvent(new Event('change'));
-                        }
-                    });
-
-                    toggleSelectBtn.textContent = allChecked ? "☐ Select All" : "☑ Deselect All";
-                });
-
-                toolbar.appendChild(addBtn);
-                toolbar.appendChild(deleteSelectedBtn);
-                toolbar.appendChild(toggleSelectBtn);
-                editRowsContainer.appendChild(toolbar);
-
-                // 创建行容器
-                const rowsWrapper = document.createElement("div");
-                rowsWrapper.style.cssText = `
-                    display: flex;
-                    flex-direction: column;
-                    gap: 6px;
-                `;
-                rowsWrapper.id = "editRowsWrapper";
-
-                // 渲染所有行
-                Object.values(this.preciseResults).forEach(item => {
-                    let timestamp_str;
-                    if (typeof item.timestamp === 'string' && /^\d{2}:\d{2}:\d{2}$/.test(item.timestamp)) {
-                        timestamp_str = item.timestamp;
-                    } else if (typeof item.timestamp === 'number') {
-                        const time = new Date(item.timestamp);
-                        const hours = String(time.getHours()).padStart(2, '0');
-                        const minutes = String(time.getMinutes()).padStart(2, '0');
-                        const seconds = String(time.getSeconds()).padStart(2, '0');
-                        timestamp_str = `${hours}:${minutes}:${seconds}`;
-                    } else {
-                        const time = new Date();
-                        const hours = String(time.getHours()).padStart(2, '0');
-                        const minutes = String(time.getMinutes()).padStart(2, '0');
-                        const seconds = String(time.getSeconds()).padStart(2, '0');
-                        timestamp_str = `${hours}:${minutes}:${seconds}`;
-                    }
-                    rowsWrapper.appendChild(createRowEditor(timestamp_str, item.text, item.timestamp));
-                });
-
-                editRowsContainer.appendChild(rowsWrapper);
-
-                // 创建快速输入区域
-                const quickInputSection = document.createElement("div");
-                quickInputSection.style.cssText = `
-                    display: flex;
-                    flex-direction: column;
-                    gap: 8px;
-                    padding-top: 12px;
-                    margin-top: 12px;
-                    border-top: 2px solid #ddd;
-                `;
-
-                // 快速输入说明
-                const quickInputLabel = document.createElement("label");
-                quickInputLabel.textContent = "Quick Import (paste plain text, one line = one item):";
-                quickInputLabel.style.cssText = `
-                    font-size: 12px;
-                    font-weight: 500;
-                    color: #666;
-                `;
-
-                // 快速输入文本框
-                const quickInputArea = document.createElement("textarea");
-                quickInputArea.placeholder = "Paste multiple lines here...\nEach line will be converted to a timestamped item";
-                quickInputArea.style.cssText = `
-                    padding: 8px;
-                    border: 1px solid #ddd;
-                    border-radius: 3px;
-                    font-size: 12px;
-                    font-family: inherit;
-                    resize: vertical;
-                    min-height: 80px;
-                    line-height: 1.4;
-                `;
-
-                // 快速导入按钮
-                const quickImportBtn = document.createElement("button");
-                quickImportBtn.textContent = "📥 Import & Convert";
-                quickImportBtn.style.cssText = `
-                    padding: 6px 12px;
-                    border: 1px solid #ddd;
-                    background: #e8f5ff;
-                    border-radius: 3px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    font-weight: 500;
-                    transition: all 0.2s;
-                `;
-                quickImportBtn.addEventListener("mouseenter", () => {
-                    quickImportBtn.style.background = "#d0e8ff";
-                });
-                quickImportBtn.addEventListener("mouseleave", () => {
-                    quickImportBtn.style.background = "#e8f5ff";
-                });
-                quickImportBtn.addEventListener("click", () => {
-                    const inputText = quickInputArea.value.trim();
-                    if (!inputText) {
-                        return;
-                    }
-
-                    // 按换行符分割文本
-                    const lines = inputText.split('\n').filter(line => line.trim().length > 0);
-
-                    if (lines.length === 0) {
-                        return;
-                    }
-
-                    // 获取当前时间作为所有导入项的时间戳
-                    const now = new Date();
-                    const hours = String(now.getHours()).padStart(2, '0');
-                    const minutes = String(now.getMinutes()).padStart(2, '0');
-                    const seconds = String(now.getSeconds()).padStart(2, '0');
-                    const timestamp = `${hours}:${minutes}:${seconds}`;
-
-                    // 为每一行创建新的edit row，使用相同的时间戳
-                    lines.forEach((line) => {
-                        const newRow = createRowEditor(timestamp, line.trim());
-                        rowsWrapper.appendChild(newRow);
-                    });
-
-                    // 清空输入框
-                    quickInputArea.value = "";
-                    quickInputArea.placeholder = "✓ Imported! Paste more above";
-                    setTimeout(() => {
-                        quickInputArea.placeholder = "Paste multiple lines here...\nEach line will be converted to a timestamped item";
-                    }, 2000);
-                });
-
-                quickInputSection.appendChild(quickInputLabel);
-                quickInputSection.appendChild(quickInputArea);
-                quickInputSection.appendChild(quickImportBtn);
-                editRowsContainer.appendChild(quickInputSection);
-
-                // 显示模态框和遮罩
-                editModalBackdrop.style.display = "block";
-                editModal.style.display = "flex";
-                editModal.style.position = "fixed";
-                editModal.style.top = "50%";
-                editModal.style.left = "50%";
-                editModal.style.transform = "translate(-50%, -50%)";
-                editModal.style.zIndex = "10000";
-                editModal.style.backgroundColor = "white";
-                editModal.style.boxShadow = "0 4px 20px rgba(0,0,0,0.3)";
-            });
-
-            // 保存编辑
-            editModalSaveBtn.addEventListener("click", () => {
-                try {
-                    const preciseResults = {};
-                    const editRows = editRowsContainer.querySelectorAll(".edit-row");
-                    let index = 0;
-
-                    editRows.forEach((row, idx) => {
-                        const timeInput = row.querySelector('input[type="text"]');
-                        const textInput = row.querySelector('textarea');
-
-                        if (!timeInput || !textInput) {
-                            return; // 跳过toolbar行
-                        }
-
-                        const timeStr = timeInput.value.trim();
-                        const textStr = textInput.value.trim();
-                        const originalValue = Object.values(this.preciseResults)[idx]?.timestamp;
-
-                        if (timeStr && /^\d{2}:\d{2}:\d{2}$/.test(timeStr)) {
-                            if (textStr) {
-                                let timestamp;
-                                if (row.dataset.originalTimestamp === timeStr) {
-                                    timestamp = originalValue;
-                                } else {
-                                    const [h, m, s] = timeStr.split(':').map(Number);
-                                    const now = new Date();
-                                    const time = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s);
-                                    timestamp = time.getTime();
-                                }
-
-                                preciseResults[index] = {
-                                    text: textStr,
-                                    timestamp: timestamp,
-                                    source: 'text'
-                                };
-                                index++;
-                            }
-                        } else if (textStr) {
-                            preciseResults[index] = {
-                                text: textStr,
-                                timestamp: Date.now(),
-                                source: 'text'
-                            };
-                            index++;
-                        }
-                    });
-
-                    if (index > 0) {
-                        this.importTextContent(preciseResults, "edited", "edit");
-                        this.showStatusMessage("✓ Text updated", 1500);
-                    } else {
-                        this.showStatusMessage("✗ No valid text content to save", 1500);
-                    }
-
-                    editModalBackdrop.style.display = "none";
-                    editModal.style.display = "none";
-                } catch (error) {
-                    console.error("Error updating text:", error);
-                    this.showStatusMessage("✗ Failed to update text", 1500);
-                    editModalBackdrop.style.display = "none";
-                    editModal.style.display = "none";
-                }
-            });
-
-            // 取消编辑
-            const closeEditModal = () => {
-                editModalBackdrop.style.display = "none";
-                editModal.style.display = "none";
-            };
-
-            editModalCancelBtn.addEventListener("click", closeEditModal);
-            closeEditModalBtn.addEventListener("click", closeEditModal);
-
-            // 点击遮罩或模态框外部关闭
-            editModalBackdrop.addEventListener("click", closeEditModal);
-            editModal.addEventListener("click", (e) => {
-                if (e.target === editModal) {
-                    closeEditModal();
-                }
-            });
+        if (editTextBtn) {
+            editTextBtn.style.display = "none";
         }
 
-        // 初始化 Edit 按钮状态（有内容时启用）
-        this.updateEditButtonState = () => {
-            if (editTextBtn && Object.keys(this.preciseResults || {}).length > 0) {
-                editTextBtn.disabled = false;
-            } else {
-                editTextBtn.disabled = true;
-            }
-        };
-    }
-
-    /**
-     * 切换输入模式（Transcript Mode vs Text Mode）
-     * @param {string} mode - 'transcript' 或 'text'
-     */
-    switchMode(mode) {
-        const recordingControls = document.getElementById("recordingControls");
-        const textControls = document.getElementById("textControls");
-        const modeTabs = document.querySelectorAll(".mode-tab");
-
-        // 更新标签页活跃状态
-        modeTabs.forEach(tab => {
-            if (tab.getAttribute("data-mode") === mode) {
-                tab.classList.add("active");
-            } else {
-                tab.classList.remove("active");
-            }
-        });
-
-        // 只切换工具栏（主内容区域和转录显示对两个模式都是通用的）
-        if (mode === "transcript") {
-            // 显示录音模式工具栏
-            if (recordingControls) recordingControls.style.display = "flex";
-            if (textControls) textControls.style.display = "none";
-        } else if (mode === "text") {
-            // 显示文本模式工具栏
-            if (recordingControls) recordingControls.style.display = "none";
-            if (textControls) textControls.style.display = "flex";
-        }
-
-        // 保存模式选择到 session
-        const currentSession = this.sessionManager.getCurrentSession();
-        if (currentSession) {
-            currentSession.inputMode = mode;
-            this.sessionManager.saveSessions();
+        // 添加纯文本 - 快速输入对话框
+        const addTextBtn = document.getElementById("addTextBtn");
+        if (addTextBtn) {
+            addTextBtn.addEventListener("click", () => {
+                this.showAddTextDialog();
+            });
         }
     }
 
@@ -1768,16 +1245,251 @@ class StreamNote {
             this.sessionManager.saveSessions();
         }
 
-        // 更新 Edit 按钮状态
-        if (this.updateEditButtonState) {
-            this.updateEditButtonState();
-        }
-
         // 刷新转录显示（会自动在正确的位置渲染）
         this.updateDisplay();
 
         // 自动生成数据以供关键词提取
         this.saveToSession();
+    }
+
+    /**
+     * 显示添加纯文本的对话框
+     */
+    showAddTextDialog() {
+        // 创建模态框遮罩
+        const backdrop = document.createElement("div");
+        backdrop.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+        `;
+
+        // 创建模态框
+        const modal = document.createElement("div");
+        modal.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 600px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            max-height: 80vh;
+        `;
+
+        // 模态框头
+        const header = document.createElement("div");
+        header.style.cssText = `
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        `;
+        header.innerHTML = `<h3 style="margin: 0; font-size: 18px;">Add Text</h3>`;
+
+        const closeBtn = document.createElement("button");
+        closeBtn.textContent = "✕";
+        closeBtn.style.cssText = `
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: #f5f5f5;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            color: #666;
+            transition: all 0.2s;
+        `;
+        closeBtn.addEventListener("mouseenter", () => {
+            closeBtn.style.background = "#e0e0e0";
+        });
+        closeBtn.addEventListener("mouseleave", () => {
+            closeBtn.style.background = "#f5f5f5";
+        });
+        header.appendChild(closeBtn);
+
+        // 模态框内容
+        const content = document.createElement("div");
+        content.style.cssText = `
+            padding: 16px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        `;
+
+        // 说明文字
+        const label = document.createElement("label");
+        label.style.cssText = `
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+        `;
+        label.textContent = "Paste or type text below. Each line will become a separate item:";
+        content.appendChild(label);
+
+        // 文本输入框
+        const textArea = document.createElement("textarea");
+        textArea.placeholder = "Paste multiple lines here...\nEach line will be converted to a timestamped item";
+        textArea.style.cssText = `
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 200px;
+            line-height: 1.5;
+        `;
+        content.appendChild(textArea);
+
+        // 快速内容示例
+        const example = document.createElement("div");
+        example.style.cssText = `
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        `;
+        example.innerHTML = `
+            <strong>Example:</strong><br>
+            First thought or sentence<br>
+            Second thought or sentence<br>
+            Third thought or sentence
+        `;
+        content.appendChild(example);
+
+        // 模态框底部按钮
+        const footer = document.createElement("div");
+        footer.style.cssText = `
+            padding: 12px 16px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            flex-shrink: 0;
+        `;
+
+        const cancelBtn = document.createElement("button");
+        cancelBtn.textContent = "Cancel";
+        cancelBtn.style.cssText = `
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: #f5f5f5;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        `;
+        cancelBtn.addEventListener("mouseenter", () => {
+            cancelBtn.style.background = "#e8e8e8";
+        });
+        cancelBtn.addEventListener("mouseleave", () => {
+            cancelBtn.style.background = "#f5f5f5";
+        });
+        footer.appendChild(cancelBtn);
+
+        const addBtn = document.createElement("button");
+        addBtn.textContent = "Add";
+        addBtn.style.cssText = `
+            padding: 8px 16px;
+            border: none;
+            background: #007AFF;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        `;
+        addBtn.addEventListener("mouseenter", () => {
+            addBtn.style.background = "#0056b3";
+        });
+        addBtn.addEventListener("mouseleave", () => {
+            addBtn.style.background = "#007AFF";
+        });
+        footer.appendChild(addBtn);
+
+        modal.appendChild(header);
+        modal.appendChild(content);
+        modal.appendChild(footer);
+
+        // 关闭对话框函数
+        const closeDialog = () => {
+            backdrop.remove();
+            modal.remove();
+        };
+
+        // 事件监听
+        closeBtn.addEventListener("click", closeDialog);
+        cancelBtn.addEventListener("click", closeDialog);
+        backdrop.addEventListener("click", () => {
+            // 点击背景关闭
+            closeDialog();
+        });
+
+        // 添加按钮逻辑
+        addBtn.addEventListener("click", () => {
+            const inputText = textArea.value.trim();
+            if (!inputText) {
+                this.showStatusMessage("Please enter some text", 1500);
+                return;
+            }
+
+            // 按换行符分割文本
+            const lines = inputText.split('\n').filter(line => line.trim().length > 0);
+
+            if (lines.length === 0) {
+                this.showStatusMessage("Please enter some text", 1500);
+                return;
+            }
+
+            // 生成 preciseResults
+            const preciseResults = {};
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timestamp = `${hours}:${minutes}:${seconds}`;
+
+            lines.forEach((line, idx) => {
+                preciseResults[idx] = {
+                    text: line.trim(),
+                    timestamp: timestamp,
+                    source: 'text'
+                };
+            });
+
+            // 导入文本
+            this.importTextContent(preciseResults, "manual", "text");
+            this.showStatusMessage(`Added ${lines.length} items`, 2000);
+
+            closeDialog();
+        });
+
+        // 添加到页面
+        document.body.appendChild(backdrop);
+        document.body.appendChild(modal);
+
+        // 自动focus文本框
+        setTimeout(() => {
+            textArea.focus();
+        }, 100);
     }
 
     /**
@@ -3485,7 +3197,7 @@ class StreamNote {
         this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
         this.sessionManager.updateCurrentKeywords(this.keywordManager.extracts);
 
-        this.showStatusMessage(`✓ Removed "${keyword}"`, 1200);
+        this.showStatusMessage(`Removed "${keyword}"`, 1200);
     }
 }
 
