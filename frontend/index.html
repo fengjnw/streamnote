@@ -40,7 +40,16 @@
                         title="Open Sessions">Sessions</button>
                 </div>
 
-                <!-- Group 2: Recording Controls (Core Workflow) -->
+                <!-- Spacer between left panel and core functions -->
+                <div class="control-spacer"></div>
+
+                <!-- Group 2: Left Panel (Explanation) -->
+                <div class="nav-group nav-group-section">
+                    <button id="quickAccessHistory" class="control-btn control-btn-secondary"
+                        title="Explanation">Explanation</button>
+                </div>
+
+                <!-- Group 3: Recording Controls (Core Workflow) -->
                 <div class="nav-group nav-group-section nav-group-primary">
                     <button id="startBtn" class="control-btn control-btn-primary" title="Record">Record</button>
                     <button id="stopBtn" class="control-btn control-btn-danger" disabled
@@ -48,24 +57,18 @@
                     <button id="clearBtn" class="control-btn control-btn-secondary" title="Clear">Clear</button>
                 </div>
 
-                <!-- Group 3: Real-time Assistance -->
+                <!-- Group 4: Real-time Assistance -->
                 <div class="nav-group nav-group-section">
                     <button id="translationToggleBtn" class="control-btn control-btn-secondary active"
                         title="Toggle Translation">Translation</button>
                 </div>
 
-                <!-- Group 4: In-class Features -->
+                <!-- Group 5: Right Panel (Keywords, Highlights, Summary) -->
                 <div class="nav-group nav-group-section">
-                    <button id="quickAccessHistory" class="control-btn control-btn-secondary"
-                        title="Explanation">Explanation</button>
                     <button id="quickAccessHighlights" class="control-btn control-btn-secondary"
                         title="Highlights">Highlights</button>
-                </div>
-
-                <!-- Group 5: Post-class Analysis -->
-                <div class="nav-group nav-group-section">
                     <button id="quickAccessKeywords" class="control-btn control-btn-secondary"
-                        title="Auto Keywords">Auto Keywords</button>
+                        title="Auto Keywords">Keywords</button>
                     <button id="quickAccessSummary" class="control-btn control-btn-secondary"
                         title="Summary">Summary</button>
                 </div>

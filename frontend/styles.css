@@ -586,6 +586,17 @@ header h1 {
     border-right: 1px solid #e9ecef;
 }
 
+/* Visual grouping: Left side panels (Sessions + Explanation) */
+.control-panel>.nav-group-section:nth-child(1),
+.control-panel>.nav-group-section:nth-child(3) {
+    background: rgba(90, 124, 153, 0.04);
+}
+
+/* Visual grouping: Right Panel (Highlights, Keywords, Summary) */
+.control-panel>.nav-group-section:nth-child(6) {
+    background: rgba(90, 124, 153, 0.04);
+}
+
 .nav-group-settings {
     /* Distinct styling for settings - moved to the right */
     border-right: none;
