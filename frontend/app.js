@@ -2467,13 +2467,17 @@ class StreamNote {
 
             this.updateRecordingButtonState();
 
-            // 每秒更新 session 统计信息
+            // 立即显示"Listening..."状态
+            this.updateDisplay();
+
+            // 每秒更新 session 统计信息和显示状态
             let statsInterval = setInterval(() => {
                 if (!this.recordingManager.isRecording) {
                     clearInterval(statsInterval);
                     return;
                 }
                 this.updateSessionStats();
+                this.updateDisplay(); // 定期更新显示，确保"Listening..."/"Transcripting..."始终可见
             }, 1000);
 
         } catch (error) {
@@ -2740,22 +2744,94 @@ class StreamNote {
 
         if (formattedLines.length > 0) {
             let displayHTML = formattedLines.join('');
-            // 如果正在转录，添加转录中的占位符
-            if (this.recordingManager.isTranscribingActive()) {
-                displayHTML += '<p class="placeholder" style="opacity: 0.7;">Transcripting...</p>';
+            // 如果正在录音或转录，添加状态提示
+            if (this.recordingManager.isRecording || this.recordingManager.isTranscribingActive()) {
+                const statusText = this.recordingManager.isTranscribingActive() ? 'Transcripting...' : 'Listening...';
+                displayHTML += `<p class="placeholder" style="color: #666; font-style: italic;">${statusText}</p>`;
             }
             transcriptDiv.innerHTML = displayHTML;
-        } else if (this.recordingManager.isTranscribingActive()) {
-            // 如果没有转录内容但正在转录中
-            transcriptDiv.innerHTML = '<p class="placeholder">Transcripting...</p>';
         } else if (this.recordingManager.isRecording) {
             // 正在录音但还没有转录内容
             transcriptDiv.innerHTML = '<p class="placeholder">Listening...</p>';
+        } else if (this.recordingManager.isTranscribingActive()) {
+            // 正在转录
+            transcriptDiv.innerHTML = '<p class="placeholder">Transcripting...</p>';
         } else {
             transcriptDiv.innerHTML = '<p class="placeholder">Start recording or add text</p>';
         }
 
-        // 更新翻译显示
+        // 更新翻译显示（只在翻译面板可见时更新）
+        this.updateTranslationDisplay();
+
+        // 重新应用所有高亮
+        this.highlightManager.reapplyAllHighlights();
+
+        // 仅在自动滚动启用时滚动到底部
+        if (this.panelManager.autoScroll) {
+            const transcript = document.getElementById("transcript");
+            const translation = document.getElementById("translation");
+
+            const keys = Object.keys(preciseResults);
+            if (keys.length > 0) {
+                const lastIndex = keys[keys.length - 1];
+
+                if (transcript) {
+                    transcript.style.scrollBehavior = 'auto';
+                    this.panelManager.scrollToLineBottom(transcript, lastIndex);
+                }
+                if (translation) {
+                    translation.style.scrollBehavior = 'auto';
+                    this.panelManager.scrollToLineBottom(translation, lastIndex);
+                }
+            }
+        }
+
+        // DOM更新完毕后，清除标志并重新检查滚动（确保autoScroll状态准确）
+        setTimeout(() => {
+            this.panelManager.isUpdatingUI = false;
+
+            // 检查是否仍在底部，如果不在则确保autoScroll被正确禁用
+            const transcript = document.getElementById("transcript");
+            if (transcript && !this.panelManager.isScrolledToBottom(transcript)) {
+                this.panelManager.autoScroll = false;
+                this.panelManager.updateAutoScrollButton();
+            }
+
+            // 根据是否有内容来启用/禁用 edit 按钮
+            const editTextBtn = document.getElementById("editTextBtn");
+            if (editTextBtn) {
+                const transcriptData = this.recordingManager.getTranscriptData();
+                const hasContent = Object.keys(transcriptData).length > 0;
+                editTextBtn.disabled = !hasContent;
+                if (!hasContent) {
+                    editTextBtn.style.opacity = "0.3";
+                    editTextBtn.style.pointerEvents = "none";
+                } else {
+                    editTextBtn.style.opacity = "1";
+                    editTextBtn.style.pointerEvents = "auto";
+                }
+            }
+        }, 50);
+    }
+
+    /**
+     * 更新翻译面板的显示（在翻译面板可见时调用）
+     */
+    updateTranslationDisplay() {
+        const translationDiv = document.getElementById("translation");
+        if (!translationDiv) return;
+
+        // 检查翻译面板是否可见
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent && mainContent.classList.contains('layout-full-transcript')) {
+            // 翻译面板被隐藏，不需要更新
+            return;
+        }
+
+        const preciseResults = this.recordingManager.getTranscriptData();
+        const translationData = this.translationManager.getTranslationData();
+
+        // 格式化翻译行
         const translationLines = Object.keys(preciseResults).map(key => {
             const item = preciseResults[key];
             if (!item || !item.text) return null;
@@ -2810,61 +2886,24 @@ class StreamNote {
             return `<p data-index="${key}" data-timestamp="[${timestamp}]">${translationText}</p>`;
         }).filter(line => line !== null);
 
+        // 更新翻译面板内容
         if (translationLines.length > 0) {
-            translationDiv.innerHTML = translationLines.join('');
+            let translationHTML = translationLines.join('');
+            // 如果正在录音或转录，添加状态提示
+            if (this.recordingManager.isRecording || this.recordingManager.isTranscribingActive()) {
+                const statusText = this.recordingManager.isTranscribingActive() ? 'Transcripting...' : 'Listening...';
+                translationHTML += `<p class="placeholder" style="color: #666; font-style: italic;">${statusText}</p>`;
+            }
+            translationDiv.innerHTML = translationHTML;
+        } else if (this.recordingManager.isRecording) {
+            // 正在录音但还没有翻译内容
+            translationDiv.innerHTML = '<p class="placeholder">Listening...</p>';
+        } else if (this.recordingManager.isTranscribingActive()) {
+            // 正在转录
+            translationDiv.innerHTML = '<p class="placeholder">Transcripting...</p>';
         } else {
             translationDiv.innerHTML = '<p class="placeholder">Translations will appear here as you record</p>';
         }
-
-        // 重新应用所有高亮
-        this.highlightManager.reapplyAllHighlights();
-
-        // 仅在自动滚动启用时滚动到底部
-        if (this.panelManager.autoScroll) {
-            const transcript = document.getElementById("transcript");
-            const translation = document.getElementById("translation");
-
-            const keys = Object.keys(preciseResults);
-            if (keys.length > 0) {
-                const lastIndex = keys[keys.length - 1];
-
-                if (transcript) {
-                    transcript.style.scrollBehavior = 'auto';
-                    this.panelManager.scrollToLineBottom(transcript, lastIndex);
-                }
-                if (translation) {
-                    translation.style.scrollBehavior = 'auto';
-                    this.panelManager.scrollToLineBottom(translation, lastIndex);
-                }
-            }
-        }
-
-        // DOM更新完毕后，清除标志并重新检查滚动（确保autoScroll状态准确）
-        setTimeout(() => {
-            this.panelManager.isUpdatingUI = false;
-
-            // 检查是否仍在底部，如果不在则确保autoScroll被正确禁用
-            const transcript = document.getElementById("transcript");
-            if (transcript && !this.panelManager.isScrolledToBottom(transcript)) {
-                this.panelManager.autoScroll = false;
-                this.panelManager.updateAutoScrollButton();
-            }
-
-            // 根据是否有内容来启用/禁用 edit 按钮
-            const editTextBtn = document.getElementById("editTextBtn");
-            if (editTextBtn) {
-                const transcriptData = this.recordingManager.getTranscriptData();
-                const hasContent = Object.keys(transcriptData).length > 0;
-                editTextBtn.disabled = !hasContent;
-                if (!hasContent) {
-                    editTextBtn.style.opacity = "0.3";
-                    editTextBtn.style.pointerEvents = "none";
-                } else {
-                    editTextBtn.style.opacity = "1";
-                    editTextBtn.style.pointerEvents = "auto";
-                }
-            }
-        }, 50);
     }
 
     /**
@@ -3288,6 +3327,10 @@ class StreamNote {
 
     updateStatus(text) {
         document.getElementById("status").textContent = text;
+        // 当status更新为"Listening..."或"Transcripting..."时，同步更新转录框显示
+        if (text.includes("Listening") || text.includes("Transcripting")) {
+            this.updateDisplay();
+        }
     }
 
     /**
