@@ -2744,11 +2744,11 @@ class StreamNote {
 
         if (formattedLines.length > 0) {
             let displayHTML = formattedLines.join('');
-            // 如果正在录音或转录，添加状态提示
-            if (this.recordingManager.isRecording || this.recordingManager.isTranscribingActive()) {
-                const statusText = this.recordingManager.isTranscribingActive() ? 'Transcripting...' : 'Listening...';
-                displayHTML += `<p class="placeholder" style="color: #666; font-style: italic;">${statusText}</p>`;
-            }
+            // 始终添加一个占位符行，用于显示状态或保持排版空间
+            const statusText = (this.recordingManager.isRecording || this.recordingManager.isTranscribingActive())
+                ? (this.recordingManager.isTranscribingActive() ? 'Transcripting...' : 'Listening...')
+                : '';
+            displayHTML += `<p class="placeholder" style="color: #666; font-style: italic; height: 1.5em;">${statusText || '&nbsp;'}</p>`;
             transcriptDiv.innerHTML = displayHTML;
         } else if (this.recordingManager.isRecording) {
             // 正在录音但还没有转录内容
@@ -2889,11 +2889,11 @@ class StreamNote {
         // 更新翻译面板内容
         if (translationLines.length > 0) {
             let translationHTML = translationLines.join('');
-            // 如果正在录音或转录，添加状态提示
-            if (this.recordingManager.isRecording || this.recordingManager.isTranscribingActive()) {
-                const statusText = this.recordingManager.isTranscribingActive() ? 'Transcripting...' : 'Listening...';
-                translationHTML += `<p class="placeholder" style="color: #666; font-style: italic;">${statusText}</p>`;
-            }
+            // 始终添加一个占位符行，用于显示状态或保持排版空间
+            const statusText = (this.recordingManager.isRecording || this.recordingManager.isTranscribingActive())
+                ? (this.recordingManager.isTranscribingActive() ? 'Transcripting...' : 'Listening...')
+                : '';
+            translationHTML += `<p class="placeholder" style="color: #666; font-style: italic; height: 1.5em;">${statusText || '&nbsp;'}</p>`;
             translationDiv.innerHTML = translationHTML;
         } else if (this.recordingManager.isRecording) {
             // 正在录音但还没有翻译内容

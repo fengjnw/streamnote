@@ -422,11 +422,17 @@ class PanelManager {
         this.scrollTimeout = setTimeout(() => {
             this.isSyncingScroll = true;
 
-            const bottomInfo = this.getBottomLineNumber(source);
-
-            if (bottomInfo) {
+            // 如果源容器已滚到最底部，直接将目标容器也滚到最底部
+            if (this.isScrolledToBottom(source)) {
                 target.style.scrollBehavior = 'auto';
-                this.scrollToLineBottom(target, bottomInfo.index);
+                target.scrollTop = target.scrollHeight;
+            } else {
+                const bottomInfo = this.getBottomLineNumber(source);
+
+                if (bottomInfo) {
+                    target.style.scrollBehavior = 'auto';
+                    this.scrollToLineBottom(target, bottomInfo.index);
+                }
             }
 
             setTimeout(() => {
