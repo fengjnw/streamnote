@@ -1830,13 +1830,11 @@ textarea::placeholder {
 
 .recording-indicator {
     color: #ff4444;
-    font-weight: 600;
-    animation: pulse 1.5s infinite;
 }
 
 .recording-indicator strong {
     color: #ff4444;
-    font-weight: 700;
+    font-weight: normal;
 }
 
 /* ================ Highlights Panel (复用 side-panels-container 样式) ================ */

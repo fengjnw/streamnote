@@ -227,7 +227,7 @@ class RecordingManager {
 
         // 显示转录进行中的状态
         this.isTranscribing = true;
-        this.onStatusUpdate("✍️ Transcripting...");
+        this.onStatusUpdate("Transcripting...");
 
         try {
             const response = await fetch(this.transcribeApiUrl, {
