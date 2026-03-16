@@ -406,7 +406,7 @@ class StreamNote {
                 const cachedSummary = this.summaryCache[cacheKey];
                 summaryDisplay.innerHTML = this.formatSummaryDisplay(cachedSummary, selectedStyle);
             } else {
-                summaryDisplay.innerHTML = '<p class="placeholder">Click Generate to generate a summary of your transcription</p>';
+                summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary</p>';
             }
         }
 
@@ -692,7 +692,7 @@ class StreamNote {
                         const cachedSummary = this.summaryCache[cacheKey];
                         summaryDisplay.innerHTML = this.formatSummaryDisplay(cachedSummary, selectedStyle);
                     } else {
-                        summaryDisplay.innerHTML = '<p class="placeholder">Click Generate to generate a summary of your transcription</p>';
+                        summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary</p>';
                     }
                 }
             });
@@ -944,7 +944,7 @@ class StreamNote {
                     summaryDisplay.innerHTML = this.formatSummaryDisplay(this.summaryCache[cacheKey], selectedStyle);
                 } else {
                     // 没有缓存，显示提示需要重新生成
-                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary in this format</p>';
+                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary</p>';
                 }
             });
         }
@@ -962,7 +962,7 @@ class StreamNote {
                     summaryDisplay.innerHTML = this.formatSummaryDisplay(this.summaryCache[cacheKey], selectedStyle);
                 } else {
                     // 没有缓存，显示提示需要重新生成
-                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary in this format</p>';
+                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary</p>';
                 }
 
                 // 更新其他地方的explanationLanguage选择器
@@ -1114,7 +1114,7 @@ class StreamNote {
             clearSummaryBtn.addEventListener("click", () => {
                 const summaryDisplay = document.getElementById("summary-display");
                 if (summaryDisplay) {
-                    summaryDisplay.innerHTML = '<p class="placeholder">Click Generate to generate a summary of your transcription</p>';
+                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary</p>';
                     this.showStatusMessage("Summary cleared", 1500);
                 }
             });
@@ -1421,7 +1421,7 @@ class StreamNote {
 
         // 文本输入框
         const textArea = document.createElement("textarea");
-        textArea.placeholder = "Add lines here...\nEach line will be converted to a timestamped item";
+        textArea.placeholder = "Each line becomes a timestamped item";
         textArea.style.cssText = `
             padding: 6px 8px;
             border: 1px solid #ddd;
@@ -1723,7 +1723,7 @@ class StreamNote {
         // 文本编辑框
         const textarea = document.createElement("textarea");
         textarea.value = text;
-        textarea.placeholder = "Enter text...";
+        textarea.placeholder = "Edit text";
         textarea.style.cssText = `
             flex: 1;
             padding: 6px 8px;
@@ -2655,7 +2655,7 @@ class StreamNote {
             // 正在录音但还没有转录内容
             transcriptDiv.innerHTML = '<p class="placeholder">Listening...</p>';
         } else {
-            transcriptDiv.innerHTML = '<p class="placeholder">Click "Record" to begin transcription</p>';
+            transcriptDiv.innerHTML = '<p class="placeholder">Start recording or add text</p>';
         }
 
         // 更新翻译显示
