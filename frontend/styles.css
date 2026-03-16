@@ -2454,6 +2454,14 @@ textarea::placeholder {
     min-height: 44px;
 }
 
+.floating-modal-toolbar .toolbar-btn {
+    flex: 1;
+}
+
+.add-content-modal .floating-modal-toolbar .toolbar-btn {
+    flex: 0;
+}
+
 /* Modal Content */
 .floating-modal-content {
     flex: 1;

@@ -1357,6 +1357,7 @@ class StreamNote {
 
         // 创建模态框
         const modal = document.createElement("div");
+        modal.className = "add-content-modal";
         modal.style.cssText = `
             position: fixed;
             top: 50%;
