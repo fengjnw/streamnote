@@ -176,18 +176,19 @@
 
                 <!-- Edit Modal -->
                 <div id="editModal" class="floating-modal edit-modal"
-                    style="display: none; width: 90%; max-width: 850px; height: 80vh; flex-direction: column; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000;">
+                    style="display: none; width: 90%; max-width: 900px; height: auto; max-height: 90vh; flex-direction: column; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000;">
                     <div class="floating-modal-header" style="flex-shrink: 0;">
                         <h3>Edit Text</h3>
                         <button id="closeEditModal" class="btn-icon toggle-btn" title="Close">✕</button>
                     </div>
                     <div class="floating-modal-content" style="padding: 0; overflow-y: auto; flex: 1;">
-                        <div id="editRowsContainer" style="display: flex; flex-direction: column; gap: 0;">
+                        <div id="editRowsContainer"
+                            style="display: flex; flex-direction: column; gap: 0; overflow: visible;">
                             <!-- Toolbar and edit rows will be rendered here -->
                         </div>
                     </div>
                     <div class="floating-modal-footer"
-                        style="padding: 12px 16px; border-top: 1px solid #e0e0e0; display: flex; gap: 8px; justify-content: flex-end; flex-shrink: 0;">
+                        style="display: none; padding: 12px 16px; border-top: 1px solid #e0e0e0; gap: 8px; justify-content: flex-end; flex-shrink: 0;">
                         <button id="editModalCancelBtn" class="control-btn control-btn-secondary">Cancel</button>
                         <button id="editModalSaveBtn" class="control-btn control-btn-primary">Save</button>
                     </div>

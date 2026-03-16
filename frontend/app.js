@@ -1214,12 +1214,10 @@ class StreamNote {
             });
         }
 
-        // 编辑 modal 关闭/保存处理
+        // 编辑 modal 关闭处理
         const editModalBackdrop = document.getElementById("editModalBackdrop");
         const editModal = document.getElementById("editModal");
         const closeEditModalBtn = document.getElementById("closeEditModal");
-        const editModalCancelBtn = document.getElementById("editModalCancelBtn");
-        const editModalSaveBtn = document.getElementById("editModalSaveBtn");
 
         const closeEditModal = () => {
             if (editModalBackdrop) editModalBackdrop.style.display = "none";
@@ -1228,14 +1226,6 @@ class StreamNote {
 
         if (closeEditModalBtn) {
             closeEditModalBtn.addEventListener("click", closeEditModal);
-        }
-        if (editModalCancelBtn) {
-            editModalCancelBtn.addEventListener("click", closeEditModal);
-        }
-        if (editModalSaveBtn) {
-            editModalSaveBtn.addEventListener("click", () => {
-                this.saveEditedTranscript();
-            });
         }
         if (editModalBackdrop) {
             editModalBackdrop.addEventListener("click", (e) => {
@@ -1564,27 +1554,63 @@ class StreamNote {
 
         // 创建工具栏
         const toolbar = document.createElement("div");
-        toolbar.className = "floating-modal-toolbar";
+        toolbar.className = "text-panel-toolbar";
         toolbar.style.cssText = `
             display: flex;
             gap: 8px;
-            padding: 12px 16px;
+            padding: 10px 16px;
             border-bottom: 1px solid #e9ecef;
             flex-shrink: 0;
-            background: #fafafa;
+            background: #f5f5f5;
+            align-items: center;
+        `;
+
+        // 左侧按钮区域（Add Item 和 Clear All）
+        const leftGroup = document.createElement("div");
+        leftGroup.style.cssText = `
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            max-width: 250px;
         `;
 
         const addItemBtn = document.createElement("button");
-        addItemBtn.className = "control-btn control-btn-secondary";
-        addItemBtn.textContent = "+ Add Item";
+        addItemBtn.className = "toolbar-btn";
+        addItemBtn.textContent = "Add Item";
+        addItemBtn.style.cssText = `flex: 1; max-width: 120px;`;
 
         const clearAllBtn = document.createElement("button");
-        clearAllBtn.className = "control-btn control-btn-secondary";
+        clearAllBtn.className = "toolbar-btn danger";
         clearAllBtn.textContent = "Clear All";
-        clearAllBtn.style.color = "#d32f2f";
+        clearAllBtn.style.cssText = `flex: 1; max-width: 120px;`;
 
-        toolbar.appendChild(addItemBtn);
-        toolbar.appendChild(clearAllBtn);
+        leftGroup.appendChild(addItemBtn);
+        leftGroup.appendChild(clearAllBtn);
+
+        // 右侧按钮区域（Cancel 和 Save）
+        const buttonGroup = document.createElement("div");
+        buttonGroup.style.cssText = `
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+            max-width: 250px;
+        `;
+
+        const cancelBtn = document.createElement("button");
+        cancelBtn.className = "toolbar-btn";
+        cancelBtn.textContent = "Cancel";
+        cancelBtn.style.cssText = `flex: 1; max-width: 120px;`;
+
+        const saveBtn = document.createElement("button");
+        saveBtn.className = "toolbar-btn";
+        saveBtn.textContent = "Save";
+        saveBtn.style.cssText = `flex: 1; max-width: 120px;`;
+
+        buttonGroup.appendChild(cancelBtn);
+        buttonGroup.appendChild(saveBtn);
+
+        toolbar.appendChild(leftGroup);
+        toolbar.appendChild(buttonGroup);
         editRowsContainer.appendChild(toolbar);
 
         // 创建编辑项容器
@@ -1592,8 +1618,8 @@ class StreamNote {
         itemsContainer.style.cssText = `
             display: flex;
             flex-direction: column;
-            gap: 0;
-            padding: 0;
+            gap: 8px;
+            padding: 12px 0;
             width: 100%;
         `;
         editRowsContainer.appendChild(itemsContainer);
@@ -1618,6 +1644,13 @@ class StreamNote {
             // 计算当前时刻的秒数（从 00:00:00 开始）
             const timestamp = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
             this._createEditItem(itemsContainer, newIdx, '', timestamp);
+            // 滚动到最下方
+            setTimeout(() => {
+                const content = document.getElementById("editModalContent");
+                if (content) {
+                    content.scrollTop = content.scrollHeight;
+                }
+            }, 0);
         });
 
         // Clear All 按钮
@@ -1626,6 +1659,21 @@ class StreamNote {
                 itemsContainer.innerHTML = "";
                 this.editInputs = {};
                 this.editTimestamps = {};
+            }
+        });
+
+        // Save 按钮
+        saveBtn.addEventListener("click", () => {
+            this.saveEditedTranscript();
+        });
+
+        // Cancel 按钮
+        cancelBtn.addEventListener("click", () => {
+            const backdrop = document.getElementById("editModalBackdrop");
+            const modal = document.getElementById("editModal");
+            if (backdrop && modal) {
+                backdrop.style.display = "none";
+                modal.style.display = "none";
             }
         });
 
@@ -1645,39 +1693,37 @@ class StreamNote {
         const item = document.createElement("div");
         item.style.cssText = `
             display: flex;
-            gap: 12px;
-            padding: 12px 16px;
-            border-bottom: 1px solid #f0f0f0;
+            gap: 10px;
+            padding: 10px 12px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #f0f0f0;
+            transition: all 0.2s ease;
             align-items: flex-start;
-            background: #fff;
-            transition: background-color 0.2s;
             overflow: visible;
+            margin: 0 12px;
         `;
         item.id = `edit-item-${idx}`;
 
-        // 索引和时间戳
-        const metaContainer = document.createElement("div");
-        metaContainer.style.cssText = `
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            flex-shrink: 0;
-            min-width: 90px;
-        `;
+        // Hover 效果
+        item.addEventListener("mouseenter", (e) => {
+            e.currentTarget.style.background = "#fafbfc";
+            e.currentTarget.style.borderColor = "#e0e0e0";
+            e.currentTarget.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.08)";
+        });
+        item.addEventListener("mouseleave", (e) => {
+            e.currentTarget.style.background = "white";
+            e.currentTarget.style.borderColor = "#f0f0f0";
+            e.currentTarget.style.boxShadow = "none";
+        });
 
-        const idxLabel = document.createElement("div");
-        idxLabel.style.cssText = `
-            font-weight: 600;
-            color: #5a7c99;
-            font-size: 12px;
-            padding-top: 2px;
-        `;
-        idxLabel.textContent = `[${idx}]`;
+        // 时间戳输入框
+        const timestampInput = document.createElement("input");
+        timestampInput.type = "text";
 
         // 转换时间戳格式（秒数 → HH:MM:SS）
         let displayTime = "00:00:00";
         if (timestamp) {
-            // 秒数格式（数字或字符串数字）
             const seconds = typeof timestamp === 'number' ? timestamp :
                 (typeof timestamp === 'string' && /^\d+$/.test(timestamp) ? parseInt(timestamp) : null);
 
@@ -1687,47 +1733,42 @@ class StreamNote {
                 const secs = seconds % 60;
                 displayTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
             }
-            // 如果已经是 HH:MM:SS 格式
             else if (typeof timestamp === 'string' && /^\d{2}:\d{2}:\d{2}$/.test(timestamp)) {
                 displayTime = timestamp;
             }
         }
 
-        const timestampInput = document.createElement("input");
-        timestampInput.type = "text";
         timestampInput.value = displayTime;
         timestampInput.placeholder = "HH:MM:SS";
         timestampInput.style.cssText = `
-            width: 100%;
-            padding: 5px 6px;
+            width: 100px;
+            padding: 6px 6px;
             border: 1px solid #ddd;
             border-radius: 3px;
             font-family: "Monaco", "Menlo", monospace;
-            font-size: 11px;
+            font-size: 13px;
             text-align: center;
             box-sizing: border-box;
-            min-width: 85px;
+            flex-shrink: 0;
+            line-height: 1.4;
+            height: 32px;
         `;
         timestampInput.addEventListener("blur", (e) => {
             const val = e.target.value.trim();
             if (!val) {
-                // 空值时恢复原值
                 e.target.value = displayTime;
                 e.target.style.borderColor = "#ddd";
             } else if (!/^\d{2}:\d{2}:\d{2}$/.test(val)) {
-                // 格式不对，高亮边框并恢复
                 e.target.style.borderColor = "#d32f2f";
                 e.target.value = displayTime;
                 this.showStatusMessage("Invalid timestamp format (use HH:MM:SS, e.g., 12:34:56)", 2000);
             } else {
-                // 验证时间范围
                 const [h, m, s] = val.split(':').map(Number);
                 if (h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59) {
                     e.target.style.borderColor = "#d32f2f";
                     e.target.value = displayTime;
                     this.showStatusMessage("Invalid time: hours must be 00-23, minutes 00-59, seconds 00-59", 2500);
                 } else {
-                    // 格式和范围都正确
                     e.target.style.borderColor = "#ddd";
                 }
             }
@@ -1736,65 +1777,141 @@ class StreamNote {
             e.target.style.borderColor = "#5a7c99";
         });
 
-        metaContainer.appendChild(idxLabel);
-        metaContainer.appendChild(timestampInput);
-
-        // 文本编辑区域
-        const contentContainer = document.createElement("div");
-        contentContainer.style.cssText = `
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-            min-width: 0;
-        `;
-
+        // 文本编辑框
         const textarea = document.createElement("textarea");
         textarea.value = text;
         textarea.placeholder = "Enter text...";
         textarea.style.cssText = `
             flex: 1;
-            padding: 8px;
+            padding: 6px 8px;
             border: 1px solid #ddd;
             border-radius: 3px;
             font-family: inherit;
             font-size: 13px;
-            resize: vertical;
-            min-height: 60px;
-            font-weight: 400;
-            line-height: 1.5;
+            resize: none;
+            line-height: 1.4;
+            min-height: 32px;
             box-sizing: border-box;
-            max-width: 100%;
+            overflow: hidden;
         `;
 
-        contentContainer.appendChild(textarea);
+        // 自动调整高度的函数
+        const adjustHeight = () => {
+            textarea.style.height = "auto";
+            textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
+        };
+
+        // 初始化高度
+        adjustHeight();
+
+        // 监听输入变化以调整高度
+        textarea.addEventListener("input", adjustHeight);
+        textarea.addEventListener("change", adjustHeight);
+
+        // 处理键盘事件：Enter 插入新 item，上下键切换 item
+        textarea.addEventListener("keydown", (e) => {
+            // Enter：创建新 item
+            if (e.key === "Enter" && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                e.preventDefault();
+
+                let currentItem = textarea.closest('[id^="edit-item-"]');
+                if (!currentItem) return;
+
+                const itemsContainer = currentItem.parentElement;
+
+                // 找到最大的 idx
+                const items = Array.from(itemsContainer.querySelectorAll('[id^="edit-item-"]'));
+                const indices = items.map(el => parseInt(el.id.replace('edit-item-', '')));
+                const newIdx = Math.max(...indices, -1) + 1;
+
+                // 获取当前时间戳
+                const now = new Date();
+                const timestamp = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+
+                // 创建新 item（会被添加到末尾）
+                this._createEditItem(itemsContainer, newIdx, '', timestamp);
+
+                // 找到新创建的 item 并插入到当前 item 后面
+                const newItem = itemsContainer.children[itemsContainer.children.length - 1];
+                newItem.remove();
+                currentItem.insertAdjacentElement('afterend', newItem);
+
+                // 焦点移到新 item 的 textarea
+                const newTextarea = newItem.querySelector('textarea');
+                if (newTextarea) newTextarea.focus();
+            }
+
+            // ArrowUp：移到上一个 item
+            if (e.key === "ArrowUp") {
+                e.preventDefault();
+
+                let currentItem = textarea.closest('[id^="edit-item-"]');
+                if (!currentItem) return;
+
+                const itemsContainer = currentItem.parentElement;
+                const items = Array.from(itemsContainer.querySelectorAll('[id^="edit-item-"]'));
+                const currentIndex = items.indexOf(currentItem);
+
+                if (currentIndex > 0) {
+                    const prevItem = items[currentIndex - 1];
+                    const prevTextarea = prevItem.querySelector('textarea');
+                    if (prevTextarea) {
+                        prevTextarea.focus();
+                        prevTextarea.setSelectionRange(prevTextarea.value.length, prevTextarea.value.length);
+                    }
+                }
+            }
+
+            // ArrowDown：移到下一个 item
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+
+                let currentItem = textarea.closest('[id^="edit-item-"]');
+                if (!currentItem) return;
+
+                const itemsContainer = currentItem.parentElement;
+                const items = Array.from(itemsContainer.querySelectorAll('[id^="edit-item-"]'));
+                const currentIndex = items.indexOf(currentItem);
+
+                if (currentIndex < items.length - 1) {
+                    const nextItem = items[currentIndex + 1];
+                    const nextTextarea = nextItem.querySelector('textarea');
+                    if (nextTextarea) {
+                        nextTextarea.focus();
+                        nextTextarea.setSelectionRange(0, 0);
+                    }
+                }
+            }
+        });
 
         // 删除按钮
         const deleteBtn = document.createElement("button");
         deleteBtn.textContent = "✕";
         deleteBtn.style.cssText = `
-            width: 28px;
-            height: 28px;
-            min-width: 28px;
-            min-height: 28px;
-            flex-shrink: 0;
-            padding: 0;
-            border: 1px solid #ddd;
-            background: #f5f5f5;
-            border-radius: 3px;
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 1.1em;
             cursor: pointer;
-            color: #d32f2f;
-            font-size: 14px;
-            font-weight: bold;
+            padding: 0 4px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
             transition: all 0.2s;
+            flex-shrink: 0;
+            align-self: flex-start;
+            margin-top: 3px;
         `;
         deleteBtn.addEventListener("mouseenter", (e) => {
-            e.target.style.backgroundColor = "#ffebee";
-            e.target.style.borderColor = "#d32f2f";
+            e.target.style.background = "rgba(211, 47, 47, 0.08)";
+            e.target.style.color = "#d32f2f";
         });
         deleteBtn.addEventListener("mouseleave", (e) => {
-            e.target.style.backgroundColor = "#f5f5f5";
-            e.target.style.borderColor = "#ddd";
+            e.target.style.background = "none";
+            e.target.style.color = "#ccc";
         });
         deleteBtn.addEventListener("click", () => {
             item.remove();
@@ -1807,8 +1924,8 @@ class StreamNote {
         this.editTimestamps[idx] = timestampInput;
 
         // 组装
-        item.appendChild(metaContainer);
-        item.appendChild(contentContainer);
+        item.appendChild(timestampInput);
+        item.appendChild(textarea);
         item.appendChild(deleteBtn);
         container.appendChild(item);
     }

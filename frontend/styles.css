@@ -2445,7 +2445,7 @@ header h1 {
 
 .toolbar-btn {
     flex: 1;
-    min-width: auto;
+    min-width: 70px;
     padding: var(--spacing-xs) 10px;
     border: 1px solid #d0d0d0;
     border-radius: 4px;
