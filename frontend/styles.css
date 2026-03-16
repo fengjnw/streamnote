@@ -365,10 +365,10 @@ header h1 {
 }
 
 .session-item.active {
-    background: #5a7c99;
+    background: #868e96;
     color: white;
-    border-color: #5a7c99;
-    box-shadow: 0 4px 12px rgba(90, 124, 153, 0.2);
+    border-color: #868e96;
+    box-shadow: 0 4px 12px rgba(134, 142, 150, 0.2);
 }
 
 .session-item.recording {
@@ -404,7 +404,7 @@ header h1 {
     align-items: center;
     gap: 3px;
     color: #999;
-    background: rgba(90, 124, 153, 0.04);
+    background: rgba(134, 142, 150, 0.04);
     padding: 2px 6px;
     border-radius: 3px;
     white-space: nowrap;
@@ -666,6 +666,7 @@ header h1 {
 .nav-group-input .control-btn-secondary {
     background: #b8cde0;
     color: #2c3e50;
+    font-weight: 600;
 }
 
 .nav-group-input .control-btn-secondary:hover:not(:disabled) {
@@ -681,6 +682,17 @@ header h1 {
 
 .nav-group-input .control-btn-secondary.active:hover:not(:disabled) {
     background: #3f5670 !important;
+}
+
+/* Record button active (red Stop state) */
+#recordBtn.active {
+    background: #ff4444 !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(255, 68, 68, 0.4) !important;
+}
+
+#recordBtn.active:hover:not(:disabled) {
+    background: #dd2222 !important;
 }
 
 /* Content tools group - secondary level (soft purple) */
@@ -715,6 +727,17 @@ header h1 {
     padding: 4px var(--spacing-sm);
 }
 
+/* Sessions button specific styling */
+#openSessionPanel.active {
+    background: #868e96 !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(134, 142, 150, 0.4) !important;
+}
+
+#openSessionPanel.active:hover:not(:disabled) {
+    background: #6c757d !important;
+}
+
 .nav-group-settings .control-btn-secondary {
     background: #e9ecef;
     color: #495057;
@@ -723,6 +746,16 @@ header h1 {
 .nav-group-settings .control-btn-secondary:hover:not(:disabled) {
     background: #dee2e6;
     color: #212529;
+}
+
+.nav-group-settings .control-btn-secondary.active {
+    background: #868e96 !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(134, 142, 150, 0.4) !important;
+}
+
+.nav-group-settings .control-btn-secondary.active:hover:not(:disabled) {
+    background: #6c757d !important;
 }
 
 /* 新控制按钮 - 纯文字版本 */
@@ -1723,6 +1756,8 @@ header h1 {
     padding: 40px var(--spacing-md);
     margin: 0;
     line-height: 1.6;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 /* Unified placeholder text styling for textarea */
@@ -1730,6 +1765,8 @@ textarea::placeholder {
     color: var(--color-text-lighter);
     font-style: italic;
     opacity: 1;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .temporary {
@@ -2868,6 +2905,9 @@ textarea::placeholder {
     line-height: 1.6;
     background: transparent;
     border-radius: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
 }
 
 /* Key Takeaways style - display as list items */

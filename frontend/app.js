@@ -1221,15 +1221,19 @@ class StreamNote {
                     const rect = addContentBtn.getBoundingClientRect();
                     contentMenu.style.left = rect.left + "px";
                     contentMenu.style.top = (rect.bottom + 4) + "px";
+                    contentMenu.style.display = "block";
+                    addContentBtn.classList.add("active");
+                } else {
+                    contentMenu.style.display = "none";
+                    addContentBtn.classList.remove("active");
                 }
-
-                contentMenu.style.display = isVisible ? "none" : "block";
             });
 
             // 点击菜单外关闭菜单
             document.addEventListener("click", (e) => {
                 if (!addContentBtn.contains(e.target) && !contentMenu.contains(e.target)) {
                     contentMenu.style.display = "none";
+                    addContentBtn.classList.remove("active");
                 }
             });
         }
@@ -1238,6 +1242,7 @@ class StreamNote {
         if (importFromFileOption && textFileInput) {
             importFromFileOption.addEventListener("click", () => {
                 contentMenu.style.display = "none";
+                addContentBtn.classList.remove("active");
                 textFileInput.click();
             });
 
@@ -1262,6 +1267,7 @@ class StreamNote {
         if (importFromTextOption) {
             importFromTextOption.addEventListener("click", () => {
                 contentMenu.style.display = "none";
+                addContentBtn.classList.remove("active");
                 this.showAddTextDialog();
             });
         }
@@ -1282,6 +1288,7 @@ class StreamNote {
         const closeEditModal = () => {
             if (editModalBackdrop) editModalBackdrop.style.display = "none";
             if (editModal) editModal.style.display = "none";
+            if (editTextBtn) editTextBtn.classList.remove("active");
         };
 
         if (closeEditModalBtn) {
@@ -1378,7 +1385,7 @@ class StreamNote {
             z-index: 10000;
             display: flex;
             flex-direction: column;
-            max-height: 90vh;
+            max-height: 70vh;
         `;
 
         // 模态框头
@@ -1451,6 +1458,8 @@ class StreamNote {
         const closeDialog = () => {
             backdrop.remove();
             modal.remove();
+            const addContentBtn = document.getElementById("addContentBtn");
+            if (addContentBtn) addContentBtn.classList.remove("active");
         };
 
         // 事件监听
@@ -1524,6 +1533,10 @@ class StreamNote {
             return;
         }
 
+        // Add active class to edit button
+        const editTextBtn = document.getElementById("editTextBtn");
+        if (editTextBtn) editTextBtn.classList.add("active");
+
         const editRowsContainer = document.getElementById("editRowsContainer");
         if (!editRowsContainer) return;
 
@@ -1541,6 +1554,9 @@ class StreamNote {
             flex-shrink: 0;
             background: #f5f5f5;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         `;
 
         // 左侧按钮区域（Cancel）
@@ -2489,14 +2505,10 @@ class StreamNote {
         if (recordBtn) {
             if (this.recordingManager && this.recordingManager.isRecording) {
                 recordBtn.textContent = "Stop";
-                recordBtn.classList.add("recording");
-                recordBtn.style.backgroundColor = "#ff4444";
-                recordBtn.style.color = "white";
+                recordBtn.classList.add("active");
             } else {
                 recordBtn.textContent = "Record";
-                recordBtn.classList.remove("recording");
-                recordBtn.style.backgroundColor = "";
-                recordBtn.style.color = "";
+                recordBtn.classList.remove("active");
             }
         }
     }

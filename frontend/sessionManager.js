@@ -599,7 +599,8 @@ class SessionManager {
         if (this.currentSessionId === sessionId) {
             const sessionIds = Object.keys(this.sessions);
             if (sessionIds.length > 0) {
-                this.switchSession(sessionIds[0]);
+                // 定位到最新的 session（最后一个）
+                this.switchSession(sessionIds[sessionIds.length - 1]);
             } else {
                 // 没有 session 了，创建新的
                 this.createNewSession("Default Session");
