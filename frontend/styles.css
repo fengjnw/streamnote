@@ -2409,6 +2409,10 @@ textarea::placeholder {
     border-radius: 0;
 }
 
+.session-modal .floating-modal-header {
+    border-radius: 0;
+}
+
 /* Settings Modal - 右侧弹出 */
 .settings-modal {
     width: 280px;
@@ -2416,6 +2420,10 @@ textarea::placeholder {
     top: 0;
     right: 0;
     left: auto;
+    border-radius: 0;
+}
+
+.settings-modal .floating-modal-header {
     border-radius: 0;
 }
 

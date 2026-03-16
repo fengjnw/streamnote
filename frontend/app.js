@@ -1371,14 +1371,14 @@ class StreamNote {
             left: 50%;
             transform: translate(-50%, -50%);
             width: 90%;
-            max-width: 600px;
+            max-width: 900px;
             background: white;
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             z-index: 10000;
             display: flex;
             flex-direction: column;
-            max-height: 85vh;
+            max-height: 90vh;
         `;
 
         // 模态框头
