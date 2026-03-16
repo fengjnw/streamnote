@@ -185,7 +185,7 @@ class StreamNote {
     onTranscribeProgress(data) {
         const { index, text, timestamp, sessionId } = data;
 
-        // 只有在仍然在同一个 session 时，才更新本地显示
+        // 如果sessionId是录制中的session，则更新本地显示（只在当前显示该session时）
         const isCurrentSession = sessionId === this.sessionManager.currentSessionId;
 
         if (isCurrentSession) {
@@ -201,10 +201,11 @@ class StreamNote {
 
             // 更新转录上下文 - 新转录的内容会被加入上下文
             this.updateTranscriptionContext();
-
-            // 保存到 session - 确保新转录也被持久化
-            this.saveToSession();
         }
+
+        // 无论是否当前显示该session，都要保存到正确的session
+        // sessionId是录制开始时的session，转录内容应该持久化到那个session
+        this.saveToSession(sessionId);
     }
 
     /**
@@ -250,10 +251,6 @@ class StreamNote {
 
         // 监听 session 切换事件
         window.addEventListener('sessionChanged', (e) => {
-            // 在切换 session 之前，先保存当前 session 的数据（防止转录数据丢失）
-            if (this.recordingManager) {
-                this.saveToSession();
-            }
             this.loadCurrentSession();
         });
     }
@@ -317,13 +314,9 @@ class StreamNote {
         }
 
         // 加载转录内容到 RecordingManager，并设置session开始时间用于时间戳计算
-        // 防护：如果正在录音，则保留当前录音数据，不要用旧session数据覆盖
-        if (!this.recordingManager.isRecording) {
-            this.recordingManager.setTranscriptData(session.transcripts || {});
-        }
-        // panelManager 需要始终更新，用于滚动计算（不参与录制数据）
-        this.panelManager.setTranscriptData(session.transcripts || {});
+        this.recordingManager.setTranscriptData(session.transcripts || {});
         this.recordingManager.setSessionStartTime(session.startTime);
+        this.panelManager.setTranscriptData(session.transcripts || {});
 
         // 更新转录上下文 - 从之前的转录内容生成
         this.updateTranscriptionContext();
@@ -2603,6 +2596,30 @@ class StreamNote {
             // 设置全局录制状态
             this.recordingSessionId = this.sessionManager.currentSessionId;
             this.updateRecordingIndicator();
+            
+            // 禁用 Sessions 按鎘
+            const sessionBtn = document.getElementById('openSessionPanel');
+            if (sessionBtn) {
+                sessionBtn.disabled = true;
+                sessionBtn.title = 'Cannot switch sessions while recording';
+                sessionBtn.style.opacity = '0.5';
+            }
+
+            // 禁用 Add Content 按钮
+            const addContentBtn = document.getElementById('addContentBtn');
+            if (addContentBtn) {
+                addContentBtn.disabled = true;
+                addContentBtn.title = 'Cannot add content while recording';
+                addContentBtn.style.opacity = '0.5';
+            }
+
+            // 禁用 Edit 按钮
+            const editBtn = document.getElementById('editTextBtn');
+            if (editBtn) {
+                editBtn.disabled = true;
+                editBtn.title = 'Cannot edit while recording';
+                editBtn.style.opacity = '0.5';
+            }
 
             // 确保上下文已更新
             this.updateTranscriptionContext();
@@ -2643,6 +2660,30 @@ class StreamNote {
             // 清除全局录制状态
             this.recordingSessionId = null;
             this.updateRecordingIndicator();
+            
+            // 启用 Sessions 按鎈
+            const sessionBtn = document.getElementById('openSessionPanel');
+            if (sessionBtn) {
+                sessionBtn.disabled = false;
+                sessionBtn.title = 'Open Sessions';
+                sessionBtn.style.opacity = '1';
+            }
+
+            // 启用 Add Content 按钮
+            const addContentBtn = document.getElementById('addContentBtn');
+            if (addContentBtn) {
+                addContentBtn.disabled = false;
+                addContentBtn.title = 'Add content from file or text';
+                addContentBtn.style.opacity = '1';
+            }
+
+            // 启用 Edit 按钮（如果有内容的话）
+            const editBtn = document.getElementById('editTextBtn');
+            if (editBtn && Object.keys(this.recordingManager.preciseResults).length > 0) {
+                editBtn.disabled = false;
+                editBtn.title = 'Edit transcript';
+                editBtn.style.opacity = '1';
+            }
 
             this.updateRecordingButtonState();
 
@@ -2951,9 +2992,9 @@ class StreamNote {
                 this.panelManager.updateAutoScrollButton();
             }
 
-            // 根据是否有内容来启用/禁用 edit 按钮
+            // 根据是否有内容来启用/禁用 edit 按钮（但录制时保持禁用）
             const editTextBtn = document.getElementById("editTextBtn");
-            if (editTextBtn) {
+            if (editTextBtn && this.recordingSessionId === null) {  // 只在不录制时更新状态
                 const transcriptData = this.recordingManager.getTranscriptData();
                 const hasContent = Object.keys(transcriptData).length > 0;
                 editTextBtn.disabled = !hasContent;

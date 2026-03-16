@@ -16,6 +16,9 @@ class SessionManager {
             defaultExplanationLanguage: "Chinese"
         };
 
+        // 验证函数：检查是否允许切换到指定 session（由外部代码如 app.js 注册）
+        this.canSwitchValidator = null;
+
         this.loadDefaultSettings();
         this.loadSessions();
         this.setupUI();
