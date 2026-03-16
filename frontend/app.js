@@ -1196,12 +1196,41 @@ class StreamNote {
         }
 
         // === 模式切换功能 ===
-        // 文件上传
-        const uploadFileBtn = document.getElementById("uploadFileBtn");
+        // 合并的 Add Content 按钮（文件导入 + 手动输入）
+        const addContentBtn = document.getElementById("addContentBtn");
+        const contentMenu = document.getElementById("contentMenu");
+        const importFromFileOption = document.getElementById("importFromFileOption");
+        const importFromTextOption = document.getElementById("importFromTextOption");
         const textFileInput = document.getElementById("textFileInput");
 
-        if (uploadFileBtn && textFileInput) {
-            uploadFileBtn.addEventListener("click", () => {
+        // 菜单显示/隐藏逻辑
+        if (addContentBtn && contentMenu) {
+            addContentBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const isVisible = contentMenu.style.display !== "none";
+
+                if (!isVisible) {
+                    // 计算菜单位置
+                    const rect = addContentBtn.getBoundingClientRect();
+                    contentMenu.style.left = rect.left + "px";
+                    contentMenu.style.top = (rect.bottom + 4) + "px";
+                }
+
+                contentMenu.style.display = isVisible ? "none" : "block";
+            });
+
+            // 点击菜单外关闭菜单
+            document.addEventListener("click", (e) => {
+                if (!addContentBtn.contains(e.target) && !contentMenu.contains(e.target)) {
+                    contentMenu.style.display = "none";
+                }
+            });
+        }
+
+        // 从文件导入
+        if (importFromFileOption && textFileInput) {
+            importFromFileOption.addEventListener("click", () => {
+                contentMenu.style.display = "none";
                 textFileInput.click();
             });
 
@@ -1219,6 +1248,14 @@ class StreamNote {
                 }
                 // 重置 input 以便重新选择同一文件
                 textFileInput.value = "";
+            });
+        }
+
+        // 从文本导入
+        if (importFromTextOption) {
+            importFromTextOption.addEventListener("click", () => {
+                contentMenu.style.display = "none";
+                this.showAddTextDialog();
             });
         }
 
@@ -1248,14 +1285,6 @@ class StreamNote {
                 if (e.target === editModalBackdrop) {
                     closeEditModal();
                 }
-            });
-        }
-
-        // 添加纯文本 - 快速输入对话框
-        const addTextBtn = document.getElementById("addTextBtn");
-        if (addTextBtn) {
-            addTextBtn.addEventListener("click", () => {
-                this.showAddTextDialog();
             });
         }
     }

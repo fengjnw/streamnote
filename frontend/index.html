@@ -56,15 +56,18 @@
 
                 <!-- Group 3: Input Mode Controls (Recording + Import) -->
                 <div class="nav-group nav-group-section">
-                    <div id="recordingControls" style="display: flex; gap: 8px;">
+                    <div id="recordingControls" style="display: flex; gap: 8px; position: relative;">
                         <button id="recordBtn" class="control-btn control-btn-secondary"
                             title="Start/Stop Recording">Record</button>
-                        <button id="uploadFileBtn" class="control-btn control-btn-secondary"
-                            title="Upload .txt/.md file">Upload File</button>
-                        <button id="addTextBtn" class="control-btn control-btn-secondary" title="Add text manually">Add
-                            Text</button>
+                        <button id="addContentBtn" class="control-btn control-btn-secondary"
+                            title="Add content from file or text">Add Content</button>
                         <button id="editTextBtn" class="control-btn control-btn-secondary"
                             title="Edit transcript">Edit</button>
+                        <!-- Hidden menu for Add Content -->
+                        <div id="contentMenu" class="content-menu" style="display: none;">
+                            <button class="content-menu-item" id="importFromFileOption">From File</button>
+                            <button class="content-menu-item" id="importFromTextOption">From Text</button>
+                        </div>
                     </div>
                 </div>
 
