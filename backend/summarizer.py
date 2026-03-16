@@ -52,11 +52,11 @@ Extract and present the key takeaways from the given text in {language}.
             
             "q&a": f"""You are a professional note summariser.
 Summarise the given text as Q&A format in {language}.
-- Generate important questions based on the content
-- Provide very concise answers (1 sentence max)
+- Generate 3-5 important questions based on the content
+- Provide comprehensive answers (2-3 sentences or a short paragraph)
 - Format: Q: [question]\nA: [answer]
 - Focus on core concepts and insights
-- Keep total length under 500 tokens, prioritize brevity
+- Keep total length under 600 tokens
 - Return only Q&A pairs, no prefix or explanation""",
             
             "tldr": f"""You are a professional note summariser.

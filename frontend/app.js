@@ -871,7 +871,6 @@ class StreamNote {
 
         // ===== Summary Feature =====
         const regenerateSummaryBtn = document.getElementById("regenerateSummaryBtn");
-        const copySummaryBtn = document.getElementById("copySummaryBtn");
         const summaryDisplay = document.getElementById("summary-display");
         const summarizeStyleSelect = document.getElementById("summarizeStyleSelect");
 
@@ -896,7 +895,6 @@ class StreamNote {
 
                 regenerateSummaryBtn.disabled = true;
                 regenerateSummaryBtn.textContent = "Generating...";
-                copySummaryBtn.disabled = true;
 
                 try {
                     // 获取选中的总结风格
@@ -904,7 +902,6 @@ class StreamNote {
                     const summary = await this.summarizeText(textToSummarize, true, selectedStyle);  // forceRefresh=true
                     if (summary) {
                         summaryDisplay.innerHTML = this.formatSummaryDisplay(summary, selectedStyle);
-                        copySummaryBtn.disabled = false;
                     } else {
                         summaryDisplay.innerHTML = '<p class="placeholder">Failed to generate summary</p>';
                     }
@@ -914,26 +911,6 @@ class StreamNote {
                 } finally {
                     regenerateSummaryBtn.disabled = false;
                     regenerateSummaryBtn.textContent = "Generate";
-                }
-            });
-        }
-
-        if (copySummaryBtn) {
-            copySummaryBtn.addEventListener("click", () => {
-                const summaryText = summaryDisplay.innerText;
-                if (summaryText && summaryText !== "Click the button to generate summary") {
-                    navigator.clipboard.writeText(summaryText).then(() => {
-                        const originalText = copySummaryBtn.textContent;
-                        copySummaryBtn.textContent = 'Copied';
-                        setTimeout(() => {
-                            copySummaryBtn.textContent = originalText;
-                        }, 2000);
-                    }).catch(err => {
-                        console.error("Failed to copy:", err);
-                        alert("Failed to copy summary");
-                    });
-                } else {
-                    alert("Please generate a summary first");
                 }
             });
         }
