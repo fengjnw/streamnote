@@ -576,6 +576,15 @@ class StreamNote {
             explanationLanguage: this.explanationLanguage
         };
         this.sessionManager.updateCurrentSettings(settings);
+
+        // 保存总结缓存到session
+        if (this.summaryCache && Object.keys(this.summaryCache).length > 0) {
+            const session = this.sessionManager.getCurrentSession();
+            if (session) {
+                session.summaryCache = { ...this.summaryCache };
+                this.sessionManager.saveSession(session);
+            }
+        }
     }
 
     /**
