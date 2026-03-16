@@ -59,6 +59,10 @@ class KeywordManager {
         // 语音朗读状态
         this.isPronouncing = false;              // 是否正在发音
         this.setupPronounceButton();             // 初始化发音按钮
+
+        // [FIX] 备用缓存：保存最后一次成功获取的转录数据
+        // 用于当主数据源（recordingManager）暂时为空时的fallback
+        this.lastKnownTranscriptData = null;
     }
 
     /**
@@ -356,25 +360,46 @@ class KeywordManager {
             if (sourcePanel === 'translation' && this.translationManager) {
                 // 从翻译数据中构建
                 const translationData = this.translationManager.getTranslationData();
-                const sortedKeys = Object.keys(translationData).sort((a, b) => parseInt(a) - parseInt(b));
-                searchText = sortedKeys
-                    .map(key => translationData[key])
-                    .filter(text => text)
-                    .join(" ");
+                if (translationData && Object.keys(translationData).length > 0) {
+                    const sortedKeys = Object.keys(translationData).sort((a, b) => parseInt(a) - parseInt(b));
+                    searchText = sortedKeys
+                        .map(key => translationData[key])
+                        .filter(text => text)
+                        .join(" ");
+                }
             } else {
                 // 从转录数据中构建（默认）
-                const preciseResults = this.getTranscriptData();
-                const sortedKeys = Object.keys(preciseResults).sort((a, b) => parseInt(a) - parseInt(b));
-                searchText = sortedKeys
-                    .map(key => {
-                        const item = preciseResults[key];
-                        return item && item.text ? item.text.trim() : "";
-                    })
-                    .join(" ");
+                let preciseResults = this.getTranscriptData();
+
+                // [FIX] 如果主数据源为空，尝试使用备用缓存
+                if (!preciseResults || Object.keys(preciseResults).length === 0) {
+                    if (this.lastKnownTranscriptData && Object.keys(this.lastKnownTranscriptData).length > 0) {
+                        console.warn(`[KeywordManager] Main transcript data empty, using fallback cache for context extraction`);
+                        preciseResults = this.lastKnownTranscriptData;
+                    }
+                } else {
+                    // 更新备用缓存（保存最后一次获取的有效数据）
+                    this.lastKnownTranscriptData = { ...preciseResults };
+                }
+
+                if (preciseResults && Object.keys(preciseResults).length > 0) {
+                    const sortedKeys = Object.keys(preciseResults).sort((a, b) => parseInt(a) - parseInt(b));
+                    searchText = sortedKeys
+                        .map(key => {
+                            const item = preciseResults[key];
+                            return item && item.text ? item.text.trim() : "";
+                        })
+                        .filter(text => text)
+                        .join(" ");
+                }
             }
         }
 
-        if (!searchText) return "";  // 仍然无法获取文本
+        if (!searchText) {
+            // [DEBUG] 当无法获取文本时，记录警告便于诊断云端问题
+            console.warn(`[KeywordManager] Unable to extract context for keyword "${keyword}" - transcriptData may be empty or not restored yet`);
+            return "";  // 仍然无法获取文本
+        }
 
         // 降级方案：使用搜索方式（对于自动提取的词）
         // 查找关键词在文本中的位置（不区分大小写）
@@ -977,8 +1002,9 @@ class KeywordManager {
 
     /**
      * 获取关键词的上下文（用于发送给API）
+     * 即使无法获取本地转录数据，也不会返回null，确保API调用安全
      * @param {string} keyword - 关键词
-     * @returns {string} 上下文
+     * @returns {string} 上下文（可能为空字符串，但不会为null）
      */
     getContextForKeyword(keyword) {
         // 检查是否有位置信息 - 优先使用位置信息的容器信息
@@ -998,34 +1024,39 @@ class KeywordManager {
             // 如果词来自翻译，需要从翻译数据中搜索
             if (this.translationManager) {
                 const translationData = this.translationManager.getTranslationData();
-                const sortedKeys = Object.keys(translationData).sort((a, b) => parseInt(a) - parseInt(b));
-                const fullTranslation = sortedKeys
-                    .map(key => translationData[key])
-                    .filter(text => text)
-                    .join(" ");
+                if (translationData && Object.keys(translationData).length > 0) {
+                    const sortedKeys = Object.keys(translationData).sort((a, b) => parseInt(a) - parseInt(b));
+                    const fullTranslation = sortedKeys
+                        .map(key => translationData[key])
+                        .filter(text => text)
+                        .join(" ");
 
-                if (fullTranslation) {
-                    // 在翻译文本中搜索
-                    const lowerText = fullTranslation.toLowerCase();
-                    const lowerKeyword = keyword.toLowerCase();
-                    const index = lowerText.indexOf(lowerKeyword);
+                    if (fullTranslation) {
+                        // 在翻译文本中搜索
+                        const lowerText = fullTranslation.toLowerCase();
+                        const lowerKeyword = keyword.toLowerCase();
+                        const index = lowerText.indexOf(lowerKeyword);
 
-                    if (index !== -1) {
-                        const contextLength = 100;
-                        const contextStart = Math.max(0, index - contextLength);
-                        const contextEnd = Math.min(fullTranslation.length, index + keyword.length + contextLength);
+                        if (index !== -1) {
+                            const contextLength = 100;
+                            const contextStart = Math.max(0, index - contextLength);
+                            const contextEnd = Math.min(fullTranslation.length, index + keyword.length + contextLength);
 
-                        let context = fullTranslation.substring(contextStart, contextEnd);
-                        if (contextStart > 0) context = "..." + context;
-                        if (contextEnd < fullTranslation.length) context = context + "...";
-                        return context;
+                            let context = fullTranslation.substring(contextStart, contextEnd);
+                            if (contextStart > 0) context = "..." + context;
+                            if (contextEnd < fullTranslation.length) context = context + "...";
+                            return context;
+                        }
                     }
                 }
             }
         }
 
         // 默认从转录数据中提取（API用途：使用100字符范围）
-        return this.extractKeywordContext(keyword, "", 100);
+        const context = this.extractKeywordContext(keyword, "", 100);
+
+        // [FIX] 安全保证：确保总是返回字符串，即使是空字符串
+        return context || "";
     }
 
     /**
