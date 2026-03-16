@@ -117,14 +117,15 @@
                             <option value="Japanese">日本語</option>
                             <option value="Korean">한국어</option>
                         </select>
+                        <button id="clearExplanationsBtn" class="toolbar-btn danger"
+                            title="Clear explanation display">Clear</button>
+                    </div>
+                    <div class="panel-toolbar explanation-panel-toolbar">
                         <button id="highlight-current-word-btn" class="toolbar-btn"
                             title="Add to highlights">Highlight</button>
                         <button id="regenerate-explanation-btn" class="toolbar-btn" disabled
                             title="Regenerate explanation">Regenerate</button>
-                        <button id="clearExplanationsBtn" class="toolbar-btn danger"
-                            title="Clear explanation display">Clear</button>
                     </div>
-                    <!-- Panel Content -->
                     <div class="explanation-panel-content">
                         <div id="explanation-focus-view" class="explanation-focus-view">
                             <div class="explanation-header hidden">
@@ -192,8 +193,8 @@
                     </div>
                     <div class="floating-modal-footer"
                         style="display: none; padding: 12px 16px; border-top: 1px solid #e0e0e0; gap: 8px; justify-content: flex-end; flex-shrink: 0;">
-                        <button id="editModalCancelBtn" class="control-btn control-btn-secondary">Cancel</button>
-                        <button id="editModalSaveBtn" class="control-btn control-btn-primary">Save</button>
+                        <button id="editModalCancelBtn" class="toolbar-btn">Cancel</button>
+                        <button id="editModalSaveBtn" class="toolbar-btn">Save</button>
                     </div>
                 </div>
 
@@ -208,7 +209,7 @@
                             <div class="settings-section">
                                 <h4 class="settings-section-title">New Session Defaults</h4>
                                 <div class="settings-item">
-                                    <label for="defaultLanguage">Default Translation Language:</label>
+                                    <label for="defaultLanguage">Translation Language:</label>
                                     <select id="defaultLanguage" class="language-selector"
                                         style="width: 100%; margin-top: 4px;">
                                         <option value="Chinese">中文</option>
@@ -220,7 +221,7 @@
                                     </select>
                                 </div>
                                 <div class="settings-item">
-                                    <label for="defaultExplanationLanguage">Default Explanation Language:</label>
+                                    <label for="defaultExplanationLanguage">Explanation Language:</label>
                                     <select id="defaultExplanationLanguage" class="language-selector"
                                         style="width: 100%; margin-top: 4px;">
                                         <option value="Chinese">中文</option>
@@ -299,7 +300,7 @@
                     <div id="highlightsContent" class="panel-content">
                         <div class="panel-toolbar">
                             <button id="clearHighlightsBtn" class="toolbar-btn danger"
-                                title="Clear all highlights">Clear All</button>
+                                title="Clear all highlights">Clear</button>
                         </div>
                         <div id="manual-keywords-display" class="keywords-items">
                             <p class="placeholder">Select text to highlight and add to this panel</p>
@@ -311,8 +312,7 @@
                         <div class="panel-toolbar">
                             <button id="reExtractKeywordsBtn" class="toolbar-btn"
                                 title="Extract keywords">Extract</button>
-                            <button id="clearKeywordsBtn" class="toolbar-btn danger" title="Clear all keywords">Clear
-                                All</button>
+                            <button id="clearKeywordsBtn" class="toolbar-btn danger" title="Clear all keywords">Clear</button>
                         </div>
                         <!-- Auto-extracted Keywords Section -->
                         <div id="auto-keywords-display" class="keywords-tab-content active">
@@ -323,12 +323,6 @@
                     <!-- Summary Content -->
                     <div id="summaryContent" class="panel-content">
                         <div class="panel-toolbar">
-                            <select id="summarizeStyleSelect" class="toolbar-select" title="Summary style">
-                                <option value="paragraph">Paragraph</option>
-                                <option value="key_takeaways">Key Takeaways</option>
-                                <option value="q&a">Q&A</option>
-                                <option value="tldr">TLDR</option>
-                            </select>
                             <select id="summary-language" class="toolbar-select" title="Summary language">
                                 <option value="Chinese">中文</option>
                                 <option value="English">English</option>
@@ -337,10 +331,17 @@
                                 <option value="Japanese">日本語</option>
                                 <option value="Korean">한국어</option>
                             </select>
+                            <button id="clearSummaryBtn" class="toolbar-btn danger" title="Clear summary">Clear</button>
+                        </div>
+                        <div class="panel-toolbar">
+                            <select id="summarizeStyleSelect" class="toolbar-select" title="Summary style">
+                                <option value="paragraph">Paragraph</option>
+                                <option value="key_takeaways">Key Takeaways</option>
+                                <option value="q&a">Q&A</option>
+                                <option value="tldr">TLDR</option>
+                            </select>
                             <button id="regenerateSummaryBtn" class="toolbar-btn"
                                 title="Generate summary">Generate</button>
-                            <button id="copySummaryBtn" class="toolbar-btn" title="Copy summary">Copy</button>
-                            <button id="clearSummaryBtn" class="toolbar-btn danger" title="Clear summary">Clear</button>
                         </div>
                         <div id="summary-display" class="summary-text">
                             <p class="placeholder">Click Generate to generate a summary of your transcription</p>

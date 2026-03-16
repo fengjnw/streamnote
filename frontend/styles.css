@@ -960,31 +960,48 @@ header h1 {
 /* ===== Panel Text Toolbar ===== */
 .text-panel .text-panel-toolbar {
     display: flex;
-    gap: var(--spacing-sm);
-    padding: 10px var(--spacing-md);
-    background: var(--color-bg-light);
+    gap: 8px;
+    padding: 8px 12px;
+    background: #f5f5f5;
     border-bottom: 1px solid var(--color-border);
     flex-shrink: 0;
     align-items: center;
     order: 1 !important;
+    flex-wrap: wrap;
+    min-height: 44px;
 }
 
 .text-panel-toolbar .toolbar-language {
-    flex: 1;
+    flex: 0;
+    min-width: 85px;
+    height: 28px;
+    padding: 4px 10px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    background: white;
+    color: #333;
+    font-size: 0.8em;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
 /* ===== Layout Dropdown ===== */
 .layout-dropdown {
-    flex: 1;
-    padding: var(--spacing-xs) 10px;
-    background: white;
+    flex: 0;
+    min-width: 85px;
+    height: 28px;
+    padding: 4px 10px;
     border: 1px solid #d0d0d0;
     border-radius: 4px;
+    background: white;
     color: #333;
     font-size: 0.8em;
+    font-family: inherit;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
 }
 
 .layout-dropdown:hover {
@@ -1143,17 +1160,10 @@ header h1 {
 
 /* Toolbar language selector */
 .panel-toolbar .toolbar-language {
-    flex: 1;
-    padding: var(--spacing-xs) 10px;
-    font-size: 0.8em;
-    font-weight: 500;
-}
-
-/* Toolbar select dropdown */
-.panel-toolbar .toolbar-select {
-    flex: 1;
-    min-width: auto;
-    padding: var(--spacing-xs) 10px;
+    flex: 0;
+    min-width: 85px;
+    height: 28px;
+    padding: 4px 10px;
     border: 1px solid #d0d0d0;
     border-radius: 4px;
     background: white;
@@ -1163,13 +1173,36 @@ header h1 {
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
 }
 
+/* Toolbar select dropdown */
+.panel-toolbar .toolbar-select {
+    flex: 0;
+    min-width: 100px;
+    height: 28px;
+    padding: 4px 10px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    background: white;
+    color: #333;
+    font-size: 0.8em;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.panel-toolbar .toolbar-language:hover,
 .panel-toolbar .toolbar-select:hover {
     border-color: var(--color-primary);
     color: var(--color-primary);
 }
 
+.panel-toolbar .toolbar-language:focus,
 .panel-toolbar .toolbar-select:focus {
     outline: none;
     border-color: var(--color-primary);
@@ -1310,13 +1343,23 @@ header h1 {
 
 .explanation-panel-toolbar {
     display: flex;
-    gap: var(--spacing-xs);
-    padding: 8px var(--spacing-md);
-    background: var(--color-bg-light);
+    gap: 8px;
+    padding: 8px 12px;
+    background: #f5f5f5;
     border-bottom: 1px solid var(--color-border);
     flex-shrink: 0;
     flex-wrap: wrap;
     order: 1 !important;
+    align-items: center;
+    min-height: 44px;
+}
+
+.explanation-panel-toolbar .toolbar-btn {
+    flex: 1;
+}
+
+.explanation-panel-toolbar .toolbar-language {
+    flex: 1;
 }
 
 .explanation-panel-content {
@@ -2050,6 +2093,18 @@ textarea::placeholder {
 }
 
 /* Hide empty toolbar in settings panel */
+#summaryContent .panel-toolbar .toolbar-btn {
+    flex: 1;
+}
+
+#summaryContent .panel-toolbar .toolbar-select {
+    flex: 1;
+}
+
+#keywordsContent .panel-toolbar .toolbar-btn {
+    flex: 1;
+}
+
 #settingsContent .panel-toolbar {
     display: none;
 }
@@ -2398,12 +2453,13 @@ textarea::placeholder {
 .floating-modal-toolbar {
     display: flex;
     gap: 8px;
-    padding: 10px 16px;
+    padding: 8px 12px;
     background: #f5f5f5;
     border-bottom: 1px solid #e9ecef;
     flex-shrink: 0;
     align-items: center;
     flex-wrap: wrap;
+    min-height: 44px;
 }
 
 /* Modal Content */
@@ -2423,6 +2479,7 @@ textarea::placeholder {
     justify-content: flex-end;
     flex-shrink: 0;
     background: #fafafa;
+    align-items: center;
 }
 
 /* Responsive design for modals */
@@ -2552,15 +2609,16 @@ textarea::placeholder {
 /* ==================== Panel Toolbar ==================== */
 .panel-toolbar {
     display: flex;
-    gap: var(--spacing-sm);
-    padding: 10px var(--spacing-md);
+    gap: 8px;
+    padding: 8px 12px;
     border-bottom: 1px solid var(--color-border);
-    background: var(--color-bg-light);
+    background: #f5f5f5;
     flex-shrink: 0;
     flex-wrap: wrap;
     justify-content: flex-start;
     order: -1;
     align-items: center;
+    min-height: 44px;
 }
 
 
@@ -2579,9 +2637,10 @@ textarea::placeholder {
 }
 
 .toolbar-btn {
-    flex: 1;
-    min-width: 70px;
-    padding: var(--spacing-xs) 10px;
+    flex: 0;
+    min-width: 65px;
+    height: 28px;
+    padding: 4px 10px;
     border: 1px solid #d0d0d0;
     border-radius: 4px;
     background: white;
@@ -2591,7 +2650,10 @@ textarea::placeholder {
     transition: all 0.2s;
     font-family: inherit;
     font-weight: 500;
-    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.2;
 }
 
 .toolbar-btn:hover {
@@ -2625,6 +2687,31 @@ textarea::placeholder {
 .toolbar-btn.active:hover {
     background: #ffcdd2;
     border-color: #c62828;
+}
+
+#clearHighlightsBtn {
+    margin-left: auto;
+}
+
+#editModalSaveBtn {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+#editModalSaveBtn:hover:not(:disabled) {
+    background: #4a6b8a;
+    border-color: #4a6b8a;
+}
+
+#editModalCancelBtn,
+#editModalSaveBtn {
+    flex: 0 !important;
+    min-width: 65px !important;
+    height: 28px !important;
+    padding: 4px 10px !important;
+    font-size: 0.8em !important;
+    font-weight: 500 !important;
 }
 
 /* ==================== Explanation Toolbar ==================== */

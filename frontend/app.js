@@ -1394,37 +1394,17 @@ class StreamNote {
 
         // 工具栏（按钮）
         const toolbar = document.createElement("div");
-        toolbar.className = "text-panel-toolbar";
-        toolbar.style.cssText = `
-            display: flex;
-            gap: 8px;
-            padding: 10px 16px;
-            border-bottom: 1px solid #e9ecef;
-            flex-shrink: 0;
-            background: #f5f5f5;
-            align-items: center;
-        `;
-
-        const buttonGroup = document.createElement("div");
-        buttonGroup.style.cssText = `
-            display: flex;
-            gap: 8px;
-            max-width: 250px;
-            align-items: center;
-        `;
-
-        const addBtn = document.createElement("button");
-        addBtn.className = "toolbar-btn";
-        addBtn.textContent = "Add";
-        addBtn.style.cssText = `flex: 0; max-width: 120px; margin-left: auto;`;
+        toolbar.className = "floating-modal-toolbar";
 
         const cancelBtn = document.createElement("button");
         cancelBtn.className = "toolbar-btn";
         cancelBtn.textContent = "Cancel";
-        cancelBtn.style.cssText = `flex: 0; max-width: 120px;`;
 
-        buttonGroup.appendChild(cancelBtn);
-        buttonGroup.appendChild(addBtn);
+        const addBtn = document.createElement("button");
+        addBtn.className = "toolbar-btn";
+        addBtn.textContent = "Add";
+        addBtn.style.marginLeft = "auto";
+
         toolbar.appendChild(cancelBtn);
         toolbar.appendChild(addBtn);
 
@@ -1555,48 +1535,36 @@ class StreamNote {
             align-items: center;
         `;
 
-        // 左侧按钮区域（Add Item 和 Clear All）
+        // 左侧按钮区域（Cancel）
         const leftGroup = document.createElement("div");
         leftGroup.style.cssText = `
             display: flex;
             gap: 8px;
-            flex: 1;
-            max-width: 250px;
-        `;
-
-        const addItemBtn = document.createElement("button");
-        addItemBtn.className = "toolbar-btn";
-        addItemBtn.textContent = "Add Item";
-        addItemBtn.style.cssText = `flex: 1; max-width: 120px;`;
-
-        const clearAllBtn = document.createElement("button");
-        clearAllBtn.className = "toolbar-btn danger";
-        clearAllBtn.textContent = "Clear All";
-        clearAllBtn.style.cssText = `flex: 1; max-width: 120px;`;
-
-        leftGroup.appendChild(addItemBtn);
-        leftGroup.appendChild(clearAllBtn);
-
-        // 右侧按钮区域（Cancel 和 Save）
-        const buttonGroup = document.createElement("div");
-        buttonGroup.style.cssText = `
-            display: flex;
-            gap: 8px;
-            margin-left: auto;
-            max-width: 250px;
         `;
 
         const cancelBtn = document.createElement("button");
         cancelBtn.className = "toolbar-btn";
         cancelBtn.textContent = "Cancel";
-        cancelBtn.style.cssText = `flex: 1; max-width: 120px;`;
+
+        leftGroup.appendChild(cancelBtn);
+
+        // 右侧按钮区域（Clear 和 Save）
+        const buttonGroup = document.createElement("div");
+        buttonGroup.style.cssText = `
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        `;
+
+        const clearAllBtn = document.createElement("button");
+        clearAllBtn.className = "toolbar-btn danger";
+        clearAllBtn.textContent = "Clear";
 
         const saveBtn = document.createElement("button");
         saveBtn.className = "toolbar-btn";
         saveBtn.textContent = "Save";
-        saveBtn.style.cssText = `flex: 1; max-width: 120px;`;
 
-        buttonGroup.appendChild(cancelBtn);
+        buttonGroup.appendChild(clearAllBtn);
         buttonGroup.appendChild(saveBtn);
 
         toolbar.appendChild(leftGroup);
@@ -1625,22 +1593,6 @@ class StreamNote {
             const text = item?.text || '';
             const timestamp = item?.timestamp || '';
             this._createEditItem(itemsContainer, idx, text, timestamp);
-        });
-
-        // Add Item 按钮
-        addItemBtn.addEventListener("click", () => {
-            const newIdx = Math.max(...indices, -1) + 1;
-            const now = new Date();
-            // 计算当前时刻的秒数（从 00:00:00 开始）
-            const timestamp = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-            this._createEditItem(itemsContainer, newIdx, '', timestamp);
-            // 滚动到最下方
-            setTimeout(() => {
-                const content = document.getElementById("editModalContent");
-                if (content) {
-                    content.scrollTop = content.scrollHeight;
-                }
-            }, 0);
         });
 
         // Clear All 按钮
