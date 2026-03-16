@@ -9,7 +9,7 @@ class PanelManager {
         this.onStatusUpdate = config.onStatusUpdate || (() => { });
 
         // 翻译启用状态（true=启用, false=禁用）
-        this.translationEnabled = true;
+        this.translationEnabled = false;
 
         // 翻译面板的布局选项（当翻译启用时在这些选项间切换）
         this.translationLayoutOptions = ['split-top', 'split-bottom', 'split-left', 'split-right', 'full-translation'];
@@ -18,7 +18,7 @@ class PanelManager {
         this.translationLayout = 'split-bottom';
 
         // 布局状态
-        this.currentLayout = 'split-bottom';
+        this.currentLayout = 'full-transcript';
 
         // 同步滚动
         this.isSyncingScroll = false;
@@ -267,9 +267,9 @@ class PanelManager {
      * 加载保存的初始布局和翻译状态
      */
     loadPanelState() {
-        // 加载翻译启用状态（默认启用）
+        // 加载翻译启用状态（默认禁用）
         const saved = localStorage.getItem('translationEnabled');
-        this.translationEnabled = saved !== null ? JSON.parse(saved) : true;
+        this.translationEnabled = saved !== null ? JSON.parse(saved) : false;
 
         // 加载翻译面板布局（默认 split-bottom）
         this.translationLayout = localStorage.getItem('translationLayout') || 'split-bottom';
