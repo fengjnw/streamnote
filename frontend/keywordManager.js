@@ -450,6 +450,7 @@ class KeywordManager {
 
             // 检查缓存
             if (this.explanationCache[cacheKey]) {
+                console.log(`[KeywordManager] Using cached explanation for "${keyword}"`);
                 contentElement.innerHTML = `<p>${this.explanationCache[cacheKey]}</p>`;
                 return;
             }
@@ -462,6 +463,8 @@ class KeywordManager {
             const fallbackDataSize = this.lastKnownTranscriptData ? Object.keys(this.lastKnownTranscriptData).length : 0;
             console.log(`[KeywordManager] fetchAndShowExplanation("${keyword}"): context="${context ? context.substring(0, 50) : "(empty)"}...", transcriptData=${transcriptDataSize} items, fallback=${fallbackDataSize} items`);
 
+            console.log(`[KeywordManager] Calling API: ${this.explanationApiUrl} with language="${explanationLanguage}"`);
+            
             const response = await fetch(this.explanationApiUrl, {
                 method: "POST",
                 headers: {
@@ -474,14 +477,19 @@ class KeywordManager {
                 })
             });
 
+            console.log(`[KeywordManager] API response status: ${response.status}`);
+            
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+                const errorText = await response.text();
+                console.error(`[KeywordManager] API error: ${response.status} ${errorText}`);
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
 
             // 处理流式响应
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let explanation = "";
+            let chunkCount = 0;
 
             try {
                 while (true) {
@@ -490,6 +498,12 @@ class KeywordManager {
 
                     const chunk = decoder.decode(value, { stream: true });
                     explanation += chunk;
+                    chunkCount++;
+                    
+                    // [DEBUG] 只在前几个chunk记录日志
+                    if (chunkCount <= 3) {
+                        console.log(`[KeywordManager] Received chunk ${chunkCount}: "${chunk.substring(0, 50)}..."`);
+                    }
 
                     // 实时更新显示（逐字显示）
                     if (explanation) {
@@ -508,6 +522,8 @@ class KeywordManager {
 
             // 存入缓存
             this.explanationCache[cacheKey] = explanation;
+            
+            console.log(`[KeywordManager] Explanation complete: "${explanation.substring(0, 60)}..." (${explanation.length} chars, ${chunkCount} chunks)`);
 
             // 最终显示
             contentElement.innerHTML = `<p>${explanation}</p>`;
@@ -940,6 +956,7 @@ class KeywordManager {
 
             // 检查缓存
             if (this.explanationCache[cacheKey]) {
+                console.log(`[KeywordManager] Using cached explanation for "${keyword}"`);
                 contentElement.innerHTML = `<p>${this.explanationCache[cacheKey]}</p>`;
                 // 解释加载完成后显示上下文
                 this.updateWordContext(keyword);
@@ -954,6 +971,8 @@ class KeywordManager {
             const fallbackDataSize = this.lastKnownTranscriptData ? Object.keys(this.lastKnownTranscriptData).length : 0;
             console.log(`[KeywordManager] fetchAndShowExplanationForFocusView("${keyword}"): context="${context ? context.substring(0, 50) : "(empty)"}...", transcriptData=${transcriptDataSize} items, fallback=${fallbackDataSize} items`);
 
+            console.log(`[KeywordManager] Calling API: ${this.explanationApiUrl} with language="${explanationLanguage}"`);
+            
             const response = await fetch(this.explanationApiUrl, {
                 method: "POST",
                 headers: {
@@ -966,13 +985,18 @@ class KeywordManager {
                 })
             });
 
+            console.log(`[KeywordManager] API response status: ${response.status}`);
+            
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+                const errorText = await response.text();
+                console.error(`[KeywordManager] API error: ${response.status} ${errorText}`);
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let explanation = "";
+            let chunkCount = 0;
 
             try {
                 while (true) {
@@ -981,6 +1005,12 @@ class KeywordManager {
 
                     const chunk = decoder.decode(value, { stream: true });
                     explanation += chunk;
+                    chunkCount++;
+                    
+                    // [DEBUG] 只在前几个chunk记录日志
+                    if (chunkCount <= 3) {
+                        console.log(`[KeywordManager] Received chunk ${chunkCount}: "${chunk.substring(0, 50)}..."`);
+                    }
 
                     if (explanation) {
                         contentElement.innerHTML = `<p>${explanation}</p>`;
@@ -991,6 +1021,8 @@ class KeywordManager {
                 if (finalChunk) {
                     contentElement.innerHTML = `<p>${explanation}</p>`;
                 }
+                
+                console.log(`[KeywordManager] Explanation complete: "${explanation.substring(0, 60)}..." (${explanation.length} chars, ${chunkCount} chunks)`);
             } finally {
                 reader.releaseLock();
             }
