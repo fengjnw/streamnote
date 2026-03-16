@@ -26,6 +26,9 @@ class RecordingManager {
         this.statsUpdateInterval = null;
         this.isTranscribing = false;  // 转录状态标志
 
+        // Session 相关
+        this.sessionStartTime = null;  // 用于计算相对时间戳的参考点（毫秒）
+
         // 转录上下文 - 用于Whisper的prompt参数，帮助提高准确率
         this.transcriptionContext = "";
 
@@ -34,6 +37,13 @@ class RecordingManager {
         this.onTranscribeProgress = config.onTranscribeProgress || (() => { });
         this.onStatusUpdate = config.onStatusUpdate || (() => { });
         this.onRecordingStateChange = config.onRecordingStateChange || (() => { });
+    }
+
+    /**
+     * 设置session开始时间（用于计算相对时间戳）
+     */
+    setSessionStartTime(sessionStartTimeMs) {
+        this.sessionStartTime = sessionStartTimeMs || Date.now();
     }
 
     /**
@@ -250,9 +260,10 @@ class RecordingManager {
             // 转录完成，回到监听状态（在通知上层之前设置）
             this.isTranscribing = false;
 
-            // 获取当前时钟时间（HH:MM:SS 转换为秒数）
-            const now = new Date();
-            const timestamp = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+            // 计算相对于session开始时间的秒数
+            const sessionStart = this.sessionStartTime || Date.now();
+            const relativeSeconds = Math.floor((Date.now() - sessionStart) / 1000);
+            const timestamp = relativeSeconds;
 
             if (!text) {
                 // 即使没有文本，也要通知上层刷新UI（特别是当停止录音时）

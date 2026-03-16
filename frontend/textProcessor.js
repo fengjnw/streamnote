@@ -94,18 +94,20 @@ class TextProcessor {
     /**
      * 将文本转换为 preciseResults 格式
      * @param {string} text - 文本内容
+     * @param {number} sessionStartTimeMs - session的开始时间（毫秒），用于计算相对时间戳
      * @returns {Object} preciseResults 格式的数据
      */
-    static convertToPreciseResults(text) {
+    static convertToPreciseResults(text, sessionStartTimeMs = null) {
         // 按行分割（每行成为一个item）
         const lines = text
             .split('\n')
             .map(line => line.trim())
             .filter(line => line.length > 0);
 
-        // 获取当前时间作为所有导入项的时间戳（从 00:00:00 开始的秒数）
-        const now = new Date();
-        const timestamp = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+        // 计算相对于session开始时间的秒数
+        const sessionStart = sessionStartTimeMs || Date.now();
+        const relativeSeconds = Math.floor((Date.now() - sessionStart) / 1000);
+        const timestamp = relativeSeconds;
 
         const preciseResults = {};
 
@@ -126,9 +128,10 @@ class TextProcessor {
     /**
      * 处理文件上传（完整流程）
      * @param {File} file - 文件对象
+     * @param {number} sessionStartTimeMs - session的开始时间（毫秒），用于计算相对时间戳
      * @returns {Promise<Object>} 转换后的 preciseResults 和元数据
      */
-    static async processFile(file) {
+    static async processFile(file, sessionStartTimeMs = null) {
         // 验证
         const validation = this.validateFile(file);
         if (!validation.valid) {
@@ -148,7 +151,7 @@ class TextProcessor {
         }
 
         // 转换
-        const result = this.convertToPreciseResults(text);
+        const result = this.convertToPreciseResults(text, sessionStartTimeMs);
 
         return {
             preciseResults: result.data,

@@ -97,6 +97,8 @@ class StreamNote {
                 }
             }
         });
+        // 为新session设置初始的sessionStartTime
+        this.recordingManager.setSessionStartTime(Date.now());
     }
 
     /**
@@ -312,20 +314,26 @@ class StreamNote {
             summaryLanguageSelector.value = this.explanationLanguage;
         }
 
-        // 加载转录内容到 RecordingManager
+        // 加载转录内容到 RecordingManager，并设置session开始时间用于时间戳计算
         this.recordingManager.setTranscriptData(session.transcripts || {});
+        this.recordingManager.setSessionStartTime(session.startTime);
         this.panelManager.setTranscriptData(session.transcripts || {});
 
         // 更新转录上下文 - 从之前的转录内容生成
         this.updateTranscriptionContext();
 
-        // 加载当前语言的翻译内容到 TranslationManager
+        // 加载当前语言的翻译内容到 TranslationManager，并同步session开始时间
         const translationsForLanguage = (session.translations && session.translations[this.language])
             ? { ...session.translations[this.language] }
             : {};
         this.translationManager.setLanguage(this.language);
         this.translationManager.setTranslationData(translationsForLanguage);
         this.translationResults = translationsForLanguage; // 保留兼容性
+        
+        // 同步session开始时间到translationManager（用于时间戳显示）
+        if (this.translationManager && session.startTime) {
+            this.translationManager.sessionStartTime = session.startTime;
+        }
 
         // 加载缓存数据
         this.summaryCache = session.summaryCache ? { ...session.summaryCache } : {};
@@ -1250,7 +1258,9 @@ class StreamNote {
                 const file = e.target.files[0];
                 if (file) {
                     try {
-                        const result = await TextProcessor.processFile(file);
+                        const session = this.sessionManager.getCurrentSession();
+                        const sessionStart = session && session.startTime ? session.startTime : Date.now();
+                        const result = await TextProcessor.processFile(file, sessionStart);
                         this.importTextContent(result.preciseResults, file.name, "file");
                         this.showStatusMessage(`Imported ${file.name}`, 2000);
                     } catch (error) {
@@ -1490,12 +1500,10 @@ class StreamNote {
 
             // 生成 preciseResults
             const preciseResults = {};
-            const now = new Date();
-            const hours = now.getHours();
-            const minutes = now.getMinutes();
-            const seconds = now.getSeconds();
-            // 存储秒数（从 00:00:00 开始计算）
-            const timestamp = hours * 3600 + minutes * 60 + seconds;
+            const session = this.sessionManager.getCurrentSession();
+            const sessionStart = session && session.startTime ? session.startTime : Date.now();
+            const relativeSeconds = Math.floor((Date.now() - sessionStart) / 1000);
+            const timestamp = relativeSeconds;
 
             lines.forEach((line, idx) => {
                 preciseResults[idx] = {
@@ -1690,30 +1698,96 @@ class StreamNote {
             e.currentTarget.style.boxShadow = "none";
         });
 
-        // 时间戳输入框
-        const timestampInput = document.createElement("input");
-        timestampInput.type = "text";
-
-        // 转换时间戳格式（秒数 → HH:MM:SS）
+        // 时间戳输入框 - 分为日期和时间两个输入框
+        const session = this.sessionManager.getCurrentSession();
+        const sessionStartMs = session && session.startTime ? session.startTime : Date.now();
+        const sessionStartDate = new Date(sessionStartMs);
+        
+        // 计算初始日期和时间
+        let displayDate = "2000-01-01";
         let displayTime = "00:00:00";
+        
         if (timestamp) {
-            const seconds = typeof timestamp === 'number' ? timestamp :
+            const relativeSeconds = typeof timestamp === 'number' ? timestamp :
                 (typeof timestamp === 'string' && /^\d+$/.test(timestamp) ? parseInt(timestamp) : null);
 
-            if (seconds !== null && seconds >= 0) {
-                const hours = Math.floor(seconds / 3600) % 24;
-                const minutes = Math.floor((seconds % 3600) / 60);
-                const secs = seconds % 60;
-                displayTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            if (relativeSeconds !== null && relativeSeconds >= 0) {
+                // 转换为实际时间
+                const actualTimeMs = sessionStartMs + relativeSeconds * 1000;
+                const date = new Date(actualTimeMs);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                displayDate = `${year}-${month}-${day}`;
+                
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                displayTime = `${hours}:${minutes}:${seconds}`;
             }
             else if (typeof timestamp === 'string' && /^\d{2}:\d{2}:\d{2}$/.test(timestamp)) {
                 displayTime = timestamp;
+                displayDate = `${sessionStartDate.getFullYear()}-${String(sessionStartDate.getMonth() + 1).padStart(2, '0')}-${String(sessionStartDate.getDate()).padStart(2, '0')}`;
             }
+        } else {
+            // 默认为session开始日期
+            displayDate = `${sessionStartDate.getFullYear()}-${String(sessionStartDate.getMonth() + 1).padStart(2, '0')}-${String(sessionStartDate.getDate()).padStart(2, '0')}`;
         }
+        
+        // 日期输入框
+        const dateInput = document.createElement("input");
+        dateInput.type = "text";
+        dateInput.value = displayDate;
+        dateInput.placeholder = "YYYY-MM-DD";
+        dateInput.style.cssText = `
+            width: 110px;
+            padding: 6px 6px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-family: "Monaco", "Menlo", monospace;
+            font-size: 13px;
+            text-align: center;
+            box-sizing: border-box;
+            flex-shrink: 0;
+            line-height: 1.4;
+            height: 32px;
+        `;
+        dateInput.addEventListener("blur", (e) => {
+            const val = e.target.value.trim();
+            if (!val) {
+                e.target.value = displayDate;
+                e.target.style.borderColor = "#ddd";
+            } else if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+                e.target.style.borderColor = "#d32f2f";
+                e.target.value = displayDate;
+                this.showStatusMessage("Invalid date format (use YYYY-MM-DD, e.g., 2026-03-16)", 2000);
+            } else {
+                const [y, m, d] = val.split('-').map(Number);
+                const date = new Date(y, m - 1, d);
+                // 检查日期有效性
+                if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) {
+                    e.target.style.borderColor = "#d32f2f";
+                    e.target.value = displayDate;
+                    this.showStatusMessage("Invalid date", 2000);
+                } else if (date < sessionStartDate) {
+                    e.target.style.borderColor = "#d32f2f";
+                    e.target.value = displayDate;
+                    this.showStatusMessage("Date cannot be before session start date", 2500);
+                } else {
+                    e.target.style.borderColor = "#ddd";
+                }
+            }
+        });
+        dateInput.addEventListener("focus", (e) => {
+            e.target.style.borderColor = "#5a7c99";
+        });
 
-        timestampInput.value = displayTime;
-        timestampInput.placeholder = "HH:MM:SS";
-        timestampInput.style.cssText = `
+        // 时间输入框
+        const timeInput = document.createElement("input");
+        timeInput.type = "text";
+        timeInput.value = displayTime;
+        timeInput.placeholder = "HH:MM:SS";
+        timeInput.style.cssText = `
             width: 100px;
             padding: 6px 6px;
             border: 1px solid #ddd;
@@ -1726,7 +1800,7 @@ class StreamNote {
             line-height: 1.4;
             height: 32px;
         `;
-        timestampInput.addEventListener("blur", (e) => {
+        timeInput.addEventListener("blur", (e) => {
             const val = e.target.value.trim();
             if (!val) {
                 e.target.value = displayTime;
@@ -1740,15 +1814,25 @@ class StreamNote {
                 if (h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59) {
                     e.target.style.borderColor = "#d32f2f";
                     e.target.value = displayTime;
-                    this.showStatusMessage("Invalid time: hours must be 00-23, minutes 00-59, seconds 00-59", 2500);
+                    this.showStatusMessage("Invalid time: hours 00-23, minutes 00-59, seconds 00-59", 2500);
                 } else {
                     e.target.style.borderColor = "#ddd";
                 }
             }
         });
-        timestampInput.addEventListener("focus", (e) => {
+        timeInput.addEventListener("focus", (e) => {
             e.target.style.borderColor = "#5a7c99";
         });
+
+        // 创建日期时间容器
+        const timestampContainer = document.createElement("div");
+        timestampContainer.style.cssText = `
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        `;
+        timestampContainer.appendChild(dateInput);
+        timestampContainer.appendChild(timeInput);
 
         // 文本编辑框
         const textarea = document.createElement("textarea");
@@ -1801,9 +1885,11 @@ class StreamNote {
                 const indices = items.map(el => parseInt(el.id.replace('edit-item-', '')));
                 const newIdx = Math.max(...indices, -1) + 1;
 
-                // 获取当前时间戳
-                const now = new Date();
-                const timestamp = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+                // 计算相对于session开始时间的秒数
+                const session = this.sessionManager.getCurrentSession();
+                const sessionStart = session && session.startTime ? session.startTime : Date.now();
+                const relativeSeconds = Math.floor((Date.now() - sessionStart) / 1000);
+                const timestamp = relativeSeconds;
 
                 // 创建新 item（会被添加到末尾）
                 this._createEditItem(itemsContainer, newIdx, '', timestamp);
@@ -1954,10 +2040,10 @@ class StreamNote {
 
         // 保存引用
         this.editInputs[idx] = textarea;
-        this.editTimestamps[idx] = timestampInput;
+        this.editTimestamps[idx] = { date: dateInput, time: timeInput };
 
         // 组装
-        item.appendChild(timestampInput);
+        item.appendChild(timestampContainer);
         item.appendChild(textarea);
         item.appendChild(deleteBtn);
         container.appendChild(item);
@@ -1975,38 +2061,83 @@ class StreamNote {
 
         const updatedData = {};
         const transcriptData = this.recordingManager.getTranscriptData();
+        const session = this.sessionManager.getCurrentSession();
+        const sessionStartTime = session && session.startTime ? session.startTime : Date.now();
+        const sessionStartDate = new Date(sessionStartTime);
+        
         let hasError = false;
         let errorMsg = "";
 
-        // 辅助函数：将 HH:MM:SS 格式转换为秒数
-        const timeToSeconds = (timeStr) => {
-            if (!timeStr) return 0;
-            const [h, m, s] = timeStr.split(':').map(Number);
-            return h * 3600 + m * 60 + s;
+        // 辅助函数：将日期+时间格式转换为相对秒数（基于session.startTime）
+        const dateTimeToSeconds = (dateStr, timeStr) => {
+            if (!dateStr || !timeStr) return 0;
+            
+            const [y, m, d] = dateStr.split('-').map(Number);
+            const [h, mi, s] = timeStr.split(':').map(Number);
+            
+            // 构建用户输入的实际日期时间
+            const inputDate = new Date(y, m - 1, d, h, mi, s);
+            
+            // 计算相对秒数
+            const relativeSeconds = Math.floor((inputDate.getTime() - sessionStartTime) / 1000);
+            return Math.max(0, relativeSeconds);  // 确保不为负
         };
 
         // 第一步：验证所有时间戳格式和范围
         editItems.forEach((item) => {
-            const timestampInput = item.querySelector('input[type="text"]');
-            if (timestampInput) {
-                const timestamp = timestampInput.value.trim();
+            const timestampContainer = item.querySelector('div[style*="display: flex"]');
+            if (timestampContainer) {
+                const inputs = timestampContainer.querySelectorAll('input[type="text"]');
+                if (inputs.length >= 2) {
+                    const dateInput = inputs[0];
+                    const timeInput = inputs[1];
+                    const dateStr = dateInput.value.trim();
+                    const timeStr = timeInput.value.trim();
 
-                // 检查格式
-                if (timestamp && !/^\d{2}:\d{2}:\d{2}$/.test(timestamp)) {
-                    hasError = true;
-                    errorMsg = `Invalid timestamp format: "${timestamp}". Use format HH:MM:SS (e.g., 12:34:56)`;
-                    timestampInput.style.borderColor = "#d32f2f";
-                    return;
-                }
-
-                // 检查时间范围
-                if (timestamp) {
-                    const [h, m, s] = timestamp.split(':').map(Number);
-                    if (h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59) {
+                    // 检查日期格式
+                    if (dateStr && !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
                         hasError = true;
-                        errorMsg = `Invalid time: hours must be 00-23, minutes 00-59, seconds 00-59`;
-                        timestampInput.style.borderColor = "#d32f2f";
+                        errorMsg = `Invalid date format: "${dateStr}". Use YYYY-MM-DD`;
+                        dateInput.style.borderColor = "#d32f2f";
                         return;
+                    }
+
+                    // 检查日期有效性
+                    if (dateStr) {
+                        const [y, m, d] = dateStr.split('-').map(Number);
+                        const date = new Date(y, m - 1, d);
+                        if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) {
+                            hasError = true;
+                            errorMsg = `Invalid date: "${dateStr}"`;
+                            dateInput.style.borderColor = "#d32f2f";
+                            return;
+                        }
+                        // 检查日期不早于session开始日期
+                        if (date < sessionStartDate) {
+                            hasError = true;
+                            errorMsg = `Date cannot be before session start date`;
+                            dateInput.style.borderColor = "#d32f2f";
+                            return;
+                        }
+                    }
+
+                    // 检查时间格式
+                    if (timeStr && !/^\d{2}:\d{2}:\d{2}$/.test(timeStr)) {
+                        hasError = true;
+                        errorMsg = `Invalid time format: "${timeStr}". Use HH:MM:SS`;
+                        timeInput.style.borderColor = "#d32f2f";
+                        return;
+                    }
+
+                    // 检查时间范围
+                    if (timeStr) {
+                        const [h, m, s] = timeStr.split(':').map(Number);
+                        if (h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59) {
+                            hasError = true;
+                            errorMsg = `Invalid time: hours 00-23, minutes 00-59, seconds 00-59`;
+                            timeInput.style.borderColor = "#d32f2f";
+                            return;
+                        }
                     }
                 }
             }
@@ -2021,13 +2152,20 @@ class StreamNote {
         let itemIndex = 0;
         editItems.forEach((item) => {
             const textarea = item.querySelector('textarea');
-            const timestampInput = item.querySelector('input[type="text"]');
-
+            const timestampContainer = item.querySelector('div[style*="display: flex"]');
+            
             const text = textarea ? textarea.value.trim() : '';
             if (text.length > 0) {
-                const timeStr = timestampInput ? timestampInput.value.trim() : '';
-                // 转换 HH:MM:SS 为秒数
-                const timestamp = timeToSeconds(timeStr);
+                let timestamp = 0;
+                
+                if (timestampContainer) {
+                    const inputs = timestampContainer.querySelectorAll('input[type="text"]');
+                    if (inputs.length >= 2) {
+                        const dateStr = inputs[0].value.trim();
+                        const timeStr = inputs[1].value.trim();
+                        timestamp = dateTimeToSeconds(dateStr, timeStr);
+                    }
+                }
 
                 updatedData[itemIndex] = {
                     text: text,
@@ -2463,6 +2601,12 @@ class StreamNote {
             // 确保上下文已更新
             this.updateTranscriptionContext();
 
+            // 为当前session设置sessionStartTime，然后开始录音
+            const currentSession = this.sessionManager.getCurrentSession();
+            if (currentSession) {
+                this.recordingManager.setSessionStartTime(currentSession.startTime);
+            }
+
             await this.recordingManager.start(this.recordingSessionId);
 
             this.updateRecordingButtonState();
@@ -2707,8 +2851,8 @@ class StreamNote {
                     // 检查是否为 HH:MM:SS 格式
                     if (/^\d{2}:\d{2}:\d{2}$/.test(timeValue)) {
                         timestamp_str = timeValue;
-                    } else {
-                        // 尝试解析为秒数
+                    } else if (/^\d+$/.test(timeValue)) {
+                        // 是纯数字字符串，当相对秒数处理
                         timeValue = parseInt(timeValue);
                     }
                 }
@@ -2717,10 +2861,14 @@ class StreamNote {
                 if (timestamp_str) {
                     timestamp = timestamp_str;
                 } else if (typeof timeValue === 'number' && !isNaN(timeValue)) {
-                    // 直接从秒数转换成 HH:MM:SS（输入的是当前时钟的秒数）
-                    const hours = String(Math.floor(timeValue / 3600) % 24).padStart(2, '0');
-                    const minutes = String(Math.floor((timeValue % 3600) / 60)).padStart(2, '0');
-                    const seconds = String(timeValue % 60).padStart(2, '0');
+                    // timeValue 是相对秒数，需要根据session.startTime换算为实际时间
+                    const session = this.sessionManager.getCurrentSession();
+                    const sessionStartMs = session && session.startTime ? session.startTime : Date.now();
+                    const actualTimeMs = sessionStartMs + timeValue * 1000;
+                    const date = new Date(actualTimeMs);
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const seconds = String(date.getSeconds()).padStart(2, '0');
                     timestamp = `${hours}:${minutes}:${seconds}`;
                 } else {
                     // 无法解析，使用当前时间
@@ -2847,8 +2995,8 @@ class StreamNote {
                     // 检查是否为 HH:MM:SS 格式
                     if (/^\d{2}:\d{2}:\d{2}$/.test(timeValue)) {
                         timestamp_str = timeValue;
-                    } else {
-                        // 尝试解析为毫秒数字
+                    } else if (/^\d+$/.test(timeValue)) {
+                        // 是纯数字字符串，当相对秒数处理
                         timeValue = parseInt(timeValue);
                     }
                 }
@@ -2857,7 +3005,11 @@ class StreamNote {
                 if (timestamp_str) {
                     timestamp = timestamp_str;
                 } else if (typeof timeValue === 'number' && !isNaN(timeValue)) {
-                    const date = new Date(timeValue);
+                    // timeValue 是相对秒数，需要根据session.startTime换算为实际时间
+                    const session = this.sessionManager.getCurrentSession();
+                    const sessionStartMs = session && session.startTime ? session.startTime : Date.now();
+                    const actualTimeMs = sessionStartMs + timeValue * 1000;
+                    const date = new Date(actualTimeMs);
                     const hours = String(date.getHours()).padStart(2, '0');
                     const minutes = String(date.getMinutes()).padStart(2, '0');
                     const seconds = String(date.getSeconds()).padStart(2, '0');
