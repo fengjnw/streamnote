@@ -456,6 +456,11 @@ class KeywordManager {
 
             // 获取上下文（用于API）- 使用统一方法避免重复
             const context = this.getContextForKeyword(keyword);
+            
+            // [DEBUG] 诊断日志 - 确保问题可见
+            const transcriptDataSize = Object.keys(this.getTranscriptData()).length;
+            const fallbackDataSize = this.lastKnownTranscriptData ? Object.keys(this.lastKnownTranscriptData).length : 0;
+            console.log(`[KeywordManager] fetchAndShowExplanation("${keyword}"): context="${context ? context.substring(0, 50) : "(empty)"}...", transcriptData=${transcriptDataSize} items, fallback=${fallbackDataSize} items`);
 
             const response = await fetch(this.explanationApiUrl, {
                 method: "POST",
@@ -943,6 +948,11 @@ class KeywordManager {
 
             // 获取上下文（用于API）- 使用统一方法
             const context = this.getContextForKeyword(keyword);
+            
+            // [DEBUG] 诊断日志 - 确保问题可见
+            const transcriptDataSize = Object.keys(this.getTranscriptData()).length;
+            const fallbackDataSize = this.lastKnownTranscriptData ? Object.keys(this.lastKnownTranscriptData).length : 0;
+            console.log(`[KeywordManager] fetchAndShowExplanationForFocusView("${keyword}"): context="${context ? context.substring(0, 50) : "(empty)"}...", transcriptData=${transcriptDataSize} items, fallback=${fallbackDataSize} items`);
 
             const response = await fetch(this.explanationApiUrl, {
                 method: "POST",
