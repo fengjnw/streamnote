@@ -211,9 +211,9 @@ class TextProcessor {
                 try {
                     const arrayBuffer = e.target.result;
                     // 设置 pdf.js worker 脚本
-                    pdfjsLib.GlobalWorkerOptions.workerSrc = 
+                    pdfjsLib.GlobalWorkerOptions.workerSrc =
                         'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                    
+
                     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                     const textArray = [];
 

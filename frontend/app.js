@@ -1599,9 +1599,16 @@ class StreamNote {
         // Clear All 按钮
         clearAllBtn.addEventListener("click", () => {
             if (confirm("Clear all items?")) {
-                itemsContainer.innerHTML = "";
-                this.editInputs = {};
-                this.editTimestamps = {};
+                // 直接调用内置的 clear 方法
+                this.clear();
+                
+                // 关闭模态窗口
+                const backdrop = document.getElementById("editModalBackdrop");
+                const modal = document.getElementById("editModal");
+                if (backdrop && modal) {
+                    backdrop.style.display = "none";
+                    modal.style.display = "none";
+                }
             }
         });
 
@@ -1877,8 +1884,9 @@ class StreamNote {
      * 保存编辑后的转录
      */
     saveEditedTranscript() {
-        if (!this.editInputs) return;
-
+        // 直接从 DOM 中读取所有编辑项，而不依赖 this.editInputs
+        const editItems = document.querySelectorAll('[id^="edit-item-"]');
+        
         const updatedData = {};
         const transcriptData = this.recordingManager.getTranscriptData();
         let hasError = false;
@@ -1892,28 +1900,31 @@ class StreamNote {
         };
 
         // 第一步：验证所有时间戳格式和范围
-        for (const [idx, timestampInput] of Object.entries(this.editTimestamps)) {
-            const timestamp = timestampInput.value.trim();
+        editItems.forEach((item) => {
+            const timestampInput = item.querySelector('input[type="text"]');
+            if (timestampInput) {
+                const timestamp = timestampInput.value.trim();
 
-            // 检查格式
-            if (timestamp && !/^\d{2}:\d{2}:\d{2}$/.test(timestamp)) {
-                hasError = true;
-                errorMsg = `Invalid timestamp format at item [${idx}]: "${timestamp}". Use format HH:MM:SS (e.g., 12:34:56)`;
-                timestampInput.style.borderColor = "#d32f2f";
-                break;
-            }
-
-            // 检查时间范围
-            if (timestamp) {
-                const [h, m, s] = timestamp.split(':').map(Number);
-                if (h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59) {
+                // 检查格式
+                if (timestamp && !/^\d{2}:\d{2}:\d{2}$/.test(timestamp)) {
                     hasError = true;
-                    errorMsg = `Invalid time at item [${idx}]: hours must be 00-23, minutes 00-59, seconds 00-59`;
+                    errorMsg = `Invalid timestamp format: "${timestamp}". Use format HH:MM:SS (e.g., 12:34:56)`;
                     timestampInput.style.borderColor = "#d32f2f";
-                    break;
+                    return;
+                }
+
+                // 检查时间范围
+                if (timestamp) {
+                    const [h, m, s] = timestamp.split(':').map(Number);
+                    if (h < 0 || h > 23 || m < 0 || m > 59 || s < 0 || s > 59) {
+                        hasError = true;
+                        errorMsg = `Invalid time: hours must be 00-23, minutes 00-59, seconds 00-59`;
+                        timestampInput.style.borderColor = "#d32f2f";
+                        return;
+                    }
                 }
             }
-        }
+        });
 
         if (hasError) {
             this.showStatusMessage(errorMsg, 2500);
@@ -1921,19 +1932,23 @@ class StreamNote {
         }
 
         // 第二步：收集数据并转换时间戳为秒数
-        Object.entries(this.editInputs).forEach(([idx, textarea]) => {
-            const text = textarea.value.trim();
+        let itemIndex = 0;
+        editItems.forEach((item) => {
+            const textarea = item.querySelector('textarea');
+            const timestampInput = item.querySelector('input[type="text"]');
+            
+            const text = textarea ? textarea.value.trim() : '';
             if (text.length > 0) {
-                const timestampInput = this.editTimestamps?.[idx];
                 const timeStr = timestampInput ? timestampInput.value.trim() : '';
                 // 转换 HH:MM:SS 为秒数
                 const timestamp = timeToSeconds(timeStr);
 
-                updatedData[idx] = {
+                updatedData[itemIndex] = {
                     text: text,
                     timestamp: timestamp,
-                    source: transcriptData[idx]?.source || 'edited'
+                    source: 'edited'
                 };
+                itemIndex++;
             }
         });
 
@@ -2430,8 +2445,8 @@ class StreamNote {
         this.updateStatus("Cleared");
         this.updateSessionStats();
 
-        // 保存到当前 session
-        this.saveToSession();
+        // 直接覆盖当前 session 的转录内容为空（不使用合并逻辑）
+        this.sessionManager.updateCurrentTranscripts({});
     }
 
     toggleAutoScroll() {
@@ -2751,6 +2766,21 @@ class StreamNote {
             if (transcript && !this.panelManager.isScrolledToBottom(transcript)) {
                 this.panelManager.autoScroll = false;
                 this.panelManager.updateAutoScrollButton();
+            }
+
+            // 根据是否有内容来启用/禁用 edit 按钮
+            const editTextBtn = document.getElementById("editTextBtn");
+            if (editTextBtn) {
+                const transcriptData = this.recordingManager.getTranscriptData();
+                const hasContent = Object.keys(transcriptData).length > 0;
+                editTextBtn.disabled = !hasContent;
+                if (!hasContent) {
+                    editTextBtn.style.opacity = "0.3";
+                    editTextBtn.style.pointerEvents = "none";
+                } else {
+                    editTextBtn.style.opacity = "1";
+                    editTextBtn.style.pointerEvents = "auto";
+                }
             }
         }, 50);
     }
