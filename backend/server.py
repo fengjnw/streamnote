@@ -14,6 +14,18 @@ import logging
 app = Flask(__name__, static_folder='../frontend', static_url_path='')
 CORS(app)
 
+# [FIX] 禁用缓存以确保云端部署最新版本的代码被加载
+@app.after_request
+def disable_caching(response):
+    """为所有响应添加HTTP缓存控制头，防止旧版本被缓存"""
+    # 禁用所有缓存 - 确保前端JavaScript和API都总是最新版本
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0, public'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    # 添加版本标识
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    return response
+
 # 禁用 Werkzeug 的详细日志
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.WARNING)  # 只显示 warning 和 error，不显示 INFO 级别的请求日志
