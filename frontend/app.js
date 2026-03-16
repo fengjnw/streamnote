@@ -614,6 +614,22 @@ class StreamNote {
     }
 
     setupUIListeners() {
+        // 工具栏按钮点击时关闭模态窗口（除了打开 modal 的按钮）
+        const controlPanel = document.querySelector(".control-panel");
+        if (controlPanel) {
+            controlPanel.addEventListener("click", (e) => {
+                const btn = e.target.classList.contains("control-btn") ? e.target : e.target.closest(".control-btn");
+                if (btn) {
+                    // 这些按钮会打开模态窗口，不要在这里关闭
+                    const modalBtnIds = ['openSessionPanel', 'quickAccessSettings'];
+                    if (!modalBtnIds.includes(btn.id)) {
+                        // 其他按钮点击时，关闭所有打开的模态
+                        this.closeAllModals();
+                    }
+                }
+            });
+        }
+
         document.getElementById("recordBtn").addEventListener("click", () => this.toggleRecording());
 
         // 布局切换已由 PanelManager 处理
@@ -3202,6 +3218,23 @@ class StreamNote {
 
         if (!modal) return;
 
+        // 如果有其他已打开的 modal，先关闭它们（一次只打开一个）
+        if (this.openModals.size > 0) {
+            this.openModals.forEach(id => {
+                if (id !== modalId) {
+                    const otherModal = document.getElementById(id);
+                    const otherButton = this.getModalButton(id);
+                    if (otherModal) {
+                        otherModal.style.display = "none";
+                        if (otherButton) {
+                            otherButton.classList.remove("active");
+                        }
+                    }
+                }
+            });
+            this.openModals.clear();
+        }
+
         // 显示背景遮罩
         if (overlay) {
             overlay.style.display = "block";
@@ -3250,6 +3283,16 @@ class StreamNote {
             // 恢复body滚动
             document.body.style.overflow = "auto";
         }
+    }
+
+    /**
+     * 关闭所有打开的模态窗口
+     */
+    closeAllModals() {
+        const openModalsCopy = Array.from(this.openModals);
+        openModalsCopy.forEach(modalId => {
+            this.closeModal(modalId);
+        });
     }
 
     /**
