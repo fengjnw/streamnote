@@ -4059,6 +4059,11 @@ class StreamNote {
     deleteKeyword(keyword) {
         if (!this.keywordManager) return;
 
+        // 检查该词是否正在解释面板中显示
+        const currentWordEl = document.getElementById("current-explanation-word");
+        const currentWord = currentWordEl?.textContent?.trim();
+        const isCurrentlyExplaining = currentWord === keyword;
+
         // 从高亮或自动提取的关键词中删除
         const highlightIndex = this.keywordManager.highlights.indexOf(keyword);
         const extractIndex = this.keywordManager.extracts.indexOf(keyword);
@@ -4075,6 +4080,11 @@ class StreamNote {
 
         // 更新所有显示
         this.keywordManager.updateAllKeywordDisplays();
+
+        // 如果被删除的词正在解释面板中显示，更新按钮状态
+        if (isCurrentlyExplaining) {
+            this.updateHighlightButtonState(keyword, false);
+        }
 
         // 分别保存高亮和关键词
         this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
