@@ -95,6 +95,11 @@ class SessionManager {
                     if (!session.summaryCache) session.summaryCache = {};
                     if (!session.highlightPositions) session.highlightPositions = {};
 
+                    // 向后兼容：添加 startTime 字段（如果缺失），初始化为 createdAt 的值（创建时间而非修改时间）
+                    if (!session.startTime) {
+                        session.startTime = session.createdAt || session.lastModified || Date.now();
+                    }
+
                     // 向后兼容：添加 lastAccessed 字段（如果缺失），初始化为 lastModified 的值
                     if (!session.lastAccessed) {
                         session.lastAccessed = session.lastModified || Date.now();
@@ -242,6 +247,7 @@ class SessionManager {
             },
 
             createdAt: Date.now(),
+            startTime: Date.now(),  // 时间戳计算的基准时间（使用创建时间，而非修改时间）
             lastModified: Date.now(),
             lastAccessed: Date.now()
         };
