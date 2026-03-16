@@ -1098,12 +1098,19 @@ class StreamNote {
                 const contextDiv = document.getElementById("word-context");
                 const headerDiv = document.querySelector(".explanation-header");
                 const regenerateBtn = document.getElementById("regenerate-explanation-btn");
+                const speakBtn = document.getElementById("speak-current-word-btn");
+
+                // 停止朗读
+                if (window.speechSynthesis) {
+                    window.speechSynthesis.cancel();
+                }
 
                 if (currentWordEl) currentWordEl.textContent = "";
                 if (contentEl) contentEl.innerHTML = '<p class="placeholder">Select a word to view its explanation</p>';
                 if (contextDiv) contextDiv.style.display = 'none';
                 if (headerDiv) headerDiv.classList.add("hidden");
                 if (regenerateBtn) regenerateBtn.disabled = true;
+                if (speakBtn) speakBtn.disabled = true;
 
                 this.showStatusMessage("Explanation cleared", 1500);
             });
@@ -1601,7 +1608,7 @@ class StreamNote {
             if (confirm("Clear all items?")) {
                 // 直接调用内置的 clear 方法
                 this.clear();
-                
+
                 // 关闭模态窗口
                 const backdrop = document.getElementById("editModalBackdrop");
                 const modal = document.getElementById("editModal");
@@ -1886,7 +1893,7 @@ class StreamNote {
     saveEditedTranscript() {
         // 直接从 DOM 中读取所有编辑项，而不依赖 this.editInputs
         const editItems = document.querySelectorAll('[id^="edit-item-"]');
-        
+
         const updatedData = {};
         const transcriptData = this.recordingManager.getTranscriptData();
         let hasError = false;
@@ -1936,7 +1943,7 @@ class StreamNote {
         editItems.forEach((item) => {
             const textarea = item.querySelector('textarea');
             const timestampInput = item.querySelector('input[type="text"]');
-            
+
             const text = textarea ? textarea.value.trim() : '';
             if (text.length > 0) {
                 const timeStr = timestampInput ? timestampInput.value.trim() : '';

@@ -55,6 +55,10 @@ class KeywordManager {
         // 用于直接高亮，避免重新搜索
         this.currentContextPositionInfo = null;  // { sourceIndices, container, sourcePanel }
         this.currentContextWord = null;         // 当前显示上下文的词
+
+        // 语音朗读状态
+        this.isSpeaking = false;                // 是否正在朗读
+        this.setupSpeechButton();                // 初始化朗读按钮
     }
 
     /**
@@ -702,6 +706,95 @@ class KeywordManager {
     }
 
     /**
+     * 初始化朗读按钮事件监听
+     */
+    setupSpeechButton() {
+        const speakBtn = document.getElementById("speak-current-word-btn");
+        if (speakBtn) {
+            speakBtn.addEventListener("click", () => {
+                const word = document.getElementById("current-explanation-word");
+                if (word && word.textContent.trim()) {
+                    this.speakWord(word.textContent);
+                }
+            });
+        }
+    }
+
+    /**
+     * 朗读单词
+     * @param {string} word - 要朗读的单词
+     */
+    speakWord(word) {
+        // 如果正在朗读，停止当前朗读
+        if (this.isSpeaking) {
+            window.speechSynthesis.cancel();
+            this.isSpeaking = false;
+            const btn = document.getElementById("speak-current-word-btn");
+            if (btn) {
+                btn.textContent = "Speak";
+            }
+            return;
+        }
+
+        // 获取语言设置
+        const language = window.streamNoteInstance?.explanationLanguage || "English";
+        const langCode = this.getLanguageCode(language);
+
+        // 创建朗读请求
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = langCode;
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+
+        // 朗读开始
+        utterance.onstart = () => {
+            this.isSpeaking = true;
+            const btn = document.getElementById("speak-current-word-btn");
+            if (btn) {
+                btn.textContent = "Stop";
+            }
+        };
+
+        // 朗读结束或被取消
+        utterance.onend = () => {
+            this.isSpeaking = false;
+            const btn = document.getElementById("speak-current-word-btn");
+            if (btn) {
+                btn.textContent = "Speak";
+            }
+        };
+
+        utterance.onerror = () => {
+            this.isSpeaking = false;
+            const btn = document.getElementById("speak-current-word-btn");
+            if (btn) {
+                btn.textContent = "Speak";
+            }
+        };
+
+        // 开始朗读
+        window.speechSynthesis.speak(utterance);
+    }
+
+    /**
+     * 将语言名称转换为语言代码
+     * @param {string} language - 语言名称 (e.g., "Chinese", "English")
+     * @returns {string} 语言代码 (e.g., "zh-CN", "en-US")
+     */
+    getLanguageCode(language) {
+        const langMap = {
+            "Chinese": "zh-CN",
+            "English": "en-US",
+            "Spanish": "es-ES",
+            "French": "fr-FR",
+            "Japanese": "ja-JP",
+            "Korean": "ko-KR"
+        };
+        return langMap[language] || "en-US";
+    }
+
+    /**
      * 显示焦点式解释面板
      * @param {string} word - 要显示的词
      */
@@ -728,8 +821,10 @@ class KeywordManager {
         // 显示标题容器
         if (headerDiv) headerDiv.classList.remove("hidden");
 
-        // 启用Regenerate按钮
+        // 启用Regenerate和Speak按钮
         if (regenerateBtn) regenerateBtn.disabled = false;
+        const speakBtn = document.getElementById("speak-current-word-btn");
+        if (speakBtn) speakBtn.disabled = false;
 
         // 检查该词是否已在highlights中，更新按钮状态
         const isHighlighted = this.highlights?.includes(word) || false;
