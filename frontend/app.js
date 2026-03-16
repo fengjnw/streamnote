@@ -1325,41 +1325,63 @@ class StreamNote {
             z-index: 10000;
             display: flex;
             flex-direction: column;
-            max-height: 80vh;
+            max-height: 85vh;
         `;
 
         // 模态框头
         const header = document.createElement("div");
+        header.className = "floating-modal-header";
         header.style.cssText = `
-            padding: 16px;
-            border-bottom: 1px solid #e0e0e0;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-shrink: 0;
         `;
-        header.innerHTML = `<h3 style="margin: 0; font-size: 18px;">Add Text</h3>`;
+        const title = document.createElement("h3");
+        title.textContent = "Add Text";
+        title.style.cssText = `margin: 0;`;
+        header.appendChild(title);
 
         const closeBtn = document.createElement("button");
+        closeBtn.className = "btn-icon toggle-btn";
         closeBtn.textContent = "✕";
-        closeBtn.style.cssText = `
-            width: 28px;
-            height: 28px;
-            border: none;
-            background: #f5f5f5;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 18px;
-            color: #666;
-            transition: all 0.2s;
-        `;
-        closeBtn.addEventListener("mouseenter", () => {
-            closeBtn.style.background = "#e0e0e0";
-        });
-        closeBtn.addEventListener("mouseleave", () => {
-            closeBtn.style.background = "#f5f5f5";
-        });
         header.appendChild(closeBtn);
+
+        // 工具栏（按钮）
+        const toolbar = document.createElement("div");
+        toolbar.className = "text-panel-toolbar";
+        toolbar.style.cssText = `
+            display: flex;
+            gap: 8px;
+            padding: 10px 16px;
+            border-bottom: 1px solid #e9ecef;
+            flex-shrink: 0;
+            background: #f5f5f5;
+            align-items: center;
+        `;
+
+        const buttonGroup = document.createElement("div");
+        buttonGroup.style.cssText = `
+            display: flex;
+            gap: 8px;
+            max-width: 250px;
+            align-items: center;
+        `;
+
+        const addBtn = document.createElement("button");
+        addBtn.className = "toolbar-btn";
+        addBtn.textContent = "Add";
+        addBtn.style.cssText = `flex: 1; max-width: 120px;`;
+
+        const cancelBtn = document.createElement("button");
+        cancelBtn.className = "toolbar-btn";
+        cancelBtn.textContent = "Cancel";
+        cancelBtn.style.cssText = `flex: 1; max-width: 120px; margin-left: auto;`;
+
+        buttonGroup.appendChild(addBtn);
+        buttonGroup.appendChild(cancelBtn);
+        toolbar.appendChild(addBtn);
+        toolbar.appendChild(cancelBtn);
 
         // 模态框内容
         const content = document.createElement("div");
@@ -1369,107 +1391,28 @@ class StreamNote {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 12px;
         `;
-
-        // 说明文字
-        const label = document.createElement("label");
-        label.style.cssText = `
-            font-size: 14px;
-            font-weight: 500;
-            color: #666;
-        `;
-        label.textContent = "Paste or type text below. Each line will become a separate item:";
-        content.appendChild(label);
 
         // 文本输入框
         const textArea = document.createElement("textarea");
-        textArea.placeholder = "Paste multiple lines here...\nEach line will be converted to a timestamped item";
+        textArea.placeholder = "Add lines here...\nEach line will be converted to a timestamped item";
         textArea.style.cssText = `
-            padding: 12px;
+            padding: 6px 8px;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 3px;
             font-size: 13px;
             font-family: inherit;
-            resize: vertical;
+            resize: none;
+            flex: 1;
             min-height: 200px;
-            line-height: 1.5;
+            line-height: 1.4;
+            box-sizing: border-box;
         `;
         content.appendChild(textArea);
 
-        // 快速内容示例
-        const example = document.createElement("div");
-        example.style.cssText = `
-            padding: 10px;
-            background: #f5f5f5;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #666;
-            line-height: 1.4;
-        `;
-        example.innerHTML = `
-            <strong>Example:</strong><br>
-            First thought or sentence<br>
-            Second thought or sentence<br>
-            Third thought or sentence
-        `;
-        content.appendChild(example);
-
-        // 模态框底部按钮
-        const footer = document.createElement("div");
-        footer.style.cssText = `
-            padding: 12px 16px;
-            border-top: 1px solid #e0e0e0;
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-            flex-shrink: 0;
-        `;
-
-        const cancelBtn = document.createElement("button");
-        cancelBtn.textContent = "Cancel";
-        cancelBtn.style.cssText = `
-            padding: 8px 16px;
-            border: 1px solid #ddd;
-            background: #f5f5f5;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
-        `;
-        cancelBtn.addEventListener("mouseenter", () => {
-            cancelBtn.style.background = "#e8e8e8";
-        });
-        cancelBtn.addEventListener("mouseleave", () => {
-            cancelBtn.style.background = "#f5f5f5";
-        });
-        footer.appendChild(cancelBtn);
-
-        const addBtn = document.createElement("button");
-        addBtn.textContent = "Add";
-        addBtn.style.cssText = `
-            padding: 8px 16px;
-            border: none;
-            background: #007AFF;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
-        `;
-        addBtn.addEventListener("mouseenter", () => {
-            addBtn.style.background = "#0056b3";
-        });
-        addBtn.addEventListener("mouseleave", () => {
-            addBtn.style.background = "#007AFF";
-        });
-        footer.appendChild(addBtn);
-
         modal.appendChild(header);
+        modal.appendChild(toolbar);
         modal.appendChild(content);
-        modal.appendChild(footer);
 
         // 关闭对话框函数
         const closeDialog = () => {
@@ -1480,9 +1423,11 @@ class StreamNote {
         // 事件监听
         closeBtn.addEventListener("click", closeDialog);
         cancelBtn.addEventListener("click", closeDialog);
-        backdrop.addEventListener("click", () => {
-            // 点击背景关闭
-            closeDialog();
+        backdrop.addEventListener("click", (e) => {
+            // 只在点击背景本身时关闭，不是点击 modal 内容
+            if (e.target === backdrop) {
+                closeDialog();
+            }
         });
 
         // 添加按钮逻辑

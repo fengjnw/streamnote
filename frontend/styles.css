@@ -1561,6 +1561,13 @@ header h1 {
     line-height: 1.6;
 }
 
+/* Unified placeholder text styling for textarea */
+textarea::placeholder {
+    color: var(--color-text-lighter);
+    font-style: italic;
+    opacity: 1;
+}
+
 }
 
 .temporary {
