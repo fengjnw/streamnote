@@ -313,6 +313,12 @@ class StreamNote {
             summaryLanguageSelector.value = this.explanationLanguage;
         }
 
+        // 更新关键词解释语言选择器
+        const keywordExplanationLangSelector = document.getElementById("keyword-explanation-language");
+        if (keywordExplanationLangSelector) {
+            keywordExplanationLangSelector.value = this.explanationLanguage;
+        }
+
         // 加载转录内容到 RecordingManager，并设置session开始时间用于时间戳计算
         this.recordingManager.setTranscriptData(session.transcripts || {});
         this.recordingManager.setSessionStartTime(session.startTime);
@@ -2582,7 +2588,7 @@ class StreamNote {
             // 设置全局录制状态
             this.recordingSessionId = this.sessionManager.currentSessionId;
             this.updateRecordingIndicator();
-            
+
             // 禁用 Sessions 按鎘
             const sessionBtn = document.getElementById('openSessionPanel');
             if (sessionBtn) {
@@ -2646,7 +2652,7 @@ class StreamNote {
             // 清除全局录制状态
             this.recordingSessionId = null;
             this.updateRecordingIndicator();
-            
+
             // 启用 Sessions 按鎈
             const sessionBtn = document.getElementById('openSessionPanel');
             if (sessionBtn) {
