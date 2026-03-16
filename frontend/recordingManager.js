@@ -232,7 +232,9 @@ class RecordingManager {
             formData.append("context", this.transcriptionContext);
         }
 
+        // 关键修复：立即分配并增加 index，防止并发请求争用同一个 index
         const currentChunkIndex = this.chunkIndex;
+        this.chunkIndex += 1;
         const sessionIdAtRequest = sessionId;
 
         // 显示转录进行中的状态
@@ -281,7 +283,6 @@ class RecordingManager {
             }
 
             this.preciseResults[currentChunkIndex] = { text, timestamp };
-            this.chunkIndex += 1;
 
             // 触发回调，通知上层更新显示
             this.onTranscribeProgress({
