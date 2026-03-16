@@ -1738,9 +1738,10 @@ class StreamNote {
         const textarea = document.createElement("textarea");
         textarea.value = text;
         textarea.placeholder = "Edit text";
+        textarea.rows = "1";
         textarea.style.cssText = `
             flex: 1;
-            padding: 6px 8px;
+            padding: 6px 6px;
             border: 1px solid #ddd;
             border-radius: 3px;
             font-family: inherit;
@@ -1750,16 +1751,19 @@ class StreamNote {
             min-height: 32px;
             box-sizing: border-box;
             overflow: hidden;
+            height: auto;
         `;
 
         // 自动调整高度的函数
         const adjustHeight = () => {
-            textarea.style.height = "auto";
-            textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
+            // 使用setTimeout确保DOM布局完全完成
+            setTimeout(() => {
+                textarea.style.height = "auto";
+                // scrollHeight包含了padding和border，直接用就是正确的高度
+                const newHeight = Math.max(textarea.scrollHeight, 32);
+                textarea.style.height = newHeight + "px";
+            }, 0);
         };
-
-        // 初始化高度
-        adjustHeight();
 
         // 监听输入变化以调整高度
         textarea.addEventListener("input", adjustHeight);
@@ -1798,44 +1802,100 @@ class StreamNote {
                 if (newTextarea) newTextarea.focus();
             }
 
-            // ArrowUp：移到上一个 item
+            // ArrowUp：如果在第一行则移到上一个 item
             if (e.key === "ArrowUp") {
-                e.preventDefault();
+                const beforeCursor = textarea.value.substring(0, textarea.selectionStart);
+                // 如果光标前面没有\n，说明在第一行
+                if (!beforeCursor.includes('\n')) {
+                    let currentItem = textarea.closest('[id^="edit-item-"]');
+                    if (!currentItem) return;
 
-                let currentItem = textarea.closest('[id^="edit-item-"]');
-                if (!currentItem) return;
+                    const itemsContainer = currentItem.parentElement;
+                    const items = Array.from(itemsContainer.querySelectorAll('[id^="edit-item-"]'));
+                    const currentIndex = items.indexOf(currentItem);
 
-                const itemsContainer = currentItem.parentElement;
-                const items = Array.from(itemsContainer.querySelectorAll('[id^="edit-item-"]'));
-                const currentIndex = items.indexOf(currentItem);
-
-                if (currentIndex > 0) {
-                    const prevItem = items[currentIndex - 1];
-                    const prevTextarea = prevItem.querySelector('textarea');
-                    if (prevTextarea) {
-                        prevTextarea.focus();
-                        prevTextarea.setSelectionRange(prevTextarea.value.length, prevTextarea.value.length);
+                    // 只有有上一个item时才切换
+                    if (currentIndex > 0) {
+                        e.preventDefault();
+                        const prevItem = items[currentIndex - 1];
+                        const prevTextarea = prevItem.querySelector('textarea');
+                        if (prevTextarea) {
+                            prevTextarea.focus();
+                            prevTextarea.setSelectionRange(prevTextarea.value.length, prevTextarea.value.length);
+                        }
                     }
                 }
             }
 
-            // ArrowDown：移到下一个 item
+            // ArrowDown：如果在最后一行则移到下一个 item
             if (e.key === "ArrowDown") {
-                e.preventDefault();
+                const afterCursor = textarea.value.substring(textarea.selectionStart);
+                // 如果光标后面没有\n，说明在最后一行
+                if (!afterCursor.includes('\n')) {
+                    let currentItem = textarea.closest('[id^="edit-item-"]');
+                    if (!currentItem) return;
 
-                let currentItem = textarea.closest('[id^="edit-item-"]');
-                if (!currentItem) return;
+                    const itemsContainer = currentItem.parentElement;
+                    const items = Array.from(itemsContainer.querySelectorAll('[id^="edit-item-"]'));
+                    const currentIndex = items.indexOf(currentItem);
 
-                const itemsContainer = currentItem.parentElement;
-                const items = Array.from(itemsContainer.querySelectorAll('[id^="edit-item-"]'));
-                const currentIndex = items.indexOf(currentItem);
+                    // 只有有下一个item时才切换
+                    if (currentIndex < items.length - 1) {
+                        e.preventDefault();
+                        const nextItem = items[currentIndex + 1];
+                        const nextTextarea = nextItem.querySelector('textarea');
+                        if (nextTextarea) {
+                            nextTextarea.focus();
+                            nextTextarea.setSelectionRange(0, 0);
+                        }
+                    }
+                }
+            }
 
-                if (currentIndex < items.length - 1) {
-                    const nextItem = items[currentIndex + 1];
-                    const nextTextarea = nextItem.querySelector('textarea');
-                    if (nextTextarea) {
-                        nextTextarea.focus();
-                        nextTextarea.setSelectionRange(0, 0);
+            // ArrowLeft：如果在开头则移到上一个 item 的末尾，否则在 textarea 内移动
+            if (e.key === "ArrowLeft") {
+                // 检查光标是否在开头
+                if (textarea.selectionStart === 0) {
+                    let currentItem = textarea.closest('[id^="edit-item-"]');
+                    if (!currentItem) return;
+
+                    const itemsContainer = currentItem.parentElement;
+                    const items = Array.from(itemsContainer.querySelectorAll('[id^="edit-item-"]'));
+                    const currentIndex = items.indexOf(currentItem);
+
+                    // 只有当有上一个item时才切换
+                    if (currentIndex > 0) {
+                        e.preventDefault();
+                        const prevItem = items[currentIndex - 1];
+                        const prevTextarea = prevItem.querySelector('textarea');
+                        if (prevTextarea) {
+                            prevTextarea.focus();
+                            prevTextarea.setSelectionRange(prevTextarea.value.length, prevTextarea.value.length);
+                        }
+                    }
+                }
+            }
+
+            // ArrowRight：如果在结尾则移到下一个 item 的开头，否则在 textarea 内移动
+            if (e.key === "ArrowRight") {
+                // 检查光标是否在结尾
+                if (textarea.selectionStart === textarea.value.length) {
+                    let currentItem = textarea.closest('[id^="edit-item-"]');
+                    if (!currentItem) return;
+
+                    const itemsContainer = currentItem.parentElement;
+                    const items = Array.from(itemsContainer.querySelectorAll('[id^="edit-item-"]'));
+                    const currentIndex = items.indexOf(currentItem);
+
+                    // 只有当有下一个item时才切换
+                    if (currentIndex < items.length - 1) {
+                        e.preventDefault();
+                        const nextItem = items[currentIndex + 1];
+                        const nextTextarea = nextItem.querySelector('textarea');
+                        if (nextTextarea) {
+                            nextTextarea.focus();
+                            nextTextarea.setSelectionRange(0, 0);
+                        }
                     }
                 }
             }
@@ -1885,6 +1945,9 @@ class StreamNote {
         item.appendChild(textarea);
         item.appendChild(deleteBtn);
         container.appendChild(item);
+
+        // 初始化高度（必须在添加到DOM后）
+        adjustHeight();
     }
 
     /**
