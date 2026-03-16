@@ -1416,17 +1416,17 @@ class StreamNote {
         const addBtn = document.createElement("button");
         addBtn.className = "toolbar-btn";
         addBtn.textContent = "Add";
-        addBtn.style.cssText = `flex: 1; max-width: 120px;`;
+        addBtn.style.cssText = `flex: 0; max-width: 120px; margin-left: auto;`;
 
         const cancelBtn = document.createElement("button");
         cancelBtn.className = "toolbar-btn";
         cancelBtn.textContent = "Cancel";
-        cancelBtn.style.cssText = `flex: 1; max-width: 120px; margin-left: auto;`;
+        cancelBtn.style.cssText = `flex: 0; max-width: 120px;`;
 
-        buttonGroup.appendChild(addBtn);
         buttonGroup.appendChild(cancelBtn);
-        toolbar.appendChild(addBtn);
+        buttonGroup.appendChild(addBtn);
         toolbar.appendChild(cancelBtn);
+        toolbar.appendChild(addBtn);
 
         // 模态框内容
         const content = document.createElement("div");
