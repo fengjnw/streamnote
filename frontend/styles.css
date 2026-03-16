@@ -648,6 +648,21 @@ header h1 {
 /* .nav-group-section - Base styling for button groups */
 
 /* Input control group - primary workflow (blue-grey light) */
+#recordBtn {
+    width: 70px;
+    flex-shrink: 0;
+}
+
+#addContentBtn {
+    width: 100px;
+    flex-shrink: 0;
+}
+
+#editTextBtn {
+    width: 60px;
+    flex-shrink: 0;
+}
+
 .nav-group-input .control-btn-secondary {
     background: #b8cde0;
     color: #2c3e50;
