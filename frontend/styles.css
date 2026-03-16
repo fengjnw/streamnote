@@ -642,14 +642,10 @@ header h1 {
 }
 
 /* 按钮组之间的分隔 - 使用spacer处理，这里不再添加margin */
-.nav-group:not(.nav-group-settings) {
-    /* Regular spacing handled by control-spacer */
-}
+/* .nav-group:not(.nav-group-settings) - Regular spacing handled by control-spacer */
 
 /* Section-based grouping for workflow visualization */
-.nav-group-section {
-    /* Base styling for button groups */
-}
+/* .nav-group-section - Base styling for button groups */
 
 /* Input control group - primary workflow (blue-grey light) */
 .nav-group-input .control-btn-secondary {
@@ -1652,9 +1648,7 @@ header h1 {
     margin: 0;
 }
 
-.keyword-explanation .explanation-content .placeholder {
-    /* inherits unified placeholder style */
-}
+/* .keyword-explanation .explanation-content .placeholder - inherits unified placeholder style */
 
 .keyword-explanation .explanation-content .error {
     color: #d32f2f;
@@ -1721,8 +1715,6 @@ textarea::placeholder {
     color: var(--color-text-lighter);
     font-style: italic;
     opacity: 1;
-}
-
 }
 
 .temporary {
@@ -2928,9 +2920,7 @@ textarea::placeholder {
     margin-bottom: 0;
 }
 
-.explanation-scroll .placeholder {
-    /* inherits unified placeholder style */
-}
+/* .explanation-scroll .placeholder - inherits unified placeholder style */
 
 .explanation-scroll .error {
     color: var(--color-danger);
