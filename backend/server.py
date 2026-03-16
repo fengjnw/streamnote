@@ -91,8 +91,6 @@ def transcribe():
         transcribe_kwargs = {
             "model": "gpt-4o-mini-transcribe",  # 更快、更准确的新模型
             "file": audio_buffer,
-            "language": "en",  # 硬编码为英文 - 根据用户测试99%情况都是英文输入
-                                # 如果需要支持其他语言或自动检测，可在此改为从前端传入或移除此参数
         }
 
         result = client.audio.transcriptions.create(**transcribe_kwargs)
