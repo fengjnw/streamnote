@@ -57,8 +57,8 @@ class KeywordManager {
         this.currentContextWord = null;         // 当前显示上下文的词
 
         // 语音朗读状态
-        this.isSpeaking = false;                // 是否正在朗读
-        this.setupSpeechButton();                // 初始化朗读按钮
+        this.isPronouncing = false;              // 是否正在发音
+        this.setupPronounceButton();             // 初始化发音按钮
     }
 
     /**
@@ -706,39 +706,38 @@ class KeywordManager {
     }
 
     /**
-     * 初始化朗读按钮事件监听
+     * 初始化发音按钮事件监听
      */
-    setupSpeechButton() {
-        const speakBtn = document.getElementById("speak-current-word-btn");
-        if (speakBtn) {
-            speakBtn.addEventListener("click", () => {
+    setupPronounceButton() {
+        const pronounceBtn = document.getElementById("pronounce-current-word-btn");
+        if (pronounceBtn) {
+            pronounceBtn.addEventListener("click", () => {
                 const word = document.getElementById("current-explanation-word");
                 if (word && word.textContent.trim()) {
-                    this.speakWord(word.textContent);
+                    this.pronounceWord(word.textContent);
                 }
             });
         }
     }
 
     /**
-     * 朗读单词
-     * @param {string} word - 要朗读的单词
+     * 发音单词
+     * @param {string} word - 要发音的单词
      */
-    speakWord(word) {
-        // 如果正在朗读，停止当前朗读
-        if (this.isSpeaking) {
+    pronounceWord(word) {
+        // 如果正在发音，停止当前发音
+        if (this.isPronouncing) {
             window.speechSynthesis.cancel();
-            this.isSpeaking = false;
-            const btn = document.getElementById("speak-current-word-btn");
+            this.isPronouncing = false;
+            const btn = document.getElementById("pronounce-current-word-btn");
             if (btn) {
-                btn.textContent = "Speak";
+                btn.textContent = "Pronounce";
             }
             return;
         }
 
-        // 获取语言设置
-        const language = window.streamNoteInstance?.explanationLanguage || "English";
-        const langCode = this.getLanguageCode(language);
+        // 自动识别词汇的语言（根据字符类型）
+        const langCode = this.detectWordLanguage(word);
 
         // 创建朗读请求
         const utterance = new SpeechSynthesisUtterance(word);
@@ -747,29 +746,29 @@ class KeywordManager {
         utterance.pitch = 1.0;
         utterance.volume = 1.0;
 
-        // 朗读开始
+        // 发音开始
         utterance.onstart = () => {
-            this.isSpeaking = true;
-            const btn = document.getElementById("speak-current-word-btn");
+            this.isPronouncing = true;
+            const btn = document.getElementById("pronounce-current-word-btn");
             if (btn) {
                 btn.textContent = "Stop";
             }
         };
 
-        // 朗读结束或被取消
+        // 发音结束或被取消
         utterance.onend = () => {
-            this.isSpeaking = false;
-            const btn = document.getElementById("speak-current-word-btn");
+            this.isPronouncing = false;
+            const btn = document.getElementById("pronounce-current-word-btn");
             if (btn) {
-                btn.textContent = "Speak";
+                btn.textContent = "Pronounce";
             }
         };
 
         utterance.onerror = () => {
-            this.isSpeaking = false;
-            const btn = document.getElementById("speak-current-word-btn");
+            this.isPronouncing = false;
+            const btn = document.getElementById("pronounce-current-word-btn");
             if (btn) {
-                btn.textContent = "Speak";
+                btn.textContent = "Pronounce";
             }
         };
 
@@ -792,6 +791,47 @@ class KeywordManager {
             "Korean": "ko-KR"
         };
         return langMap[language] || "en-US";
+    }
+
+    /**
+     * 自动检测词汇的语言
+     * @param {string} word - 要检测的单词
+     * @returns {string} 语言代码 (e.g., "zh-CN", "en-US")
+     */
+    detectWordLanguage(word) {
+        if (!word) return "en-US";
+
+        // 检测中文（包括简体、繁体、标点符号）
+        const chineseRegex = /[\u4e00-\u9fff\u3400-\u4dbf]/;
+        if (chineseRegex.test(word)) {
+            return "zh-CN";
+        }
+
+        // 检测日文（平假名、片假名）
+        const japaneseRegex = /[\u3040-\u309f\u30a0-\u30ff]/;
+        if (japaneseRegex.test(word)) {
+            return "ja-JP";
+        }
+
+        // 检测韩文
+        const koreanRegex = /[\uac00-\ud7af\u1100-\u11ff]/;
+        if (koreanRegex.test(word)) {
+            return "ko-KR";
+        }
+
+        // 检测西班牙文字符（带重音）
+        if (/[áéíóúñüàèìòùâêîôûäëïöü]/.test(word.toLowerCase())) {
+            // 这里为简化，我们默认返回西班牙文，实际可再细分
+            return "es-ES";
+        }
+
+        // 检测法文字符（带重音）
+        if (/[àâäæçéèêëïîôùûüœ]/.test(word.toLowerCase())) {
+            return "fr-FR";
+        }
+
+        // 默认为英文（拉丁字母）
+        return "en-US";
     }
 
     /**
@@ -821,10 +861,10 @@ class KeywordManager {
         // 显示标题容器
         if (headerDiv) headerDiv.classList.remove("hidden");
 
-        // 启用Regenerate和Speak按钮
+        // 启用Regenerate和Pronounce按钮
         if (regenerateBtn) regenerateBtn.disabled = false;
-        const speakBtn = document.getElementById("speak-current-word-btn");
-        if (speakBtn) speakBtn.disabled = false;
+        const pronounceBtn = document.getElementById("pronounce-current-word-btn");
+        if (pronounceBtn) pronounceBtn.disabled = false;
 
         // 检查该词是否已在highlights中，更新按钮状态
         const isHighlighted = this.highlights?.includes(word) || false;

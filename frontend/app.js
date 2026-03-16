@@ -1091,9 +1091,9 @@ class StreamNote {
                 const contextDiv = document.getElementById("word-context");
                 const headerDiv = document.querySelector(".explanation-header");
                 const regenerateBtn = document.getElementById("regenerate-explanation-btn");
-                const speakBtn = document.getElementById("speak-current-word-btn");
+                const pronounceBtn = document.getElementById("pronounce-current-word-btn");
 
-                // 停止朗读
+                // 停止发音
                 if (window.speechSynthesis) {
                     window.speechSynthesis.cancel();
                 }
@@ -1103,7 +1103,7 @@ class StreamNote {
                 if (contextDiv) contextDiv.style.display = 'none';
                 if (headerDiv) headerDiv.classList.add("hidden");
                 if (regenerateBtn) regenerateBtn.disabled = true;
-                if (speakBtn) speakBtn.disabled = true;
+                if (pronounceBtn) pronounceBtn.disabled = true;
 
                 this.showStatusMessage("Explanation cleared", 1500);
             });
