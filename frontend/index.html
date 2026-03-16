@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StreamNote</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Libraries for DOCX and PDF processing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 
 <body>
@@ -95,7 +98,7 @@
 
             <div class="content-wrapper">
                 <input type="file" id="importFileInput" accept=".json" style="display: none;" />
-                <input type="file" id="textFileInput" accept=".txt,.md,.text,.markdown" style="display: none;" />
+                <input type="file" id="textFileInput" accept=".txt,.md,.text,.markdown,.docx,.pdf" style="display: none;" />
 
                 <!-- Modal Overlay Layer -->
                 <div id="modalOverlay" class="modal-overlay" style="display: none;"></div>
@@ -153,7 +156,8 @@
                     <div class="floating-modal-toolbar">
                         <button id="newSessionBtn" class="toolbar-btn" title="New Session">New</button>
                         <button id="renameSessionBtn" class="toolbar-btn" title="Rename session">Rename</button>
-                        <button id="deleteSessionBtn" class="toolbar-btn danger" title="Delete current session">Delete</button>
+                        <button id="deleteSessionBtn" class="toolbar-btn danger"
+                            title="Delete current session">Delete</button>
                         <button id="sessionMenuBtn" class="toolbar-btn" title="More options">…</button>
                     </div>
                     <div class="session-menu" id="sessionMenu" style="display: none;">
