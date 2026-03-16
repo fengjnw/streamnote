@@ -1375,7 +1375,7 @@ class StreamNote {
 
         // 模态框头
         const header = document.createElement("div");
-        header.className = "floating-modal-header";
+        header.className = "floating-modal-header input-group-modal-header";
         header.style.cssText = `
             display: flex;
             justify-content: space-between;
@@ -1383,7 +1383,7 @@ class StreamNote {
             flex-shrink: 0;
         `;
         const title = document.createElement("h3");
-        title.textContent = "Add Text";
+        title.textContent = "Add Content from Text";
         title.style.cssText = `margin: 0;`;
         header.appendChild(title);
 
