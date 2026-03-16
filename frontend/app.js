@@ -329,7 +329,7 @@ class StreamNote {
         this.translationManager.setLanguage(this.language);
         this.translationManager.setTranslationData(translationsForLanguage);
         this.translationResults = translationsForLanguage; // 保留兼容性
-        
+
         // 同步session开始时间到translationManager（用于时间戳显示）
         if (this.translationManager && session.startTime) {
             this.translationManager.sessionStartTime = session.startTime;
@@ -1702,11 +1702,11 @@ class StreamNote {
         const session = this.sessionManager.getCurrentSession();
         const sessionStartMs = session && session.startTime ? session.startTime : Date.now();
         const sessionStartDate = new Date(sessionStartMs);
-        
+
         // 计算初始日期和时间
         let displayDate = "2000-01-01";
         let displayTime = "00:00:00";
-        
+
         if (timestamp) {
             const relativeSeconds = typeof timestamp === 'number' ? timestamp :
                 (typeof timestamp === 'string' && /^\d+$/.test(timestamp) ? parseInt(timestamp) : null);
@@ -1719,7 +1719,7 @@ class StreamNote {
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const day = String(date.getDate()).padStart(2, '0');
                 displayDate = `${year}-${month}-${day}`;
-                
+
                 const hours = String(date.getHours()).padStart(2, '0');
                 const minutes = String(date.getMinutes()).padStart(2, '0');
                 const seconds = String(date.getSeconds()).padStart(2, '0');
@@ -1733,7 +1733,7 @@ class StreamNote {
             // 默认为session开始日期
             displayDate = `${sessionStartDate.getFullYear()}-${String(sessionStartDate.getMonth() + 1).padStart(2, '0')}-${String(sessionStartDate.getDate()).padStart(2, '0')}`;
         }
-        
+
         // 日期输入框
         const dateInput = document.createElement("input");
         dateInput.type = "text";
@@ -2064,20 +2064,20 @@ class StreamNote {
         const session = this.sessionManager.getCurrentSession();
         const sessionStartTime = session && session.startTime ? session.startTime : Date.now();
         const sessionStartDate = new Date(sessionStartTime);
-        
+
         let hasError = false;
         let errorMsg = "";
 
         // 辅助函数：将日期+时间格式转换为相对秒数（基于session.startTime）
         const dateTimeToSeconds = (dateStr, timeStr) => {
             if (!dateStr || !timeStr) return 0;
-            
+
             const [y, m, d] = dateStr.split('-').map(Number);
             const [h, mi, s] = timeStr.split(':').map(Number);
-            
+
             // 构建用户输入的实际日期时间
             const inputDate = new Date(y, m - 1, d, h, mi, s);
-            
+
             // 计算相对秒数
             const relativeSeconds = Math.floor((inputDate.getTime() - sessionStartTime) / 1000);
             return Math.max(0, relativeSeconds);  // 确保不为负
@@ -2153,11 +2153,11 @@ class StreamNote {
         editItems.forEach((item) => {
             const textarea = item.querySelector('textarea');
             const timestampContainer = item.querySelector('div[style*="display: flex"]');
-            
+
             const text = textarea ? textarea.value.trim() : '';
             if (text.length > 0) {
                 let timestamp = 0;
-                
+
                 if (timestampContainer) {
                     const inputs = timestampContainer.querySelectorAll('input[type="text"]');
                     if (inputs.length >= 2) {
