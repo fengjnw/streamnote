@@ -72,7 +72,7 @@ class PanelManager {
             floatingAutoScrollBtn.addEventListener("click", () => {
                 this.toggleAutoScroll();
             });
-            this.updateAutoScrollButton();
+            // 注意：按钮的初始状态在 HTML 中已设置，无需在这里重复更新
         }
 
         // 设置左侧解释面板的控制
@@ -274,18 +274,23 @@ class PanelManager {
         // 加载翻译面板布局（默认 split-bottom）
         this.translationLayout = localStorage.getItem('translationLayout') || 'split-bottom';
 
+        // 加载自动滚动状态（默认启用）
+        const savedAutoScroll = localStorage.getItem('autoScroll');
+        this.autoScroll = savedAutoScroll !== null ? JSON.parse(savedAutoScroll) : true;
+
         // 根据翻译启用状态设置初始布局
         const initialLayout = this.translationEnabled ? this.translationLayout : 'full-transcript';
         this.setLayout(initialLayout);
     }
 
     /**
-     * 保存布局偏好和翻译状态
+     * 保存布局偏好、翻译状态和自动滚动设置
      * @private
      */
     savePanelState() {
         localStorage.setItem('translationEnabled', JSON.stringify(this.translationEnabled));
         localStorage.setItem('translationLayout', this.translationLayout);
+        localStorage.setItem('autoScroll', JSON.stringify(this.autoScroll));
     }
 
     /**
@@ -293,6 +298,7 @@ class PanelManager {
      */
     toggleAutoScroll() {
         this.autoScroll = !this.autoScroll;
+        this.savePanelState();  // 保存用户的自动滚动偏好
         this.updateAutoScrollButton();
 
         // 如果开启自动滚动，立即滚动到底部

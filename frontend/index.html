@@ -64,8 +64,8 @@
                             title="Start/Stop Recording">Record</button>
                         <button id="addContentBtn" class="control-btn control-btn-secondary"
                             title="Add content from file or text">Add Content</button>
-                        <button id="editTextBtn" class="control-btn control-btn-secondary"
-                            title="Edit transcript">Edit</button>
+                        <button id="editTextBtn" class="control-btn control-btn-secondary" disabled
+                            title="Edit transcript" style="opacity: 0.3; pointer-events: none;">Edit</button>
                         <!-- Hidden menu for Add Content -->
                         <div id="contentMenu" class="content-menu" style="display: none;">
                             <button class="content-menu-item" id="importFromFileOption">From File</button>
@@ -289,7 +289,7 @@
                     </div>
 
                     <!-- Floating Auto Scroll Button -->
-                    <button id="floatingAutoScrollBtn" class="floating-auto-scroll-btn" title="Click to jump to latest">
+                    <button id="floatingAutoScrollBtn" class="floating-auto-scroll-btn hidden" title="Click to jump to latest">
                         Back to Latest
                     </button>
                 </div>

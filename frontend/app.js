@@ -410,8 +410,8 @@ class StreamNote {
             }
         }
 
-        // 重置自动滚动状态为启用（切换 session 时应该重新启用自动滚动）
-        this.panelManager.autoScroll = true;
+        // 恢复用户保存的自动滚动偏好（已在 panelManager 构造中通过 loadPanelState 加载）
+        // 不再硬编码为 true，以保持用户之前的选择
         this.panelManager.updateAutoScrollButton();
 
         this.updateDisplay();
