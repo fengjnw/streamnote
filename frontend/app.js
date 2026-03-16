@@ -2453,10 +2453,12 @@ class StreamNote {
                 recordBtn.textContent = "Stop";
                 recordBtn.classList.add("recording");
                 recordBtn.style.backgroundColor = "#ff4444";
+                recordBtn.style.color = "white";
             } else {
                 recordBtn.textContent = "Record";
                 recordBtn.classList.remove("recording");
                 recordBtn.style.backgroundColor = "";
+                recordBtn.style.color = "";
             }
         }
     }

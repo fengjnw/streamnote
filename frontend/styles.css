@@ -300,6 +300,30 @@ header h1 {
     transform: scale(1.08);
 }
 
+/* Content panel close buttons (purple theme) */
+.explanation-panel-header .btn-icon,
+.text-panel-header .btn-icon,
+.side-panel-header .btn-icon {
+    color: #4a3559;
+    background: rgba(74, 53, 89, 0.1);
+}
+
+.explanation-panel-header .btn-icon:hover,
+.text-panel-header .btn-icon:hover,
+.side-panel-header .btn-icon:hover {
+    background: rgba(74, 53, 89, 0.2);
+}
+
+/* Modal close buttons (grey theme) */
+.floating-modal-header .btn-icon {
+    color: #495057;
+    background: rgba(73, 80, 87, 0.1);
+}
+
+.floating-modal-header .btn-icon:hover {
+    background: rgba(73, 80, 87, 0.2);
+}
+
 /* ================ 统一行条目样式 ================ */
 .panel-item {
     background: white;
@@ -627,6 +651,48 @@ header h1 {
     /* Base styling for button groups */
 }
 
+/* Input control group - primary workflow (blue-grey light) */
+.nav-group-input .control-btn-secondary {
+    background: #b8cde0;
+    color: #2c3e50;
+}
+
+.nav-group-input .control-btn-secondary:hover:not(:disabled) {
+    background: #a4bfd3;
+    color: #1a2634;
+}
+
+.nav-group-input .control-btn-secondary.active {
+    background: #5a7c99 !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(90, 124, 153, 0.4) !important;
+}
+
+.nav-group-input .control-btn-secondary.active:hover:not(:disabled) {
+    background: #3f5670 !important;
+}
+
+/* Content tools group - secondary level (soft purple) */
+.nav-group-content .control-btn-secondary {
+    background: #d4c5d9;
+    color: #4a3559;
+}
+
+.nav-group-content .control-btn-secondary:hover:not(:disabled) {
+    background: #c7b3cd;
+    color: #322340;
+}
+
+.nav-group-content .control-btn-secondary.active {
+    background: #6b4875 !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(107, 72, 117, 0.4) !important;
+}
+
+.nav-group-content .control-btn-secondary.active:hover:not(:disabled) {
+    background: #4a3559 !important;
+}
+
 /* 核心功能组 */
 .nav-group-primary {
     padding: 4px var(--spacing-sm);
@@ -636,6 +702,16 @@ header h1 {
 .nav-group-settings {
     margin-left: auto;
     padding: 4px var(--spacing-sm);
+}
+
+.nav-group-settings .control-btn-secondary {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.nav-group-settings .control-btn-secondary:hover:not(:disabled) {
+    background: #dee2e6;
+    color: #212529;
 }
 
 /* 新控制按钮 - 纯文字版本 */
@@ -831,8 +907,8 @@ header h1 {
     justify-content: space-between;
     align-items: center;
     padding: 8px var(--spacing-md);
-    background: var(--color-primary);
-    color: white;
+    background: #d4c5d9;
+    color: #4a3559;
     flex-shrink: 0;
     gap: var(--spacing-sm);
     border-bottom: none;
@@ -1216,8 +1292,8 @@ header h1 {
     justify-content: space-between;
     align-items: center;
     padding: 8px 12px;
-    background: var(--color-primary);
-    color: white;
+    background: #d4c5d9;
+    color: #4a3559;
     flex-shrink: 0;
     gap: 10px;
     border-bottom: 1px solid #e9ecef;
@@ -1277,8 +1353,8 @@ header h1 {
     justify-content: space-between;
     align-items: center;
     padding: 8px 12px;
-    background: var(--color-primary);
-    color: white;
+    background: #d4c5d9;
+    color: #4a3559;
     flex-shrink: 0;
     gap: 10px;
     border-bottom: none;
@@ -2287,8 +2363,8 @@ textarea::placeholder {
     justify-content: space-between;
     align-items: center;
     padding: 8px 12px;
-    background: var(--color-primary);
-    color: white;
+    background: #e9ecef;
+    color: #495057;
     flex-shrink: 0;
     gap: 10px;
     border-bottom: none;
