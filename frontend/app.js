@@ -185,14 +185,12 @@ class StreamNote {
     onTranscribeProgress(data) {
         const { index, text, timestamp, sessionId } = data;
 
-        // 获取当前 session
-        const currentSession = this.sessionManager.getCurrentSession();
+        // 只有在仍然在同一个 session 时，才更新本地显示
         const isCurrentSession = sessionId === this.sessionManager.currentSessionId;
 
         if (isCurrentSession) {
-            // 只有在仍然在同一个 session 时，才更新本地显示
-            const transcriptData = this.recordingManager.getTranscriptData();
-            transcriptData[index] = { text, timestamp };
+            // 数据已经由 recordingManager.submitForTranscription 保存
+            // 直接更新显示（不要修改副本，避免数据不一致）
             this.updateDisplay();
 
             // 自动翻译 - 使用转录的上下文来改进翻译
@@ -252,6 +250,10 @@ class StreamNote {
 
         // 监听 session 切换事件
         window.addEventListener('sessionChanged', (e) => {
+            // 在切换 session 之前，先保存当前 session 的数据（防止转录数据丢失）
+            if (this.recordingManager) {
+                this.saveToSession();
+            }
             this.loadCurrentSession();
         });
     }
@@ -315,9 +317,13 @@ class StreamNote {
         }
 
         // 加载转录内容到 RecordingManager，并设置session开始时间用于时间戳计算
-        this.recordingManager.setTranscriptData(session.transcripts || {});
-        this.recordingManager.setSessionStartTime(session.startTime);
+        // 防护：如果正在录音，则保留当前录音数据，不要用旧session数据覆盖
+        if (!this.recordingManager.isRecording) {
+            this.recordingManager.setTranscriptData(session.transcripts || {});
+        }
+        // panelManager 需要始终更新，用于滚动计算（不参与录制数据）
         this.panelManager.setTranscriptData(session.transcripts || {});
+        this.recordingManager.setSessionStartTime(session.startTime);
 
         // 更新转录上下文 - 从之前的转录内容生成
         this.updateTranscriptionContext();
