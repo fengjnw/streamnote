@@ -1083,17 +1083,26 @@ class KeywordManager {
                     if (explanation && contentElement && contentElement.parentElement) {
                         // 第一次写入时clear placeholder
                         if (chunkCount === 1) {
+                            console.log(`[KeywordManager] Request ${requestId}: First chunk, clearing placeholder`);
                             contentElement.innerHTML = '';
+                            console.log(`[KeywordManager] Request ${requestId}: contentElement.children.length after clear: ${contentElement.children.length}`);
                         }
                         
                         // 确保只有一个p元素
                         let p = contentElement.querySelector('p');
                         if (!p) {
+                            console.log(`[KeywordManager] Request ${requestId}: No p element found, creating new one`);
                             p = document.createElement('p');
                             contentElement.appendChild(p);
+                            console.log(`[KeywordManager] Request ${requestId}: New p appended, children count: ${contentElement.children.length}`);
                         }
                         // 使用textContent避免HTML转义问题
                         p.textContent = explanation;
+                        if (chunkCount <= 5) {
+                            console.log(`[KeywordManager] Request ${requestId}: Updated p.textContent, current length: ${p.textContent.length}`);
+                        }
+                    } else {
+                        console.warn(`[KeywordManager] Request ${requestId}: Cannot update - explanation=${!!explanation}, contentElement=${!!contentElement}, parentElement=${contentElement ? !!contentElement.parentElement : 'N/A'}`);
                     }
                 }
                 const finalChunk = decoder.decode();
@@ -1109,13 +1118,18 @@ class KeywordManager {
                 
                 // 最终确保内容显示正确
                 if (contentElement && contentElement.parentElement) {
+                    console.log(`[KeywordManager] Request ${requestId}: Final update - looking for existing p element...`);
                     let p = contentElement.querySelector('p');
                     if (!p) {
+                        console.log(`[KeywordManager] Request ${requestId}: No p element at final stage, creating new one`);
                         contentElement.innerHTML = '';
                         p = document.createElement('p');
                         contentElement.appendChild(p);
                     }
                     p.textContent = explanation;
+                    console.log(`[KeywordManager] Request ${requestId}: Final p.textContent set, length: ${p.textContent.length}, contentElement.children: ${contentElement.children.length}`);
+                } else {
+                    console.error(`[KeywordManager] Request ${requestId}: Cannot do final update - contentElement=${!!contentElement}, parentElement=${contentElement ? !!contentElement.parentElement : 'N/A'}`);
                 }
             } finally {
                 reader.releaseLock();
@@ -1124,8 +1138,10 @@ class KeywordManager {
             // 存入缓存
             this.explanationCache[cacheKey] = explanation;
 
+            console.log(`[KeywordManager] Request ${requestId}: About to call updateWordContext for "${keyword}"`);
             // 解释加载完成后显示上下文
             this.updateWordContext(keyword);
+            console.log(`[KeywordManager] Request ${requestId}: updateWordContext completed, final check - contentElement.innerHTML starts with: "${contentElement.innerHTML.substring(0, 60)}..."`);
         } catch (error) {
             console.error("[KeywordManager] Error fetching explanation:", error);
             if (contentElement && contentElement.parentElement) {
@@ -1136,8 +1152,10 @@ class KeywordManager {
                 contentElement.appendChild(p);
             }
 
+            console.log(`[KeywordManager] About to call updateWordContext (error case) for "${keyword}"`);
             // 即使出错也显示上下文
             this.updateWordContext(keyword);
+            console.log(`[KeywordManager] updateWordContext completed (error case)`);
         }
     }
 
@@ -1239,6 +1257,8 @@ class KeywordManager {
         const contextDiv = document.getElementById("word-context");
         const contextText = document.getElementById("context-text");
 
+        console.log(`[KeywordManager] updateWordContext: called for "${keyword}", contextDiv=${!!contextDiv}, contextText=${!!contextText}`);
+
         if (!contextDiv || !contextText) return;
 
         let displayContext = "";
@@ -1250,19 +1270,24 @@ class KeywordManager {
                 keyword,
                 50  // 前后各50字符
             );
+            console.log(`[KeywordManager] updateWordContext: Using currentContextPositionInfo, displayContext.length=${displayContext.length}`);
         } else if (this.highlightPositions && this.highlightPositions[keyword]) {
             const positionInfo = this.highlightPositions[keyword];
             displayContext = this._buildContextByPosition(positionInfo, keyword, 50);
+            console.log(`[KeywordManager] updateWordContext: Using highlightPositions, displayContext.length=${displayContext.length}`);
         } else {
             // 降级方案：从全文搜索（用较小范围）
             displayContext = this._buildContextBySearch(keyword, 50);
+            console.log(`[KeywordManager] updateWordContext: Using search fallback, displayContext.length=${displayContext.length}`);
         }
 
         if (displayContext) {
             contextText.innerHTML = displayContext;
             contextDiv.style.display = 'block';
+            console.log(`[KeywordManager] updateWordContext: Set context display, contextDiv shown`);
         } else {
             contextDiv.style.display = 'none';
+            console.log(`[KeywordManager] updateWordContext: No context found, contextDiv hidden`);
         }
     }
 
