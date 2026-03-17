@@ -65,7 +65,7 @@ class KeywordManager {
         this.lastKnownTranscriptData = null;
 
         // [防护] 用于防止并发explanation请求的标记
-        this.currentExpanationRequestId = null;
+        this.currentExpanationRequestId = 0;  // 用++递增，从1开始
         this.currentLoadingKeyword = null;
     }
 
@@ -902,6 +902,12 @@ class KeywordManager {
         const focusView = document.getElementById("explanation-focus-view");
         if (!focusView) return;
 
+        // [防护] 如果已在加载某个word，检查是否是同一个
+        // 如果不同，则中止前一个并开始新的
+        if (this.currentLoadingKeyword && this.currentLoadingKeyword !== word) {
+            console.log(`[KeywordManager] Cancelling previous request for "${this.currentLoadingKeyword}", starting new for "${word}"`);
+        }
+
         // 自动展开左侧解释面板
         if (window.streamNoteInstance && window.streamNoteInstance.panelManager) {
             window.streamNoteInstance.panelManager.showExplanationPanel();
@@ -933,7 +939,7 @@ class KeywordManager {
         const isHighlighted = this.highlights?.includes(word) || false;
         window.streamNoteInstance?.updateHighlightButtonState(word, isHighlighted);
 
-        // 显示加载状态，先隐藏context - 使用textContent避免HTML解析问题
+        // 显示加载状态，先隐藏context - 使用DOM元素避免解析问题
         contentElement.innerHTML = '';  // 先清空
         const placeholder = document.createElement('p');
         placeholder.className = 'placeholder';
@@ -972,12 +978,17 @@ class KeywordManager {
      */
     async fetchAndShowExplanationForFocusView(keyword, contentElement) {
         try {
+            // [防护] 为这个请求分配递增ID，用于检查是否被新请求取代
+            const requestId = ++this.currentExpanationRequestId;
+            
+            console.log(`[KeywordManager] Request ${requestId} started for "${keyword}"`);
+            
             // [FIX] 确保contentElement有效，如果无效则重新获取
             if (!contentElement || !contentElement.parentElement) {
-                console.warn(`[KeywordManager] contentElement is stale, re-fetching...`);
+                console.warn(`[KeywordManager] Request ${requestId}: contentElement is stale, re-fetching...`);
                 contentElement = document.getElementById("explanation-content");
                 if (!contentElement) {
-                    console.error(`[KeywordManager] Cannot find explanation-content element!`);
+                    console.error(`[KeywordManager] Request ${requestId}: Cannot find explanation-content element!`);
                     return;
                 }
             }
@@ -987,7 +998,14 @@ class KeywordManager {
 
             // 检查缓存
             if (this.explanationCache[cacheKey]) {
-                console.log(`[KeywordManager] Using cached explanation for "${keyword}"`);
+                console.log(`[KeywordManager] Request ${requestId}: Using cached explanation for "${keyword}"`);
+                
+                // [防护] 检查是否被新请求取代
+                if (this.currentExpanationRequestId !== requestId) {
+                    console.log(`[KeywordManager] Request ${requestId} cancelled (newer request started)`);
+                    return;
+                }
+                
                 // 使用textContent避免HTML转义问题
                 contentElement.innerHTML = '';
                 const p = document.createElement('p');
@@ -1001,12 +1019,19 @@ class KeywordManager {
             // 获取上下文（用于API）- 使用统一方法
             const context = this.getContextForKeyword(keyword);
             
-            // [DEBUG] 诊断日志 - 确保问题可见
+            // [DEBUG] 诊断日志 - 避免转义问题，直接输出对象
             const transcriptDataSize = Object.keys(this.getTranscriptData()).length;
             const fallbackDataSize = this.lastKnownTranscriptData ? Object.keys(this.lastKnownTranscriptData).length : 0;
-            console.log(`[KeywordManager] fetchAndShowExplanationForFocusView("${keyword}"): context="${context ? context.substring(0, 50) : "(empty)"}...", transcriptData=${transcriptDataSize} items, fallback=${fallbackDataSize} items`);
+            
+            console.log(`[KeywordManager] Request ${requestId}: Context analysis:`, {
+                contextLength: context ? context.length : 0,
+                contextPreview: context ? context.substring(0, 100) : "(empty)",
+                contextHasQuotes: context ? context.includes('"') || context.includes("'") : false,
+                transcriptDataSize: transcriptDataSize,
+                fallbackDataSize: fallbackDataSize,
+            });
 
-            console.log(`[KeywordManager] Calling API: ${this.explanationApiUrl} with language="${explanationLanguage}"`);
+            console.log(`[KeywordManager] Request ${requestId}: Calling API...`);
             
             const response = await fetch(this.explanationApiUrl, {
                 method: "POST",
@@ -1020,11 +1045,11 @@ class KeywordManager {
                 })
             });
 
-            console.log(`[KeywordManager] API response status: ${response.status}`);
+            console.log(`[KeywordManager] Request ${requestId}: API response status: ${response.status}`);
             
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error(`[KeywordManager] API error: ${response.status} ${errorText}`);
+                console.error(`[KeywordManager] Request ${requestId}: API error: ${response.status} ${errorText}`);
                 throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
 
@@ -1038,13 +1063,20 @@ class KeywordManager {
                     const { done, value } = await reader.read();
                     if (done) break;
 
+                    // [防护] 每次读取chunk前检查是否被新请求取代
+                    if (this.currentExpanationRequestId !== requestId) {
+                        reader.releaseLock();
+                        console.log(`[KeywordManager] Request ${requestId} cancelled during streaming`);
+                        return;
+                    }
+
                     const chunk = decoder.decode(value, { stream: true });
                     explanation += chunk;
                     chunkCount++;
                     
                     // [DEBUG] 只在前几个chunk记录日志
                     if (chunkCount <= 3) {
-                        console.log(`[KeywordManager] Received chunk ${chunkCount}: "${chunk.substring(0, 50)}..."`);
+                        console.log(`[KeywordManager] Request ${requestId}: Received chunk ${chunkCount}: "${chunk.substring(0, 50)}..."`);
                     }
 
                     // 实时更新显示 - 使用安全的DOM更新方式
@@ -1067,7 +1099,13 @@ class KeywordManager {
                 const finalChunk = decoder.decode();
                 explanation += finalChunk;
                 
-                console.log(`[KeywordManager] Explanation complete: "${explanation.substring(0, 60)}..." (${explanation.length} chars, ${chunkCount} chunks)`);
+                // [防护] 最后检查一次是否被新请求取代
+                if (this.currentExpanationRequestId !== requestId) {
+                    console.log(`[KeywordManager] Request ${requestId} cancelled at completion`);
+                    return;
+                }
+                
+                console.log(`[KeywordManager] Request ${requestId}: Explanation complete: "${explanation.substring(0, 60)}..." (${explanation.length} chars, ${chunkCount} chunks)`);
                 
                 // 最终确保内容显示正确
                 if (contentElement && contentElement.parentElement) {
