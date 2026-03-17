@@ -1169,7 +1169,7 @@ header h1 {
 .layout-selector {
     padding: var(--spacing-sm) var(--spacing-md);
     background: var(--color-white);
-    border: 1px solid var(--color-grey-border-light);
+    border: 1px solid var(--color-primary-lighter);
     border-radius: 6px;
     font-size: 0.9em;
     color: var(--color-text);
@@ -1180,6 +1180,7 @@ header h1 {
 
 .layout-selector:hover {
     border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
     box-shadow: 0 2px 6px var(--color-primary-shadow-15);
 }
 
@@ -1187,6 +1188,7 @@ header h1 {
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px var(--color-primary-shadow-1);
+    background: var(--color-primary-lightest);
 }
 
 .side-panel-header .language-selector {
@@ -1392,17 +1394,18 @@ header h1 {
 
 .language-selector {
     padding: var(--spacing-sm) var(--spacing-md);
-    border: 1px solid var(--color-grey-300);
+    border: 1px solid var(--color-primary-lighter);
     border-radius: 4px;
     font-size: 0.95em;
     background: var(--color-white);
     cursor: pointer;
-    transition: border-color 0.3s;
+    transition: all 0.2s ease;
 }
 
 .language-selector:hover,
 .language-selector:focus {
     border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
     outline: none;
 }
 
@@ -1412,7 +1415,7 @@ header h1 {
     min-width: 85px;
     height: 28px;
     padding: 4px 10px;
-    border: 1px solid var(--color-grey-divider);
+    border: 1px solid var(--color-primary-lighter);
     border-radius: 4px;
     background: var(--color-white);
     color: var(--color-text);
@@ -1433,6 +1436,18 @@ header h1 {
 .translation-panel .toolbar-language:hover,
 .translation-panel .toolbar-language:focus {
     border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
+}
+
+/* Translation panel layout dropdown */
+.translation-panel .layout-dropdown {
+    border-color: var(--color-primary-lighter);
+}
+
+.translation-panel .layout-dropdown:hover,
+.translation-panel .layout-dropdown:focus {
+    border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
 }
 
 /* Toolbar select dropdown */
@@ -1441,7 +1456,7 @@ header h1 {
     min-width: 100px;
     height: 28px;
     padding: 4px 10px;
-    border: 1px solid var(--color-grey-divider);
+    border: 1px solid var(--color-primary-lighter);
     border-radius: 4px;
     background: var(--color-white);
     color: var(--color-text);
@@ -1457,13 +1472,14 @@ header h1 {
 .panel-toolbar .toolbar-language:hover,
 .panel-toolbar .toolbar-select:hover {
     border-color: var(--color-primary);
-    color: var(--color-primary);
+    background: var(--color-primary-lightest);
 }
 
 .panel-toolbar .toolbar-language:focus,
 .panel-toolbar .toolbar-select:focus {
     outline: none;
     border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
     box-shadow: 0 0 0 2px var(--color-primary-shadow-1);
 }
 
@@ -2522,18 +2538,19 @@ textarea::placeholder {
 .settings-panel .language-selector {
     width: 100%;
     padding: var(--spacing-sm) var(--spacing-md);
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-primary-lighter);
     border-radius: 4px;
     font-size: 0.9em;
-    background: white;
-    color: #333;
+    background: var(--color-white);
+    color: var(--color-text);
     cursor: pointer;
-    transition: border-color 0.3s;
+    transition: all 0.2s ease;
 }
 
 .settings-panel .language-selector:hover,
 .settings-panel .language-selector:focus {
     border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
     outline: none;
 }
 
@@ -2593,17 +2610,19 @@ textarea::placeholder {
 .settings-item .language-selector {
     width: 100%;
     padding: var(--spacing-xs) var(--spacing-sm);
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-primary-lighter);
     border-radius: 4px;
     font-size: 0.85em;
-    background: white;
-    color: #333;
+    background: var(--color-white);
+    color: var(--color-text);
     cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .settings-item .language-selector:hover,
 .settings-item .language-selector:focus {
     border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
     outline: none;
 }
 
