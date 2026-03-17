@@ -1554,7 +1554,7 @@ class StreamNote {
 
         // 创建工具栏
         const toolbar = document.createElement("div");
-        toolbar.className = "text-panel-toolbar";
+        toolbar.className = "floating-modal-toolbar edit-modal-toolbar";
         toolbar.style.cssText = `
             display: flex;
             gap: 8px;

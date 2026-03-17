@@ -2889,6 +2889,28 @@ textarea::placeholder {
     border-color: #d32f2f;
 }
 
+/* Edit modal toolbar buttons - unified with add content modal style */
+.edit-modal-toolbar .toolbar-btn {
+    flex: 0;
+    border-color: var(--color-primary-lighter);
+}
+
+.edit-modal-toolbar .toolbar-btn:hover {
+    background: var(--color-primary-lightest);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.edit-modal-toolbar .toolbar-btn.danger {
+    color: #d32f2f;
+    border-color: var(--color-danger-border-light);
+}
+
+.edit-modal-toolbar .toolbar-btn.danger:hover:not(:disabled) {
+    background: var(--color-danger-bg);
+    border-color: #d32f2f;
+}
+
 /* Blue theme for edit modal buttons */
 .edit-modal .floating-modal-footer .toolbar-btn {
     border-color: var(--color-primary-lighter);
