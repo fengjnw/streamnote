@@ -950,26 +950,9 @@ class KeywordManager {
         
         if (contextDiv) contextDiv.style.display = 'none';
 
-        // 获取位置信息（使用已保存的，如果没有则检测）
-        // 优先使用 highlightPositions 中的信息（在 openExplanationForWord 中保存的精确位置）
-        let positionInfo = null;
-        if (this.highlightPositions && this.highlightPositions[word]) {
-            positionInfo = this.highlightPositions[word];
-        } else if (window.streamNoteInstance && window.streamNoteInstance.highlightManager) {
-            // 如果没有已保存位置，才进行检测搜索
-            const sourcePanel = this.wordSourcePanel[word] || 'transcript';
-            positionInfo = window.streamNoteInstance.highlightManager.detectWordPosition(word, sourcePanel);
-        }
-
-        // 如果找到位置信息，立即显示临时高亮
-        if (positionInfo && window.streamNoteInstance && window.streamNoteInstance.highlightManager) {
-            window.streamNoteInstance.highlightManager.showTemporaryHighlight(word, positionInfo);
-        }
-
-        // 保存位置信息供后续使用
-        this.currentContextPositionInfo = positionInfo;
-        this.currentContextWord = word;
-
+        // [FIX] 获取内容后，不要再做位置检测相关操作，因为showTemporaryHighlight可能导致DOM重排
+        // 这导致contentElement所在容器位置改变或被隐藏
+        
         // 获取解释（完成后会显示context）
         await this.fetchAndShowExplanationForFocusView(word, contentElement);
     }
@@ -1195,32 +1178,12 @@ class KeywordManager {
             contentElement.offsetHeight; // Trigger reflow
             contentElement.style.display = 'block'; // Force display
             
-            // [DEBUG] 设置 MutationObserver 来追踪任何修改
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (mutation.type === 'childList') {
-                        console.warn(`[KeywordManager] Request ${requestId}: contentElement children changed! addedNodes: ${mutation.addedNodes.length}, removedNodes: ${mutation.removedNodes.length}`);
-                    } else if (mutation.type === 'attributes') {
-                        console.warn(`[KeywordManager] Request ${requestId}: contentElement attribute changed: ${mutation.attributeName} = "${contentElement.getAttribute(mutation.attributeName)}"`);
-                    } else if (mutation.type === 'characterData') {
-                        console.warn(`[KeywordManager] Request ${requestId}: contentElement text content changed`);
-                    }
-                });
-            });
-            
-            observer.observe(contentElement, {
-                childList: true,
-                attributes: true,
-                characterData: false,
-                subtree: true,
-                attributeOldValue: true
-            });
-            
-            // 30秒后停止观察
-            setTimeout(() => {
-                observer.disconnect();
-                console.log(`[KeywordManager] Request ${requestId}: MutationObserver stopped`);
-            }, 30000);
+            // [DEBUG] 强制重新检查 explanation-content 的可见性
+            const explanationContent = document.getElementById("explanation-content");
+            if (explanationContent) {
+                const rect = explanationContent.getBoundingClientRect();
+                console.log(`[KeywordManager] Request ${requestId}: contentElement position - top: ${rect.top}, left: ${rect.left}, width: ${rect.width}, height: ${rect.height}`);
+            }
         } catch (error) {
             console.error("[KeywordManager] Error fetching explanation:", error);
             if (contentElement && contentElement.parentElement) {
