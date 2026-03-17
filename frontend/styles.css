@@ -910,49 +910,49 @@ header h1 {
 
 /* Sessions button specific styling */
 #openSessionPanel {
-    background: var(--color-secondary-light);
-    color: var(--color-grey-700);
+    background: var(--color-primary-lighter);
+    color: var(--color-primary-accent);
 }
 
 #openSessionPanel:hover:not(:disabled) {
-    background: var(--color-secondary);
+    background: var(--color-primary-light);
     color: white;
     transform: scale(1.08);
-    box-shadow: 0 2px 6px var(--color-secondary-shadow-08);
+    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
 }
 
 #openSessionPanel.active {
-    background: var(--color-secondary) !important;
+    background: var(--color-primary) !important;
     color: white !important;
-    box-shadow: 0 4px 12px var(--color-secondary-shadow-08) !important;
+    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
 }
 
 #openSessionPanel.active:hover:not(:disabled) {
-    background: var(--color-secondary-dark) !important;
-    box-shadow: 0 4px 12px var(--color-secondary-shadow-1) !important;
+    background: var(--color-primary-dark) !important;
+    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
     transform: scale(1.12);
 }
 
 .nav-group-settings .control-btn-secondary {
-    background: var(--color-secondary-light);
-    color: var(--color-grey-700);
+    background: var(--color-primary-lighter);
+    color: var(--color-primary-accent);
 }
 
 .nav-group-settings .control-btn-secondary:hover:not(:disabled) {
-    background: var(--color-secondary);
+    background: var(--color-primary-light);
     color: white;
     transform: scale(1.08);
-    box-shadow: 0 2px 6px var(--color-secondary-shadow-08);
+    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
 }
 
 .nav-group-settings .control-btn-secondary.active {
-    background: var(--color-secondary) !important;
+    background: var(--color-primary) !important;
     color: white !important;
-    box-shadow: 0 4px 12px var(--color-secondary-shadow-4) !important;
+    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
 }
 
 .nav-group-settings .control-btn-secondary.active:hover:not(:disabled) {
-    background: var(--color-secondary-dark) !important;
+    background: var(--color-primary-dark) !important;
 }
 
 /* 新控制按钮 - 纯文字版本 */
