@@ -460,7 +460,7 @@ class KeywordManager {
 
             // 获取上下文（用于API）- 使用统一方法避免重复
             const context = this.getContextForKeyword(keyword);
-            
+
             const response = await fetch(this.explanationApiUrl, {
                 method: "POST",
                 headers: {
@@ -472,7 +472,7 @@ class KeywordManager {
                     context: context  // 添加上下文
                 })
             });
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error(`[KeywordManager] API error: ${response.status} ${errorText}`);
@@ -884,7 +884,7 @@ class KeywordManager {
 
         // [防护] 如果已在加载某个word，检查是否是同一个
         // 如果不同，则中止前一个并开始新的
-        
+
         // 自动展开左侧解释面板
         if (window.streamNoteInstance && window.streamNoteInstance.panelManager) {
             window.streamNoteInstance.panelManager.showExplanationPanel();
@@ -922,12 +922,12 @@ class KeywordManager {
         placeholder.className = 'placeholder';
         placeholder.textContent = 'Loading explanation...';
         contentElement.appendChild(placeholder);
-        
+
         if (contextDiv) contextDiv.style.display = 'none';
 
         // [FIX] 获取内容后，不要再做位置检测相关操作，因为showTemporaryHighlight可能导致DOM重排
         // 这导致contentElement所在容器位置改变或被隐藏
-        
+
         // 获取解释（完成后会显示context）
         await this.fetchAndShowExplanationForFocusView(word, contentElement);
     }
@@ -941,7 +941,7 @@ class KeywordManager {
         try {
             // [防护] 为这个请求分配递增ID，用于检查是否被新请求取代
             const requestId = ++this.currentExpanationRequestId;
-            
+
             // [FIX] 确保contentElement有效，如果无效则重新获取
             if (!contentElement || !contentElement.parentElement) {
                 console.warn(`[KeywordManager] Request ${requestId}: contentElement is stale, re-fetching...`);
@@ -951,7 +951,7 @@ class KeywordManager {
                     return;
                 }
             }
-            
+
             const explanationLanguage = window.streamNoteInstance?.explanationLanguage || "English";
             const cacheKey = `${keyword}|${explanationLanguage}`;
 
@@ -961,7 +961,7 @@ class KeywordManager {
                 if (this.currentExpanationRequestId !== requestId) {
                     return;
                 }
-                
+
                 // 使用textContent避免HTML转义问题
                 contentElement.innerHTML = '';
                 const p = document.createElement('p');
@@ -974,7 +974,7 @@ class KeywordManager {
 
             // 获取上下文（用于API）- 使用统一方法
             const context = this.getContextForKeyword(keyword);
-            
+
             const response = await fetch(this.explanationApiUrl, {
                 method: "POST",
                 headers: {
@@ -986,7 +986,7 @@ class KeywordManager {
                     context: context
                 })
             });
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error(`[KeywordManager] Request ${requestId}: API error: ${response.status} ${errorText}`);
@@ -1019,7 +1019,7 @@ class KeywordManager {
                         if (chunkCount === 1) {
                             contentElement.innerHTML = '';
                         }
-                        
+
                         // 确保只有一个p元素
                         let p = contentElement.querySelector('p');
                         if (!p) {
@@ -1032,12 +1032,12 @@ class KeywordManager {
                 }
                 const finalChunk = decoder.decode();
                 explanation += finalChunk;
-                
+
                 // [防护] 最后检查一次是否被新请求取代
                 if (this.currentExpanationRequestId !== requestId) {
                     return;
                 }
-                
+
                 // 最终确保内容显示正确
                 if (contentElement && contentElement.parentElement) {
                     let p = contentElement.querySelector('p');
