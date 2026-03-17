@@ -506,14 +506,14 @@ class KeywordManager {
                     }
 
                     // 实时更新显示（逐字显示）
-                    if (explanation) {
+                    if (explanation && contentElement && contentElement.parentElement) {
                         contentElement.innerHTML = `<p>${explanation}</p>`;
                     }
                 }
                 // 刷新解码器缓冲区，获取最后的字符
                 const finalChunk = decoder.decode();
                 explanation += finalChunk;
-                if (finalChunk) {
+                if (finalChunk && contentElement && contentElement.parentElement) {
                     contentElement.innerHTML = `<p>${explanation}</p>`;
                 }
             } finally {
@@ -525,8 +525,18 @@ class KeywordManager {
             
             console.log(`[KeywordManager] Explanation complete: "${explanation.substring(0, 60)}..." (${explanation.length} chars, ${chunkCount} chunks)`);
 
-            // 最终显示
-            contentElement.innerHTML = `<p>${explanation}</p>`;
+            // 最终显示 - 验证contentElement仍然有效
+            if (contentElement && contentElement.parentElement) {
+                contentElement.innerHTML = `<p>${explanation}</p>`;
+            } else {
+                console.warn(`[KeywordManager] contentElement is stale at final display, re-fetching...`);
+                contentElement = document.getElementById("explanation-content");
+                if (contentElement) {
+                    contentElement.innerHTML = `<p>${explanation}</p>`;
+                } else {
+                    console.error(`[KeywordManager] Cannot find explanation-content element`);
+                }
+            }
         } catch (error) {
             console.error("[KeywordManager] Error fetching explanation:", error);
             contentElement.innerHTML = `<p class="error">Failed to load explanation: ${error.message}</p>`;
@@ -951,6 +961,16 @@ class KeywordManager {
      */
     async fetchAndShowExplanationForFocusView(keyword, contentElement) {
         try {
+            // [FIX] 确保contentElement有效，如果无效则重新获取
+            if (!contentElement || !contentElement.parentElement) {
+                console.warn(`[KeywordManager] contentElement is stale, re-fetching...`);
+                contentElement = document.getElementById("explanation-content");
+                if (!contentElement) {
+                    console.error(`[KeywordManager] Cannot find explanation-content element!`);
+                    return;
+                }
+            }
+            
             const explanationLanguage = window.streamNoteInstance?.explanationLanguage || "English";
             const cacheKey = `${keyword}|${explanationLanguage}`;
 
