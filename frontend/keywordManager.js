@@ -1182,7 +1182,6 @@ class KeywordManager {
             this.updateWordContext(keyword);
             console.log(`[KeywordManager] updateWordContext completed (error case), contentElement.style.display: "${contentElement.style.display}", computed: "${contentElement ? window.getComputedStyle(contentElement).display : 'N/A'}"`);
         }
-        }
     }
 
     /**
