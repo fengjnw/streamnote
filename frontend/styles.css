@@ -122,40 +122,42 @@
     --color-panel-header-bg: var(--color-primary-lighter);
     --color-panel-header-text: var(--color-primary-accent);
 
-    /* ================ Primary Color Transparency Variants ================ */
-    --color-primary-shadow-04: rgba(90, 124, 153, 0.04);
-    --color-primary-shadow-08: rgba(90, 124, 153, 0.08);
-    --color-primary-shadow-1: rgba(90, 124, 153, 0.1);
-    --color-primary-shadow-12: rgba(90, 124, 153, 0.12);
-    --color-primary-shadow-15: rgba(90, 124, 153, 0.15);
-    --color-primary-shadow-18: rgba(90, 124, 153, 0.18);
-    --color-primary-shadow-25: rgba(90, 124, 153, 0.25);
-    --color-primary-shadow-3: rgba(90, 124, 153, 0.3);
-    --color-primary-shadow-4: rgba(90, 124, 153, 0.4);
+    /* ================ RGB Color Values (for rgba composition) ================ */
+    --color-primary-rgb: 90 124 153;
+    --color-primary-accent-rgb: 42 62 82;
+    --color-secondary-rgb: 134 142 150;
+    --color-danger-rgb: 211 47 47;
+    --color-black-rgb: 0 0 0;
+    --color-secondary-shadow-4: var(--color-secondary-shadow-4);
 
-    /* ================ Primary Accent Transparency Variants ================ */
-    --color-primary-accent-10: rgba(42, 62, 82, 0.1);
-    --color-primary-accent-20: rgba(42, 62, 82, 0.2);
+    /* ================ Secondary Dark (Grey-700) Transparency Variants ================ */
+    --color-secondary-dark-shadow-1: var(--color-secondary-dark-shadow-1);
+    --color-secondary-dark-shadow-2: var(--color-secondary-dark-shadow-2);
 
-    /* ================ Extended Grey Colors ================ */
-    --color-grey-border-light: #d0d9e1;
-    --color-grey-divider: #d0d0d0;
-    --color-grey-hover: #dee2e6;
-    --color-grey-card-bg: #fafbfc;
-    --color-grey-subtle-bg: #f1f1f1;
+    /* ================ Danger Color Transparency Variants ================ */
+    --color-danger-shadow-08: var(--color-danger-shadow-08);
+    --color-danger-shadow-1: var(--color-danger-shadow-1);
+    --color-danger-light-shadow-15: var(--color-danger-light-shadow-15);
+    --color-danger-light-shadow-2: var(--color-danger-light-shadow-2);
+    --color-danger-light-shadow-4: var(--color-danger-light-shadow-4);
+    --color-danger-active-shadow-4: var(--color-danger-active-shadow-4);
 
-    /* ================ Success Variants ================ */
-    --color-success-bg: #d4edda;
-    --color-success-border: #d4edda;
-    --color-danger-border-light: #ffcdd2;
+    /* ================ Black Overlay & Shadow Variants ================ */
+    --color-black-shadow-05: var(--color-black-shadow-05);
+    --color-black-shadow-08: var(--color-black-shadow-08);
+    --color-black-shadow-12: var(--color-black-shadow-12);
+    --color-black-shadow-15: var(--color-black-shadow-15);
+    --color-black-shadow-2: var(--color-black-shadow-2);
+    --color-black-shadow-3: var(--color-black-shadow-3);
+    --color-black-shadow-5: var(--color-black-shadow-5);
 
-    /* ================ Blue Hover & Active States ================ */
-    --color-primary-hover-bg: #f0f7ff;
-    --color-primary-active-bg: #e0f0ff;
-
-    /* ================ Secondary Color Transparency Variants ================ */
-    --color-secondary-shadow-08: rgba(134, 142, 150, 0.08);
-    --color-secondary-shadow-1: rgba(134, 142, 150, 0.1);
+    /* ================ White Transparency Variants ================ */
+    --color-white-shadow-1: var(--color-white-shadow-1);
+    --color-white-shadow-2: var(--color-white-shadow-2);
+    --color-white-shadow-25: var(--color-white-shadow-25);
+    --color-white-shadow-35: var(--color-white-shadow-35);
+    --color-white-shadow-7: var(--color-white-shadow-7);
+    --color-white-shadow-8: var(--color-white-shadow-8);
 }
 
 html {
@@ -311,7 +313,7 @@ header h1 {
     background: var(--color-white);
     border: 1px solid var(--color-border);
     border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px var(--color-black-shadow-15);
     z-index: 10000;
     min-width: 160px;
     overflow: hidden;
@@ -355,7 +357,7 @@ header h1 {
     background: var(--color-white);
     border: 1px solid var(--color-border);
     border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px var(--color-black-shadow-15);
     z-index: 10001;
     min-width: 140px;
     overflow: hidden;
@@ -424,7 +426,7 @@ header h1 {
 }
 
 .btn-icon {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--color-white-shadow-2);
     color: white;
     border: none;
     border-radius: 3px;
@@ -441,7 +443,7 @@ header h1 {
 }
 
 .btn-icon:hover {
-    background: rgba(255, 255, 255, 0.35);
+    background: var(--color-white-shadow-35);
     transform: scale(1.08);
 }
 
@@ -462,11 +464,11 @@ header h1 {
 /* Modal close buttons (grey theme) */
 .floating-modal-header .btn-icon {
     color: var(--color-grey-700);
-    background: rgba(73, 80, 87, 0.1);
+    background: var(--color-secondary-dark-shadow-1);
 }
 
 .floating-modal-header .btn-icon:hover {
-    background: rgba(73, 80, 87, 0.2);
+    background: var(--color-secondary-dark-shadow-2);
 }
 
 /* ================ 统一行条目样式 ================ */
@@ -476,7 +478,7 @@ header h1 {
     padding: 10px var(--spacing-md);
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px var(--color-black-shadow-05);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -484,7 +486,7 @@ header h1 {
 }
 
 .panel-item:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 8px var(--color-black-shadow-08);
     transform: translateY(-1px);
     border-color: var(--color-secondary);
 }
@@ -495,7 +497,7 @@ header h1 {
     padding: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px var(--color-black-shadow-08);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -504,7 +506,7 @@ header h1 {
 }
 
 .session-item:hover {
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 3px 8px var(--color-black-shadow-12);
     border-color: var(--color-grey-200);
     background: var(--color-grey-card-bg);
 }
@@ -513,12 +515,12 @@ header h1 {
     background: var(--color-secondary);
     color: white;
     border-color: var(--color-secondary);
-    box-shadow: 0 4px 12px rgba(134, 142, 150, 0.2);
+    box-shadow: 0 4px 12px var(--color-secondary-shadow-2);
 }
 
 .session-item.recording {
     border: 1.5px solid var(--color-danger-light);
-    box-shadow: 0 0 12px rgba(255, 107, 107, 0.15);
+    box-shadow: 0 0 12px var(--color-danger-light-shadow-15);
 }
 
 .session-main {
@@ -549,15 +551,15 @@ header h1 {
     align-items: center;
     gap: 3px;
     color: var(--color-grey-500);
-    background: rgba(134, 142, 150, 0.04);
+    background: var(--color-secondary-shadow-04);
     padding: 2px 6px;
     border-radius: 3px;
     white-space: nowrap;
 }
 
 .session-item.active .brief-item {
-    color: rgba(255, 255, 255, 0.8);
-    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-white-shadow-8);
+    background: var(--color-white-shadow-1);
 }
 
 .session-time {
@@ -568,11 +570,11 @@ header h1 {
 }
 
 .session-item.active .session-time {
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-white-shadow-7);
 }
 
 .delete-session-btn {
-    background: rgba(255, 107, 107, 0.2);
+    background: var(--color-danger-light-shadow-2);
     color: var(--color-danger-light);
     border: none;
     border-radius: 4px;
@@ -590,7 +592,7 @@ header h1 {
 }
 
 .session-item.active .delete-session-btn {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--color-white-shadow-2);
     color: white;
 }
 
@@ -669,7 +671,7 @@ header h1 {
 .session-name-input:focus {
     outline: none;
     border-color: var(--color-secondary);
-    box-shadow: 0 0 0 2px rgba(134, 142, 150, 0.1);
+    box-shadow: 0 0 0 2px rgba(var(--color-secondary-rgb), 0.1);
 }
 
 .session-name-edit .toolbar-btn {
@@ -726,7 +728,7 @@ header h1 {
     right: 0;
     background: var(--color-white);
     border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px var(--color-black-shadow-15);
     z-index: 1000;
     min-width: 200px;
     overflow: hidden;
@@ -855,7 +857,7 @@ header h1 {
 #recordBtn.active {
     background: var(--color-danger-light-hover) !important;
     color: white !important;
-    box-shadow: 0 4px 12px rgba(255, 68, 68, 0.4) !important;
+    box-shadow: 0 4px 12px var(--color-danger-active-shadow-4) !important;
 }
 
 #recordBtn.active:hover:not(:disabled) {
@@ -936,7 +938,7 @@ header h1 {
 .nav-group-settings .control-btn-secondary.active {
     background: var(--color-secondary) !important;
     color: white !important;
-    box-shadow: 0 4px 12px rgba(134, 142, 150, 0.4) !important;
+    box-shadow: 0 4px 12px var(--color-secondary-shadow-4) !important;
 }
 
 .nav-group-settings .control-btn-secondary.active:hover:not(:disabled) {
@@ -1289,13 +1291,13 @@ header h1 {
 .control-btn-danger:hover:not(:disabled) {
     background: var(--color-danger-hover);
     transform: scale(1.08);
-    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+    box-shadow: 0 4px 12px var(--color-danger-light-shadow-4);
 }
 
 .control-btn-secondary {
     background: var(--color-secondary-light);
     color: var(--color-grey-700);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px var(--color-black-shadow-08);
 }
 
 .control-btn-secondary:hover:not(:disabled) {
@@ -1452,7 +1454,7 @@ header h1 {
 .panel-toolbar .toolbar-select:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 2px var(--color-primary-shadow-1);
 }
 
 .toggle-panel-btn {
@@ -1825,7 +1827,7 @@ header h1 {
 }
 
 .keyword-delete-btn:hover {
-    background: rgba(211, 47, 47, 0.08);
+    background: var(--color-danger-shadow-08);
     color: var(--color-danger);
 }
 
@@ -2158,7 +2160,7 @@ textarea::placeholder {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--color-black-shadow-5);
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(3px);
@@ -2170,7 +2172,7 @@ textarea::placeholder {
     border-radius: 12px;
     width: 90%;
     max-width: 600px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 40px var(--color-black-shadow-3);
     display: flex;
     flex-direction: column;
     animation: slideIn 0.3s ease-out;
@@ -2227,7 +2229,7 @@ textarea::placeholder {
 }
 
 .modal-close-btn:hover {
-    background-color: rgba(255, 255, 255, 0.25);
+    background-color: var(--color-white-shadow-25);
     color: white;
 }
 
@@ -2287,7 +2289,7 @@ textarea::placeholder {
     width: 350px;
     height: 100vh;
     background: white;
-    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+    box-shadow: -4px 0 12px var(--color-black-shadow-15);
     z-index: 999;
     display: flex;
     flex-direction: column;
@@ -2613,7 +2615,7 @@ textarea::placeholder {
 .settings-item-btn:hover {
     background: var(--color-bg-hover);
     border-color: var(--color-secondary);
-    box-shadow: 0 2px 6px rgba(134, 142, 150, 0.1);
+    box-shadow: 0 2px 6px rgba(var(--color-secondary-rgb), 0.1);
 }
 
 .settings-item-btn.danger {
@@ -2624,7 +2626,7 @@ textarea::placeholder {
 .settings-item-btn.danger:hover {
     background: var(--color-danger-bg);
     border-color: var(--color-danger);
-    box-shadow: 0 2px 6px rgba(211, 47, 47, 0.1);
+    box-shadow: 0 2px 6px var(--color-danger-shadow-1);
 }
 
 /* ==================== Keywords Tab Navigation ==================== */
@@ -2689,7 +2691,7 @@ textarea::placeholder {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--color-black-shadow-3);
     z-index: 2000;
     pointer-events: auto;
     border-radius: 0;
@@ -2711,7 +2713,7 @@ textarea::placeholder {
     z-index: 2010;
     background: white;
     border-radius: 8px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 12px 40px var(--color-black-shadow-2);
     display: flex;
     flex-direction: column;
     max-height: 100%;
@@ -2797,7 +2799,7 @@ textarea::placeholder {
 }
 
 .floating-modal-header.input-group-modal-header .btn-icon:hover {
-    background: rgba(90, 124, 153, 0.2);
+    background: rgba(var(--color-primary-rgb), 0.2);
 }
 
 .floating-modal-header h3 {
@@ -2928,7 +2930,7 @@ textarea::placeholder {
     z-index: 1001;
     background: white;
     border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 16px var(--color-black-shadow-15);
     border: 1px solid #e0e0e0;
     display: flex;
     flex-direction: column;
