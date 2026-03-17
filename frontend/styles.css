@@ -119,8 +119,8 @@
     --color-button-secondary-text: var(--color-grey-700);
     --color-input-border: var(--color-grey-300);
     --color-panel-bg: var(--color-white);
-    --color-panel-header-bg: var(--color-primary-lighter);
-    --color-panel-header-text: var(--color-primary-accent);
+    --color-panel-header-bg: var(--color-primary);
+    --color-panel-header-text: white;
 
     /* ================ Highlight Colors ================ */
     --color-highlight-bg: #ffa500;
@@ -522,10 +522,10 @@ header h1 {
 }
 
 .session-item.active {
-    background: var(--color-secondary);
+    background: var(--color-primary);
     color: white;
-    border-color: var(--color-secondary);
-    box-shadow: 0 4px 12px var(--color-secondary-shadow-2);
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px var(--color-primary-shadow-2);
 }
 
 .session-item.recording {
@@ -2508,7 +2508,7 @@ textarea::placeholder {
     cursor: pointer;
     width: 18px;
     height: 18px;
-    accent-color: var(--color-secondary);
+    accent-color: var(--color-primary);
 }
 
 .settings-label span {
@@ -2531,7 +2531,7 @@ textarea::placeholder {
 
 .settings-panel .language-selector:hover,
 .settings-panel .language-selector:focus {
-    border-color: var(--color-secondary);
+    border-color: var(--color-primary);
     outline: none;
 }
 
@@ -2544,9 +2544,9 @@ textarea::placeholder {
 
 .settings-section {
     padding: 8px;
-    background: var(--color-secondary-lightest);
+    background: var(--color-primary-lightest);
     border-radius: 6px;
-    border: 1px solid var(--color-secondary-light);
+    border: 1px solid var(--color-primary-lighter);
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -2579,7 +2579,7 @@ textarea::placeholder {
 }
 
 .settings-item input[type="checkbox"] {
-    accent-color: var(--color-secondary);
+    accent-color: var(--color-primary);
     cursor: pointer;
 }
 
@@ -2601,7 +2601,7 @@ textarea::placeholder {
 
 .settings-item .language-selector:hover,
 .settings-item .language-selector:focus {
-    border-color: var(--color-secondary);
+    border-color: var(--color-primary);
     outline: none;
 }
 
@@ -2624,8 +2624,8 @@ textarea::placeholder {
 
 .settings-item-btn:hover {
     background: var(--color-bg-hover);
-    border-color: var(--color-secondary);
-    box-shadow: 0 2px 6px rgba(var(--color-secondary-rgb), 0.1);
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 6px rgba(var(--color-primary-rgb), 0.1);
 }
 
 .settings-item-btn.danger {
@@ -2765,7 +2765,17 @@ textarea::placeholder {
 }
 
 .session-modal .floating-modal-header {
+    background: var(--color-primary);
+    color: white;
     border-radius: 0;
+}
+
+.session-modal .floating-modal-header .btn-icon {
+    color: white;
+}
+
+.session-modal .floating-modal-header .btn-icon:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 /* Settings Modal - 右侧弹出 */
@@ -2779,7 +2789,17 @@ textarea::placeholder {
 }
 
 .settings-modal .floating-modal-header {
+    background: var(--color-primary);
+    color: white;
     border-radius: 0;
+}
+
+.settings-modal .floating-modal-header .btn-icon {
+    color: white;
+}
+
+.settings-modal .floating-modal-header .btn-icon:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 /* Modal Header */
@@ -2836,15 +2856,15 @@ textarea::placeholder {
     flex: 1;
 }
 
-/* Gray theme for session modal toolbar buttons */
+/* Purple theme for session modal toolbar buttons */
 .session-modal .floating-modal-toolbar .toolbar-btn {
-    border-color: #ccc;
+    border-color: var(--color-primary-lighter);
 }
 
 .session-modal .floating-modal-toolbar .toolbar-btn:hover {
-    background: var(--color-secondary-lighter);
-    border-color: var(--color-secondary);
-    color: var(--color-secondary);
+    background: var(--color-primary-lightest);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }
 
 .session-modal .floating-modal-toolbar .toolbar-btn.danger {
@@ -2857,15 +2877,15 @@ textarea::placeholder {
     border-color: #d32f2f;
 }
 
-/* Gray theme for settings modal toolbar buttons */
+/* Purple theme for settings modal toolbar buttons */
 .settings-modal .floating-modal-toolbar .toolbar-btn {
-    border-color: #ccc;
+    border-color: var(--color-primary-lighter);
 }
 
 .settings-modal .floating-modal-toolbar .toolbar-btn:hover {
-    background: var(--color-secondary-lighter);
-    border-color: var(--color-secondary);
-    color: var(--color-secondary);
+    background: var(--color-primary-lightest);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }
 
 .add-content-modal .floating-modal-toolbar .toolbar-btn {
