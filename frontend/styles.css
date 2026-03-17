@@ -23,18 +23,18 @@
     --spacing-lg: 16px;
     --spacing-xl: 20px;
 
-    /* ================ Primary Color (Purple Theme) ================ */
-    --color-primary: #6b4875;
+    /* ================ Primary Color (Slate Blue Theme) ================ */
+    --color-primary: #5a7c99;
     /* 主色 */
-    --color-primary-dark: #553366;
-    /* 深紫 Header */
-    --color-primary-light: #a395b8;
-    /* 浅紫 按钮 */
-    --color-primary-lighter: #d4c5d9;
-    /* 更浅紫 面板头 */
-    --color-primary-lightest: #f5f0f7;
-    /* 最浅紫 背景 */
-    --color-primary-accent: #4a3559;
+    --color-primary-dark: #42657a;
+    /* 深灰蓝 Header */
+    --color-primary-light: #8ba6bf;
+    /* 浅灰蓝 按钮 */
+    --color-primary-lighter: #b8cce0;
+    /* 更浅灰蓝 面板头 */
+    --color-primary-lightest: #eef3f8;
+    /* 最浅灰蓝 背景 */
+    --color-primary-accent: #2a3e52;
     /* 深色文字 */
 
     /* ================ Secondary Color (Grey) ================ */
@@ -121,6 +121,41 @@
     --color-panel-bg: var(--color-white);
     --color-panel-header-bg: var(--color-primary-lighter);
     --color-panel-header-text: var(--color-primary-accent);
+
+    /* ================ Primary Color Transparency Variants ================ */
+    --color-primary-shadow-04: rgba(90, 124, 153, 0.04);
+    --color-primary-shadow-08: rgba(90, 124, 153, 0.08);
+    --color-primary-shadow-1: rgba(90, 124, 153, 0.1);
+    --color-primary-shadow-12: rgba(90, 124, 153, 0.12);
+    --color-primary-shadow-15: rgba(90, 124, 153, 0.15);
+    --color-primary-shadow-18: rgba(90, 124, 153, 0.18);
+    --color-primary-shadow-25: rgba(90, 124, 153, 0.25);
+    --color-primary-shadow-3: rgba(90, 124, 153, 0.3);
+    --color-primary-shadow-4: rgba(90, 124, 153, 0.4);
+
+    /* ================ Primary Accent Transparency Variants ================ */
+    --color-primary-accent-10: rgba(42, 62, 82, 0.1);
+    --color-primary-accent-20: rgba(42, 62, 82, 0.2);
+
+    /* ================ Extended Grey Colors ================ */
+    --color-grey-border-light: #d0d9e1;
+    --color-grey-divider: #d0d0d0;
+    --color-grey-hover: #dee2e6;
+    --color-grey-card-bg: #fafbfc;
+    --color-grey-subtle-bg: #f1f1f1;
+
+    /* ================ Success Variants ================ */
+    --color-success-bg: #d4edda;
+    --color-success-border: #d4edda;
+    --color-danger-border-light: #ffcdd2;
+
+    /* ================ Blue Hover & Active States ================ */
+    --color-primary-hover-bg: #f0f7ff;
+    --color-primary-active-bg: #e0f0ff;
+
+    /* ================ Secondary Color Transparency Variants ================ */
+    --color-secondary-shadow-08: rgba(134, 142, 150, 0.08);
+    --color-secondary-shadow-1: rgba(134, 142, 150, 0.1);
 }
 
 html {
@@ -414,19 +449,19 @@ header h1 {
 .explanation-panel-header .btn-icon,
 .text-panel-header .btn-icon,
 .side-panel-header .btn-icon {
-    color: #4a3559;
-    background: rgba(74, 53, 89, 0.1);
+    color: var(--color-primary-accent);
+    background: var(--color-primary-accent-10);
 }
 
 .explanation-panel-header .btn-icon:hover,
 .text-panel-header .btn-icon:hover,
 .side-panel-header .btn-icon:hover {
-    background: rgba(74, 53, 89, 0.2);
+    background: var(--color-primary-accent-20);
 }
 
 /* Modal close buttons (grey theme) */
 .floating-modal-header .btn-icon {
-    color: #495057;
+    color: var(--color-grey-700);
     background: rgba(73, 80, 87, 0.1);
 }
 
@@ -471,7 +506,7 @@ header h1 {
 .session-item:hover {
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
     border-color: var(--color-grey-200);
-    background: #fafbfc;
+    background: var(--color-grey-card-bg);
 }
 
 .session-item.active {
@@ -647,21 +682,21 @@ header h1 {
 
 #confirmSessionNameBtn {
     color: var(--color-success);
-    border-color: #d4edda;
+    border-color: var(--color-success-border);
 }
 
 #confirmSessionNameBtn:hover:not(:disabled) {
-    background: #d4edda;
+    background: var(--color-success-bg);
     border-color: var(--color-success);
 }
 
 #cancelSessionNameBtn {
     color: #d32f2f;
-    border-color: #ffcdd2;
+    border-color: var(--color-danger-border-light);
 }
 
 #cancelSessionNameBtn:hover:not(:disabled) {
-    background: #ffebee;
+    background: var(--color-danger-bg);
     border-color: #d32f2f;
 }
 
@@ -725,7 +760,7 @@ header h1 {
 }
 
 .manage-menu-item.danger:hover {
-    background: #ffebee;
+    background: var(--color-danger-bg);
 }
 
 /* Main wrapper - 包含 control-panel, main-content, status-bar */
@@ -799,14 +834,16 @@ header h1 {
 }
 
 .nav-group-input .control-btn-secondary:hover:not(:disabled) {
-    background: #c7b3cd;
-    color: var(--color-primary-accent);
+    background: var(--color-primary-light);
+    color: white;
+    transform: scale(1.08);
+    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
 }
 
 .nav-group-input .control-btn-secondary.active {
     background: var(--color-primary) !important;
     color: white !important;
-    box-shadow: 0 4px 12px rgba(90, 124, 153, 0.4) !important;
+    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
 }
 
 .nav-group-input .control-btn-secondary.active:hover:not(:disabled) {
@@ -832,14 +869,16 @@ header h1 {
 }
 
 .nav-group-content .control-btn-secondary:hover:not(:disabled) {
-    background: #c7b3cd;
-    color: #322340;
+    background: var(--color-primary-light);
+    color: white;
+    transform: scale(1.08);
+    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
 }
 
 .nav-group-content .control-btn-secondary.active {
     background: var(--color-primary) !important;
     color: white !important;
-    box-shadow: 0 4px 12px rgba(107, 72, 117, 0.4) !important;
+    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
 }
 
 .nav-group-content .control-btn-secondary.active:hover:not(:disabled) {
@@ -858,14 +897,28 @@ header h1 {
 }
 
 /* Sessions button specific styling */
+#openSessionPanel {
+    background: var(--color-secondary-light);
+    color: var(--color-grey-700);
+}
+
+#openSessionPanel:hover:not(:disabled) {
+    background: var(--color-secondary);
+    color: white;
+    transform: scale(1.08);
+    box-shadow: 0 2px 6px var(--color-secondary-shadow-08);
+}
+
 #openSessionPanel.active {
     background: var(--color-secondary) !important;
     color: white !important;
-    box-shadow: 0 4px 12px rgba(134, 142, 150, 0.4) !important;
+    box-shadow: 0 4px 12px var(--color-secondary-shadow-08) !important;
 }
 
 #openSessionPanel.active:hover:not(:disabled) {
     background: var(--color-secondary-dark) !important;
+    box-shadow: 0 4px 12px var(--color-secondary-shadow-1) !important;
+    transform: scale(1.12);
 }
 
 .nav-group-settings .control-btn-secondary {
@@ -874,8 +927,10 @@ header h1 {
 }
 
 .nav-group-settings .control-btn-secondary:hover:not(:disabled) {
-    background: #dee2e6;
-    color: var(--color-grey-900);
+    background: var(--color-secondary);
+    color: white;
+    transform: scale(1.08);
+    box-shadow: 0 2px 6px var(--color-secondary-shadow-08);
 }
 
 .nav-group-settings .control-btn-secondary.active {
@@ -932,17 +987,17 @@ header h1 {
 .control-btn-primary {
     background: var(--color-primary);
     color: white;
-    box-shadow: 0 2px 6px rgba(90, 124, 153, 0.3);
+    box-shadow: 0 2px 6px var(--color-primary-shadow-3);
 }
 
 .control-btn-primary:hover:not(:disabled) {
     background: var(--color-primary-dark);
     transform: scale(1.08);
-    box-shadow: 0 4px 12px rgba(90, 124, 153, 0.4);
+    box-shadow: 0 4px 12px var(--color-primary-shadow-4);
 }
 
 .manage-menu-item.danger:hover {
-    background: #ffebee;
+    background: var(--color-danger-bg);
 }
 
 /* ================ Text Panels (Transcript & Translation) ================ */
@@ -1102,7 +1157,7 @@ header h1 {
 .layout-selector {
     padding: var(--spacing-sm) var(--spacing-md);
     background: var(--color-white);
-    border: 1px solid #d0d9e1;
+    border: 1px solid var(--color-grey-border-light);
     border-radius: 6px;
     font-size: 0.9em;
     color: var(--color-text);
@@ -1113,13 +1168,13 @@ header h1 {
 
 .layout-selector:hover {
     border-color: var(--color-primary);
-    box-shadow: 0 2px 6px rgba(90, 124, 153, 0.15);
+    box-shadow: 0 2px 6px var(--color-primary-shadow-15);
 }
 
 .layout-selector:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(90, 124, 153, 0.1);
+    box-shadow: 0 0 0 3px var(--color-primary-shadow-1);
 }
 
 .side-panel-header .language-selector {
@@ -1150,7 +1205,7 @@ header h1 {
     min-width: 85px;
     height: 28px;
     padding: 4px 10px;
-    border: 1px solid #c7b3cd;
+    border: 1px solid var(--color-primary-lighter);
     border-radius: 4px;
     background: var(--color-white);
     color: var(--color-text);
@@ -1173,7 +1228,7 @@ header h1 {
     min-width: 85px;
     height: 28px;
     padding: 4px 10px;
-    border: 1px solid #c7b3cd;
+    border: 1px solid var(--color-primary-lighter);
     border-radius: 4px;
     background: var(--color-white);
     color: var(--color-text);
@@ -1192,7 +1247,7 @@ header h1 {
 .layout-dropdown:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px rgba(107, 72, 117, 0.1);
+    box-shadow: 0 0 0 2px var(--color-primary-shadow-1);
 }
 
 .text-panel-header .btn-icon {
@@ -1244,9 +1299,10 @@ header h1 {
 }
 
 .control-btn-secondary:hover:not(:disabled) {
-    background: #dee2e6;
+    background: var(--color-primary-shadow-08);
+    border-color: var(--color-primary-shadow-15);
     transform: scale(1.08);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
 }
 
 /* Active/highlighted button state - higher specificity to override secondary style */
@@ -1254,14 +1310,14 @@ header h1 {
 .control-btn-secondary.active {
     background: var(--color-primary) !important;
     color: white !important;
-    box-shadow: 0 4px 12px rgba(90, 124, 153, 0.4) !important;
+    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
 }
 
 .control-btn.active:hover:not(:disabled),
 .control-btn-secondary.active:hover:not(:disabled) {
     background: var(--color-primary-dark) !important;
     transform: scale(1.12);
-    box-shadow: 0 6px 16px rgba(90, 124, 153, 0.5) !important;
+    box-shadow: 0 6px 16px var(--color-primary-shadow-4) !important;
 }
 
 .control-btn:disabled {
@@ -1344,7 +1400,7 @@ header h1 {
     min-width: 85px;
     height: 28px;
     padding: 4px 10px;
-    border: 1px solid #d0d0d0;
+    border: 1px solid var(--color-grey-divider);
     border-radius: 4px;
     background: var(--color-white);
     color: var(--color-text);
@@ -1359,7 +1415,7 @@ header h1 {
 
 /* Translation panel language selector */
 .translation-panel .toolbar-language {
-    border-color: #c7b3cd;
+    border-color: var(--color-primary-lighter);
 }
 
 .translation-panel .toolbar-language:hover,
@@ -1373,7 +1429,7 @@ header h1 {
     min-width: 100px;
     height: 28px;
     padding: 4px 10px;
-    border: 1px solid #d0d0d0;
+    border: 1px solid var(--color-grey-divider);
     border-radius: 4px;
     background: var(--color-white);
     color: var(--color-text);
@@ -1546,7 +1602,7 @@ header h1 {
 
 .explanation-panel-toolbar .toolbar-btn {
     flex: 1;
-    border-color: #c7b3cd;
+    border-color: var(--color-primary-lighter);
 }
 
 .explanation-panel-toolbar .toolbar-btn:hover {
@@ -1557,7 +1613,7 @@ header h1 {
 
 .explanation-panel-toolbar .toolbar-language {
     flex: 1;
-    border-color: #c7b3cd;
+    border-color: var(--color-primary-lighter);
 }
 
 .explanation-panel-toolbar .toolbar-language:hover,
@@ -1702,8 +1758,8 @@ header h1 {
 
 .keyword-item:hover {
     background: var(--color-primary-lightest);
-    border-color: #e6d5ea;
-    box-shadow: 0 2px 6px rgba(107, 72, 117, 0.08);
+    border-color: var(--color-primary-lighter);
+    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
 }
 
 .keyword-text {
@@ -1724,8 +1780,8 @@ header h1 {
 }
 
 .keyword-explain-btn {
-    background: rgba(107, 72, 117, 0.08);
-    border: 1px solid rgba(107, 72, 117, 0.15);
+    background: var(--color-primary-shadow-08);
+    border: 1px solid var(--color-primary-shadow-15);
     color: var(--color-primary);
     font-size: 0.75em;
     font-weight: 600;
@@ -1742,13 +1798,13 @@ header h1 {
 }
 
 .keyword-explain-btn:hover {
-    background: rgba(107, 72, 117, 0.12);
-    border-color: rgba(107, 72, 117, 0.25);
-    box-shadow: 0 2px 4px rgba(107, 72, 117, 0.1);
+    background: var(--color-primary-shadow-12);
+    border-color: var(--color-primary-shadow-25);
+    box-shadow: 0 2px 4px var(--color-primary-shadow-1);
 }
 
 .keyword-explain-btn:active {
-    background: rgba(107, 72, 117, 0.18);
+    background: var(--color-primary-shadow-18);
 }
 
 .keyword-delete-btn {
@@ -1785,9 +1841,9 @@ header h1 {
 }
 
 .keyword-item-wrapper:hover {
-    border-color: #e6d5ea;
+    border-color: var(--color-primary-lighter);
     background: var(--color-primary-lightest);
-    box-shadow: 0 2px 6px rgba(107, 72, 117, 0.08);
+    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
 }
 
 .keyword-expand-btn {
@@ -1808,7 +1864,7 @@ header h1 {
 }
 
 .keyword-expand-btn:hover {
-    background: rgba(90, 124, 153, 0.1);
+    background: var(--color-primary-shadow-1);
     color: var(--color-primary);
 }
 
@@ -1946,7 +2002,7 @@ textarea::placeholder {
     font-size: 0.9em;
     font-weight: 500;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(107, 72, 117, 0.3);
+    box-shadow: 0 4px 12px var(--color-primary-shadow-3);
     transition: all 0.3s ease;
     z-index: 100;
     white-space: nowrap;
@@ -1954,7 +2010,7 @@ textarea::placeholder {
 
 .floating-auto-scroll-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(107, 72, 117, 0.4);
+    box-shadow: 0 6px 16px var(--color-primary-shadow-4);
 }
 
 .floating-auto-scroll-btn.hidden {
@@ -2075,20 +2131,20 @@ textarea::placeholder {
     .main-content.layout-split-left .transcript-panel,
     .main-content.layout-split-right .transcript-panel {
         border-right: none;
-        border-bottom: 1px solid #e9ecef;
+        border-bottom: 1px solid var(--color-secondary-light);
         order: 2;
     }
 
     .main-content.layout-split-left .translation-panel,
     .main-content.layout-split-right .translation-panel {
         border-right: none;
-        border-bottom: 1px solid #e9ecef;
+        border-bottom: 1px solid var(--color-secondary-light);
         order: 1;
     }
 
     .transcript-container {
         border-right: none;
-        border-bottom: 1px solid #e9ecef;
+        border-bottom: 1px solid var(--color-secondary-light);
     }
 }
 
@@ -2210,7 +2266,7 @@ textarea::placeholder {
 }
 
 .modal::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: var(--color-grey-subtle-bg);
 }
 
 .modal::-webkit-scrollbar-thumb {
@@ -2310,53 +2366,53 @@ textarea::placeholder {
 
 /* Summary Panel */
 #summaryContent .panel-toolbar .toolbar-btn {
-    border-color: #c7b3cd;
+    border-color: var(--color-primary-lighter);
 }
 
 #summaryContent .panel-toolbar .toolbar-btn:hover {
-    background: #f5f0f7;
-    border-color: #6b4875;
-    color: #6b4875;
+    background: var(--color-primary-lightest);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }
 
 #summaryContent .panel-toolbar .toolbar-btn.danger {
     color: #d32f2f;
-    border-color: #ffcdd2;
+    border-color: var(--color-danger-border-light);
 }
 
 #summaryContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled) {
-    background: #ffebee;
+    background: var(--color-danger-bg);
     border-color: #d32f2f;
 }
 
 #summaryContent .panel-toolbar .toolbar-select {
-    border-color: #c7b3cd;
+    border-color: var(--color-primary-lighter);
     color: #333;
 }
 
 #summaryContent .panel-toolbar .toolbar-select:hover,
 #summaryContent .panel-toolbar .toolbar-select:focus {
-    border-color: #6b4875;
+    border-color: var(--color-primary);
 }
 
 /* Keywords Panel */
 #keywordsContent .panel-toolbar .toolbar-btn {
-    border-color: #c7b3cd;
+    border-color: var(--color-primary-lighter);
 }
 
 #keywordsContent .panel-toolbar .toolbar-btn:hover {
-    background: #f5f0f7;
-    border-color: #6b4875;
-    color: #6b4875;
+    background: var(--color-primary-lightest);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }
 
 #keywordsContent .panel-toolbar .toolbar-btn.danger {
     color: #d32f2f;
-    border-color: #ffcdd2;
+    border-color: var(--color-danger-border-light);
 }
 
 #keywordsContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled) {
-    background: #ffebee;
+    background: var(--color-danger-bg);
     border-color: #d32f2f;
 }
 
@@ -2366,36 +2422,36 @@ textarea::placeholder {
 }
 
 .keywords-tab-btn:hover {
-    color: #6b4875;
+    color: var(--color-primary);
 }
 
 .keywords-tab-btn.active {
-    color: #6b4875;
+    color: var(--color-primary);
     font-weight: 600;
 }
 
 .keywords-tab-btn.active::after {
-    background: #6b4875;
+    background: var(--color-primary);
 }
 
 /* Highlights Panel */
 #highlightsContent .panel-toolbar .toolbar-btn {
-    border-color: #c7b3cd;
+    border-color: var(--color-primary-lighter);
 }
 
 #highlightsContent .panel-toolbar .toolbar-btn:hover {
-    background: #f5f0f7;
-    border-color: #6b4875;
-    color: #6b4875;
+    background: var(--color-primary-lightest);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }
 
 #highlightsContent .panel-toolbar .toolbar-btn.danger {
     color: #d32f2f;
-    border-color: #ffcdd2;
+    border-color: var(--color-danger-border-light);
 }
 
 #highlightsContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled) {
-    background: #ffebee;
+    background: var(--color-danger-bg);
     border-color: #d32f2f;
 }
 
@@ -2417,7 +2473,7 @@ textarea::placeholder {
 .settings-group {
     margin-bottom: 16px;
     padding-bottom: 12px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--color-grey-100);
 }
 
 .settings-group:last-child {
@@ -2440,7 +2496,7 @@ textarea::placeholder {
     cursor: pointer;
     width: 18px;
     height: 18px;
-    accent-color: #868e96;
+    accent-color: var(--color-secondary);
 }
 
 .settings-label span {
@@ -2463,22 +2519,22 @@ textarea::placeholder {
 
 .settings-panel .language-selector:hover,
 .settings-panel .language-selector:focus {
-    border-color: #868e96;
+    border-color: var(--color-secondary);
     outline: none;
 }
 
 .settings-divider {
     height: 8px;
-    background: linear-gradient(to right, transparent, #f0f0f0, transparent);
+    background: linear-gradient(to right, transparent, var(--color-grey-100), transparent);
     margin: 15px 0;
     border: none;
 }
 
 .settings-section {
     padding: 8px;
-    background: #fafafa;
+    background: var(--color-secondary-lightest);
     border-radius: 6px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--color-secondary-light);
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -2511,7 +2567,7 @@ textarea::placeholder {
 }
 
 .settings-item input[type="checkbox"] {
-    accent-color: #868e96;
+    accent-color: var(--color-secondary);
     cursor: pointer;
 }
 
@@ -2533,7 +2589,7 @@ textarea::placeholder {
 
 .settings-item .language-selector:hover,
 .settings-item .language-selector:focus {
-    border-color: #868e96;
+    border-color: var(--color-secondary);
     outline: none;
 }
 
@@ -2556,17 +2612,17 @@ textarea::placeholder {
 
 .settings-item-btn:hover {
     background: var(--color-bg-hover);
-    border-color: #868e96;
+    border-color: var(--color-secondary);
     box-shadow: 0 2px 6px rgba(134, 142, 150, 0.1);
 }
 
 .settings-item-btn.danger {
     color: var(--color-danger);
-    border-color: #ffcdd2;
+    border-color: var(--color-danger-border-light);
 }
 
 .settings-item-btn.danger:hover {
-    background: #ffebee;
+    background: var(--color-danger-bg);
     border-color: var(--color-danger);
     box-shadow: 0 2px 6px rgba(211, 47, 47, 0.1);
 }
@@ -2599,7 +2655,7 @@ textarea::placeholder {
 }
 
 .keywords-tab-btn.active {
-    color: #6b4875;
+    color: var(--color-primary);
     font-weight: 600;
 }
 
@@ -2610,7 +2666,7 @@ textarea::placeholder {
     left: 0;
     right: 0;
     height: 2px;
-    background: #6b4875;
+    background: var(--color-primary);
 }
 
 /* Keywords Tab Content */
@@ -2720,8 +2776,8 @@ textarea::placeholder {
     justify-content: space-between;
     align-items: center;
     padding: 8px 12px;
-    background: #e9ecef;
-    color: #495057;
+    background: var(--color-secondary-light);
+    color: var(--color-grey-700);
     flex-shrink: 0;
     gap: 10px;
     border-bottom: none;
@@ -2731,17 +2787,17 @@ textarea::placeholder {
 
 /* Input group modal header (purple theme) */
 .floating-modal-header.input-group-modal-header {
-    background: #d4c5d9;
-    color: #4a3559;
+    background: var(--color-primary-lighter);
+    color: var(--color-primary-accent);
 }
 
 .floating-modal-header.input-group-modal-header .btn-icon {
-    color: #4a3559;
-    background: rgba(74, 53, 89, 0.1);
+    color: var(--color-primary-accent);
+    background: var(--color-primary-shadow-1);
 }
 
 .floating-modal-header.input-group-modal-header .btn-icon:hover {
-    background: rgba(74, 53, 89, 0.2);
+    background: rgba(90, 124, 153, 0.2);
 }
 
 .floating-modal-header h3 {
@@ -2756,8 +2812,8 @@ textarea::placeholder {
     display: flex;
     gap: 8px;
     padding: 8px 12px;
-    background: #f5f5f5;
-    border-bottom: 1px solid #e9ecef;
+    background: var(--color-secondary-lighter);
+    border-bottom: 1px solid var(--color-secondary-light);
     flex-shrink: 0;
     align-items: center;
     flex-wrap: wrap;
@@ -2774,18 +2830,18 @@ textarea::placeholder {
 }
 
 .session-modal .floating-modal-toolbar .toolbar-btn:hover {
-    background: #f5f5f5;
-    border-color: #868e96;
-    color: #868e96;
+    background: var(--color-secondary-lighter);
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
 }
 
 .session-modal .floating-modal-toolbar .toolbar-btn.danger {
     color: #d32f2f;
-    border-color: #ffcdd2;
+    border-color: var(--color-danger-border-light);
 }
 
 .session-modal .floating-modal-toolbar .toolbar-btn.danger:hover:not(:disabled) {
-    background: #ffebee;
+    background: var(--color-danger-bg);
     border-color: #d32f2f;
 }
 
@@ -2795,42 +2851,42 @@ textarea::placeholder {
 }
 
 .settings-modal .floating-modal-toolbar .toolbar-btn:hover {
-    background: #f5f5f5;
-    border-color: #868e96;
-    color: #868e96;
+    background: var(--color-secondary-lighter);
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
 }
 
 .add-content-modal .floating-modal-toolbar .toolbar-btn {
     flex: 0;
-    border-color: #d4c5d9;
+    border-color: var(--color-primary-lighter);
 }
 
 .add-content-modal .floating-modal-toolbar .toolbar-btn:hover {
-    background: #f5f0f7;
-    border-color: #6b4875;
-    color: #6b4875;
+    background: var(--color-primary-lightest);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }
 
 .add-content-modal .floating-modal-toolbar .toolbar-btn.danger {
     color: #d32f2f;
-    border-color: #ffcdd2;
+    border-color: var(--color-danger-border-light);
 }
 
 .add-content-modal .floating-modal-toolbar .toolbar-btn.danger:hover:not(:disabled) {
-    background: #ffebee;
+    background: var(--color-danger-bg);
     border-color: #d32f2f;
 }
 
 /* Blue theme for edit modal buttons */
 .edit-modal .floating-modal-footer .toolbar-btn {
-    border-color: #d4c5d9;
+    border-color: var(--color-primary-lighter);
     color: #333;
 }
 
 .edit-modal .floating-modal-footer .toolbar-btn:hover {
-    background: #f5f0f7;
-    border-color: #6b4875;
-    color: #6b4875;
+    background: var(--color-primary-lightest);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }
 
 /* Modal Content */
@@ -2844,12 +2900,12 @@ textarea::placeholder {
 /* Modal Footer */
 .floating-modal-footer {
     padding: 12px 16px;
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid var(--color-secondary-light);
     display: flex;
     gap: 8px;
     justify-content: flex-end;
     flex-shrink: 0;
-    background: #fafafa;
+    background: var(--color-secondary-lightest);
     align-items: center;
 }
 
@@ -2927,13 +2983,13 @@ textarea::placeholder {
 }
 
 .floating-menu-item:hover {
-    background: #f0f7ff;
-    color: #6b4875;
+    background: var(--color-primary-hover-bg);
+    color: var(--color-primary);
     padding-left: 16px;
 }
 
 .floating-menu-item:active {
-    background: #e0f0ff;
+    background: var(--color-primary-active-bg);
 }
 
 .floating-menu-item .menu-icon {
@@ -2983,7 +3039,7 @@ textarea::placeholder {
     gap: 8px;
     padding: 8px 12px;
     border-bottom: 1px solid var(--color-border);
-    background: #f5f5f5;
+    background: var(--color-secondary-lighter);
     flex-shrink: 0;
     flex-wrap: wrap;
     justify-content: flex-start;
@@ -3012,7 +3068,7 @@ textarea::placeholder {
     min-width: 65px;
     height: 28px;
     padding: 4px 10px;
-    border: 1px solid #d0d0d0;
+    border: 1px solid var(--color-grey-divider);
     border-radius: 4px;
     background: white;
     color: #333;
@@ -3040,23 +3096,23 @@ textarea::placeholder {
 
 .toolbar-btn.danger {
     color: #d32f2f;
-    border-color: #ffcdd2;
+    border-color: var(--color-danger-border-light);
 }
 
 .toolbar-btn.danger:hover:not(:disabled) {
-    background: #ffebee;
+    background: var(--color-danger-bg);
     border-color: #d32f2f;
 }
 
 .toolbar-btn.active {
-    background: #ffebee;
+    background: var(--color-danger-bg);
     border-color: #d32f2f;
     color: #d32f2f;
     font-weight: 600;
 }
 
 .toolbar-btn.active:hover {
-    background: #ffcdd2;
+    background: var(--color-danger-border-light);
     border-color: #c62828;
 }
 
@@ -3071,8 +3127,8 @@ textarea::placeholder {
 }
 
 #editModalSaveBtn:hover:not(:disabled) {
-    background: #4a6b8a;
-    border-color: #4a6b8a;
+    background: var(--color-primary-light);
+    border-color: var(--color-primary-light);
 }
 
 #editModalCancelBtn,
@@ -3091,7 +3147,7 @@ textarea::placeholder {
     gap: 8px;
     padding: 8px 0 0 0;
     margin-top: 8px;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--color-grey-100);
 }
 
 /* ==================== Explanation Focus View ==================== */
@@ -3250,7 +3306,7 @@ textarea::placeholder {
 
 .summary-text .qa-question {
     font-weight: 600;
-    color: #6b4875;
+    color: var(--color-primary);
     font-size: 0.95em;
     margin: 0 0 6px 0;
     padding: 0;
@@ -3297,7 +3353,7 @@ textarea::placeholder {
 .explanation-scroll .error {
     color: var(--color-danger);
     padding: var(--spacing-md);
-    background: #ffebee;
+    background: var(--color-danger-bg);
     border-radius: 4px;
     margin: 0 var(--spacing-lg);
 }
@@ -3381,17 +3437,17 @@ textarea::placeholder {
 .mode-tab:last-child {
     border-left: none;
     border-radius: 0 4px 4px 0;
-    background: #f5f5f5;
+    background: var(--color-secondary-lighter);
     color: #666;
 }
 
 .mode-tab:hover {
-    background: #f0f0f0;
+    background: var(--color-grey-100);
     color: #000;
 }
 
 .mode-tab.active {
-    background: #4CAF50;
+    background: var(--color-success);
     color: white;
     border-color: #45a049;
 }
@@ -3409,7 +3465,7 @@ textarea::placeholder {
 }
 
 .mode-tab:hover {
-    background: #eeeeee !important;
+    background: var(--color-grey-100) !important;
 }
 
 .mode-tab.active {
