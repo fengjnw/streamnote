@@ -359,7 +359,7 @@ header h1 {
 .panel-item:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
-    border-color: #5a7c99;
+    border-color: #868e96;
 }
 
 .session-item {
@@ -500,6 +500,21 @@ header h1 {
 #editSessionNameBtn {
     flex-shrink: 0;
     min-width: 70px;
+    background: white;
+    border: 1px solid #ddd;
+    color: #333;
+    font-weight: 500;
+    font-size: 0.8em;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 4px 10px;
+}
+
+#editSessionNameBtn:hover {
+    border-color: #868e96;
+    background: #f5f5f5;
+    color: #868e96;
 }
 
 /* Session Name Edit Mode */
@@ -520,10 +535,14 @@ header h1 {
     font-family: inherit;
 }
 
+.session-name-input:hover {
+    border-color: #bbb;
+}
+
 .session-name-input:focus {
     outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px rgba(90, 124, 153, 0.1);
+    border-color: #868e96;
+    box-shadow: 0 0 0 2px rgba(134, 142, 150, 0.1);
 }
 
 .session-name-edit .toolbar-btn {
@@ -1038,7 +1057,7 @@ header h1 {
     min-width: 85px;
     height: 28px;
     padding: 4px 10px;
-    border: 1px solid #d0d0d0;
+    border: 1px solid #c7b3cd;
     border-radius: 4px;
     background: white;
     color: #333;
@@ -1049,13 +1068,19 @@ header h1 {
     transition: all 0.2s;
 }
 
+.text-panel-toolbar .toolbar-language:hover,
+.text-panel-toolbar .toolbar-language:focus {
+    border-color: #6b4875;
+    background: #f5f0f7;
+}
+
 /* ===== Layout Dropdown ===== */
 .layout-dropdown {
     flex: 0;
     min-width: 85px;
     height: 28px;
     padding: 4px 10px;
-    border: 1px solid #d0d0d0;
+    border: 1px solid #c7b3cd;
     border-radius: 4px;
     background: white;
     color: #333;
@@ -1067,14 +1092,14 @@ header h1 {
 }
 
 .layout-dropdown:hover {
-    border-color: var(--color-primary);
-    background: white;
+    border-color: #6b4875;
+    background: #f5f0f7;
 }
 
 .layout-dropdown:focus {
     outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px rgba(90, 124, 153, 0.1);
+    border-color: #6b4875;
+    box-shadow: 0 0 0 2px rgba(107, 72, 117, 0.1);
 }
 
 .text-panel-header .btn-icon {
@@ -1103,13 +1128,13 @@ header h1 {
 /* Enhanced text selection - highlight selected text with brand color */
 .transcript::selection,
 .translation::selection {
-    background-color: #5a7c99;
+    background-color: #6b4875;
     color: white;
 }
 
 .transcript::-moz-selection,
 .translation::-moz-selection {
-    background-color: #5a7c99;
+    background-color: #6b4875;
     color: white;
 }
 
@@ -1418,10 +1443,23 @@ header h1 {
 
 .explanation-panel-toolbar .toolbar-btn {
     flex: 1;
+    border-color: #c7b3cd;
+}
+
+.explanation-panel-toolbar .toolbar-btn:hover {
+    background: #f5f0f7;
+    border-color: #6b4875;
+    color: #6b4875;
 }
 
 .explanation-panel-toolbar .toolbar-language {
     flex: 1;
+    border-color: #c7b3cd;
+}
+
+.explanation-panel-toolbar .toolbar-language:hover,
+.explanation-panel-toolbar .toolbar-language:focus {
+    border-color: #6b4875;
 }
 
 .explanation-panel-content {
@@ -1560,9 +1598,9 @@ header h1 {
 }
 
 .keyword-item:hover {
-    background: #fafbfc;
-    border-color: #e0e0e0;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    background: #f5f0f7;
+    border-color: #e6d5ea;
+    box-shadow: 0 2px 6px rgba(107, 72, 117, 0.08);
 }
 
 .keyword-text {
@@ -1579,13 +1617,13 @@ header h1 {
 }
 
 .keyword-item:hover .keyword-text {
-    color: #5a7c99;
+    color: #6b4875;
 }
 
 .keyword-explain-btn {
-    background: rgba(90, 124, 153, 0.08);
-    border: 1px solid rgba(90, 124, 153, 0.15);
-    color: #5a7c99;
+    background: rgba(107, 72, 117, 0.08);
+    border: 1px solid rgba(107, 72, 117, 0.15);
+    color: #6b4875;
     font-size: 0.75em;
     font-weight: 600;
     cursor: pointer;
@@ -1601,13 +1639,13 @@ header h1 {
 }
 
 .keyword-explain-btn:hover {
-    background: rgba(90, 124, 153, 0.12);
-    border-color: rgba(90, 124, 153, 0.25);
-    box-shadow: 0 2px 4px rgba(90, 124, 153, 0.1);
+    background: rgba(107, 72, 117, 0.12);
+    border-color: rgba(107, 72, 117, 0.25);
+    box-shadow: 0 2px 4px rgba(107, 72, 117, 0.1);
 }
 
 .keyword-explain-btn:active {
-    background: rgba(90, 124, 153, 0.18);
+    background: rgba(107, 72, 117, 0.18);
 }
 
 .keyword-delete-btn {
@@ -1644,9 +1682,9 @@ header h1 {
 }
 
 .keyword-item-wrapper:hover {
-    border-color: #e0e0e0;
-    background: #fafbfc;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    border-color: #e6d5ea;
+    background: #f5f0f7;
+    box-shadow: 0 2px 6px rgba(107, 72, 117, 0.08);
 }
 
 .keyword-expand-btn {
@@ -2165,6 +2203,99 @@ textarea::placeholder {
     flex: 1;
 }
 
+/* ==================== Purple Theme for Summary/Keywords/Highlights Panels ==================== */
+
+/* Summary Panel */
+#summaryContent .panel-toolbar .toolbar-btn {
+    border-color: #c7b3cd;
+}
+
+#summaryContent .panel-toolbar .toolbar-btn:hover {
+    background: #f5f0f7;
+    border-color: #6b4875;
+    color: #6b4875;
+}
+
+#summaryContent .panel-toolbar .toolbar-btn.danger {
+    color: #d32f2f;
+    border-color: #ffcdd2;
+}
+
+#summaryContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled) {
+    background: #ffebee;
+    border-color: #d32f2f;
+}
+
+#summaryContent .panel-toolbar .toolbar-select {
+    border-color: #c7b3cd;
+    color: #333;
+}
+
+#summaryContent .panel-toolbar .toolbar-select:hover,
+#summaryContent .panel-toolbar .toolbar-select:focus {
+    border-color: #6b4875;
+}
+
+/* Keywords Panel */
+#keywordsContent .panel-toolbar .toolbar-btn {
+    border-color: #c7b3cd;
+}
+
+#keywordsContent .panel-toolbar .toolbar-btn:hover {
+    background: #f5f0f7;
+    border-color: #6b4875;
+    color: #6b4875;
+}
+
+#keywordsContent .panel-toolbar .toolbar-btn.danger {
+    color: #d32f2f;
+    border-color: #ffcdd2;
+}
+
+#keywordsContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled) {
+    background: #ffebee;
+    border-color: #d32f2f;
+}
+
+/* Keywords Tab Navigation */
+.keywords-tab-btn {
+    color: #666;
+}
+
+.keywords-tab-btn:hover {
+    color: #6b4875;
+}
+
+.keywords-tab-btn.active {
+    color: #6b4875;
+    font-weight: 600;
+}
+
+.keywords-tab-btn.active::after {
+    background: #6b4875;
+}
+
+/* Highlights Panel */
+#highlightsContent .panel-toolbar .toolbar-btn {
+    border-color: #c7b3cd;
+}
+
+#highlightsContent .panel-toolbar .toolbar-btn:hover {
+    background: #f5f0f7;
+    border-color: #6b4875;
+    color: #6b4875;
+}
+
+#highlightsContent .panel-toolbar .toolbar-btn.danger {
+    color: #d32f2f;
+    border-color: #ffcdd2;
+}
+
+#highlightsContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled) {
+    background: #ffebee;
+    border-color: #d32f2f;
+}
+
 #settingsContent .panel-toolbar {
     display: none;
 }
@@ -2206,7 +2337,7 @@ textarea::placeholder {
     cursor: pointer;
     width: 18px;
     height: 18px;
-    accent-color: #5a7c99;
+    accent-color: #868e96;
 }
 
 .settings-label span {
@@ -2229,7 +2360,7 @@ textarea::placeholder {
 
 .settings-panel .language-selector:hover,
 .settings-panel .language-selector:focus {
-    border-color: #5a7c99;
+    border-color: #868e96;
     outline: none;
 }
 
@@ -2277,7 +2408,7 @@ textarea::placeholder {
 }
 
 .settings-item input[type="checkbox"] {
-    accent-color: #5a7c99;
+    accent-color: #868e96;
     cursor: pointer;
 }
 
@@ -2299,7 +2430,7 @@ textarea::placeholder {
 
 .settings-item .language-selector:hover,
 .settings-item .language-selector:focus {
-    border-color: #5a7c99;
+    border-color: #868e96;
     outline: none;
 }
 
@@ -2322,8 +2453,8 @@ textarea::placeholder {
 
 .settings-item-btn:hover {
     background: var(--color-bg-hover);
-    border-color: var(--color-primary);
-    box-shadow: 0 2px 6px rgba(90, 124, 153, 0.1);
+    border-color: #868e96;
+    box-shadow: 0 2px 6px rgba(134, 142, 150, 0.1);
 }
 
 .settings-item-btn.danger {
@@ -2534,8 +2665,69 @@ textarea::placeholder {
     flex: 1;
 }
 
+/* Gray theme for session modal toolbar buttons */
+.session-modal .floating-modal-toolbar .toolbar-btn {
+    border-color: #ccc;
+}
+
+.session-modal .floating-modal-toolbar .toolbar-btn:hover {
+    background: #f5f5f5;
+    border-color: #868e96;
+    color: #868e96;
+}
+
+.session-modal .floating-modal-toolbar .toolbar-btn.danger {
+    color: #d32f2f;
+    border-color: #ffcdd2;
+}
+
+.session-modal .floating-modal-toolbar .toolbar-btn.danger:hover:not(:disabled) {
+    background: #ffebee;
+    border-color: #d32f2f;
+}
+
+/* Gray theme for settings modal toolbar buttons */
+.settings-modal .floating-modal-toolbar .toolbar-btn {
+    border-color: #ccc;
+}
+
+.settings-modal .floating-modal-toolbar .toolbar-btn:hover {
+    background: #f5f5f5;
+    border-color: #868e96;
+    color: #868e96;
+}
+
 .add-content-modal .floating-modal-toolbar .toolbar-btn {
     flex: 0;
+    border-color: #b8cde0;
+}
+
+.add-content-modal .floating-modal-toolbar .toolbar-btn:hover {
+    background: #e8f1f8;
+    border-color: #5a7c99;
+    color: #5a7c99;
+}
+
+.add-content-modal .floating-modal-toolbar .toolbar-btn.danger {
+    color: #d32f2f;
+    border-color: #ffcdd2;
+}
+
+.add-content-modal .floating-modal-toolbar .toolbar-btn.danger:hover:not(:disabled) {
+    background: #ffebee;
+    border-color: #d32f2f;
+}
+
+/* Blue theme for edit modal buttons */
+.edit-modal .floating-modal-footer .toolbar-btn {
+    border-color: #b8cde0;
+    color: #333;
+}
+
+.edit-modal .floating-modal-footer .toolbar-btn:hover {
+    background: #e8f1f8;
+    border-color: #5a7c99;
+    color: #5a7c99;
 }
 
 /* Modal Content */
@@ -2955,7 +3147,7 @@ textarea::placeholder {
 
 .summary-text .qa-question {
     font-weight: 600;
-    color: #5a7c99;
+    color: #6b4875;
     font-size: 0.95em;
     margin: 0 0 6px 0;
     padding: 0;
