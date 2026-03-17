@@ -945,6 +945,9 @@ class KeywordManager {
         placeholder.className = 'placeholder';
         placeholder.textContent = 'Loading explanation...';
         contentElement.appendChild(placeholder);
+        
+        console.log(`[KeywordManager] displayExplanationFocusView: After placeholder setup - contentElement.style.display: "${ contentElement.style.display}", computed: "${window.getComputedStyle(contentElement).display}"`);
+        
         if (contextDiv) contextDiv.style.display = 'none';
 
         // 获取位置信息（使用已保存的，如果没有则检测）
@@ -982,6 +985,7 @@ class KeywordManager {
             const requestId = ++this.currentExpanationRequestId;
             
             console.log(`[KeywordManager] Request ${requestId} started for "${keyword}"`);
+            console.log(`[KeywordManager] Request ${requestId}: Initial contentElement style - display: "${contentElement.style.display}", computed: "${contentElement ? window.getComputedStyle(contentElement).display : 'N/A'}"`);
             
             // [FIX] 确保contentElement有效，如果无效则重新获取
             if (!contentElement || !contentElement.parentElement) {
@@ -1128,6 +1132,15 @@ class KeywordManager {
                     }
                     p.textContent = explanation;
                     console.log(`[KeywordManager] Request ${requestId}: Final p.textContent set, length: ${p.textContent.length}, contentElement.children: ${contentElement.children.length}`);
+                
+                // [DEBUG] 检查DOM可见性
+                const computedStyle = window.getComputedStyle(contentElement);
+                console.log(`[KeywordManager] Request ${requestId}: contentElement computed style - display: ${computedStyle.display}, visibility: ${computedStyle.visibility}, opacity: ${computedStyle.opacity}, height: ${computedStyle.height}`);
+                
+                if (contentElement.parentElement) {
+                    const parentStyle = window.getComputedStyle(contentElement.parentElement);
+                    console.log(`[KeywordManager] Request ${requestId}: contentElement.parentElement computed style - display: ${parentStyle.display}, visibility: ${parentStyle.visibility}, opacity: ${parentStyle.opacity}, height: ${parentStyle.height}`);
+                }
                 } else {
                     console.error(`[KeywordManager] Request ${requestId}: Cannot do final update - contentElement=${!!contentElement}, parentElement=${contentElement ? !!contentElement.parentElement : 'N/A'}`);
                 }
@@ -1141,6 +1154,18 @@ class KeywordManager {
             console.log(`[KeywordManager] Request ${requestId}: About to call updateWordContext for "${keyword}"`);
             // 解释加载完成后显示上下文
             this.updateWordContext(keyword);
+            
+            // [DEBUG] 最终检查contentElement的可见性
+            const explanationFocusView = document.getElementById("explanation-focus-view");
+            const explanationBody = document.querySelector(".explanation-body");
+            const explanationScroll = document.querySelector(".explanation-scroll");
+            
+            console.log(`[KeywordManager] Request ${requestId}: Final visibility check:`);
+            console.log(`  - explanation-focus-view: display=${explanationFocusView ? window.getComputedStyle(explanationFocusView).display : 'N/A'}`);
+            console.log(`  - explanation-body: display=${explanationBody ? window.getComputedStyle(explanationBody).display : 'N/A'}`);
+            console.log(`  - explanation-content (contentElement): display=${contentElement ? window.getComputedStyle(contentElement).display : 'N/A'}`);
+            console.log(`  - explanation-scroll: display=${explanationScroll ? window.getComputedStyle(explanationScroll).display : 'N/A'}`);
+            
             console.log(`[KeywordManager] Request ${requestId}: updateWordContext completed, final check - contentElement.innerHTML starts with: "${contentElement.innerHTML.substring(0, 60)}..."`);
         } catch (error) {
             console.error("[KeywordManager] Error fetching explanation:", error);
@@ -1155,7 +1180,8 @@ class KeywordManager {
             console.log(`[KeywordManager] About to call updateWordContext (error case) for "${keyword}"`);
             // 即使出错也显示上下文
             this.updateWordContext(keyword);
-            console.log(`[KeywordManager] updateWordContext completed (error case)`);
+            console.log(`[KeywordManager] updateWordContext completed (error case), contentElement.style.display: "${contentElement.style.display}", computed: "${contentElement ? window.getComputedStyle(contentElement).display : 'N/A'}"`);
+        }
         }
     }
 
