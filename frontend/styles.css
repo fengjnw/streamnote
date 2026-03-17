@@ -121,22 +121,6 @@
     --color-panel-bg: var(--color-white);
     --color-panel-header-bg: var(--color-primary-lighter);
     --color-panel-header-text: var(--color-primary-accent);
-
-    /* ================ Radius ================ */
-    --radius-sm: 3px;
-    --radius-md: 4px;
-    --radius-lg: 6px;
-
-    /* ================ Box Shadow ================ */
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
-    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
-    --shadow-xl: 0 6px 16px rgba(0, 0, 0, 0.15);
-
-    /* ================ Success/Danger Status Colors ================ */
-    --color-success-bg: #d4edda;
-    --color-danger-light-bg: #ffcdd2;
 }
 
 html {
@@ -292,8 +276,8 @@ header h1 {
     position: fixed;
     background: var(--color-white);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 10000;
     min-width: 160px;
     overflow: hidden;
@@ -336,8 +320,8 @@ header h1 {
     position: fixed;
     background: var(--color-white);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 10001;
     min-width: 140px;
     overflow: hidden;
@@ -409,7 +393,7 @@ header h1 {
     background: rgba(255, 255, 255, 0.2);
     color: white;
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: 3px;
     width: 24px;
     height: 24px;
     display: flex;
@@ -454,11 +438,11 @@ header h1 {
 /* ================ 统一行条目样式 ================ */
 .panel-item {
     background: var(--color-white);
-    border-radius: var(--radius-lg);
+    border-radius: 6px;
     padding: 10px var(--spacing-md);
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -466,18 +450,18 @@ header h1 {
 }
 
 .panel-item:hover {
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
     border-color: var(--color-secondary);
 }
 
 .session-item {
     background: var(--color-white);
-    border-radius: var(--radius-lg);
+    border-radius: 6px;
     padding: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: var(--shadow-xs);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -486,7 +470,7 @@ header h1 {
 }
 
 .session-item:hover {
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
     border-color: var(--color-grey-200);
     background: #fafbfc;
 }
@@ -495,7 +479,7 @@ header h1 {
     background: var(--color-secondary);
     color: white;
     border-color: var(--color-secondary);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 12px rgba(134, 142, 150, 0.2);
 }
 
 .session-item.recording {
@@ -533,7 +517,7 @@ header h1 {
     color: var(--color-grey-500);
     background: rgba(134, 142, 150, 0.04);
     padding: 2px 6px;
-    border-radius: var(--radius-sm);
+    border-radius: 3px;
     white-space: nowrap;
 }
 
@@ -557,7 +541,7 @@ header h1 {
     background: rgba(255, 107, 107, 0.2);
     color: var(--color-danger-light);
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     width: 24px;
     height: 24px;
     display: flex;
@@ -614,7 +598,7 @@ header h1 {
     color: var(--color-text);
     font-weight: 500;
     font-size: 0.8em;
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
     padding: 4px 10px;
@@ -637,7 +621,7 @@ header h1 {
     flex: 1;
     padding: var(--spacing-sm) 10px;
     border: 1px solid var(--color-grey-300);
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     font-size: 0.9em;
     transition: border-color 0.2s;
     background: var(--color-white);
@@ -664,22 +648,22 @@ header h1 {
 
 #confirmSessionNameBtn {
     color: var(--color-success);
-    border-color: var(--color-success-bg);
+    border-color: #d4edda;
 }
 
 #confirmSessionNameBtn:hover:not(:disabled) {
-    background: var(--color-success-bg);
+    background: #d4edda;
     border-color: var(--color-success);
 }
 
 #cancelSessionNameBtn {
-    color: var(--color-danger);
-    border-color: var(--color-danger-light-bg);
+    color: #d32f2f;
+    border-color: #ffcdd2;
 }
 
 #cancelSessionNameBtn:hover:not(:disabled) {
-    background: var(--color-danger-bg);
-    border-color: var(--color-danger);
+    background: #ffebee;
+    border-color: #d32f2f;
 }
 
 .empty-message {
@@ -692,13 +676,13 @@ header h1 {
 /* Text Selection Tools - Quick Access Buttons */
 .text-tools {
     display: flex;
-    gap: var(--spacing-xs);
+    gap: 4px;
 }
 
 /* Panel Controls - Quick Access Buttons */
 .panel-controls {
     display: flex;
-    gap: var(--spacing-xs);
+    gap: 4px;
 }
 
 /* 管理菜单 */
@@ -707,8 +691,8 @@ header h1 {
     top: calc(100% + 5px);
     right: 0;
     background: var(--color-white);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 1000;
     min-width: 200px;
     overflow: hidden;
@@ -738,11 +722,11 @@ header h1 {
 }
 
 .manage-menu-item.danger {
-    color: var(--color-danger);
+    color: #d32f2f;
 }
 
 .manage-menu-item.danger:hover {
-    background: var(--color-danger-bg);
+    background: #ffebee;
 }
 
 /* Main wrapper - 包含 control-panel, main-content, status-bar */
@@ -784,7 +768,7 @@ header h1 {
     flex-shrink: 0;
     padding: 4px var(--spacing-sm);
     background: transparent;
-    border-radius: var(--radius-md);
+    border-radius: 4px;
 }
 
 /* 按钮组之间的分隔 - 使用spacer处理，这里不再添加margin */
@@ -810,14 +794,14 @@ header h1 {
 }
 
 .nav-group-input .control-btn-secondary {
-    background: var(--color-primary-light);
-    color: #ffffff;
+    background: var(--color-primary-lighter);
+    color: var(--color-primary-accent);
     font-weight: 600;
 }
 
 .nav-group-input .control-btn-secondary:hover:not(:disabled) {
-    background: #8b7ba4;
-    color: #ffffff;
+    background: #c7b3cd;
+    color: var(--color-primary-accent);
 }
 
 .nav-group-input .control-btn-secondary.active {
@@ -828,6 +812,7 @@ header h1 {
 
 .nav-group-input .control-btn-secondary.active:hover:not(:disabled) {
     background: var(--color-primary-dark) !important;
+    color: white !important;
 }
 
 /* Record button active (red Stop state) */
@@ -909,7 +894,7 @@ header h1 {
     min-width: 60px;
     height: 28px;
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1119,7 +1104,7 @@ header h1 {
     padding: var(--spacing-sm) var(--spacing-md);
     background: var(--color-white);
     border: 1px solid #d0d9e1;
-    border-radius: var(--radius-lg);
+    border-radius: 6px;
     font-size: 0.9em;
     color: var(--color-text);
     cursor: pointer;
@@ -1129,7 +1114,7 @@ header h1 {
 
 .layout-selector:hover {
     border-color: var(--color-primary);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 2px 6px rgba(90, 124, 153, 0.15);
 }
 
 .layout-selector:focus {
@@ -1167,7 +1152,7 @@ header h1 {
     height: 28px;
     padding: 4px 10px;
     border: 1px solid #c7b3cd;
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     background: var(--color-white);
     color: var(--color-text);
     font-size: 0.8em;
@@ -1190,7 +1175,7 @@ header h1 {
     height: 28px;
     padding: 4px 10px;
     border: 1px solid #c7b3cd;
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     background: var(--color-white);
     color: var(--color-text);
     font-size: 0.8em;
@@ -1341,7 +1326,7 @@ header h1 {
 .language-selector {
     padding: var(--spacing-sm) var(--spacing-md);
     border: 1px solid var(--color-grey-300);
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     font-size: 0.95em;
     background: var(--color-white);
     cursor: pointer;
@@ -1361,7 +1346,7 @@ header h1 {
     height: 28px;
     padding: 4px 10px;
     border: 1px solid #d0d0d0;
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     background: var(--color-white);
     color: var(--color-text);
     font-size: 0.8em;
@@ -1390,7 +1375,7 @@ header h1 {
     height: 28px;
     padding: 4px 10px;
     border: 1px solid #d0d0d0;
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     background: var(--color-white);
     color: var(--color-text);
     font-size: 0.8em;
@@ -1419,7 +1404,7 @@ header h1 {
     background: var(--color-primary);
     color: white;
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     padding: var(--spacing-sm) var(--spacing-md);
     cursor: pointer;
     font-size: 1.1em;
@@ -1436,7 +1421,7 @@ header h1 {
 .keyword-controls select {
     padding: 8px 12px;
     border: 1px solid var(--color-grey-300);
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     font-size: 0.95em;
     background: var(--color-white);
     cursor: pointer;
@@ -1452,7 +1437,7 @@ header h1 {
 .btn {
     padding: 10px var(--spacing-lg);
     border: none;
-    border-radius: var(--radius-lg);
+    border-radius: 6px;
     font-size: 1em;
     font-weight: 500;
     cursor: pointer;
@@ -1711,7 +1696,7 @@ header h1 {
     gap: 8px;
     padding: 10px 12px;
     background: var(--color-white);
-    border-radius: var(--radius-lg);
+    border-radius: 6px;
     border: 1px solid var(--color-grey-100);
     transition: all 0.2s ease;
 }
@@ -1719,7 +1704,7 @@ header h1 {
 .keyword-item:hover {
     background: var(--color-primary-lightest);
     border-color: #e6d5ea;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 2px 6px rgba(107, 72, 117, 0.08);
 }
 
 .keyword-text {
@@ -1751,7 +1736,7 @@ header h1 {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     transition: all 0.2s;
     flex-shrink: 0;
     white-space: nowrap;
@@ -1779,7 +1764,7 @@ header h1 {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     transition: all 0.2s;
     flex-shrink: 0;
 }
@@ -1791,7 +1776,7 @@ header h1 {
 
 /* ==================== Keywords Expandable Style ==================== */
 .keyword-item-wrapper {
-    border-radius: var(--radius-lg);
+    border-radius: 6px;
     border: 1px solid var(--color-grey-100);
     transition: all 0.2s;
     overflow: visible;
@@ -1803,7 +1788,7 @@ header h1 {
 .keyword-item-wrapper:hover {
     border-color: #e6d5ea;
     background: var(--color-primary-lightest);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 2px 6px rgba(107, 72, 117, 0.08);
 }
 
 .keyword-expand-btn {
@@ -1818,7 +1803,7 @@ header h1 {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     transition: all 0.2s;
     flex-shrink: 0;
 }
@@ -1962,7 +1947,7 @@ textarea::placeholder {
     font-size: 0.9em;
     font-weight: 500;
     cursor: pointer;
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 12px rgba(107, 72, 117, 0.3);
     transition: all 0.3s ease;
     z-index: 100;
     white-space: nowrap;
@@ -2181,7 +2166,7 @@ textarea::placeholder {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     transition: all 0.2s;
     flex-shrink: 0;
 }
@@ -2231,7 +2216,7 @@ textarea::placeholder {
 
 .modal::-webkit-scrollbar-thumb {
     background: #888;
-    border-radius: var(--radius-md);
+    border-radius: 4px;
 }
 
 .modal::-webkit-scrollbar-thumb:hover {
@@ -2493,7 +2478,7 @@ textarea::placeholder {
 .settings-section {
     padding: 8px;
     background: #fafafa;
-    border-radius: var(--radius-lg);
+    border-radius: 6px;
     border: 1px solid #e9ecef;
     display: flex;
     flex-direction: column;
@@ -2540,7 +2525,7 @@ textarea::placeholder {
     width: 100%;
     padding: var(--spacing-xs) var(--spacing-sm);
     border: 1px solid #ddd;
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     font-size: 0.85em;
     background: white;
     color: #333;
@@ -3391,12 +3376,12 @@ textarea::placeholder {
 }
 
 .mode-tab:first-child {
-    border-radius: var(--radius-md) 0 0 var(--radius-md);
+    border-radius: 4px 0 0 4px;
 }
 
 .mode-tab:last-child {
     border-left: none;
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    border-radius: 0 4px 4px 0;
     background: #f5f5f5;
     color: #666;
 }
