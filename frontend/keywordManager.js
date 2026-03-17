@@ -967,9 +967,6 @@ class KeywordManager {
             // [防护] 为这个请求分配递增ID，用于检查是否被新请求取代
             const requestId = ++this.currentExpanationRequestId;
             
-            console.log(`[KeywordManager] Request ${requestId} started for "${keyword}"`);
-            console.log(`[KeywordManager] Request ${requestId}: Initial contentElement style - display: "${contentElement.style.display}", computed: "${contentElement ? window.getComputedStyle(contentElement).display : 'N/A'}"`);
-            
             // [FIX] 确保contentElement有效，如果无效则重新获取
             if (!contentElement || !contentElement.parentElement) {
                 console.warn(`[KeywordManager] Request ${requestId}: contentElement is stale, re-fetching...`);
@@ -1006,20 +1003,6 @@ class KeywordManager {
             // 获取上下文（用于API）- 使用统一方法
             const context = this.getContextForKeyword(keyword);
             
-            // [DEBUG] 诊断日志 - 避免转义问题，直接输出对象
-            const transcriptDataSize = Object.keys(this.getTranscriptData()).length;
-            const fallbackDataSize = this.lastKnownTranscriptData ? Object.keys(this.lastKnownTranscriptData).length : 0;
-            
-            console.log(`[KeywordManager] Request ${requestId}: Context analysis:`, {
-                contextLength: context ? context.length : 0,
-                contextPreview: context ? context.substring(0, 100) : "(empty)",
-                contextHasQuotes: context ? context.includes('"') || context.includes("'") : false,
-                transcriptDataSize: transcriptDataSize,
-                fallbackDataSize: fallbackDataSize,
-            });
-
-            console.log(`[KeywordManager] Request ${requestId}: Calling API...`);
-            
             const response = await fetch(this.explanationApiUrl, {
                 method: "POST",
                 headers: {
@@ -1031,8 +1014,6 @@ class KeywordManager {
                     context: context
                 })
             });
-
-            console.log(`[KeywordManager] Request ${requestId}: API response status: ${response.status}`);
             
             if (!response.ok) {
                 const errorText = await response.text();
@@ -1060,36 +1041,22 @@ class KeywordManager {
                     const chunk = decoder.decode(value, { stream: true });
                     explanation += chunk;
                     chunkCount++;
-                    
-                    // [DEBUG] 只在前几个chunk记录日志
-                    if (chunkCount <= 3) {
-                        console.log(`[KeywordManager] Request ${requestId}: Received chunk ${chunkCount}: "${chunk.substring(0, 50)}..."`);
-                    }
 
                     // 实时更新显示 - 使用安全的DOM更新方式
                     if (explanation && contentElement && contentElement.parentElement) {
                         // 第一次写入时clear placeholder
                         if (chunkCount === 1) {
-                            console.log(`[KeywordManager] Request ${requestId}: First chunk, clearing placeholder`);
                             contentElement.innerHTML = '';
-                            console.log(`[KeywordManager] Request ${requestId}: contentElement.children.length after clear: ${contentElement.children.length}`);
                         }
                         
                         // 确保只有一个p元素
                         let p = contentElement.querySelector('p');
                         if (!p) {
-                            console.log(`[KeywordManager] Request ${requestId}: No p element found, creating new one`);
                             p = document.createElement('p');
                             contentElement.appendChild(p);
-                            console.log(`[KeywordManager] Request ${requestId}: New p appended, children count: ${contentElement.children.length}`);
                         }
                         // 使用textContent避免HTML转义问题
                         p.textContent = explanation;
-                        if (chunkCount <= 5) {
-                            console.log(`[KeywordManager] Request ${requestId}: Updated p.textContent, current length: ${p.textContent.length}`);
-                        }
-                    } else {
-                        console.warn(`[KeywordManager] Request ${requestId}: Cannot update - explanation=${!!explanation}, contentElement=${!!contentElement}, parentElement=${contentElement ? !!contentElement.parentElement : 'N/A'}`);
                     }
                 }
                 const finalChunk = decoder.decode();
@@ -1105,27 +1072,13 @@ class KeywordManager {
                 
                 // 最终确保内容显示正确
                 if (contentElement && contentElement.parentElement) {
-                    console.log(`[KeywordManager] Request ${requestId}: Final update - looking for existing p element...`);
                     let p = contentElement.querySelector('p');
                     if (!p) {
-                        console.log(`[KeywordManager] Request ${requestId}: No p element at final stage, creating new one`);
                         contentElement.innerHTML = '';
                         p = document.createElement('p');
                         contentElement.appendChild(p);
                     }
                     p.textContent = explanation;
-                    console.log(`[KeywordManager] Request ${requestId}: Final p.textContent set, length: ${p.textContent.length}, contentElement.children: ${contentElement.children.length}`);
-                
-                // [DEBUG] 检查DOM可见性
-                const computedStyle = window.getComputedStyle(contentElement);
-                console.log(`[KeywordManager] Request ${requestId}: contentElement computed style - display: ${computedStyle.display}, visibility: ${computedStyle.visibility}, opacity: ${computedStyle.opacity}, height: ${computedStyle.height}`);
-                
-                if (contentElement.parentElement) {
-                    const parentStyle = window.getComputedStyle(contentElement.parentElement);
-                    console.log(`[KeywordManager] Request ${requestId}: contentElement.parentElement computed style - display: ${parentStyle.display}, visibility: ${parentStyle.visibility}, opacity: ${parentStyle.opacity}, height: ${parentStyle.height}`);
-                }
-                } else {
-                    console.error(`[KeywordManager] Request ${requestId}: Cannot do final update - contentElement=${!!contentElement}, parentElement=${contentElement ? !!contentElement.parentElement : 'N/A'}`);
                 }
             } finally {
                 reader.releaseLock();
@@ -1134,56 +1087,8 @@ class KeywordManager {
             // 存入缓存
             this.explanationCache[cacheKey] = explanation;
 
-            console.log(`[KeywordManager] Request ${requestId}: About to call updateWordContext for "${keyword}"`);
             // 解释加载完成后显示上下文
             this.updateWordContext(keyword);
-            
-            // [DEBUG] 最终检查contentElement的可见性
-            const explanationFocusView = document.getElementById("explanation-focus-view");
-            const explanationBody = document.querySelector(".explanation-body");
-            const explanationScroll = document.querySelector(".explanation-scroll");
-            
-            console.log(`[KeywordManager] Request ${requestId}: Final visibility check:`);
-            console.log(`  - explanation-focus-view: display=${explanationFocusView ? window.getComputedStyle(explanationFocusView).display : 'N/A'}`);
-            console.log(`  - explanation-body: display=${explanationBody ? window.getComputedStyle(explanationBody).display : 'N/A'}`);
-            console.log(`  - explanation-content (contentElement): display=${contentElement ? window.getComputedStyle(contentElement).display : 'N/A'}`);
-            console.log(`  - explanation-scroll: display=${explanationScroll ? window.getComputedStyle(explanationScroll).display : 'N/A'}`);
-            
-            // [DEBUG] 深度检查确认元素确实有内容
-            console.log(`[KeywordManager] Request ${requestId}: Deep content check:`);
-            console.log(`  - contentElement.children.length: ${contentElement.children.length}`);
-            console.log(`  - contentElement.innerHTML.length: ${contentElement.innerHTML.length}`);
-            console.log(`  - contentElement.firstChild: ${contentElement.firstChild ? contentElement.firstChild.nodeName : 'null'}`);
-            if (contentElement.firstChild) {
-                console.log(`  - contentElement.firstChild.textContent.length: ${contentElement.firstChild.textContent.length}`);
-            }
-            
-            // [DEBUG] 检查是否被强制隐藏
-            if (contentElement.style.display === 'none') {
-                console.warn(`[KeywordManager] Request ${requestId}: contentElement.style.display is FORCED to 'none'!`);
-            }
-            console.log(`[KeywordManager] Request ${requestId}: updateWordContext completed, final check - contentElement.innerHTML starts with: "${contentElement.innerHTML.substring(0, 60)}..."`);
-            
-            // [DEBUG] 延迟检查：确保没有其他代码在异步修改元素
-            setTimeout(() => {
-                const contentElem = document.getElementById("explanation-content");
-                if (contentElem) {
-                    const computedStyle = window.getComputedStyle(contentElem);
-                    console.log(`[KeywordManager] Request ${requestId}: DELAYED CHECK (100ms) - contentElement.innerHTML.length: ${contentElem.innerHTML.length}, display: ${computedStyle.display}, visibility: ${computedStyle.visibility}`);
-                }
-            }, 100);
-            
-            // [DEBUG] 强制重绘
-            console.log(`[KeywordManager] Request ${requestId}: Forcing repaint...`);
-            contentElement.offsetHeight; // Trigger reflow
-            contentElement.style.display = 'block'; // Force display
-            
-            // [DEBUG] 强制重新检查 explanation-content 的可见性
-            const explanationContent = document.getElementById("explanation-content");
-            if (explanationContent) {
-                const rect = explanationContent.getBoundingClientRect();
-                console.log(`[KeywordManager] Request ${requestId}: contentElement position - top: ${rect.top}, left: ${rect.left}, width: ${rect.width}, height: ${rect.height}`);
-            }
         } catch (error) {
             console.error("[KeywordManager] Error fetching explanation:", error);
             if (contentElement && contentElement.parentElement) {
@@ -1194,10 +1099,8 @@ class KeywordManager {
                 contentElement.appendChild(p);
             }
 
-            console.log(`[KeywordManager] About to call updateWordContext (error case) for "${keyword}"`);
             // 即使出错也显示上下文
             this.updateWordContext(keyword);
-            console.log(`[KeywordManager] updateWordContext completed (error case), contentElement.style.display: "${contentElement.style.display}", computed: "${contentElement ? window.getComputedStyle(contentElement).display : 'N/A'}"`);
         }
     }
 
