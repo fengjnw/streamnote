@@ -63,6 +63,10 @@ class KeywordManager {
         // [FIX] 备用缓存：保存最后一次成功获取的转录数据
         // 用于当主数据源（recordingManager）暂时为空时的fallback
         this.lastKnownTranscriptData = null;
+
+        // [防护] 用于防止并发explanation请求的标记
+        this.currentExpanationRequestId = null;
+        this.currentLoadingKeyword = null;
     }
 
     /**
@@ -911,6 +915,9 @@ class KeywordManager {
 
         if (!wordElement || !contentElement) return;
 
+        // [防护] 标记当前正在加载的keyword，防止并发请求干扰
+        this.currentLoadingKeyword = word;
+
         // 更新词语显示
         wordElement.textContent = word;
 
@@ -926,8 +933,12 @@ class KeywordManager {
         const isHighlighted = this.highlights?.includes(word) || false;
         window.streamNoteInstance?.updateHighlightButtonState(word, isHighlighted);
 
-        // 显示加载状态，先隐藏context
-        contentElement.innerHTML = '<p class="placeholder">Loading explanation...</p>';
+        // 显示加载状态，先隐藏context - 使用textContent避免HTML解析问题
+        contentElement.innerHTML = '';  // 先清空
+        const placeholder = document.createElement('p');
+        placeholder.className = 'placeholder';
+        placeholder.textContent = 'Loading explanation...';
+        contentElement.appendChild(placeholder);
         if (contextDiv) contextDiv.style.display = 'none';
 
         // 获取位置信息（使用已保存的，如果没有则检测）
@@ -977,7 +988,11 @@ class KeywordManager {
             // 检查缓存
             if (this.explanationCache[cacheKey]) {
                 console.log(`[KeywordManager] Using cached explanation for "${keyword}"`);
-                contentElement.innerHTML = `<p>${this.explanationCache[cacheKey]}</p>`;
+                // 使用textContent避免HTML转义问题
+                contentElement.innerHTML = '';
+                const p = document.createElement('p');
+                p.textContent = this.explanationCache[cacheKey];
+                contentElement.appendChild(p);
                 // 解释加载完成后显示上下文
                 this.updateWordContext(keyword);
                 return;
@@ -1032,30 +1047,56 @@ class KeywordManager {
                         console.log(`[KeywordManager] Received chunk ${chunkCount}: "${chunk.substring(0, 50)}..."`);
                     }
 
-                    if (explanation) {
-                        contentElement.innerHTML = `<p>${explanation}</p>`;
+                    // 实时更新显示 - 使用安全的DOM更新方式
+                    if (explanation && contentElement && contentElement.parentElement) {
+                        // 第一次写入时clear placeholder
+                        if (chunkCount === 1) {
+                            contentElement.innerHTML = '';
+                        }
+                        
+                        // 确保只有一个p元素
+                        let p = contentElement.querySelector('p');
+                        if (!p) {
+                            p = document.createElement('p');
+                            contentElement.appendChild(p);
+                        }
+                        // 使用textContent避免HTML转义问题
+                        p.textContent = explanation;
                     }
                 }
                 const finalChunk = decoder.decode();
                 explanation += finalChunk;
-                if (finalChunk) {
-                    contentElement.innerHTML = `<p>${explanation}</p>`;
-                }
                 
                 console.log(`[KeywordManager] Explanation complete: "${explanation.substring(0, 60)}..." (${explanation.length} chars, ${chunkCount} chunks)`);
+                
+                // 最终确保内容显示正确
+                if (contentElement && contentElement.parentElement) {
+                    let p = contentElement.querySelector('p');
+                    if (!p) {
+                        contentElement.innerHTML = '';
+                        p = document.createElement('p');
+                        contentElement.appendChild(p);
+                    }
+                    p.textContent = explanation;
+                }
             } finally {
                 reader.releaseLock();
             }
 
             // 存入缓存
             this.explanationCache[cacheKey] = explanation;
-            contentElement.innerHTML = `<p>${explanation}</p>`;
 
             // 解释加载完成后显示上下文
             this.updateWordContext(keyword);
         } catch (error) {
             console.error("[KeywordManager] Error fetching explanation:", error);
-            contentElement.innerHTML = `<p class="error">Failed to load explanation: ${error.message}</p>`;
+            if (contentElement && contentElement.parentElement) {
+                contentElement.innerHTML = '';
+                const p = document.createElement('p');
+                p.className = 'error';
+                p.textContent = `Failed to load explanation: ${error.message}`;
+                contentElement.appendChild(p);
+            }
 
             // 即使出错也显示上下文
             this.updateWordContext(keyword);
