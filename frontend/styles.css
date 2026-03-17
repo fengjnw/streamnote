@@ -122,6 +122,16 @@
     --color-panel-header-bg: var(--color-primary-lighter);
     --color-panel-header-text: var(--color-primary-accent);
 
+    /* ================ Highlight Colors ================ */
+    --color-highlight-bg: #ffa500;
+    /* 永久高亮背景（橙色） */
+    --color-highlight-jump: #d32f2f;
+    /* 定位跳转文字颜色（红色） */
+    --color-highlight-temp: #fffde7;
+    /* 临时高亮背景（浅黄） */
+    --color-highlight-temp-pulse: #fff9c4;
+    /* 临时高亮脉动颜色（更浅黄） */
+
     /* ================ RGB Color Values (for rgba composition) ================ */
     --color-primary-rgb: 90 124 153;
     --color-primary-accent-rgb: 42 62 82;
@@ -3009,7 +3019,7 @@ textarea::placeholder {
 
 /* ================ Text Highlight Style ================ */
 .text-highlight {
-    background-color: #ffa500;
+    background-color: var(--color-highlight-bg);
     color: inherit;
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
@@ -3017,7 +3027,7 @@ textarea::placeholder {
 
 /* 临时高亮（在解释面板显示时） */
 .temp-highlight {
-    background-color: #fffde7;
+    background-color: var(--color-highlight-temp);
     color: inherit;
     animation: temp-highlight-pulse 2s ease-in-out infinite;
 }
@@ -3027,11 +3037,11 @@ textarea::placeholder {
 
     0%,
     100% {
-        background-color: #fffde7;
+        background-color: var(--color-highlight-temp);
     }
 
     50% {
-        background-color: #fff9c4;
+        background-color: var(--color-highlight-temp-pulse);
     }
 }
 
@@ -3395,7 +3405,7 @@ textarea::placeholder {
 .temp-word-highlight {
     animation: wordHighlightFade 4s ease-out forwards;
     text-decoration: underline;
-    text-decoration-color: #d32f2f;
+    text-decoration-color: var(--color-highlight-jump);
     text-decoration-thickness: 2px;
 }
 
@@ -3403,8 +3413,8 @@ textarea::placeholder {
 
     0%,
     80% {
-        color: #d32f2f;
-        text-decoration-color: #d32f2f;
+        color: var(--color-highlight-jump);
+        text-decoration-color: var(--color-highlight-jump);
     }
 
     100% {
