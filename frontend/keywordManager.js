@@ -946,8 +946,6 @@ class KeywordManager {
         placeholder.textContent = 'Loading explanation...';
         contentElement.appendChild(placeholder);
         
-        console.log(`[KeywordManager] displayExplanationFocusView: After placeholder setup - contentElement.style.display: "${ contentElement.style.display}", computed: "${window.getComputedStyle(contentElement).display}"`);
-        
         if (contextDiv) contextDiv.style.display = 'none';
 
         // [FIX] 获取内容后，不要再做位置检测相关操作，因为showTemporaryHighlight可能导致DOM重排
@@ -1064,11 +1062,8 @@ class KeywordManager {
                 
                 // [防护] 最后检查一次是否被新请求取代
                 if (this.currentExpanationRequestId !== requestId) {
-                    console.log(`[KeywordManager] Request ${requestId} cancelled at completion`);
                     return;
                 }
-                
-                console.log(`[KeywordManager] Request ${requestId}: Explanation complete: "${explanation.substring(0, 60)}..." (${explanation.length} chars, ${chunkCount} chunks)`);
                 
                 // 最终确保内容显示正确
                 if (contentElement && contentElement.parentElement) {
@@ -1202,8 +1197,6 @@ class KeywordManager {
         const contextDiv = document.getElementById("word-context");
         const contextText = document.getElementById("context-text");
 
-        console.log(`[KeywordManager] updateWordContext: called for "${keyword}", contextDiv=${!!contextDiv}, contextText=${!!contextText}`);
-
         if (!contextDiv || !contextText) return;
 
         let displayContext = "";
@@ -1215,24 +1208,19 @@ class KeywordManager {
                 keyword,
                 50  // 前后各50字符
             );
-            console.log(`[KeywordManager] updateWordContext: Using currentContextPositionInfo, displayContext.length=${displayContext.length}`);
         } else if (this.highlightPositions && this.highlightPositions[keyword]) {
             const positionInfo = this.highlightPositions[keyword];
             displayContext = this._buildContextByPosition(positionInfo, keyword, 50);
-            console.log(`[KeywordManager] updateWordContext: Using highlightPositions, displayContext.length=${displayContext.length}`);
         } else {
             // 降级方案：从全文搜索（用较小范围）
             displayContext = this._buildContextBySearch(keyword, 50);
-            console.log(`[KeywordManager] updateWordContext: Using search fallback, displayContext.length=${displayContext.length}`);
         }
 
         if (displayContext) {
             contextText.innerHTML = displayContext;
             contextDiv.style.display = 'block';
-            console.log(`[KeywordManager] updateWordContext: Set context display, contextDiv shown`);
         } else {
             contextDiv.style.display = 'none';
-            console.log(`[KeywordManager] updateWordContext: No context found, contextDiv hidden`);
         }
     }
 
