@@ -1189,6 +1189,38 @@ class KeywordManager {
                     console.log(`[KeywordManager] Request ${requestId}: DELAYED CHECK (100ms) - contentElement.innerHTML.length: ${contentElem.innerHTML.length}, display: ${computedStyle.display}, visibility: ${computedStyle.visibility}`);
                 }
             }, 100);
+            
+            // [DEBUG] 强制重绘
+            console.log(`[KeywordManager] Request ${requestId}: Forcing repaint...`);
+            contentElement.offsetHeight; // Trigger reflow
+            contentElement.style.display = 'block'; // Force display
+            
+            // [DEBUG] 设置 MutationObserver 来追踪任何修改
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'childList') {
+                        console.warn(`[KeywordManager] Request ${requestId}: contentElement children changed! addedNodes: ${mutation.addedNodes.length}, removedNodes: ${mutation.removedNodes.length}`);
+                    } else if (mutation.type === 'attributes') {
+                        console.warn(`[KeywordManager] Request ${requestId}: contentElement attribute changed: ${mutation.attributeName} = "${contentElement.getAttribute(mutation.attributeName)}"`);
+                    } else if (mutation.type === 'characterData') {
+                        console.warn(`[KeywordManager] Request ${requestId}: contentElement text content changed`);
+                    }
+                });
+            });
+            
+            observer.observe(contentElement, {
+                childList: true,
+                attributes: true,
+                characterData: false,
+                subtree: true,
+                attributeOldValue: true
+            });
+            
+            // 30秒后停止观察
+            setTimeout(() => {
+                observer.disconnect();
+                console.log(`[KeywordManager] Request ${requestId}: MutationObserver stopped`);
+            }, 30000);
         } catch (error) {
             console.error("[KeywordManager] Error fetching explanation:", error);
             if (contentElement && contentElement.parentElement) {
