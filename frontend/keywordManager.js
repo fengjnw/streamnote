@@ -884,10 +884,7 @@ class KeywordManager {
 
         // [防护] 如果已在加载某个word，检查是否是同一个
         // 如果不同，则中止前一个并开始新的
-        if (this.currentLoadingKeyword && this.currentLoadingKeyword !== word) {
-            console.log(`[KeywordManager] Cancelling previous request for "${this.currentLoadingKeyword}", starting new for "${word}"`);
-        }
-
+        
         // 自动展开左侧解释面板
         if (window.streamNoteInstance && window.streamNoteInstance.panelManager) {
             window.streamNoteInstance.panelManager.showExplanationPanel();
@@ -960,11 +957,8 @@ class KeywordManager {
 
             // 检查缓存
             if (this.explanationCache[cacheKey]) {
-                console.log(`[KeywordManager] Request ${requestId}: Using cached explanation for "${keyword}"`);
-                
                 // [防护] 检查是否被新请求取代
                 if (this.currentExpanationRequestId !== requestId) {
-                    console.log(`[KeywordManager] Request ${requestId} cancelled (newer request started)`);
                     return;
                 }
                 
@@ -1012,7 +1006,6 @@ class KeywordManager {
                     // [防护] 每次读取chunk前检查是否被新请求取代
                     if (this.currentExpanationRequestId !== requestId) {
                         reader.releaseLock();
-                        console.log(`[KeywordManager] Request ${requestId} cancelled during streaming`);
                         return;
                     }
 
