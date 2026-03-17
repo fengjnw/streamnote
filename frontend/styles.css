@@ -3009,7 +3009,7 @@ textarea::placeholder {
 
 /* ================ Text Highlight Style ================ */
 .text-highlight {
-    background-color: #fff59d;
+    background-color: #ffa500;
     color: inherit;
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
@@ -3393,20 +3393,23 @@ textarea::placeholder {
 
 /* 临时单词高亮样式 */
 .temp-word-highlight {
-    animation: fadeOutHighlight 2s ease-out forwards;
+    animation: wordHighlightFade 4s ease-out forwards;
+    text-decoration: underline;
+    text-decoration-color: #d32f2f;
+    text-decoration-thickness: 2px;
 }
 
-@keyframes fadeOutHighlight {
-    0% {
-        color: #d32f2f;
-    }
+@keyframes wordHighlightFade {
 
-    50% {
+    0%,
+    80% {
         color: #d32f2f;
+        text-decoration-color: #d32f2f;
     }
 
     100% {
         color: currentColor;
+        text-decoration-color: transparent;
     }
 }
 
