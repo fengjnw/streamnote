@@ -1120,7 +1120,17 @@ class StreamNote {
             clearSummaryBtn.addEventListener("click", () => {
                 const summaryDisplay = document.getElementById("summary-display");
                 if (summaryDisplay) {
+                    // 清空显示
                     summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary</p>';
+                    
+                    // 获取当前的style和language，清除对应的缓存
+                    const styleSelect = document.getElementById("summarizeStyleSelect");
+                    const selectedStyle = styleSelect ? styleSelect.value : "paragraph";
+                    const cacheKey = `${this.explanationLanguage}-${selectedStyle}`;
+                    if (this.summaryCache[cacheKey]) {
+                        delete this.summaryCache[cacheKey];
+                    }
+                    
                     this.showStatusMessage("Summary cleared", 1500);
                 }
             });
