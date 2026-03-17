@@ -1673,31 +1673,16 @@ class StreamNote {
      */
     _createEditItem(container, idx, text, timestamp) {
         const item = document.createElement("div");
+        item.className = "edit-item";
+        item.id = `edit-item-${idx}`;
         item.style.cssText = `
             display: flex;
             gap: 10px;
             padding: 10px 12px;
-            background: white;
-            border-radius: 6px;
-            border: 1px solid #f0f0f0;
-            transition: all 0.2s ease;
             align-items: flex-start;
             overflow: visible;
             margin: 0 12px;
         `;
-        item.id = `edit-item-${idx}`;
-
-        // Hover 效果
-        item.addEventListener("mouseenter", (e) => {
-            e.currentTarget.style.background = "#fafbfc";
-            e.currentTarget.style.borderColor = "#e0e0e0";
-            e.currentTarget.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.08)";
-        });
-        item.addEventListener("mouseleave", (e) => {
-            e.currentTarget.style.background = "white";
-            e.currentTarget.style.borderColor = "#f0f0f0";
-            e.currentTarget.style.boxShadow = "none";
-        });
 
         // 时间戳输入框 - 分为日期和时间两个输入框
         const session = this.sessionManager.getCurrentSession();
