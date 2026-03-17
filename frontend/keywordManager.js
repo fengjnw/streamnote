@@ -1166,7 +1166,29 @@ class KeywordManager {
             console.log(`  - explanation-content (contentElement): display=${contentElement ? window.getComputedStyle(contentElement).display : 'N/A'}`);
             console.log(`  - explanation-scroll: display=${explanationScroll ? window.getComputedStyle(explanationScroll).display : 'N/A'}`);
             
+            // [DEBUG] 深度检查确认元素确实有内容
+            console.log(`[KeywordManager] Request ${requestId}: Deep content check:`);
+            console.log(`  - contentElement.children.length: ${contentElement.children.length}`);
+            console.log(`  - contentElement.innerHTML.length: ${contentElement.innerHTML.length}`);
+            console.log(`  - contentElement.firstChild: ${contentElement.firstChild ? contentElement.firstChild.nodeName : 'null'}`);
+            if (contentElement.firstChild) {
+                console.log(`  - contentElement.firstChild.textContent.length: ${contentElement.firstChild.textContent.length}`);
+            }
+            
+            // [DEBUG] 检查是否被强制隐藏
+            if (contentElement.style.display === 'none') {
+                console.warn(`[KeywordManager] Request ${requestId}: contentElement.style.display is FORCED to 'none'!`);
+            }
             console.log(`[KeywordManager] Request ${requestId}: updateWordContext completed, final check - contentElement.innerHTML starts with: "${contentElement.innerHTML.substring(0, 60)}..."`);
+            
+            // [DEBUG] 延迟检查：确保没有其他代码在异步修改元素
+            setTimeout(() => {
+                const contentElem = document.getElementById("explanation-content");
+                if (contentElem) {
+                    const computedStyle = window.getComputedStyle(contentElem);
+                    console.log(`[KeywordManager] Request ${requestId}: DELAYED CHECK (100ms) - contentElement.innerHTML.length: ${contentElem.innerHTML.length}, display: ${computedStyle.display}, visibility: ${computedStyle.visibility}`);
+                }
+            }, 100);
         } catch (error) {
             console.error("[KeywordManager] Error fetching explanation:", error);
             if (contentElement && contentElement.parentElement) {
