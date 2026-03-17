@@ -588,7 +588,7 @@ class StreamNote {
             const session = this.sessionManager.getCurrentSession();
             if (session) {
                 session.summaryCache = { ...this.summaryCache };
-                this.sessionManager.saveSession(session);
+                this.sessionManager.saveSessions();
             }
         }
     }
