@@ -2829,8 +2829,8 @@ textarea::placeholder {
     justify-content: space-between;
     align-items: center;
     padding: 8px 12px;
-    background: var(--color-secondary-light);
-    color: var(--color-grey-700);
+    background: var(--color-primary);
+    color: white;
     flex-shrink: 0;
     gap: 10px;
     border-bottom: none;
@@ -2840,17 +2840,17 @@ textarea::placeholder {
 
 /* Input group modal header (purple theme) */
 .floating-modal-header.input-group-modal-header {
-    background: var(--color-primary-lighter);
-    color: var(--color-primary-accent);
+    background: var(--color-primary);
+    color: white;
 }
 
 .floating-modal-header.input-group-modal-header .btn-icon {
-    color: var(--color-primary-accent);
-    background: var(--color-primary-shadow-1);
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .floating-modal-header.input-group-modal-header .btn-icon:hover {
-    background: rgba(var(--color-primary-rgb), 0.2);
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .floating-modal-header h3 {
