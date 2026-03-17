@@ -26,7 +26,7 @@
     --color-text-lighter: #999;
     --color-bg-light: #fafafa;
     --color-bg-hover: #f5f5f5;
-    --color-primary: #5a7c99;
+    --color-primary: #6b4875;
     --color-danger: #d32f2f;
 }
 
@@ -63,7 +63,7 @@ header {
 }
 
 .header-logo {
-    background: #3d546b;
+    background: #553366;
     backdrop-filter: blur(10px);
     padding: var(--spacing-md) var(--spacing-lg);
     flex: 0 0 auto;
@@ -73,7 +73,7 @@ header {
 }
 
 .header-info {
-    background: var(--color-primary);
+    background: #6b4875;
     backdrop-filter: blur(10px);
     padding: var(--spacing-md) var(--spacing-lg);
     flex: 1;
@@ -701,24 +701,24 @@ header h1 {
 }
 
 .nav-group-input .control-btn-secondary {
-    background: #b8cde0;
-    color: #2c3e50;
+    background: #a395b8;
+    color: #ffffff;
     font-weight: 600;
 }
 
 .nav-group-input .control-btn-secondary:hover:not(:disabled) {
-    background: #a4bfd3;
-    color: #1a2634;
+    background: #8b7ba4;
+    color: #ffffff;
 }
 
 .nav-group-input .control-btn-secondary.active {
-    background: #5a7c99 !important;
+    background: #6b4875 !important;
     color: white !important;
     box-shadow: 0 4px 12px rgba(90, 124, 153, 0.4) !important;
 }
 
 .nav-group-input .control-btn-secondary.active:hover:not(:disabled) {
-    background: #3f5670 !important;
+    background: #553366 !important;
 }
 
 /* Record button active (red Stop state) */
@@ -750,7 +750,7 @@ header h1 {
 }
 
 .nav-group-content .control-btn-secondary.active:hover:not(:disabled) {
-    background: #4a3559 !important;
+    background: #553366 !important;
 }
 
 /* 核心功能组 */
@@ -1019,13 +1019,13 @@ header h1 {
 }
 
 .layout-selector:hover {
-    border-color: #5a7c99;
+    border-color: #6b4875;
     box-shadow: 0 2px 6px rgba(90, 124, 153, 0.15);
 }
 
 .layout-selector:focus {
     outline: none;
-    border-color: #5a7c99;
+    border-color: #6b4875;
     box-shadow: 0 0 0 3px rgba(90, 124, 153, 0.1);
 }
 
@@ -1159,7 +1159,7 @@ header h1 {
 /* Active/highlighted button state - higher specificity to override secondary style */
 .control-btn.active,
 .control-btn-secondary.active {
-    background: #5a7c99 !important;
+    background: #6b4875 !important;
     color: white !important;
     box-shadow: 0 4px 12px rgba(90, 124, 153, 0.4) !important;
 }
@@ -1262,6 +1262,16 @@ header h1 {
     transition: all 0.2s;
     display: flex;
     align-items: center;
+}
+
+/* Translation panel language selector */
+.translation-panel .toolbar-language {
+    border-color: #c7b3cd;
+}
+
+.translation-panel .toolbar-language:hover,
+.translation-panel .toolbar-language:focus {
+    border-color: #6b4875;
 }
 
 /* Toolbar select dropdown */
@@ -1706,7 +1716,7 @@ header h1 {
 
 .keyword-expand-btn:hover {
     background: rgba(90, 124, 153, 0.1);
-    color: #5a7c99;
+    color: #6b4875;
 }
 
 .keyword-expand-btn .expand-icon {
@@ -1836,14 +1846,14 @@ textarea::placeholder {
     bottom: var(--spacing-lg);
     right: var(--spacing-lg);
     padding: 10px var(--spacing-lg);
-    background: var(--color-primary);
+    background: #6b4875;
     color: white;
     border: none;
     border-radius: 20px;
     font-size: 0.9em;
     font-weight: 500;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(90, 124, 153, 0.3);
+    box-shadow: 0 4px 12px rgba(107, 72, 117, 0.3);
     transition: all 0.3s ease;
     z-index: 100;
     white-space: nowrap;
@@ -1851,7 +1861,7 @@ textarea::placeholder {
 
 .floating-auto-scroll-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(90, 124, 153, 0.4);
+    box-shadow: 0 6px 16px rgba(107, 72, 117, 0.4);
 }
 
 .floating-auto-scroll-btn.hidden {
@@ -2496,7 +2506,7 @@ textarea::placeholder {
 }
 
 .keywords-tab-btn.active {
-    color: #5a7c99;
+    color: #6b4875;
     font-weight: 600;
 }
 
@@ -2507,7 +2517,7 @@ textarea::placeholder {
     left: 0;
     right: 0;
     height: 2px;
-    background: #5a7c99;
+    background: #6b4875;
 }
 
 /* Keywords Tab Content */
@@ -2626,19 +2636,19 @@ textarea::placeholder {
     border-radius: 8px 8px 0 0;
 }
 
-/* Input group modal header (blue theme) */
+/* Input group modal header (purple theme) */
 .floating-modal-header.input-group-modal-header {
-    background: #b8cde0;
-    color: #2c3e50;
+    background: #d4c5d9;
+    color: #4a3559;
 }
 
 .floating-modal-header.input-group-modal-header .btn-icon {
-    color: #2c3e50;
-    background: rgba(44, 62, 80, 0.1);
+    color: #4a3559;
+    background: rgba(74, 53, 89, 0.1);
 }
 
 .floating-modal-header.input-group-modal-header .btn-icon:hover {
-    background: rgba(44, 62, 80, 0.2);
+    background: rgba(74, 53, 89, 0.2);
 }
 
 .floating-modal-header h3 {
@@ -2699,13 +2709,13 @@ textarea::placeholder {
 
 .add-content-modal .floating-modal-toolbar .toolbar-btn {
     flex: 0;
-    border-color: #b8cde0;
+    border-color: #d4c5d9;
 }
 
 .add-content-modal .floating-modal-toolbar .toolbar-btn:hover {
-    background: #e8f1f8;
-    border-color: #5a7c99;
-    color: #5a7c99;
+    background: #f5f0f7;
+    border-color: #6b4875;
+    color: #6b4875;
 }
 
 .add-content-modal .floating-modal-toolbar .toolbar-btn.danger {
@@ -2720,14 +2730,14 @@ textarea::placeholder {
 
 /* Blue theme for edit modal buttons */
 .edit-modal .floating-modal-footer .toolbar-btn {
-    border-color: #b8cde0;
+    border-color: #d4c5d9;
     color: #333;
 }
 
 .edit-modal .floating-modal-footer .toolbar-btn:hover {
-    background: #e8f1f8;
-    border-color: #5a7c99;
-    color: #5a7c99;
+    background: #f5f0f7;
+    border-color: #6b4875;
+    color: #6b4875;
 }
 
 /* Modal Content */
@@ -2825,7 +2835,7 @@ textarea::placeholder {
 
 .floating-menu-item:hover {
     background: #f0f7ff;
-    color: #5a7c99;
+    color: #6b4875;
     padding-left: 16px;
 }
 
