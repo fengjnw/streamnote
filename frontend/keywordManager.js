@@ -454,20 +454,12 @@ class KeywordManager {
 
             // 检查缓存
             if (this.explanationCache[cacheKey]) {
-                console.log(`[KeywordManager] Using cached explanation for "${keyword}"`);
                 contentElement.innerHTML = `<p>${this.explanationCache[cacheKey]}</p>`;
                 return;
             }
 
             // 获取上下文（用于API）- 使用统一方法避免重复
             const context = this.getContextForKeyword(keyword);
-            
-            // [DEBUG] 诊断日志 - 确保问题可见
-            const transcriptDataSize = Object.keys(this.getTranscriptData()).length;
-            const fallbackDataSize = this.lastKnownTranscriptData ? Object.keys(this.lastKnownTranscriptData).length : 0;
-            console.log(`[KeywordManager] fetchAndShowExplanation("${keyword}"): context="${context ? context.substring(0, 50) : "(empty)"}...", transcriptData=${transcriptDataSize} items, fallback=${fallbackDataSize} items`);
-
-            console.log(`[KeywordManager] Calling API: ${this.explanationApiUrl} with language="${explanationLanguage}"`);
             
             const response = await fetch(this.explanationApiUrl, {
                 method: "POST",
@@ -480,8 +472,6 @@ class KeywordManager {
                     context: context  // 添加上下文
                 })
             });
-
-            console.log(`[KeywordManager] API response status: ${response.status}`);
             
             if (!response.ok) {
                 const errorText = await response.text();
@@ -503,11 +493,6 @@ class KeywordManager {
                     const chunk = decoder.decode(value, { stream: true });
                     explanation += chunk;
                     chunkCount++;
-                    
-                    // [DEBUG] 只在前几个chunk记录日志
-                    if (chunkCount <= 3) {
-                        console.log(`[KeywordManager] Received chunk ${chunkCount}: "${chunk.substring(0, 50)}..."`);
-                    }
 
                     // 实时更新显示（逐字显示）
                     if (explanation && contentElement && contentElement.parentElement) {
@@ -526,19 +511,14 @@ class KeywordManager {
 
             // 存入缓存
             this.explanationCache[cacheKey] = explanation;
-            
-            console.log(`[KeywordManager] Explanation complete: "${explanation.substring(0, 60)}..." (${explanation.length} chars, ${chunkCount} chunks)`);
 
             // 最终显示 - 验证contentElement仍然有效
             if (contentElement && contentElement.parentElement) {
                 contentElement.innerHTML = `<p>${explanation}</p>`;
             } else {
-                console.warn(`[KeywordManager] contentElement is stale at final display, re-fetching...`);
                 contentElement = document.getElementById("explanation-content");
                 if (contentElement) {
                     contentElement.innerHTML = `<p>${explanation}</p>`;
-                } else {
-                    console.error(`[KeywordManager] Cannot find explanation-content element`);
                 }
             }
         } catch (error) {
