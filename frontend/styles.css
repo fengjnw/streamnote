@@ -143,13 +143,13 @@
     --color-danger-active-shadow-4: var(--color-danger-active-shadow-4);
 
     /* ================ Black Overlay & Shadow Variants ================ */
-    --color-black-shadow-05: var(--color-black-shadow-05);
-    --color-black-shadow-08: var(--color-black-shadow-08);
-    --color-black-shadow-12: var(--color-black-shadow-12);
-    --color-black-shadow-15: var(--color-black-shadow-15);
-    --color-black-shadow-2: var(--color-black-shadow-2);
-    --color-black-shadow-3: var(--color-black-shadow-3);
-    --color-black-shadow-5: var(--color-black-shadow-5);
+    --color-black-shadow-05: rgba(0, 0, 0, 0.05);
+    --color-black-shadow-08: rgba(0, 0, 0, 0.08);
+    --color-black-shadow-12: rgba(0, 0, 0, 0.12);
+    --color-black-shadow-15: rgba(0, 0, 0, 0.15);
+    --color-black-shadow-2: rgba(0, 0, 0, 0.2);
+    --color-black-shadow-3: rgba(0, 0, 0, 0.3);
+    --color-black-shadow-5: rgba(0, 0, 0, 0.5);
 
     /* ================ White Transparency Variants ================ */
     --color-white-shadow-1: var(--color-white-shadow-1);
