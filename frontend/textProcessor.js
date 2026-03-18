@@ -174,15 +174,28 @@ class TextProcessor {
                 return;
             }
 
+            // 检查 mammoth 库是否已加载
+            if (typeof mammoth === 'undefined') {
+                reject(new Error('DOCX support library (mammoth) is not loaded. Please refresh the page and try again.'));
+                return;
+            }
+
             const reader = new FileReader();
 
             reader.onload = async (e) => {
                 try {
                     const arrayBuffer = e.target.result;
                     // 使用 mammoth 库提取文本
-                    const result = await mammoth.extractRawText({ arrayBuffer });
-                    const text = this.cleanText(result.value);
-                    resolve(text);
+                    // 0.3.2 版本使用 convertToHtml，然后从 HTML 中提取文本
+                    const result = await mammoth.convertToHtml({ arrayBuffer });
+                    
+                    // 从 HTML 中提取纯文本
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = result.value;
+                    const text = tempDiv.textContent || tempDiv.innerText || '';
+                    
+                    const cleanedText = this.cleanText(text);
+                    resolve(cleanedText);
                 } catch (error) {
                     reject(new Error(`Failed to read DOCX: ${error.message}`));
                 }
@@ -205,6 +218,12 @@ class TextProcessor {
         return new Promise((resolve, reject) => {
             if (!file) {
                 reject(new Error('No file provided'));
+                return;
+            }
+
+            // 检查 pdf.js 库是否已加载
+            if (typeof pdfjsLib === 'undefined') {
+                reject(new Error('PDF support library (pdf.js) is not loaded. Please refresh the page and try again.'));
                 return;
             }
 
