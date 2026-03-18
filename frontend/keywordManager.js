@@ -1335,10 +1335,10 @@ class KeywordManager {
         }
 
         // 拼接：... + 前文 + <span>词</span> + 后文 + ...
-        // 省略号规则：除非在全文头/尾或尾部是句号，否则都加上
+        // 省略号规则：上下文被截断（达到长度限制）时加省略号
         const highlightedKeyword = `<span class="highlighted-word">${cleanedKeyword}</span>`;
-        const prefix = (firstIdx > globalFirstIdx) ? "... " : "";
-        const suffix = (lastIdx < globalLastIdx) || !contextAfter.endsWith("。") ? " ..." : "";
+        const prefix = (contextBefore.length >= contextLength) ? "... " : "";
+        const suffix = (contextAfter.length >= contextLength) ? " ..." : "";
         return prefix + contextBefore + highlightedKeyword + contextAfter + suffix;
     }
 
@@ -1483,10 +1483,10 @@ class KeywordManager {
         }
 
         // 拼接：... + 前文 + <span>词</span> + 后文 + ...
-        // 省略号规则：除非在全文头/尾或尾部是句号，否则都加上
+        // 省略号规则：上下文被截断（达到长度限制）时加省略号
         const highlightedKeyword = `<span class="highlighted-word">${cleanedKeyword}</span>`;
-        const prefix = (targetSegment.srcIndex > globalFirstSegment.srcIndex) ? "... " : "";
-        const suffix = (targetSegment.srcIndex < globalLastSegment.srcIndex) || !contextAfter.endsWith("。") ? " ..." : "";
+        const prefix = (contextBefore.length >= contextLength) ? "... " : "";
+        const suffix = (contextAfter.length >= contextLength) ? " ..." : "";
         return prefix + contextBefore + highlightedKeyword + contextAfter + suffix;
     }
 
