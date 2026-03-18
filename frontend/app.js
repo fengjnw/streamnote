@@ -2987,7 +2987,7 @@ class StreamNote {
             const statusText = (this.recordingManager.isRecording || this.recordingManager.isTranscribingActive())
                 ? (this.recordingManager.isTranscribingActive() ? 'Transcripting...' : 'Listening...')
                 : '';
-            displayHTML += `<p class="placeholder" style="color: #666; font-style: italic; height: 1.5em;">${statusText || '&nbsp;'}</p>`;
+            displayHTML += `<p class="placeholder">${statusText || '&nbsp;'}</p>`;
             transcriptDiv.innerHTML = displayHTML;
         } else if (this.recordingManager.isRecording) {
             // 正在录音但还没有转录内容
@@ -3136,7 +3136,7 @@ class StreamNote {
             const statusText = (this.recordingManager.isRecording || this.recordingManager.isTranscribingActive())
                 ? (this.recordingManager.isTranscribingActive() ? 'Transcripting...' : 'Listening...')
                 : '';
-            translationHTML += `<p class="placeholder" style="color: #666; font-style: italic; height: 1.5em;">${statusText || '&nbsp;'}</p>`;
+            translationHTML += `<p class="placeholder">${statusText || '&nbsp;'}</p>`;
             translationDiv.innerHTML = translationHTML;
         } else if (this.recordingManager.isRecording) {
             // 正在录音但还没有翻译内容

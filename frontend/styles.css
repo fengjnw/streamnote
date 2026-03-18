@@ -2009,7 +2009,7 @@ header h1 {
 .placeholder {
     color: var(--color-text-lighter);
     font-style: italic;
-    font-size: 0.9em;
+    font-size: 0.9rem;
     text-align: center;
     padding: 40px var(--spacing-md);
     margin: 0;
@@ -3313,7 +3313,7 @@ textarea::placeholder {
 .summary-text .placeholder {
     color: var(--color-text-lighter);
     font-style: italic;
-    font-size: 0.9em;
+    font-size: 0.9rem !important;
     text-align: center;
     padding: 40px var(--spacing-md);
     margin: 0;
@@ -3399,7 +3399,10 @@ textarea::placeholder {
     margin-bottom: 0;
 }
 
-/* .explanation-scroll .placeholder - inherits unified placeholder style */
+/* 确保placeholder字体大小统一 */
+.explanation-scroll .placeholder {
+    font-size: 0.9rem !important;
+}
 
 .explanation-scroll .error {
     color: var(--color-danger);
