@@ -1414,7 +1414,7 @@ class StreamNote {
         header.appendChild(title);
 
         const closeBtn = document.createElement("button");
-        closeBtn.className = "btn-icon toggle-btn";
+        closeBtn.className = "panel-close-btn toggle-btn";
         closeBtn.textContent = "✕";
         header.appendChild(closeBtn);
 
@@ -1991,33 +1991,8 @@ class StreamNote {
 
         // 删除按钮
         const deleteBtn = document.createElement("button");
+        deleteBtn.className = "item-delete-btn";
         deleteBtn.textContent = "✕";
-        deleteBtn.style.cssText = `
-            background: none;
-            border: none;
-            color: #ccc;
-            font-size: 1.1em;
-            cursor: pointer;
-            padding: 0 4px;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            transition: all 0.2s;
-            flex-shrink: 0;
-            align-self: flex-start;
-            margin-top: 3px;
-        `;
-        deleteBtn.addEventListener("mouseenter", (e) => {
-            e.target.style.background = "rgba(211, 47, 47, 0.08)";
-            e.target.style.color = "#d32f2f";
-        });
-        deleteBtn.addEventListener("mouseleave", (e) => {
-            e.target.style.background = "none";
-            e.target.style.color = "#ccc";
-        });
         deleteBtn.addEventListener("click", () => {
             item.remove();
             delete this.editInputs[idx];
