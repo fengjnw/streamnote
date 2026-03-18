@@ -14,7 +14,7 @@ class KeywordManager {
         // 分类存储
         this.highlights = [];        // 用户高亮的词
         this.extracts = [];          // 自动提取的关键词
-        this.explanations = [];      // 即时解释面板的词
+        this.explanationHistory = []; // 解释查询历史（完整记录，包含explanation和context）
 
         // 高亮位置信息：{ "highlightText": { sourceIndices: [...], startIndex: ..., endIndex: ... } }
         // 用于精确提取上下文
@@ -708,17 +708,10 @@ class KeywordManager {
             this.highlightPositions[word] = positionInfo;
         }
 
-        // 添加到解释历史
-        if (!this.explanations.includes(word)) {
-            this.explanations.unshift(word);
-            if (this.explanations.length > 20) {
-                this.explanations = this.explanations.slice(0, 20);
-            }
-        } else {
-            // 已存在则移到最前
-            this.explanations = this.explanations.filter(t => t !== word);
-            this.explanations.unshift(word);
-        }
+        // 临时保存当前查询信息（用于 displayExplanationFocusView 后保存完整记录）
+        this.currentQueryWord = word;
+        this.currentQuerySourcePanel = sourcePanel;
+        this.currentQueryPositionInfo = positionInfo;
 
         // 显示解释面板
         const historyContent = document.getElementById("historyContent");
@@ -939,6 +932,23 @@ class KeywordManager {
      */
     async fetchAndShowExplanationForFocusView(keyword, contentElement) {
         try {
+            const explanationLanguage = window.streamNoteInstance?.explanationLanguage || "English";
+            const cacheKey = `${keyword}|${explanationLanguage}`;
+
+            // [优化] 先检查缓存，这样即使有并发请求也能使用缓存
+            if (this.explanationCache[cacheKey]) {
+                // 使用textContent避免HTML转义问题
+                contentElement.innerHTML = '';
+                const p = document.createElement('p');
+                p.textContent = this.explanationCache[cacheKey];
+                contentElement.appendChild(p);
+                // 解释加载完成后显示上下文
+                const contextInfo = this.updateWordContext(keyword);
+                // 保存到历史记录
+                this.saveExplanationHistory(keyword, this.explanationCache[cacheKey], contextInfo);
+                return;
+            }
+
             // [防护] 为这个请求分配递增ID，用于检查是否被新请求取代
             const requestId = ++this.currentExpanationRequestId;
 
@@ -950,26 +960,6 @@ class KeywordManager {
                     console.error(`[KeywordManager] Request ${requestId}: Cannot find explanation-content element!`);
                     return;
                 }
-            }
-
-            const explanationLanguage = window.streamNoteInstance?.explanationLanguage || "English";
-            const cacheKey = `${keyword}|${explanationLanguage}`;
-
-            // 检查缓存
-            if (this.explanationCache[cacheKey]) {
-                // [防护] 检查是否被新请求取代
-                if (this.currentExpanationRequestId !== requestId) {
-                    return;
-                }
-
-                // 使用textContent避免HTML转义问题
-                contentElement.innerHTML = '';
-                const p = document.createElement('p');
-                p.textContent = this.explanationCache[cacheKey];
-                contentElement.appendChild(p);
-                // 解释加载完成后显示上下文
-                this.updateWordContext(keyword);
-                return;
             }
 
             // 获取上下文（用于API）- 使用统一方法
@@ -1057,6 +1047,10 @@ class KeywordManager {
 
             // 解释加载完成后显示上下文
             this.updateWordContext(keyword);
+
+            // 获取context并保存完整的历史记录
+            const contextInfo = this.updateWordContext(keyword);
+            this.saveExplanationHistory(keyword, explanation, contextInfo);
         } catch (error) {
             console.error("[KeywordManager] Error fetching explanation:", error);
             if (contentElement && contentElement.parentElement) {
@@ -1170,7 +1164,7 @@ class KeywordManager {
         const contextDiv = document.getElementById("word-context");
         const contextText = document.getElementById("context-text");
 
-        if (!contextDiv || !contextText) return;
+        if (!contextDiv || !contextText) return null;
 
         let displayContext = "";
 
@@ -1195,6 +1189,8 @@ class KeywordManager {
         } else {
             contextDiv.style.display = 'none';
         }
+
+        return displayContext;
     }
 
     /**
@@ -1587,6 +1583,96 @@ class KeywordManager {
     }
 
     /**
+     * 保存完整的解释历史记录
+     * @param {string} word - 词语
+     * @param {string} explanation - 解释内容
+     * @param {string} contextDisplayText - 上下文显示文本（来自HTML）
+     */
+    saveExplanationHistory(word, explanation, contextDisplayText = null) {
+        // 获取纯文本 context
+        let context = contextDisplayText || "";
+        if (!context) {
+            const contextTextEl = document.getElementById("context-text");
+            if (contextTextEl) {
+                context = contextTextEl.textContent;
+            }
+        }
+
+        // 获取当前语言
+        const language = window.streamNoteInstance?.explanationLanguage || "English";
+
+        // 获取位置信息
+        const positionInfo = this.currentQueryPositionInfo || this.highlightPositions[word] || null;
+
+        // 创建历史记录对象（包含语言字段用于缓存隔离）
+        const historyRecord = {
+            word: word,
+            language: language,  // 添加语言字段
+            explanation: explanation,
+            context: context,
+            sourceIndices: positionInfo ? positionInfo.sourceIndices : [],
+            sourcePanel: this.currentQuerySourcePanel || this.wordSourcePanel[word] || 'transcript',
+            timestamp: Date.now()
+        };
+
+        // 添加到历史（新记录放在最前）
+        this.explanationHistory.unshift(historyRecord);
+
+        // 限制历史记录数量（最多保留 50 条）
+        if (this.explanationHistory.length > 50) {
+            this.explanationHistory = this.explanationHistory.slice(0, 50);
+        }
+
+        // 保存到 session
+        if (window.streamNoteInstance) {
+            window.streamNoteInstance.saveSettingsToSession();
+        }
+    }
+
+    /**
+     * 恢复并显示历史记录中的某个解释
+     * @param {Object} historyRecord - 历史记录对象 {word, explanation, context, sourceIndices, language, sourcePanel, ...}
+     */
+    async restoreExplanationHistoryRecord(historyRecord) {
+        if (!historyRecord) return;
+
+        const { word, explanation, context, sourceIndices, language } = historyRecord;
+
+        // 更新 UI
+        const wordElement = document.getElementById("current-explanation-word");
+        const contentElement = document.getElementById("explanation-content");
+        const contextDiv = document.getElementById("word-context");
+        const contextText = document.getElementById("context-text");
+        const headerDiv = document.querySelector(".explanation-header");
+
+        if (wordElement) wordElement.textContent = word;
+
+        if (contentElement) {
+            contentElement.innerHTML = '';
+            const p = document.createElement('p');
+            p.textContent = explanation;
+            contentElement.appendChild(p);
+        }
+
+        if (headerDiv) headerDiv.classList.remove("hidden");
+
+        if (context && contextText) {
+            contextText.textContent = context;
+            contextDiv.style.display = 'block';
+        } else if (contextDiv) {
+            contextDiv.style.display = 'none';
+        }
+
+        // 恢复源面板和位置信息
+        if (sourceIndices && sourceIndices.length > 0) {
+            this.highlightPositions[word] = {
+                sourceIndices: sourceIndices
+            };
+            this.wordSourcePanel[word] = historyRecord.sourcePanel || 'transcript';
+        }
+    }
+
+    /**
      * 重置
      */
     reset() {
@@ -1594,6 +1680,7 @@ class KeywordManager {
         this.allCollectedKeywords = [];
         this.highlights = [];
         this.extracts = [];
+        // 注意：不清除 explanationHistory，因为需要保留解释历史
         if (this.keywordElement) {
             this.keywordElement.innerHTML = '';
         }

@@ -92,6 +92,7 @@ class SessionManager {
 
                     // 初始化新的数据结构字段（如果缺失）
                     if (!session.explanations) session.explanations = [];
+                    if (!session.explanationHistory) session.explanationHistory = [];
                     if (!session.keywordCache) session.keywordCache = {};
                     if (!session.highlightCache) session.highlightCache = {};
                     if (!session.explanationCache) session.explanationCache = {};
@@ -230,7 +231,8 @@ class SessionManager {
             // 词列表（三种）
             keywords: [],       // 自动提取的关键词
             highlights: [],     // 手动标记的关键词
-            explanations: [],   // 在解释面板查询过的词
+            explanations: [],   // 在解释面板查询过的词（旧格式，仅字词列表）
+            explanationHistory: [], // 解释查询历史（新格式，包含完整信息）
 
             // 高亮位置信息（用于精确提取上下文）
             highlightPositions: {}, // { "highlightText": { sourceIndices: [...], startIndex: ..., endIndex: ... } }
@@ -407,6 +409,18 @@ class SessionManager {
         const session = this.getCurrentSession();
         if (session) {
             session.explanations = [...explanations];
+            session.lastModified = Date.now();
+            this.saveSessions();
+        }
+    }
+
+    /**
+     * 更新当前 session 的解释历史（新格式，包含完整信息）
+     */
+    updateCurrentExplanationHistory(explanationHistory) {
+        const session = this.getCurrentSession();
+        if (session) {
+            session.explanationHistory = [...explanationHistory];
             session.lastModified = Date.now();
             this.saveSessions();
         }

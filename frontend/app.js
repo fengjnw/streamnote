@@ -350,6 +350,25 @@ class StreamNote {
                 this.highlightManager.setHighlightIdMap(this.highlightIdMap);
             }
         }
+        // 清空解释面板显示（在恢复 keywordManager 数据前清空，避免显示前一个 session 的解释）
+        const explanationContent = document.getElementById("explanation-content");
+        const currentExplanationWord = document.getElementById("current-explanation-word");
+        const wordContext = document.getElementById("word-context");
+        const explanationHeader = document.querySelector(".explanation-header");
+
+        if (explanationContent) {
+            explanationContent.innerHTML = '<p class="placeholder">Select a word to view its explanation</p>';
+        }
+        if (currentExplanationWord) {
+            currentExplanationWord.textContent = "";
+        }
+        if (wordContext) {
+            wordContext.style.display = 'none';
+        }
+        if (explanationHeader) {
+            explanationHeader.classList.add("hidden");
+        }
+
         if (this.keywordManager) {
             this.keywordManager.reset();
 
@@ -373,11 +392,13 @@ class StreamNote {
                 }
             }
 
-            // 恢复在解释面板查询过的词
-            if (session.explanations && session.explanations.length > 0) {
-                this.keywordManager.explanations = [...session.explanations];
+            // 恢复解释历史
+            // 新格式：explanationHistory（包含完整信息）
+            // 旧格式兼容：explanations（只有单词列表，不再使用）
+            if (session.explanationHistory && session.explanationHistory.length > 0) {
+                this.keywordManager.explanationHistory = [...session.explanationHistory];
             } else {
-                this.keywordManager.explanations = [];
+                this.keywordManager.explanationHistory = [];
             }
 
             // 恢复三个解释缓存
@@ -397,6 +418,22 @@ class StreamNote {
 
             // 更新显示
             this.keywordManager.displayExplanations();
+
+            // 切换 session 时，自动恢复最后查询过的解释（按当前语言查找）
+            if (this.keywordManager.explanationHistory && this.keywordManager.explanationHistory.length > 0) {
+                // 优先查找与当前语言匹配的最新记录
+                const currentLanguage = this.explanationLanguage || "English";
+                const lastRecordForLanguage = this.keywordManager.explanationHistory.find(
+                    record => record.language === currentLanguage
+                );
+
+                // 如果没有找到当前语言的记录，使用最新记录
+                const recordToRestore = lastRecordForLanguage || this.keywordManager.explanationHistory[0];
+
+                setTimeout(() => {
+                    this.keywordManager.restoreExplanationHistoryRecord(recordToRestore);
+                }, 100);
+            }
         }
 
         // 应用全局布局和翻译状态（而不是session特定的）
@@ -546,7 +583,7 @@ class StreamNote {
         if (this.keywordManager) {
             this.sessionManager.updateCurrentKeywords(this.keywordManager.extracts);
             this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
-            this.sessionManager.updateCurrentExplanations(this.keywordManager.explanations);
+            this.sessionManager.updateCurrentExplanationHistory(this.keywordManager.explanationHistory);
 
             // 保存缓存
             this.sessionManager.updateCurrentKeywordCache(this.keywordManager.extractsCache);
@@ -590,6 +627,11 @@ class StreamNote {
                 session.summaryCache = { ...this.summaryCache };
                 this.sessionManager.saveSessions();
             }
+        }
+
+        // 保存解释历史到 session
+        if (this.keywordManager && this.keywordManager.explanationHistory) {
+            this.sessionManager.updateCurrentExplanationHistory(this.keywordManager.explanationHistory);
         }
     }
 
