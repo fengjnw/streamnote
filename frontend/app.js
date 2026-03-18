@@ -471,6 +471,16 @@ class StreamNote {
             this.keywordManager.updateAllKeywordDisplays();
         }
 
+        // 刷新页面后，如果翻译面板打开且翻译启用，检查是否需要翻译缺失的内容
+        if (this.panelManager && this.panelManager.isTranslationEnabled() && this.translationEnabled) {
+            // 延迟执行，确保 DOM 已更新
+            setTimeout(() => {
+                if (this.translationManager) {
+                    this.translationManager.translateMissingContent();
+                }
+            }, 200);
+        }
+
         this.updateStatus(`Loaded: ${session.name}`);
     }
 
@@ -1365,6 +1375,9 @@ class StreamNote {
     importTextContent(preciseResults, sourceFile, sourceType) {
         // 获取当前 session 并合并新内容（追加而不是覆盖）
         const currentSession = this.sessionManager.getCurrentSession();
+        const sessionId = this.sessionManager.currentSessionId;
+        const newIndices = [];  // 追踪新导入的索引
+        
         if (currentSession) {
             // 找到现有转录中的最大索引
             const existingIndices = Object.keys(currentSession.transcripts || {})
@@ -1377,6 +1390,7 @@ class StreamNote {
             Object.entries(preciseResults).forEach(([key, value], idx) => {
                 const newIndex = maxIndex + 1 + idx;
                 mergedTranscripts[newIndex] = value;
+                newIndices.push(newIndex);
             });
 
             currentSession.transcripts = mergedTranscripts;
@@ -1401,6 +1415,17 @@ class StreamNote {
 
         // 刷新转录显示（会自动在正确的位置渲染）
         this.updateDisplay();
+
+        // 自动翻译新导入的内容 - 类似 onTranscribeProgress 中的处理
+        if (this.translationEnabled && newIndices.length > 0) {
+            const translationContext = this.recordingManager.getTranscriptionContext();
+            newIndices.forEach(index => {
+                const item = mergedData[index];
+                if (item && item.text) {
+                    this.translationManager.translateText(item.text, index, sessionId, translationContext);
+                }
+            });
+        }
 
         // 自动生成数据以供关键词提取
         this.saveToSession();
@@ -2197,6 +2222,12 @@ class StreamNote {
 
         // 刷新显示
         this.updateDisplay();
+        
+        // 重新翻译所有编辑后的内容（如果翻译启用）
+        if (this.translationEnabled && this.translationManager) {
+            this.translationManager.retranslateAll();
+        }
+        
         this.saveToSession();
         this.showStatusMessage("Transcript updated", 1500);
 
