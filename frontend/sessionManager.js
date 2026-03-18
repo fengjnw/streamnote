@@ -254,7 +254,8 @@ class SessionManager {
             createdAt: Date.now(),
             startTime: Date.now(),  // 时间戳计算的基准时间（使用创建时间，而非修改时间）
             lastModified: Date.now(),
-            lastAccessed: Date.now()
+            lastAccessed: Date.now(),
+            lastTextModified: null   // 最后一条转录的时间戳（用于判断是否需要重新提取关键词/总结）
         };
 
         this.saveSessions();
@@ -274,6 +275,31 @@ class SessionManager {
      */
     getSession(sessionId) {
         return this.sessions[sessionId] || null;
+    }
+
+    /**
+     * 更新 session 的 lastTextModified（获取最后一条转录的时间戳）
+     * @param {string} sessionId - session ID
+     */
+    updateLastTextModified(sessionId) {
+        const session = this.getSession(sessionId);
+        if (!session || !session.transcripts) return;
+
+        // 获取最后一条转录的时间戳
+        const indices = Object.keys(session.transcripts)
+            .map(Number)
+            .filter(k => !isNaN(k))
+            .sort((a, b) => b - a);  // 降序排列，最大的在前
+
+        if (indices.length > 0) {
+            const lastItem = session.transcripts[indices[0]];
+            // timestamp 是相对秒数，直接保存
+            session.lastTextModified = lastItem?.timestamp || 0;
+        } else {
+            session.lastTextModified = null;
+        }
+
+        this.saveSessions();
     }
 
     /**

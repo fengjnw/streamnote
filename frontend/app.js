@@ -508,11 +508,19 @@ class StreamNote {
         const session = this.sessionManager.getCurrentSession();
         if (!session) return;
 
-        // 显示 session 创建日期 (ISO 8601 format: YYYY-MM-DD HH:MM:SS)
-        const startTime = session.startTime || Date.now();
+        // 显示最后一条转录的时间 (ISO 8601 format: YYYY-MM-DD HH:MM:SS)
+        // lastTextModified 是相对秒数，需要转换为实际时间戳（毫秒）
+        let displayTime;
+        if (session.lastTextModified !== null && session.lastTextModified !== undefined) {
+            const sessionStartTime = session.startTime || Date.now();
+            displayTime = sessionStartTime + (session.lastTextModified * 1000);
+        } else {
+            displayTime = session.startTime || Date.now();
+        }
+        
         const dateDisplay = document.getElementById('sessionDateDisplay');
         if (dateDisplay) {
-            const date = new Date(startTime);
+            const date = new Date(displayTime);
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
@@ -1402,6 +1410,8 @@ class StreamNote {
                 paragraphCount: Object.keys(mergedTranscripts).length
             };
             this.sessionManager.saveSessions();
+            // 更新 lastTextModified
+            this.sessionManager.updateLastTextModified(sessionId);
         }
 
         // 更新所有工具的数据（使用合并后的完整数据）
@@ -2206,6 +2216,8 @@ class StreamNote {
         if (currentSession) {
             currentSession.transcripts = updatedData;
             this.sessionManager.saveSessions();
+            // 更新 lastTextModified
+            this.sessionManager.updateLastTextModified(this.sessionManager.currentSessionId);
         }
         if (this.panelManager) {
             this.panelManager.setTranscriptData(updatedData);
@@ -2713,8 +2725,14 @@ class StreamNote {
 
             this.updateRecordingButtonState();
 
-            // 停止时更新一次统计信息
+            // 停止时更新一次统计信息和 lastTextModified
             this.updateSessionStats();
+            // 更新 lastTextModified 以反映最后一条转录的时间
+            if (this.recordingSessionId !== null) {
+                this.sessionManager.updateLastTextModified(this.recordingSessionId);
+            } else if (this.sessionManager.currentSessionId) {
+                this.sessionManager.updateLastTextModified(this.sessionManager.currentSessionId);
+            }
         }
     }
 
