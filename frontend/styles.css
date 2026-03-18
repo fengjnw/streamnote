@@ -1824,9 +1824,9 @@ header h1 {
 /* ==================== Edit Panel Item (统一样式） ==================== */
 .edit-item {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 8px;
     padding: 10px 12px;
     background: var(--color-white);
     border-radius: 6px;
