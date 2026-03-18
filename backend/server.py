@@ -109,12 +109,13 @@ def transcribe():
         text = result.text.strip()
         
         # 如果有上下文，用GPT校准转录结果（移除重复、纠正术语、确保连贯性）
-        if context and len(context) > 0 and len(text) > 0:
-            try:
-                text = _refine_transcription(text, context)
-            except Exception as e:
-                # 校准失败时返回原始转录，不中断流程
-                print(f"[WARNING] Transcription refinement failed: {e}")
+        # DISABLED: 暂时禁用后处理，避免重复输出
+        # if context and len(context) > 0 and len(text) > 0:
+        #     try:
+        #         text = _refine_transcription(text, context)
+        #     except Exception as e:
+        #         # 校准失败时返回原始转录，不中断流程
+        #         print(f"[WARNING] Transcription refinement failed: {e}")
         
         return jsonify({"text": text})
 

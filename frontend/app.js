@@ -1377,7 +1377,7 @@ class StreamNote {
         const currentSession = this.sessionManager.getCurrentSession();
         const sessionId = this.sessionManager.currentSessionId;
         const newIndices = [];  // 追踪新导入的索引
-        
+
         if (currentSession) {
             // 找到现有转录中的最大索引
             const existingIndices = Object.keys(currentSession.transcripts || {})
@@ -2213,12 +2213,12 @@ class StreamNote {
 
         // 刷新显示
         this.updateDisplay();
-        
+
         // 重新翻译所有编辑后的内容（如果翻译启用）
         if (this.translationEnabled && this.translationManager) {
             this.translationManager.retranslateAll();
         }
-        
+
         this.saveToSession();
         this.showStatusMessage("Transcript updated", 1500);
 
