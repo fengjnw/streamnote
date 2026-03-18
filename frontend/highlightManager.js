@@ -83,6 +83,9 @@ class HighlightManager {
 
         this.onStatusMessage(`✓ Highlighted "${highlightText}"`, 1500);
 
+        // 如果解释面板打开了同一个词，更新高亮按钮状态
+        this.updateExplanationPanelHighlightButton(highlightText);
+
         return highlightText;
     }
 
@@ -148,6 +151,9 @@ class HighlightManager {
         }
 
         this.onStatusMessage(`✓ Highlighted "${highlightText}"`, 1500);
+
+        // 如果解释面板打开了同一个词，更新高亮按钮状态
+        this.updateExplanationPanelHighlightButton(highlightText);
 
         return highlightText;
     }
@@ -223,7 +229,32 @@ class HighlightManager {
 
         this.onStatusMessage(`✓ Highlighted "${cleanedText}"`, 1500);
 
+        // 如果解释面板打开了同一个词，更新高亮按钮状态
+        this.updateExplanationPanelHighlightButton(cleanedText);
+
         return true;
+    }
+
+    /**
+     * 更新解释面板上的高亮按钮状态
+     * 检查当前打开的解释词是否与新添加的高亮词相同，如果相同则更新按钮
+     * @param {string} highlightedWord - 刚添加的高亮词
+     */
+    updateExplanationPanelHighlightButton(highlightedWord) {
+        // 获取当前打开的解释词
+        const currentWordEl = document.getElementById("current-explanation-word");
+        if (!currentWordEl) return;
+
+        const currentWord = currentWordEl.textContent?.trim();
+        if (!currentWord) return;
+
+        // 检查是否是同一个词（不区分大小写比较）
+        if (currentWord.toLowerCase() === highlightedWord.toLowerCase()) {
+            // 调用全局的updateHighlightButtonState方法来更新按钮状态
+            if (window.streamNoteInstance && window.streamNoteInstance.updateHighlightButtonState) {
+                window.streamNoteInstance.updateHighlightButtonState(highlightedWord, true);
+            }
+        }
     }
 
     /**
@@ -962,7 +993,31 @@ class HighlightManager {
         // 保存到session
         this.sessionManager?.updateCurrentHighlights(this.keywordManager.highlights);
 
+        // 如果解释面板打开了同一个词，更新高亮按钮状态（改为"Highlight"）
+        this.updateExplanationPanelHighlightButtonAfterRemoval(text);
+
         return true;
+    }
+
+    /**
+     * 删除高亮后更新解释面板按钮状态（改为"Highlight"）
+     * @param {string} removedWord - 刚删除的高亮词
+     */
+    updateExplanationPanelHighlightButtonAfterRemoval(removedWord) {
+        // 获取当前打开的解释词
+        const currentWordEl = document.getElementById("current-explanation-word");
+        if (!currentWordEl) return;
+
+        const currentWord = currentWordEl.textContent?.trim();
+        if (!currentWord) return;
+
+        // 检查是否是同一个词（不区分大小写比较）
+        if (currentWord.toLowerCase() === removedWord.toLowerCase()) {
+            // 调用全局的updateHighlightButtonState方法来更新按钮状态
+            if (window.streamNoteInstance && window.streamNoteInstance.updateHighlightButtonState) {
+                window.streamNoteInstance.updateHighlightButtonState(removedWord, false);
+            }
+        }
     }
 
     /**
@@ -1266,6 +1321,9 @@ class HighlightManager {
         }
 
         this.onStatusMessage(`✓ Highlighted "${cleanedWord}"`, 1500);
+
+        // 更新解释面板上的高亮按钮状态
+        this.updateExplanationPanelHighlightButton(cleanedWord);
 
         return true;
     }
