@@ -15,7 +15,7 @@
             mammoth: false,
             pdfjsLib: false
         };
-        
+
         // 监听库加载完成
         window.addEventListener('load', () => {
             const checkInterval = setInterval(() => {
@@ -25,12 +25,12 @@
                 if (typeof pdfjsLib !== 'undefined') {
                     window.librariesReady.pdfjsLib = true;
                 }
-                
+
                 if (window.librariesReady.mammoth && window.librariesReady.pdfjsLib) {
                     clearInterval(checkInterval);
                 }
             }, 50);
-            
+
             // 最多等待 10 秒
             setTimeout(() => {
                 clearInterval(checkInterval);

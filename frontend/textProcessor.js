@@ -188,12 +188,12 @@ class TextProcessor {
                     // 使用 mammoth 库提取文本
                     // 0.3.2 版本使用 convertToHtml，然后从 HTML 中提取文本
                     const result = await mammoth.convertToHtml({ arrayBuffer });
-                    
+
                     // 从 HTML 中提取纯文本
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = result.value;
                     const text = tempDiv.textContent || tempDiv.innerText || '';
-                    
+
                     const cleanedText = this.cleanText(text);
                     resolve(cleanedText);
                 } catch (error) {
