@@ -1824,10 +1824,6 @@ class StreamNote {
                     e.target.style.borderColor = "#d32f2f";
                     e.target.value = displayDate;
                     this.showStatusMessage("Invalid date", 2000);
-                } else if (date < sessionStartDate) {
-                    e.target.style.borderColor = "#d32f2f";
-                    e.target.value = displayDate;
-                    this.showStatusMessage("Date cannot be before session start date", 2500);
                 } else {
                     e.target.style.borderColor = "#ddd";
                 }
@@ -2139,13 +2135,6 @@ class StreamNote {
                         if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) {
                             hasError = true;
                             errorMsg = `Invalid date: "${dateStr}"`;
-                            dateInput.style.borderColor = "#d32f2f";
-                            return;
-                        }
-                        // 检查日期不早于session开始日期
-                        if (date < sessionStartDate) {
-                            hasError = true;
-                            errorMsg = `Date cannot be before session start date`;
                             dateInput.style.borderColor = "#d32f2f";
                             return;
                         }
