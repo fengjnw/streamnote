@@ -517,7 +517,7 @@ class StreamNote {
         } else {
             displayTime = session.startTime || Date.now();
         }
-        
+
         const dateDisplay = document.getElementById('sessionDateDisplay');
         if (dateDisplay) {
             const date = new Date(displayTime);
