@@ -1760,7 +1760,8 @@ class StreamNote {
         let displayDate = "2000-01-01";
         let displayTime = "00:00:00";
 
-        if (timestamp) {
+        // 检查 timestamp 是否有效（包括 0，0 表示 session 开始时间），而不是只检查 truthy 值
+        if (timestamp !== null && timestamp !== undefined && timestamp !== '') {
             const relativeSeconds = typeof timestamp === 'number' ? timestamp :
                 (typeof timestamp === 'string' && /^\d+$/.test(timestamp) ? parseInt(timestamp) : null);
 
@@ -1783,8 +1784,9 @@ class StreamNote {
                 displayDate = `${sessionStartDate.getFullYear()}-${String(sessionStartDate.getMonth() + 1).padStart(2, '0')}-${String(sessionStartDate.getDate()).padStart(2, '0')}`;
             }
         } else {
-            // 默认为session开始日期
+            // 默认为session开始日期时间
             displayDate = `${sessionStartDate.getFullYear()}-${String(sessionStartDate.getMonth() + 1).padStart(2, '0')}-${String(sessionStartDate.getDate()).padStart(2, '0')}`;
+            displayTime = `${String(sessionStartDate.getHours()).padStart(2, '0')}:${String(sessionStartDate.getMinutes()).padStart(2, '0')}:${String(sessionStartDate.getSeconds()).padStart(2, '0')}`;
         }
 
         // 日期输入框
