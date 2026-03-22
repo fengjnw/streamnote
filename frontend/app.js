@@ -3486,7 +3486,7 @@ class StreamNote {
     /**
      * 格式化总结显示 - 根据不同风格进行HTML格式化
      * @param {string} summary - 总结文本
-     * @param {string} style - 总结风格 (paragraph, key_takeaways, q&a, tldr)
+     * @param {string} style - 总结风格 (paragraph, key_takeaways, q&a)
      * @returns {string} 格式化后的HTML
      */
     formatSummaryDisplay(summary, style) {
@@ -3497,8 +3497,6 @@ class StreamNote {
                 return this.formatKeyTakeaways(summary);
             case 'q&a':
                 return this.formatQAFormat(summary);
-            case 'tldr':
-                return this.formatTLDR(summary);
             case 'paragraph':
             default:
                 return this.formatParagraph(summary);
@@ -3560,13 +3558,7 @@ class StreamNote {
         return html || `<p>${summary.replace(/\n/g, '<br>')}</p>`;
     }
 
-    /**
-     * 格式化TLDR风格
-     */
-    formatTLDR(summary) {
-        const text = summary.trim();
-        return `<div class="tldr-content">${text.replace(/\n/g, '<br>')}</div>`;
-    }
+
 
     updateStatus(text) {
         document.getElementById("status").textContent = text;

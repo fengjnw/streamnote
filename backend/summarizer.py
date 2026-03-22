@@ -21,7 +21,7 @@ class Summarizer(AIService):
         Args:
             text: 要总结的文本
             language: 总结的目标语言
-            style: 总结风格 (paragraph, bullet_points, q&a, tldr)
+            style: 总结风格 (paragraph, bullet_points, q&a)
             
         Yields:
             流式总结结果
@@ -57,15 +57,7 @@ Summarise the given text as Q&A format in {language}.
 - Format: Q: [question]\nA: [answer]
 - Focus on core concepts and insights
 - Keep total length under 600 tokens
-- Return only Q&A pairs, no prefix or explanation""",
-            
-            "tldr": f"""You are a professional note summariser.
-Create a TLDR (Too Long; Didn't Read) summary in {language}.
-- Summarise the entire content in exactly 1-2 sentences
-- Capture the absolute most important points
-- Be direct and concise
-- Keep under 150 tokens
-- Return only the TLDR, no prefix or explanation"""
+- Return only Q&A pairs, no prefix or explanation"""
         }
         
         system_message = style_prompts.get(style, style_prompts["paragraph"])
@@ -75,8 +67,7 @@ Create a TLDR (Too Long; Didn't Read) summary in {language}.
         max_tokens_map = {
             "paragraph": 300,
             "key_takeaways": 600,
-            "q&a": 600,
-            "tldr": 150
+            "q&a": 600
         }
         max_tokens = max_tokens_map.get(style, 300)
         
