@@ -944,7 +944,7 @@ header h1 {
 }
 
 #openSessionPanel:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.05);
+    background: transparent;
     color: var(--color-primary);
     transform: scale(1.08);
     box-shadow: none;
@@ -957,7 +957,7 @@ header h1 {
 }
 
 #openSessionPanel.active:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.05) !important;
+    background: transparent !important;
     box-shadow: none !important;
     transform: scale(1.12);
 }
@@ -970,7 +970,7 @@ header h1 {
 }
 
 .nav-group-settings .control-btn-secondary:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.05);
+    background: transparent;
     color: var(--color-primary);
     transform: scale(1.08);
     box-shadow: none;
@@ -983,7 +983,7 @@ header h1 {
 }
 
 .nav-group-settings .control-btn-secondary.active:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.05) !important;
+    background: transparent !important;
     box-shadow: none !important;
     transform: scale(1.12);
 }
@@ -997,7 +997,7 @@ header h1 {
 }
 
 #quickAccessSettings:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.05);
+    background: transparent;
     color: var(--color-primary);
     transform: scale(1.08);
     box-shadow: none;
@@ -1010,7 +1010,7 @@ header h1 {
 }
 
 #quickAccessSettings.active:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.05) !important;
+    background: transparent !important;
     box-shadow: none !important;
     transform: scale(1.12);
 }
