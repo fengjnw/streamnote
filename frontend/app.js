@@ -1141,10 +1141,10 @@ class StreamNote {
             });
         }
 
-        const regenerateExplanationBtn = document.getElementById("regenerate-explanation-btn");
-        if (regenerateExplanationBtn) {
-            regenerateExplanationBtn.addEventListener("click", () => {
-                this.keywordManager?.regenerateCurrentExplanation();
+        const reexplainExplanationBtn = document.getElementById("reexplain-explanation-btn");
+        if (reexplainExplanationBtn) {
+            reexplainExplanationBtn.addEventListener("click", () => {
+                this.keywordManager?.reexplainCurrentExplanation();
             });
         }
 

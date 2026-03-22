@@ -582,10 +582,10 @@ class KeywordManager {
     }
 
     /**
-     * 重新生成关键词的解释
+     * 重新解释关键词
      * @param {string} keyword - 要重新解释的关键词
      */
-    async regenerateExplanation(keyword) {
+    async reexplainExplanation(keyword) {
         // 查找对应的 keyword-explanation 元素
         const allExplanations = document.querySelectorAll('.keyword-explanation');
         let wrapper = null;
@@ -606,7 +606,7 @@ class KeywordManager {
         if (!contentElement) return;
 
         // 显示加载状态
-        contentElement.innerHTML = '<p class="placeholder">Regenerating...</p>';
+        contentElement.innerHTML = '<p class="placeholder">Reexplaining...</p>';
 
         // 清除缓存，强制重新获取
         const cacheKey = `${keyword}|${window.streamNoteInstance?.explanationLanguage || 'English'}`;
@@ -886,7 +886,7 @@ class KeywordManager {
         const wordElement = document.getElementById("current-explanation-word");
         const contentElement = document.getElementById("explanation-content");
         const headerDiv = document.querySelector(".explanation-header");
-        const regenerateBtn = document.getElementById("regenerate-explanation-btn");
+        const reexplainBtn = document.getElementById("reexplain-explanation-btn");
         const contextDiv = document.getElementById("word-context");
 
         if (!wordElement || !contentElement) return;
@@ -900,8 +900,8 @@ class KeywordManager {
         // 显示标题容器
         if (headerDiv) headerDiv.classList.remove("hidden");
 
-        // 启用Regenerate和Pronounce按钮
-        if (regenerateBtn) regenerateBtn.disabled = false;
+        // 启用Reexplain和Pronounce按钮
+        if (reexplainBtn) reexplainBtn.disabled = false;
         const pronounceBtn = document.getElementById("pronounce-current-word-btn");
         if (pronounceBtn) pronounceBtn.disabled = false;
 
@@ -1487,9 +1487,9 @@ class KeywordManager {
     }
 
     /**
-     * 重新生成当前显示词的解释
+     * 重新解释当前显示词
      */
-    async regenerateCurrentExplanation() {
+    async reexplainCurrentExplanation() {
         const currentWordEl = document.getElementById("current-explanation-word");
         const contentElement = document.getElementById("explanation-content");
 
@@ -1502,7 +1502,7 @@ class KeywordManager {
         // 清除缓存
         delete this.explanationCache[cacheKey];
 
-        contentElement.innerHTML = '<p class="placeholder">Regenerating explanation...</p>';
+        contentElement.innerHTML = '<p class="placeholder">Reexplaining explanation...</p>';
         await this.fetchAndShowExplanationForFocusView(word, contentElement);
     }
 
@@ -1544,11 +1544,11 @@ class KeywordManager {
     }
 
     /**
-     * 刷新所有已展开的解释（用新语言重新生成）
+     * 刷新所有已展开的解释（用新语言重新解释）
      */
     refreshExpandedExplanations() {
         // 刷新当前显示的词
-        this.regenerateCurrentExplanation();
+        this.reexplainCurrentExplanation();
     }
 
     /**
