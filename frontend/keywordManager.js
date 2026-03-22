@@ -188,8 +188,15 @@ class KeywordManager {
     displayExtracts() {
         const element = document.getElementById("auto-keywords-display");
         if (!element) return;
+
+        // 保存滚动位置（防止自动提取面板在更新时滚到顶部）
+        const scrollPosition = element.scrollTop;
+
         const uniqueKeywords = [...new Set(this.extracts)];
         this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "Click Extract to generate keywords from your transcription");
+
+        // 恢复滚动位置
+        element.scrollTop = scrollPosition;
     }
 
     /**
@@ -1554,7 +1561,7 @@ class KeywordManager {
         if (!currentWordEl || !contentElement) return;
 
         const word = currentWordEl.textContent;
-        
+
         // 直接调用 fetchAndShowExplanationForFocusView，它会优先使用新语言的缓存
         // 而不是通过 reexplainCurrentExplanation 删除缓存后重新获取
         this.fetchAndShowExplanationForFocusView(word, contentElement);
