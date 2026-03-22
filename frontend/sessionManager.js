@@ -155,12 +155,41 @@ class SessionManager {
             if (currentId && this.sessions[currentId]) {
                 this.currentSessionId = currentId;
             } else {
-                // 创建默认 session，使用当前时间作为名称
-                this.createNewSession();
+                // 检查是否应该加载示例会话（首次使用）
+                if (shouldLoadDemoSession && shouldLoadDemoSession()) {
+                    // 创建示例会话
+                    if (createDemoSession) {
+                        createDemoSession();
+                        // 重新加载一次 sessions
+                        const saved = localStorage.getItem(this.STORAGE_KEY);
+                        if (saved) {
+                            this.sessions = JSON.parse(saved);
+                        }
+                        // 将当前 session 设置为示例会话
+                        if (this.sessions[DEMO_SESSION_DATA.id]) {
+                            this.currentSessionId = DEMO_SESSION_DATA.id;
+                        }
+                    }
+                } else {
+                    // 创建默认 session，使用当前时间作为名称
+                    this.createNewSession();
+                }
             }
         } catch (error) {
             console.error('[SessionManager] Load error:', error);
-            this.createNewSession();
+            // 检查是否应该加载示例会话
+            if (shouldLoadDemoSession && shouldLoadDemoSession() && createDemoSession) {
+                createDemoSession();
+                const saved = localStorage.getItem(this.STORAGE_KEY);
+                if (saved) {
+                    this.sessions = JSON.parse(saved);
+                }
+                if (this.sessions[DEMO_SESSION_DATA.id]) {
+                    this.currentSessionId = DEMO_SESSION_DATA.id;
+                }
+            } else {
+                this.createNewSession();
+            }
         }
     }
 
@@ -767,6 +796,22 @@ class SessionManager {
         // 清空所有数据
         document.getElementById('clearAllBtn')?.addEventListener('click', () => {
             this.clearAllSessions();
+        });
+
+        // 加载示例会话
+        document.getElementById('loadDemoBtn')?.addEventListener('click', () => {
+            if (createDemoSession) {
+                createDemoSession();
+                // 重新加载 sessions
+                const saved = localStorage.getItem(this.STORAGE_KEY);
+                if (saved) {
+                    this.sessions = JSON.parse(saved);
+                }
+                // 切换到示例会话
+                if (this.sessions[DEMO_SESSION_DATA.id] && DEMO_SESSION_DATA) {
+                    this.switchSession(DEMO_SESSION_DATA.id);
+                }
+            }
         });
 
         // 重命名session
