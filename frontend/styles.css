@@ -372,13 +372,16 @@ header h1 {
     padding: 6px 10px;
     border-radius: 4px;
     font-size: 0.75em;
-    white-space: nowrap;
+    white-space: normal;
+    word-wrap: break-word;
     z-index: 10000;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.2s, visibility 0.2s;
     pointer-events: none;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    max-width: 200px;
+    display: inline-block;
 }
 
 .sidebar-tooltip.show {

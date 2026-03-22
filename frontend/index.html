@@ -458,17 +458,19 @@
 
                     tooltipElement.textContent = this.getAttribute('data-tooltip');
 
-                    // Position tooltip
+                    // Position tooltip - reset all position properties first
                     const rect = this.getBoundingClientRect();
                     const isLeftSidebar = this.closest('.sidebar-left') !== null;
+
+                    tooltipElement.style.left = 'auto';
+                    tooltipElement.style.right = 'auto';
 
                     if (isLeftSidebar) {
                         // Right side of button
                         tooltipElement.style.left = (rect.right + 10) + 'px';
                     } else {
-                        // Left side of button
+                        // Left side of button (for right sidebar)
                         tooltipElement.style.right = (window.innerWidth - rect.left + 10) + 'px';
-                        tooltipElement.style.left = 'auto';
                     }
                     tooltipElement.style.top = (rect.top + rect.height / 2) + 'px';
                     tooltipElement.style.transform = 'translateY(-50%)';
