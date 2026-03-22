@@ -922,7 +922,7 @@ class StreamNote {
 
                         if (!hasContent && this.keywordManager && Object.keys(this.preciseResults).length > 0) {
                             // Auto-trigger keyword extraction
-                            this.showStatusMessage("Auto-extracting keywords...", 1000);
+                            this.showStatusMessage("Extracting keywords...", 1000);
                             // Show loading message in panel
                             autoKeywordsDisplay.innerHTML = '<p class="placeholder">Extracting keywords...</p>';
                             try {
@@ -972,7 +972,7 @@ class StreamNote {
 
                             if (textToSummarize && textToSummarize.trim().length > 0) {
                                 // Auto-trigger summary generation
-                                this.showStatusMessage("Auto-generating summary...", 1000);
+                                this.showStatusMessage("Generating summary...", 1000);
                                 // Show loading message in panel
                                 summaryDisplay.innerHTML = '<p class="placeholder">Generating summary...</p>';
                                 try {
