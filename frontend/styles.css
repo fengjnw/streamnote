@@ -939,7 +939,7 @@ header h1 {
 /* Sessions button specific styling */
 #openSessionPanel {
     background: transparent;
-    color: var(--color-grey-700);
+    color: var(--color-grey-500);
     box-shadow: none;
 }
 
@@ -964,7 +964,7 @@ header h1 {
 
 .nav-group-settings .control-btn-secondary {
     background: transparent;
-    color: var(--color-grey-700);
+    color: var(--color-grey-500);
     box-shadow: none;
     font-size: 1.2em;
 }
@@ -991,7 +991,7 @@ header h1 {
 /* Settings button specific styling */
 #quickAccessSettings {
     background: transparent;
-    color: var(--color-grey-700);
+    color: var(--color-grey-500);
     box-shadow: none;
     font-size: 1.2em;
 }
@@ -1038,10 +1038,10 @@ header h1 {
 /* Icon-only buttons - 仅显示文字符号 */
 .control-btn.icon-only {
     padding: 0 !important;
-    min-width: 24px !important;
-    width: 24px !important;
-    height: 24px !important;
-    font-size: 0.9em !important;
+    min-width: 20px !important;
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 0.8em !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -1056,7 +1056,7 @@ header h1 {
 .control-btn.icon-only.transparent {
     background: transparent;
     box-shadow: none;
-    color: var(--color-grey-700);
+    color: var(--color-grey-500);
 }
 
 .control-btn.icon-only.transparent:hover:not(:disabled) {
