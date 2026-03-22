@@ -669,6 +669,14 @@ class SessionManager {
             });
         }
 
+        // 侧栏新建 session 按钮
+        const sidebarNewSessionBtn = document.getElementById('sidebarNewSessionBtn');
+        if (sidebarNewSessionBtn) {
+            sidebarNewSessionBtn.addEventListener('click', () => {
+                this.createNewSession();
+            });
+        }
+
         // Session modal 打开按钮
         const openBtn = document.getElementById('openSessionPanel');
         if (openBtn) {

@@ -1038,6 +1038,31 @@ header h1 {
     transform: scale(1.12);
 }
 
+#sidebarNewSessionBtn {
+    background: transparent;
+    color: var(--color-grey-500);
+    box-shadow: none;
+}
+
+#sidebarNewSessionBtn:hover:not(:disabled) {
+    background: transparent;
+    color: var(--color-primary);
+    transform: scale(1.08);
+    box-shadow: none;
+}
+
+#sidebarNewSessionBtn.active {
+    background: transparent !important;
+    color: var(--color-primary) !important;
+    box-shadow: none !important;
+}
+
+#sidebarNewSessionBtn.active:hover:not(:disabled) {
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: scale(1.12);
+}
+
 .nav-group-settings .control-btn-secondary {
     background: transparent;
     color: var(--color-grey-500);
