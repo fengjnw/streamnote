@@ -3699,13 +3699,10 @@ class StreamNote {
             clearTimeout(this.statusMessageTimeout);
         }
 
-        const originalText = statusEl.textContent;
         statusEl.textContent = message;
 
         this.statusMessageTimeout = setTimeout(() => {
-            if (statusEl.textContent === message) {
-                statusEl.textContent = originalText;
-            }
+            statusEl.textContent = "";
             this.statusMessageTimeout = null;
         }, duration);
     }

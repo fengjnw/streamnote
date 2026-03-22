@@ -146,7 +146,7 @@ class KeywordManager {
                             <span class="keyword-text" onclick="window.keywordManagerInstance.scrollToKeyword('${escapedItem}')">
                                 ${this.escapeHtml(item)}
                             </span>
-                            ${showAddHighlightBtn ? `<button class="${btnClass}" onclick="window.keywordManagerInstance.toggleExtractedKeywordHighlight('${escapedItem}')" title="Toggle highlight"><i data-feather="underline"></i></button>` : ''}
+                            ${showAddHighlightBtn ? `<button class="${btnClass}" onclick="window.keywordManagerInstance.toggleExtractedKeywordHighlight('${escapedItem}')" title="Toggle highlight"><i data-feather="flag"></i></button>` : ''}
                             <button class="keyword-explain-btn" onclick="window.keywordManagerInstance.openExplanationForWord('${escapedItem}')" title="View explanation"><i data-feather="book-open"></i></button>
                             ${showDeleteBtn ? `<button class="keyword-delete-btn" onclick="window.keywordManagerInstance.${deleteHandlerName}('${escapedItem}')" title="Delete"><i data-feather="trash-2"></i></button>` : ''}
                         </div>
@@ -624,6 +624,11 @@ class KeywordManager {
 
         // 更新手动高亮面板
         this.displayHighlights();
+
+        // 只在添加高亮时跳转定位，移除高亮时不跳转
+        if (isHighlightedAfter) {
+            this.scrollToKeyword(keyword);
+        }
     }
 
     /**

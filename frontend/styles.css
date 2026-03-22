@@ -1892,7 +1892,7 @@ header h1 {
 }
 
 .keyword-highlight-toggle-btn:hover {
-    color: var(--color-primary);
+    color: var(--color-highlight-bg);
     transform: scale(1.1);
 }
 
