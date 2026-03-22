@@ -461,7 +461,7 @@ class StreamNote {
                 const cachedSummary = this.summaryCache[cacheKey];
                 summaryDisplay.innerHTML = this.formatSummaryDisplay(cachedSummary, selectedStyle);
             } else {
-                summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary</p>';
+                summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
             }
         }
 
@@ -779,7 +779,7 @@ class StreamNote {
                         const cachedSummary = this.summaryCache[cacheKey];
                         summaryDisplay.innerHTML = this.formatSummaryDisplay(cachedSummary, selectedStyle);
                     } else {
-                        summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary</p>';
+                        summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
                     }
                 }
             });
@@ -974,7 +974,7 @@ class StreamNote {
                 }
 
                 regenerateSummaryBtn.disabled = true;
-                regenerateSummaryBtn.textContent = "Generating...";
+                regenerateSummaryBtn.textContent = "Refreshing...";
 
                 try {
                     // 获取选中的总结风格
@@ -990,7 +990,7 @@ class StreamNote {
                     summaryDisplay.innerHTML = `<p class="placeholder">Error: ${error.message}</p>`;
                 } finally {
                     regenerateSummaryBtn.disabled = false;
-                    regenerateSummaryBtn.textContent = "Generate";
+                    regenerateSummaryBtn.textContent = "Refresh";
                 }
             });
         }
@@ -1008,7 +1008,7 @@ class StreamNote {
                     summaryDisplay.innerHTML = this.formatSummaryDisplay(this.summaryCache[cacheKey], selectedStyle);
                 } else {
                     // 没有缓存，显示提示需要重新生成
-                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary</p>';
+                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
                 }
             });
         }
@@ -1026,7 +1026,7 @@ class StreamNote {
                     summaryDisplay.innerHTML = this.formatSummaryDisplay(this.summaryCache[cacheKey], selectedStyle);
                 } else {
                     // 没有缓存，显示提示需要重新生成
-                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary</p>';
+                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
                 }
 
                 // 更新其他地方的explanationLanguage选择器
@@ -1062,7 +1062,7 @@ class StreamNote {
 
                 reExtractKeywordsBtn.disabled = true;
                 const originalText = reExtractKeywordsBtn.textContent;
-                reExtractKeywordsBtn.textContent = 'Extracting...';
+                reExtractKeywordsBtn.textContent = 'Refreshing...';
 
                 try {
                     await this.processKeywords(this.recordingSessionId || this.sessionManager.currentSessionId);
@@ -1186,7 +1186,7 @@ class StreamNote {
                 const summaryDisplay = document.getElementById("summary-display");
                 if (summaryDisplay) {
                     // 清空显示
-                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Generate to create a summary</p>';
+                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
 
                     // 获取当前的style和language，清除对应的缓存
                     const styleSelect = document.getElementById("summarizeStyleSelect");

@@ -206,7 +206,7 @@ class KeywordManager {
 
         const uniqueKeywords = [...new Set(this.extracts)];
         // showDeleteBtn 设置为 false，自动提取面板中不显示删除按钮
-        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "Click Extract to generate keywords from your transcription", true, false);
+        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "Click Refresh to generate keywords from your transcription", true, false);
 
         // 恢复滚动位置
         element.scrollTop = scrollPosition;
@@ -651,7 +651,7 @@ class KeywordManager {
         if (!contentElement) return;
 
         // 显示加载状态
-        contentElement.innerHTML = '<p class="placeholder">Reexplaining...</p>';
+        contentElement.innerHTML = '<p class="placeholder">Refreshing...</p>';
 
         // 清除缓存，强制重新获取
         const cacheKey = `${keyword}|${window.streamNoteInstance?.explanationLanguage || 'English'}`;
@@ -1551,7 +1551,7 @@ class KeywordManager {
         // 清除缓存
         delete this.explanationCache[cacheKey];
 
-        contentElement.innerHTML = '<p class="placeholder">Reexplaining explanation...</p>';
+        contentElement.innerHTML = '<p class="placeholder">Refreshing explanation...</p>';
         await this.fetchAndShowExplanationForFocusView(word, contentElement);
     }
 
