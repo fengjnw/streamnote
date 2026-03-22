@@ -361,6 +361,29 @@ header h1 {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    position: relative;
+}
+
+/* Custom tooltip for sidebar buttons - via JavaScript */
+.sidebar-tooltip {
+    position: fixed;
+    background: var(--color-grey-900);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    white-space: nowrap;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar-tooltip.show {
+    opacity: 1;
+    visibility: visible;
 }
 
 /* ================ Session 管理面板 ================ */
