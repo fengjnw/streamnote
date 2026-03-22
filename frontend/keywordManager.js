@@ -617,18 +617,13 @@ class KeywordManager {
         }
 
         // 使用 highlightManager 的 toggleHighlight 方法
-        const isHighlightedAfter = this.highlightManager.toggleHighlight(keyword);
+        this.highlightManager.toggleHighlight(keyword);
 
         // 更新显示（刷新自动提取面板）
         this.displayExtracts();
 
         // 更新手动高亮面板
         this.displayHighlights();
-
-        // 只在添加高亮时跳转定位，移除高亮时不跳转
-        if (isHighlightedAfter) {
-            this.scrollToKeyword(keyword);
-        }
     }
 
     /**
