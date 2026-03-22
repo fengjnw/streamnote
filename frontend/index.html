@@ -163,17 +163,21 @@
                             title="Clear explanation display">Clear</button>
                     </div>
                     <div class="panel-toolbar explanation-panel-toolbar">
-                        <button id="pronounce-current-word-btn" class="toolbar-btn" disabled
-                            title="Pronounce the word">Pronounce</button>
-                        <button id="highlight-current-word-btn" class="toolbar-btn"
-                            title="Add to highlights">Highlight</button>
                         <button id="reexplain-explanation-btn" class="toolbar-btn" disabled
                             title="Reexplain explanation">Reexplain</button>
                     </div>
                     <div class="explanation-panel-content">
                         <div id="explanation-focus-view" class="explanation-focus-view">
                             <div class="explanation-header hidden">
-                                <h4 id="current-explanation-word" class="current-word"></h4>
+                                <div class="explanation-header-title-group">
+                                    <h4 id="current-explanation-word" class="current-word"></h4>
+                                    <div class="explanation-header-buttons">
+                                        <button id="pronounce-current-word-btn" class="header-icon-btn" disabled
+                                            title="Pronounce the word"><i data-feather="volume-2"></i></button>
+                                        <button id="highlight-current-word-btn" class="header-icon-btn"
+                                            title="Add to highlights"><i data-feather="flag"></i></button>
+                                    </div>
+                                </div>
                             </div>
                             <div class="explanation-body">
                                 <div id="explanation-content" class="explanation-scroll">

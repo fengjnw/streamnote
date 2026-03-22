@@ -809,7 +809,8 @@ class KeywordManager {
             this.isPronouncing = false;
             const btn = document.getElementById("pronounce-current-word-btn");
             if (btn) {
-                btn.textContent = "Pronounce";
+                btn.title = "Pronounce the word";
+                btn.classList.remove("pronouncing");
             }
             return;
         }
@@ -829,7 +830,8 @@ class KeywordManager {
             this.isPronouncing = true;
             const btn = document.getElementById("pronounce-current-word-btn");
             if (btn) {
-                btn.textContent = "Stop";
+                btn.title = "Stop pronouncing";
+                btn.classList.add("pronouncing");
             }
         };
 
@@ -838,7 +840,8 @@ class KeywordManager {
             this.isPronouncing = false;
             const btn = document.getElementById("pronounce-current-word-btn");
             if (btn) {
-                btn.textContent = "Pronounce";
+                btn.title = "Pronounce the word";
+                btn.classList.remove("pronouncing");
             }
         };
 
@@ -846,7 +849,8 @@ class KeywordManager {
             this.isPronouncing = false;
             const btn = document.getElementById("pronounce-current-word-btn");
             if (btn) {
-                btn.textContent = "Pronounce";
+                btn.title = "Pronounce the word";
+                btn.classList.remove("pronouncing");
             }
         };
 

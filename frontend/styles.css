@@ -1892,7 +1892,6 @@ header h1 {
 }
 
 .keyword-highlight-toggle-btn:hover {
-    color: var(--color-highlight-bg);
     transform: scale(1.1);
 }
 
@@ -1901,12 +1900,12 @@ header h1 {
 }
 
 .keyword-highlight-toggle-btn.active {
-    color: var(--color-highlight-bg);
+    color: #ff8c00;
 }
 
 .keyword-highlight-toggle-btn.active:hover {
-    color: #ff8c00;
     opacity: 0.9;
+    transform: scale(1.1);
 }
 
 
@@ -3275,6 +3274,78 @@ textarea::placeholder {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.explanation-header-title-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+}
+
+.explanation-header-buttons {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-shrink: 0;
+}
+
+.header-icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 4px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-secondary-dark);
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.header-icon-btn:hover:not(:disabled) {
+    transform: scale(1.1);
+}
+
+.header-icon-btn:active:not(:disabled) {
+    opacity: 0.9;
+    transform: scale(0.95);
+}
+
+#highlight-current-word-btn:active:not(:disabled) {
+    color: #ff8c00;
+    opacity: 0.9;
+}
+
+.header-icon-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.header-icon-btn i {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2;
+}
+
+.header-icon-btn.pronouncing {
+    color: var(--color-primary);
+}
+
+.header-icon-btn.pronouncing:hover:not(:disabled) {
+    color: var(--color-primary);
+    transform: scale(1.1);
+}
+
+.header-icon-btn.active {
+    color: #ff8c00;
+}
+
+.header-icon-btn.active:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: scale(1.1);
 }
 
 .explanation-body {

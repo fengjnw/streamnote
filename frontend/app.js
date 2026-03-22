@@ -3717,10 +3717,10 @@ class StreamNote {
         if (!btn) return;
 
         if (isHighlighted) {
-            btn.textContent = "Remove";
+            btn.title = "Remove from highlights";
             btn.classList.add("active");
         } else {
-            btn.textContent = "Highlight";
+            btn.title = "Add to highlights";
             btn.classList.remove("active");
         }
     }
