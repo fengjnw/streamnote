@@ -53,6 +53,24 @@ class SettingsPanel {
             });
         }
 
+        // 初始化演示会话 Toggle
+        const loadDemoSessionToggle = document.getElementById("loadDemoSessionToggle");
+        if (loadDemoSessionToggle) {
+            // 设置当前值
+            loadDemoSessionToggle.checked = defaultSettings.loadDemoSession !== false;
+
+            // 添加变化事件
+            loadDemoSessionToggle.addEventListener("change", (e) => {
+                this.sessionManager.updateDefaultSettings({
+                    loadDemoSession: e.target.checked
+                });
+                const status = e.target.checked
+                    ? "Demo session will be shown on next startup"
+                    : "Demo session disabled";
+                this.onStatusUpdate(status);
+            });
+        }
+
         // 初始化 Session Management 按钮
         this.initializeSessionManagementButtons();
     }

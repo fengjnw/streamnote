@@ -4,7 +4,7 @@
 
 const DEMO_SESSION_DATA = {
     id: 'demo-session',
-    name: 'Demo - Complete Tutorial',
+    name: 'Tutorial',
 
     // 示例转录内容（演示文本选中和高亮功能）
     transcripts: {
