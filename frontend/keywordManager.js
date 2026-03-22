@@ -1548,7 +1548,16 @@ class KeywordManager {
      */
     refreshExpandedExplanations() {
         // 刷新当前显示的词
-        this.reexplainCurrentExplanation();
+        const currentWordEl = document.getElementById("current-explanation-word");
+        const contentElement = document.getElementById("explanation-content");
+
+        if (!currentWordEl || !contentElement) return;
+
+        const word = currentWordEl.textContent;
+        
+        // 直接调用 fetchAndShowExplanationForFocusView，它会优先使用新语言的缓存
+        // 而不是通过 reexplainCurrentExplanation 删除缓存后重新获取
+        this.fetchAndShowExplanationForFocusView(word, contentElement);
     }
 
     /**
