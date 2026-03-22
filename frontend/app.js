@@ -170,6 +170,11 @@ class StreamNote {
             getTranscriptData: () => this.recordingManager.getTranscriptData(),
             highlightIdMap: this.highlightIdMap
         });
+
+        // 将 highlightManager 引用传递给 keywordManager
+        if (this.keywordManager) {
+            this.keywordManager.highlightManager = this.highlightManager;
+        }
     }
 
     /**

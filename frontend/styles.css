@@ -1870,6 +1870,46 @@ header h1 {
     background: var(--color-primary-shadow-18);
 }
 
+.keyword-highlight-toggle-btn {
+    background: var(--color-secondary-light);
+    border: 1px solid #d9d9d9;
+    color: var(--color-secondary-dark);
+    font-size: 0.75em;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 10px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.keyword-highlight-toggle-btn:hover {
+    background: #d9d9d9;
+    border-color: var(--color-secondary-dark);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.keyword-highlight-toggle-btn:active {
+    background: var(--color-secondary-light);
+}
+
+.keyword-highlight-toggle-btn.active {
+    background: #ffd700;
+    border-color: #e6c200;
+    color: #8b6914;
+}
+
+.keyword-highlight-toggle-btn.active:hover {
+    background: #ffeb3b;
+    border-color: #d4af37;
+    box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+}
+
 
 
 /* ==================== Keywords Expandable Style ==================== */
@@ -3519,4 +3559,44 @@ textarea::placeholder {
 .mode-tab.active {
     color: var(--color-primary) !important;
     border-bottom-color: var(--color-primary) !important;
+}
+
+/* ========================= Feather Icons 样式 ========================= */
+
+/* 按钮中的图标样式 */
+button [data-feather] {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+/* 工具栏按钮中的图标 */
+.toolbar-btn [data-feather] {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+}
+
+/* 控制面板按钮中的图标 */
+.control-btn [data-feather] {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+}
+
+/* 菜单项中的图标 */
+.session-menu-item [data-feather],
+.content-menu-item [data-feather] {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2;
+    margin-right: 4px;
+}
+
+/* 图标颜色继承 */
+[data-feather] {
+    stroke: currentColor;
+    fill: none;
 }

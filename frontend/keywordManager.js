@@ -31,6 +31,9 @@ class KeywordManager {
         // 翻译管理器引用（用于获取翻译数据）
         this.translationManager = config.translationManager || null;
 
+        // 高亮管理器引用（用于添加高亮）
+        this.highlightManager = config.highlightManager || null;
+
         // 解释 API
         this.explanationApiUrl = config.explanationApiUrl || "/api/explain-keyword";
 
@@ -113,8 +116,9 @@ class KeywordManager {
      * @param {HTMLElement} containerElement - 容器元素
      * @param {string} deleteHandlerName - 删除处理函数的名字（"deleteKeywordItem" 或 "removeFromExplanations"）
      * @param {string} emptyMessage - 列表为空时的提示信息
+     * @param {boolean} showAddHighlightBtn - 是否显示"Highlight/Remove"按钮（用于自动提取的关键词）
      */
-    displayItemList(items, containerElement, deleteHandlerName, emptyMessage = "No items") {
+    displayItemList(items, containerElement, deleteHandlerName, emptyMessage = "No items", showAddHighlightBtn = false) {
         if (!containerElement) {
             return;
         }
@@ -129,12 +133,19 @@ class KeywordManager {
                 ${items.map((item, index) => {
             // Safely escape special characters in onclick attributes
             const escapedItem = item.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            
+            // 检查是否已高亮
+            const isHighlighted = showAddHighlightBtn && this.highlights?.includes(item);
+            const btnText = isHighlighted ? "Remove" : "Highlight";
+            const btnClass = isHighlighted ? "keyword-highlight-toggle-btn active" : "keyword-highlight-toggle-btn";
+            
             return `
                     <div class="keyword-item-wrapper" data-keyword="${index}" title="${this.escapeHtml(item)}">
                         <div class="keyword-item">
                             <span class="keyword-text" onclick="window.keywordManagerInstance.scrollToKeyword('${escapedItem}')">
                                 ${this.escapeHtml(item)}
                             </span>
+                            ${showAddHighlightBtn ? `<button class="${btnClass}" onclick="window.keywordManagerInstance.toggleExtractedKeywordHighlight('${escapedItem}')" title="Toggle highlight">${btnText}</button>` : ''}
                             <button class="keyword-explain-btn" onclick="window.keywordManagerInstance.openExplanationForWord('${escapedItem}')" title="View explanation">Explain</button>
                             <button class="keyword-delete-btn" onclick="window.keywordManagerInstance.${deleteHandlerName}('${escapedItem}')" title="Delete">×</button>
                         </div>
@@ -193,7 +204,7 @@ class KeywordManager {
         const scrollPosition = element.scrollTop;
 
         const uniqueKeywords = [...new Set(this.extracts)];
-        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "Click Extract to generate keywords from your transcription");
+        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "Click Extract to generate keywords from your transcription", true);
 
         // 恢复滚动位置
         element.scrollTop = scrollPosition;
@@ -586,6 +597,31 @@ class KeywordManager {
         if (window.streamNoteInstance) {
             window.streamNoteInstance.deleteKeyword(keyword);
         }
+    }
+
+    /**
+     * 切换自动提取关键词的高亮状态
+     * @param {string} keyword - 关键词
+     */
+    toggleExtractedKeywordHighlight(keyword) {
+        if (!this.highlightManager) {
+            this.onStatusMessage("Highlight manager not available", 1500);
+            return;
+        }
+
+        if (!keyword) {
+            this.onStatusMessage("No keyword to toggle", 1500);
+            return;
+        }
+
+        // 使用 highlightManager 的 toggleHighlight 方法
+        const isHighlightedAfter = this.highlightManager.toggleHighlight(keyword);
+        
+        // 更新显示（刷新自动提取面板）
+        this.displayExtracts();
+        
+        // 更新手动高亮面板
+        this.displayHighlights();
     }
 
     /**
