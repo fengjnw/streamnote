@@ -846,7 +846,7 @@ header h1 {
 
 /* Input control group - primary workflow (blue-grey light) */
 #recordBtn {
-    width: 70px;
+    width: 130px;
     flex-shrink: 0;
 }
 
@@ -864,6 +864,8 @@ header h1 {
     background: var(--color-primary-lighter);
     color: var(--color-primary-accent);
     font-weight: 600;
+    min-width: auto;
+    padding: 0 16px;
 }
 
 .nav-group-input .control-btn-secondary:hover:not(:disabled) {

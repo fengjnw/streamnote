@@ -2799,10 +2799,10 @@ class StreamNote {
         const recordBtn = document.getElementById("recordBtn");
         if (recordBtn) {
             if (this.recordingManager && this.recordingManager.isRecording) {
-                recordBtn.textContent = "Stop";
+                recordBtn.textContent = "Stop Recording";
                 recordBtn.classList.add("active");
             } else {
-                recordBtn.textContent = "Record";
+                recordBtn.textContent = "Record a Lecture";
                 recordBtn.classList.remove("active");
             }
         }
