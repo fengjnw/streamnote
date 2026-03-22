@@ -1147,6 +1147,48 @@ header h1 {
     transform: scale(1.12);
 }
 
+/* Other sidebar icon buttons - match sessions/settings style */
+#quickAccessHistory,
+#translationToggleBtn,
+#quickAccessHighlights,
+#quickAccessKeywords,
+#quickAccessSummary {
+    background: transparent;
+    color: var(--color-grey-500);
+    box-shadow: none;
+}
+
+#quickAccessHistory:hover:not(:disabled),
+#translationToggleBtn:hover:not(:disabled),
+#quickAccessHighlights:hover:not(:disabled),
+#quickAccessKeywords:hover:not(:disabled),
+#quickAccessSummary:hover:not(:disabled) {
+    background: transparent;
+    color: var(--color-primary);
+    transform: scale(1.08);
+    box-shadow: none;
+}
+
+#quickAccessHistory.active,
+#translationToggleBtn.active,
+#quickAccessHighlights.active,
+#quickAccessKeywords.active,
+#quickAccessSummary.active {
+    background: transparent !important;
+    color: var(--color-primary) !important;
+    box-shadow: none !important;
+}
+
+#quickAccessHistory.active:hover:not(:disabled),
+#translationToggleBtn.active:hover:not(:disabled),
+#quickAccessHighlights.active:hover:not(:disabled),
+#quickAccessKeywords.active:hover:not(:disabled),
+#quickAccessSummary.active:hover:not(:disabled) {
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: scale(1.12);
+}
+
 /* 新控制按钮 - 纯文字版本 */
 .control-btn {
     min-width: 60px;
