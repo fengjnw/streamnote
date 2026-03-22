@@ -330,18 +330,18 @@ class PanelManager {
         const transcript = document.getElementById("transcript");
         const translation = document.getElementById("translation");
 
-        const keys = Object.keys(this.preciseResults);
-        if (keys.length > 0) {
-            if (transcript) {
-                transcript.style.scrollBehavior = 'auto';
+        if (transcript) {
+            transcript.style.scrollBehavior = 'auto';
+            // 保证滚到最底部，使用更长的延迟以确保 DOM 完全渲染
+            setTimeout(() => {
                 transcript.scrollTop = transcript.scrollHeight;
-                transcript.style.scrollBehavior = 'smooth';
-            }
-            if (translation) {
-                translation.style.scrollBehavior = 'auto';
+            }, 0);
+        }
+        if (translation) {
+            translation.style.scrollBehavior = 'auto';
+            setTimeout(() => {
                 translation.scrollTop = translation.scrollHeight;
-                translation.style.scrollBehavior = 'smooth';
-            }
+            }, 0);
         }
 
         setTimeout(() => {
