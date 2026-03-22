@@ -701,11 +701,11 @@ class StreamNote {
     }
 
     setupUIListeners() {
-        // 工具栏按钮点击时关闭模态窗口（除了打开 modal 的按钮）
-        const controlPanel = document.querySelector(".control-panel");
-        if (controlPanel) {
-            controlPanel.addEventListener("click", (e) => {
-                const btn = e.target.classList.contains("control-btn") ? e.target : e.target.closest(".control-btn");
+        // 侧栏按钮点击时关闭模态窗口（除了打开 modal 的按钮）
+        const sidebars = document.querySelectorAll(".sidebar");
+        sidebars.forEach(sidebar => {
+            sidebar.addEventListener("click", (e) => {
+                const btn = e.target.closest(".sidebar-btn");
                 if (btn) {
                     // 这些按钮会打开模态窗口，不要在这里关闭
                     const modalBtnIds = ['openSessionPanel', 'quickAccessSettings'];
@@ -713,6 +713,18 @@ class StreamNote {
                         // 其他按钮点击时，关闭所有打开的模态
                         this.closeAllModals();
                     }
+                }
+            });
+        });
+
+        // 控制栏按钮点击时关闭模态窗口
+        const controlBar = document.querySelector(".control-bar");
+        if (controlBar) {
+            controlBar.addEventListener("click", (e) => {
+                const btn = e.target.closest(".control-btn");
+                if (btn) {
+                    // 关闭所有打开的模态
+                    this.closeAllModals();
                 }
             });
         }

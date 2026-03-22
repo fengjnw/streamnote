@@ -262,6 +262,107 @@ header h1 {
     flex: 1;
 }
 
+/* ================ Main Wrapper - Three Column Layout ================ */
+.main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+}
+
+/* ================ Sidebars - Left and Right ================ */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-light);
+    border: 1px solid var(--color-border);
+    padding: var(--spacing-md) var(--spacing-sm);
+    gap: var(--spacing-md);
+    align-items: center;
+    flex-shrink: 0;
+    width: 60px;
+    overflow-y: auto;
+}
+
+.sidebar-left {
+    border-right: 1px solid var(--color-border);
+    border-left: none;
+}
+
+.sidebar-right {
+    border-left: 1px solid var(--color-border);
+    border-right: none;
+}
+
+/* Sidebar Sections */
+.sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    width: 100%;
+    align-items: center;
+}
+
+.sidebar-divider {
+    width: 100%;
+    height: 1px;
+    background: var(--color-border);
+}
+
+.sidebar-spacer {
+    flex: 1;
+}
+
+/* Sidebar Buttons */
+.sidebar-btn {
+    min-width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.75em;
+    font-weight: 500;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    padding: 0;
+    line-height: 1;
+    gap: 4px;
+    white-space: nowrap;
+    background: var(--color-secondary-light);
+    color: var(--color-primary-accent);
+}
+
+.sidebar-btn:hover:not(:disabled) {
+    background: var(--color-primary-lighter);
+    color: white;
+    transform: scale(1.08);
+}
+
+.sidebar-btn.active {
+    background: var(--color-primary) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
+}
+
+.sidebar-btn.active:hover:not(:disabled) {
+    background: var(--color-primary-dark) !important;
+    color: white !important;
+}
+
+/* Icon-only sidebar buttons */
+.sidebar-btn.icon-only {
+    width: 40px;
+    height: 40px;
+    padding: 0 !important;
+    font-size: 1em !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
 /* ================ Session 管理面板 ================ */
 .session-panel {
     width: 0;
@@ -796,35 +897,66 @@ header h1 {
     background: var(--color-danger-bg);
 }
 
-/* Main wrapper - 包含 control-panel, main-content, status-bar */
+/* Main wrapper - 包含 left-sidebar, content-wrapper, right-sidebar */
 .main-wrapper {
     flex: 1;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     overflow: hidden;
 }
 
 .content-wrapper {
     flex: 1;
     display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+    position: relative;
+    background: var(--color-white);
+}
+
+/* ================ Control Bar (Center: Recording + Import) ================ */
+
+.control-bar {
+    display: flex;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--color-bg-light);
+    border-bottom: 1px solid var(--color-border);
+    align-items: center;
+    flex-wrap: wrap;
+    position: relative;
+    min-height: 52px;
+}
+
+.control-bar-group {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.control-bar-input {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* Content Area - 主内容区域：文字面板和右侧面板并排显示 */
+.content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
     gap: 0;
     overflow: hidden;
     position: relative;
 }
 
-/* ================ Control Panel - 优化的导航栏设计 ================ */
+/* ================ Control Panel - 优化的导航栏设计 (DEPRECATED - 已迁移到sidebars) ================ */
 
 .control-panel {
-    display: flex;
-    gap: 0;
-    padding: 6px var(--spacing-lg);
-    background: var(--color-bg-light);
-    border-bottom: 1px solid var(--color-border);
-    align-items: center;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    position: relative;
-    min-height: 36px;
+    display: none;
 }
 
 /* 导航栏分组 */
@@ -1095,10 +1227,11 @@ header h1 {
     display: flex;
     flex-direction: row;
     gap: 0;
-    flex: 1;
+    flex: 1 1 auto;
     overflow: hidden;
     padding: 0;
     position: relative;
+    min-width: 0;
 }
 
 .text-panel {
@@ -1744,6 +1877,7 @@ header h1 {
     overflow: hidden;
     background: var(--color-white);
     border-left: 1px solid var(--color-border);
+    flex-shrink: 0;
 }
 
 .side-panels-container.expanded {
