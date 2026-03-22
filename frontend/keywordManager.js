@@ -117,8 +117,9 @@ class KeywordManager {
      * @param {string} deleteHandlerName - 删除处理函数的名字（"deleteKeywordItem" 或 "removeFromExplanations"）
      * @param {string} emptyMessage - 列表为空时的提示信息
      * @param {boolean} showAddHighlightBtn - 是否显示"Highlight/Remove"按钮（用于自动提取的关键词）
+     * @param {boolean} showDeleteBtn - 是否显示删除按钮（默认true）
      */
-    displayItemList(items, containerElement, deleteHandlerName, emptyMessage = "No items", showAddHighlightBtn = false) {
+    displayItemList(items, containerElement, deleteHandlerName, emptyMessage = "No items", showAddHighlightBtn = false, showDeleteBtn = true) {
         if (!containerElement) {
             return;
         }
@@ -147,7 +148,7 @@ class KeywordManager {
                             </span>
                             ${showAddHighlightBtn ? `<button class="${btnClass}" onclick="window.keywordManagerInstance.toggleExtractedKeywordHighlight('${escapedItem}')" title="Toggle highlight"><i data-feather="underline"></i></button>` : ''}
                             <button class="keyword-explain-btn" onclick="window.keywordManagerInstance.openExplanationForWord('${escapedItem}')" title="View explanation"><i data-feather="book-open"></i></button>
-                            <button class="keyword-delete-btn" onclick="window.keywordManagerInstance.${deleteHandlerName}('${escapedItem}')" title="Delete"><i data-feather="trash-2"></i></button>
+                            ${showDeleteBtn ? `<button class="keyword-delete-btn" onclick="window.keywordManagerInstance.${deleteHandlerName}('${escapedItem}')" title="Delete"><i data-feather="trash-2"></i></button>` : ''}
                         </div>
                     </div>
                 `;
@@ -204,7 +205,8 @@ class KeywordManager {
         const scrollPosition = element.scrollTop;
 
         const uniqueKeywords = [...new Set(this.extracts)];
-        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "Click Extract to generate keywords from your transcription", true);
+        // showDeleteBtn 设置为 false，自动提取面板中不显示删除按钮
+        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "Click Extract to generate keywords from your transcription", true, false);
 
         // 恢复滚动位置
         element.scrollTop = scrollPosition;
