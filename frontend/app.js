@@ -888,7 +888,7 @@ class StreamNote {
 
         // Quick access buttons
         if (quickAccessKeywords) {
-            quickAccessKeywords.addEventListener("click", () => {
+            quickAccessKeywords.addEventListener("click", async () => {
                 const isOpen = sidePanelsContainer.classList.contains("expanded");
                 const isActive = keywordsContent.classList.contains("active");
 
@@ -901,12 +901,29 @@ class StreamNote {
                     }, 350);
                 } else {
                     showContent(keywordsContent, "Keywords");
+
+                    // Auto-extract keywords if panel is empty
+                    const autoKeywordsDisplay = document.getElementById("auto-keywords-display");
+                    if (autoKeywordsDisplay) {
+                        const hasContent = autoKeywordsDisplay.children.length > 0 &&
+                            !autoKeywordsDisplay.querySelector(".placeholder");
+
+                        if (!hasContent && this.keywordManager && Object.keys(this.preciseResults).length > 0) {
+                            // Auto-trigger keyword extraction
+                            this.showStatusMessage("Auto-extracting keywords...", 1000);
+                            try {
+                                await this.processKeywords(this.recordingSessionId || this.sessionManager.currentSessionId);
+                            } catch (error) {
+                                console.error("[StreamNote] Error auto-extracting keywords:", error);
+                            }
+                        }
+                    }
                 }
             });
         }
 
         if (quickAccessSummary) {
-            quickAccessSummary.addEventListener("click", () => {
+            quickAccessSummary.addEventListener("click", async () => {
                 const isOpen = sidePanelsContainer.classList.contains("expanded");
                 const isActive = summaryContent.classList.contains("active");
 
@@ -919,6 +936,40 @@ class StreamNote {
                     }, 350);
                 } else {
                     showContent(summaryContent, "Summary");
+
+                    // Auto-generate summary if panel is empty
+                    const summaryDisplay = document.getElementById("summary-display");
+                    if (summaryDisplay) {
+                        const hasContent = summaryDisplay.children.length > 0 &&
+                            !summaryDisplay.querySelector(".placeholder");
+
+                        if (!hasContent) {
+                            // Get transcript text from current session
+                            const session = this.sessionManager.getCurrentSession();
+                            let textToSummarize = "";
+
+                            if (session && session.transcripts) {
+                                textToSummarize = Object.values(session.transcripts)
+                                    .map(item => item && item.text ? item.text : "")
+                                    .filter(text => text.trim().length > 0)
+                                    .join(" ");
+                            }
+
+                            if (textToSummarize && textToSummarize.trim().length > 0) {
+                                // Auto-trigger summary generation
+                                this.showStatusMessage("Auto-generating summary...", 1000);
+                                try {
+                                    const selectedStyle = summarizeStyleSelect ? summarizeStyleSelect.value : "paragraph";
+                                    const summary = await this.summarizeText(textToSummarize, true, selectedStyle);
+                                    if (summary) {
+                                        summaryDisplay.innerHTML = this.formatSummaryDisplay(summary, selectedStyle);
+                                    }
+                                } catch (error) {
+                                    console.error("[SUMMARY] Error auto-generating summary:", error);
+                                }
+                            }
+                        }
+                    }
                 }
             });
         }
