@@ -1360,10 +1360,10 @@ class StreamNote {
                 const isVisible = contentMenu.style.display !== "none";
 
                 if (!isVisible) {
-                    // 计算菜单位置
+                    // 计算菜单位置 - 侧开（向右展开）
                     const rect = addContentBtn.getBoundingClientRect();
-                    contentMenu.style.left = rect.left + "px";
-                    contentMenu.style.top = (rect.bottom + 4) + "px";
+                    contentMenu.style.left = (rect.right + 8) + "px";
+                    contentMenu.style.top = (rect.top - 4) + "px";
                     contentMenu.style.display = "block";
                     addContentBtn.classList.add("active");
                 } else {
