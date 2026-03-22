@@ -277,10 +277,10 @@ header h1 {
     background: var(--color-bg-light);
     border: 1px solid var(--color-border);
     padding: var(--spacing-md) var(--spacing-sm);
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
     align-items: center;
     flex-shrink: 0;
-    width: 50px;
+    width: 44px;
     overflow-y: auto;
 }
 
@@ -315,8 +315,8 @@ header h1 {
 
 /* Sidebar Buttons */
 .sidebar-btn {
-    min-width: 40px;
-    height: 40px;
+    min-width: 36px;
+    height: 36px;
     border: none;
     border-radius: 6px;
     display: flex;
@@ -354,10 +354,10 @@ header h1 {
 
 /* Icon-only sidebar buttons */
 .sidebar-btn.icon-only {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     padding: 0 !important;
-    font-size: 1em !important;
+    font-size: 0.9em !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
