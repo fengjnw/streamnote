@@ -1002,60 +1002,6 @@ header h1 {
 /* .nav-group:not(.nav-group-settings) - Regular spacing handled by control-spacer */
 
 /* Section-based grouping for workflow visualization */
-/* .nav-group-section - Base styling for button groups */
-
-/* Input control group - primary workflow (blue-grey light) */
-#recordBtn {
-    width: 130px;
-    flex-shrink: 0;
-}
-
-#addContentBtn {
-    width: 100px;
-    flex-shrink: 0;
-}
-
-#editTextBtn {
-    width: 60px;
-    flex-shrink: 0;
-}
-
-.nav-group-input .control-btn-secondary {
-    background: var(--color-primary-lighter);
-    color: var(--color-primary-accent);
-    font-weight: 600;
-    min-width: auto;
-    padding: 0 16px;
-}
-
-.nav-group-input .control-btn-secondary:hover:not(:disabled) {
-    background: var(--color-primary-light);
-    color: white;
-    transform: scale(1.08);
-    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
-}
-
-.nav-group-input .control-btn-secondary.active {
-    background: var(--color-primary) !important;
-    color: white !important;
-    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
-}
-
-.nav-group-input .control-btn-secondary.active:hover:not(:disabled) {
-    background: var(--color-primary-dark) !important;
-    color: white !important;
-}
-
-/* Record button active (red Stop state) */
-#recordBtn.active {
-    background: var(--color-danger-light-hover) !important;
-    color: white !important;
-    box-shadow: 0 4px 12px var(--color-danger-active-shadow-4) !important;
-}
-
-#recordBtn.active:hover:not(:disabled) {
-    background: var(--color-danger-dark-hover) !important;
-}
 
 /* Content tools group - secondary level (soft purple) */
 .nav-group-content .control-btn-secondary {
@@ -1168,6 +1114,61 @@ header h1 {
     background: transparent !important;
     box-shadow: none !important;
     transform: scale(1.12);
+}
+
+/* Control buttons moved to sidebar - match icon button styling */
+#recordBtn,
+#addContentBtn,
+#editTextBtn {
+    background: transparent;
+    color: var(--color-grey-500);
+    box-shadow: none;
+}
+
+#recordBtn:hover:not(:disabled),
+#addContentBtn:hover:not(:disabled),
+#editTextBtn:hover:not(:disabled) {
+    background: transparent;
+    color: var(--color-primary);
+    transform: scale(1.08);
+    box-shadow: none;
+}
+
+#recordBtn.active {
+    background: transparent !important;
+    color: var(--color-danger) !important;
+    box-shadow: none !important;
+}
+
+#recordBtn.active:hover:not(:disabled) {
+    background: transparent !important;
+    color: var(--color-danger-dark) !important;
+    box-shadow: none !important;
+    transform: scale(1.12);
+}
+
+#addContentBtn.active,
+#editTextBtn.active {
+    background: transparent !important;
+    color: var(--color-primary) !important;
+    box-shadow: none !important;
+}
+
+#addContentBtn.active:hover:not(:disabled),
+#editTextBtn.active:hover:not(:disabled) {
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: scale(1.12);
+}
+
+#editTextBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#editTextBtn:disabled:hover {
+    background: transparent;
+    transform: none;
 }
 
 /* Other sidebar icon buttons - match sessions/settings style */
