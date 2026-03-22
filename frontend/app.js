@@ -3084,15 +3084,13 @@ class StreamNote {
 
             const keys = Object.keys(preciseResults);
             if (keys.length > 0) {
-                const lastIndex = keys[keys.length - 1];
-
                 if (transcript) {
                     transcript.style.scrollBehavior = 'auto';
-                    this.panelManager.scrollToLineBottom(transcript, lastIndex);
+                    transcript.scrollTop = transcript.scrollHeight;
                 }
                 if (translation) {
                     translation.style.scrollBehavior = 'auto';
-                    this.panelManager.scrollToLineBottom(translation, lastIndex);
+                    translation.scrollTop = translation.scrollHeight;
                 }
             }
         }

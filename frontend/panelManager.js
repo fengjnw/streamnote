@@ -332,16 +332,14 @@ class PanelManager {
 
         const keys = Object.keys(this.preciseResults);
         if (keys.length > 0) {
-            const lastIndex = keys[keys.length - 1];
-
             if (transcript) {
                 transcript.style.scrollBehavior = 'auto';
-                this.scrollToLineBottom(transcript, lastIndex);
+                transcript.scrollTop = transcript.scrollHeight;
                 transcript.style.scrollBehavior = 'smooth';
             }
             if (translation) {
                 translation.style.scrollBehavior = 'auto';
-                this.scrollToLineBottom(translation, lastIndex);
+                translation.scrollTop = translation.scrollHeight;
                 translation.style.scrollBehavior = 'smooth';
             }
         }
