@@ -133,21 +133,21 @@ class KeywordManager {
                 ${items.map((item, index) => {
             // Safely escape special characters in onclick attributes
             const escapedItem = item.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-            
+
             // 检查是否已高亮
             const isHighlighted = showAddHighlightBtn && this.highlights?.includes(item);
             const btnText = isHighlighted ? "Remove" : "Highlight";
             const btnClass = isHighlighted ? "keyword-highlight-toggle-btn active" : "keyword-highlight-toggle-btn";
-            
+
             return `
                     <div class="keyword-item-wrapper" data-keyword="${index}" title="${this.escapeHtml(item)}">
                         <div class="keyword-item">
                             <span class="keyword-text" onclick="window.keywordManagerInstance.scrollToKeyword('${escapedItem}')">
                                 ${this.escapeHtml(item)}
                             </span>
-                            ${showAddHighlightBtn ? `<button class="${btnClass}" onclick="window.keywordManagerInstance.toggleExtractedKeywordHighlight('${escapedItem}')" title="Toggle highlight">${btnText}</button>` : ''}
-                            <button class="keyword-explain-btn" onclick="window.keywordManagerInstance.openExplanationForWord('${escapedItem}')" title="View explanation">Explain</button>
-                            <button class="keyword-delete-btn" onclick="window.keywordManagerInstance.${deleteHandlerName}('${escapedItem}')" title="Delete">×</button>
+                            ${showAddHighlightBtn ? `<button class="${btnClass}" onclick="window.keywordManagerInstance.toggleExtractedKeywordHighlight('${escapedItem}')" title="Toggle highlight"><i data-feather="underline"></i></button>` : ''}
+                            <button class="keyword-explain-btn" onclick="window.keywordManagerInstance.openExplanationForWord('${escapedItem}')" title="View explanation"><i data-feather="book-open"></i></button>
+                            <button class="keyword-delete-btn" onclick="window.keywordManagerInstance.${deleteHandlerName}('${escapedItem}')" title="Delete"><i data-feather="trash-2"></i></button>
                         </div>
                     </div>
                 `;
@@ -616,10 +616,10 @@ class KeywordManager {
 
         // 使用 highlightManager 的 toggleHighlight 方法
         const isHighlightedAfter = this.highlightManager.toggleHighlight(keyword);
-        
+
         // 更新显示（刷新自动提取面板）
         this.displayExtracts();
-        
+
         // 更新手动高亮面板
         this.displayHighlights();
     }

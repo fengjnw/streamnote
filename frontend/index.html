@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StreamNote</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Feather Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <!-- Libraries for DOCX and PDF processing -->
     <script src="https://unpkg.com/mammoth@0.3.2/mammoth.browser.min.js" async></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" async></script>
@@ -423,6 +425,20 @@
     <script src="textProcessor.js"></script>
     <script src="highlightManager.js"></script>
     <script src="app.js"></script>
+
+    <!-- Initialize Feather Icons -->
+    <script>
+        // Initialize Feather Icons when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            feather.replace();
+        });
+
+        // Reinitialize when DOM contents change (for dynamically added icons)
+        const iconObserver = new MutationObserver(() => {
+            feather.replace();
+        });
+        iconObserver.observe(document.body, { childList: true, subtree: true });
+    </script>
 </body>
 
 </html>
