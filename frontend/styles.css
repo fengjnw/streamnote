@@ -839,6 +839,11 @@ header h1 {
 }
 
 /* 按钮组之间的分隔 - 使用spacer处理，这里不再添加margin */
+/* First nav-group (Sessions) - 靠近左边缘 */
+.nav-group:first-of-type {
+    padding: 4px 2px;
+}
+
 /* .nav-group:not(.nav-group-settings) - Regular spacing handled by control-spacer */
 
 /* Section-based grouping for workflow visualization */
@@ -928,54 +933,86 @@ header h1 {
 /* 设置按钮组 - 右侧对齐 */
 .nav-group-settings {
     margin-left: auto;
-    padding: 4px var(--spacing-sm);
+    padding: 4px 2px;
 }
 
 /* Sessions button specific styling */
 #openSessionPanel {
-    background: var(--color-primary-lighter);
-    color: var(--color-primary-accent);
+    background: transparent;
+    color: var(--color-grey-700);
+    box-shadow: none;
 }
 
 #openSessionPanel:hover:not(:disabled) {
-    background: var(--color-primary-light);
-    color: white;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--color-primary);
     transform: scale(1.08);
-    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
+    box-shadow: none;
 }
 
 #openSessionPanel.active {
-    background: var(--color-primary) !important;
-    color: white !important;
-    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
+    background: transparent !important;
+    color: var(--color-primary) !important;
+    box-shadow: none !important;
 }
 
 #openSessionPanel.active:hover:not(:disabled) {
-    background: var(--color-primary-dark) !important;
-    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
+    background: rgba(0, 0, 0, 0.05) !important;
+    box-shadow: none !important;
     transform: scale(1.12);
 }
 
 .nav-group-settings .control-btn-secondary {
-    background: var(--color-primary-lighter);
-    color: var(--color-primary-accent);
+    background: transparent;
+    color: var(--color-grey-700);
+    box-shadow: none;
+    font-size: 1.2em;
 }
 
 .nav-group-settings .control-btn-secondary:hover:not(:disabled) {
-    background: var(--color-primary-light);
-    color: white;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--color-primary);
     transform: scale(1.08);
-    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
+    box-shadow: none;
 }
 
 .nav-group-settings .control-btn-secondary.active {
-    background: var(--color-primary) !important;
-    color: white !important;
-    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
+    background: transparent !important;
+    color: var(--color-primary) !important;
+    box-shadow: none !important;
 }
 
 .nav-group-settings .control-btn-secondary.active:hover:not(:disabled) {
-    background: var(--color-primary-dark) !important;
+    background: rgba(0, 0, 0, 0.05) !important;
+    box-shadow: none !important;
+    transform: scale(1.12);
+}
+
+/* Settings button specific styling */
+#quickAccessSettings {
+    background: transparent;
+    color: var(--color-grey-700);
+    box-shadow: none;
+    font-size: 1.2em;
+}
+
+#quickAccessSettings:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--color-primary);
+    transform: scale(1.08);
+    box-shadow: none;
+}
+
+#quickAccessSettings.active {
+    background: transparent !important;
+    color: var(--color-primary) !important;
+    box-shadow: none !important;
+}
+
+#quickAccessSettings.active:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.05) !important;
+    box-shadow: none !important;
+    transform: scale(1.12);
 }
 
 /* 新控制按钮 - 纯文字版本 */
@@ -1000,15 +1037,32 @@ header h1 {
 
 /* Icon-only buttons - 仅显示文字符号 */
 .control-btn.icon-only {
-    padding: 0 6px;
-    min-width: 28px;
-    width: 28px;
-    font-size: 1em;
+    padding: 0 !important;
+    min-width: 24px !important;
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 0.9em !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 .control-btn.icon-only::after {
     content: attr(title);
     display: none;
+}
+
+/* Icon-only buttons without background */
+.control-btn.icon-only.transparent {
+    background: transparent;
+    box-shadow: none;
+    color: var(--color-grey-700);
+}
+
+.control-btn.icon-only.transparent:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.05);
+    box-shadow: none;
+    color: var(--color-primary);
 }
 
 /* 快速访问按钮的紧凑布局 */
