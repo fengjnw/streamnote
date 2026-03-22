@@ -77,18 +77,16 @@
             <aside class="sidebar sidebar-left">
                 <!-- Group 1: Session Management -->
                 <div class="sidebar-section">
-                    <button id="openSessionPanel" class="sidebar-btn icon-only" title="Sessions" data-tooltip="Manage sessions"><i
-                            data-feather="menu"></i></button>
+                    <button id="openSessionPanel" class="sidebar-btn icon-only" title="Sessions"
+                        data-tooltip="Manage sessions"><i data-feather="menu"></i></button>
                 </div>
-
-                <div class="sidebar-divider"></div>
 
                 <!-- Group 2: Left Panel (Explanation + Translation) -->
                 <div class="sidebar-section">
-                    <button id="quickAccessHistory" class="sidebar-btn icon-only" title="Explain" data-tooltip="Show word explanations"><i
-                            data-feather="book-open"></i></button>
-                    <button id="translationToggleBtn" class="sidebar-btn icon-only" title="Translate" data-tooltip="Toggle translation panel"><i
-                            data-feather="globe"></i></button>
+                    <button id="quickAccessHistory" class="sidebar-btn icon-only" title="Explain"
+                        data-tooltip="Show word explanations"><i data-feather="book-open"></i></button>
+                    <button id="translationToggleBtn" class="sidebar-btn icon-only" title="Translate"
+                        data-tooltip="Toggle translation panel"><i data-feather="globe"></i></button>
                 </div>
 
                 <div class="sidebar-spacer"></div>
@@ -398,26 +396,24 @@
         <aside class="sidebar sidebar-right">
             <!-- Group 1: Highlights -->
             <div class="sidebar-section">
-                <button id="quickAccessHighlights" class="sidebar-btn icon-only" title="View Highlights" data-tooltip="Show all highlighted text"><i
-                        data-feather="flag"></i></button>
+                <button id="quickAccessHighlights" class="sidebar-btn icon-only" title="View Highlights"
+                    data-tooltip="Show all highlighted text"><i data-feather="flag"></i></button>
             </div>
-
-            <div class="sidebar-divider"></div>
 
             <!-- Group 2: Keywords + Summary -->
             <div class="sidebar-section">
-                <button id="quickAccessKeywords" class="sidebar-btn icon-only" title="Extract Keywords" data-tooltip="Show extracted keywords and terms"><i
-                        data-feather="tag"></i></button>
-                <button id="quickAccessSummary" class="sidebar-btn icon-only" title="Summarise" data-tooltip="Generate text summary"><i
-                        data-feather="file-text"></i></button>
+                <button id="quickAccessKeywords" class="sidebar-btn icon-only" title="Extract Keywords"
+                    data-tooltip="Show extracted keywords and terms"><i data-feather="tag"></i></button>
+                <button id="quickAccessSummary" class="sidebar-btn icon-only" title="Summarise"
+                    data-tooltip="Generate text summary"><i data-feather="file-text"></i></button>
             </div>
 
             <div class="sidebar-spacer"></div>
 
             <!-- Group 3: Settings -->
             <div class="sidebar-section">
-                <button id="quickAccessSettings" class="sidebar-btn icon-only" title="Settings" data-tooltip="Configure app settings"><i
-                        data-feather="settings"></i></button>
+                <button id="quickAccessSettings" class="sidebar-btn icon-only" title="Settings"
+                    data-tooltip="Configure app settings"><i data-feather="settings"></i></button>
             </div>
         </aside>
     </div>
@@ -453,9 +449,9 @@
             let tooltipTimeout = null;
 
             sidebarBtns.forEach(btn => {
-                btn.addEventListener('mouseenter', function() {
+                btn.addEventListener('mouseenter', function () {
                     clearTimeout(tooltipTimeout);
-                    
+
                     // Create tooltip if not exists
                     if (!tooltipElement) {
                         tooltipElement = document.createElement('div');
@@ -464,11 +460,11 @@
                     }
 
                     tooltipElement.textContent = this.getAttribute('data-tooltip');
-                    
+
                     // Position tooltip
                     const rect = this.getBoundingClientRect();
                     const isLeftSidebar = this.closest('.sidebar-left') !== null;
-                    
+
                     if (isLeftSidebar) {
                         // Right side of button
                         tooltipElement.style.left = (rect.right + 10) + 'px';
@@ -486,7 +482,7 @@
                     }, 100);
                 });
 
-                btn.addEventListener('mouseleave', function() {
+                btn.addEventListener('mouseleave', function () {
                     clearTimeout(tooltipTimeout);
                     if (tooltipElement) {
                         tooltipElement.classList.remove('show');
