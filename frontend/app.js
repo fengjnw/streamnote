@@ -900,7 +900,7 @@ class StreamNote {
                         this.isUpdatingUI = false;
                     }, 350);
                 } else {
-                    showContent(keywordsContent, "Auto Keywords");
+                    showContent(keywordsContent, "Keywords");
                 }
             });
         }

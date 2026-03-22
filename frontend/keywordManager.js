@@ -206,7 +206,7 @@ class KeywordManager {
 
         const uniqueKeywords = [...new Set(this.extracts)];
         // showDeleteBtn 设置为 false，自动提取面板中不显示删除按钮
-        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "Click Refresh to generate keywords from your transcription", true, false);
+        this.displayItemList(uniqueKeywords, element, "deleteKeywordItem", "Click Refresh to extract keywords from your transcription", true, false);
 
         // 恢复滚动位置
         element.scrollTop = scrollPosition;
