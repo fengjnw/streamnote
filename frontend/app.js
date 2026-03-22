@@ -923,10 +923,13 @@ class StreamNote {
                         if (!hasContent && this.keywordManager && Object.keys(this.preciseResults).length > 0) {
                             // Auto-trigger keyword extraction
                             this.showStatusMessage("Auto-extracting keywords...", 1000);
+                            // Show loading message in panel
+                            autoKeywordsDisplay.innerHTML = '<p class="placeholder">Extracting keywords...</p>';
                             try {
                                 await this.processKeywords(this.recordingSessionId || this.sessionManager.currentSessionId);
                             } catch (error) {
                                 console.error("[StreamNote] Error auto-extracting keywords:", error);
+                                autoKeywordsDisplay.innerHTML = '<p class="placeholder">Failed to extract keywords</p>';
                             }
                         }
                     }
@@ -970,6 +973,8 @@ class StreamNote {
                             if (textToSummarize && textToSummarize.trim().length > 0) {
                                 // Auto-trigger summary generation
                                 this.showStatusMessage("Auto-generating summary...", 1000);
+                                // Show loading message in panel
+                                summaryDisplay.innerHTML = '<p class="placeholder">Generating summary...</p>';
                                 try {
                                     const selectedStyle = summarizeStyleSelect ? summarizeStyleSelect.value : "paragraph";
                                     const summary = await this.summarizeText(textToSummarize, true, selectedStyle);
@@ -978,6 +983,7 @@ class StreamNote {
                                     }
                                 } catch (error) {
                                     console.error("[SUMMARY] Error auto-generating summary:", error);
+                                    summaryDisplay.innerHTML = '<p class="placeholder">Failed to generate summary</p>';
                                 }
                             }
                         }
