@@ -179,12 +179,7 @@ function createTutorialSession() {
     try {
         const sessions = JSON.parse(localStorage.getItem('streamnote_sessions') || '{}');
 
-        // 如果已经存在 tutorial session，不创建新的
-        if (sessions[TUTORIAL_SESSION_DATA.id]) {
-            return;
-        }
-
-        // 添加示例会话
+        // 始终用最新的教程数据覆盖旧版本（确保用户总是看到最新的教程）
         sessions[TUTORIAL_SESSION_DATA.id] = TUTORIAL_SESSION_DATA;
         localStorage.setItem('streamnote_sessions', JSON.stringify(sessions));
 

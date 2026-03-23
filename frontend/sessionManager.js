@@ -10,6 +10,9 @@ class SessionManager {
         this.CURRENT_SESSION_KEY = 'streamnote_current_session';
         this.DEFAULT_SETTINGS_KEY = 'streamnote_default_settings';
 
+        // 保留的系统session ID（不能被用户创建）
+        this.RESERVED_SESSION_IDS = ['tutorial-session'];
+
         // 全局默认设置（新建session时使用）
         this.defaultSettings = {
             defaultLanguage: "Chinese",
