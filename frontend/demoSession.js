@@ -11,61 +11,61 @@ const DEMO_SESSION_DATA = {
         0: {
             index: 0,
             text: 'Welcome to StreamNote, your intelligent learning assistant. Record classroom lectures or upload transcripts. Get automatic transcription, keyword extraction, instant word explanations, multi-language translation, and powerful summaries to enhance your learning.',
-            timestamp: 0,
+            timestamp: 1,
             source: 'text'
         },
         1: {
             index: 1,
             text: 'StreamNote has a clean, organized layout. Header at the top shows session name and statistics. Center area displays your transcript text. Left sidebar provides quick-access action buttons. Right sidebar contains information panels and tabs.',
-            timestamp: 5,
+            timestamp: 6,
             source: 'text'
         },
         2: {
             index: 2,
             text: 'Left sidebar buttons from top to bottom: 📋 Sessions menu shows all your sessions, ➕ Creates new session, 🎤 Records audio, 📤 Imports documents, ✏️ For Editing, 📖 Shows explanations, 🌐 For Translation.',
-            timestamp: 15,
+            timestamp: 16,
             source: 'text'
         },
         3: {
             index: 3,
             text: 'Right sidebar tabs from top to bottom: 🚩 Highlights tab shows your manually highlighted text, 🏷️ Keywords tab displays auto-extracted important terms, 📃 Summary tab provides intelligent summaries.',
-            timestamp: 20,
+            timestamp: 21,
             source: 'text'
         },
         4: {
             index: 4,
             text: '1. 📚 Add Content: Use the 🎤 to Record audio, or 📤 to import text and documents.',
-            timestamp: 25,
+            timestamp: 26,
             source: 'text'
         },
         5: {
             index: 5,
             text: '2. ✨ Process Text: Select text to 🚩 important phrases, or right-click to 📖 for instant definitions.',
-            timestamp: 30,
+            timestamp: 31,
             source: 'text'
         },
         6: {
             index: 6,
             text: '3. 🔍 Keywords & Highlights: View auto-extracted 🏷️ and your 🚩 in the right sidebar tabs.',
-            timestamp: 35,
+            timestamp: 36,
             source: 'text'
         },
         7: {
             index: 7,
             text: '4. 🌐 Translation: Click 🌐 in sidebar to view translations. Change language from toolbar.',
-            timestamp: 40,
+            timestamp: 41,
             source: 'text'
         },
         8: {
             index: 8,
             text: '5. 📃 Summary: Click 📃 in right sidebar to view intelligent summaries.',
-            timestamp: 45,
+            timestamp: 46,
             source: 'text'
         },
         9: {
             index: 9,
             text: '6. 🚀 Get Started: Click ➕ in sidebar to create new session. Then 🎤 or 📤 to add content.',
-            timestamp: 50,
+            timestamp: 51,
             source: 'text'
         }
     },
