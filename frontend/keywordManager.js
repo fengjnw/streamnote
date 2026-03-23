@@ -83,6 +83,16 @@ class KeywordManager {
         }
 
         try {
+            // === [执行上下文防护] ===
+            const app = window.streamNoteInstance;
+            const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
+            
+            // 启动操作追踪
+            let operationTracker = null;
+            if (app && app.operationManager) {
+                operationTracker = app.operationManager.startKeywords(executionContextSnapshot);
+            }
+
             const payload = {
                 text: text
             };
@@ -92,20 +102,51 @@ class KeywordManager {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload),
+                signal: operationTracker ? operationTracker.getSignal() : undefined
             });
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
 
+            // [防护] 检查执行上下文是否仍然有效
+            if (operationTracker && !operationTracker.isValid(app)) {
+                console.log(`[KeywordManager] extractKeywords: Context changed before reading response`);
+                if (app && app.operationManager) app.operationManager.endKeywords();
+                return [];
+            }
+
             const data = await response.json();
 
+            // [防护] 最后检查一次执行上下文
+            if (operationTracker && !operationTracker.isValid(app)) {
+                console.log(`[KeywordManager] extractKeywords: Context changed after reading response, discarding keywords`);
+                if (app && app.operationManager) app.operationManager.endKeywords();
+                return [];
+            }
+
             this.currentKeywords = data.keywords || [];
+
+            // [防护] 标记操作完成
+            if (operationTracker) {
+                operationTracker.abort('Keywords extraction completed');
+            }
+            if (app && app.operationManager) {
+                app.operationManager.endKeywords();
+            }
+
             return this.currentKeywords;
 
         } catch (error) {
             console.error("[KeywordManager] Error:", error);
+            
+            // [防护] 清理操作追踪
+            const app = window.streamNoteInstance;
+            if (app && app.operationManager) {
+                app.operationManager.endKeywords();
+            }
+            
             return [];
         }
     }
@@ -465,7 +506,20 @@ class KeywordManager {
             return;
         }
 
+        // === [执行上下文防护] ===
+        const app = window.streamNoteInstance;
+        const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
+        const operationTracker = app?.operationManager?.startExplanation(executionContextSnapshot);
+        const abortSignal = operationTracker?.abortController.signal;
+
         try {
+            // [防护] 操作前验证
+            if (operationTracker && !operationTracker.isValid(app)) {
+                console.log(`[KeywordManager] Context changed before explanation fetch`);
+                if (operationTracker) operationTracker.abort('Context changed before request');
+                return;
+            }
+
             // 获取解释语言（从全局 StreamNote 实例）
             const explanationLanguage = window.streamNoteInstance?.explanationLanguage || "English";
 
@@ -474,7 +528,13 @@ class KeywordManager {
 
             // 检查缓存
             if (this.explanationCache[cacheKey]) {
+                // [防护] 显示前最后检查
+                if (operationTracker && !operationTracker.isValid(app)) {
+                    if (operationTracker) operationTracker.abort('Context changed during cache check');
+                    return;
+                }
                 contentElement.innerHTML = `<p>${this.explanationCache[cacheKey]}</p>`;
+                if (operationTracker) operationTracker.abort('Explanation from cache');
                 return;
             }
 
@@ -490,8 +550,16 @@ class KeywordManager {
                     keyword: keyword,
                     language: explanationLanguage,
                     context: context  // 添加上下文
-                })
+                }),
+                signal: abortSignal
             });
+
+            // [防护] 响应后验证
+            if (operationTracker && !operationTracker.isValid(app)) {
+                console.log(`[KeywordManager] Context changed after fetch`);
+                if (operationTracker) operationTracker.abort('Context changed after fetch');
+                return;
+            }
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -507,6 +575,14 @@ class KeywordManager {
 
             try {
                 while (true) {
+                    // [防护] 流中验证，中断完整流
+                    if (operationTracker && !operationTracker.isValid(app)) {
+                        console.log(`[KeywordManager] Context changed during stream`);
+                        reader.cancel();
+                        if (operationTracker) operationTracker.abort('Context changed during stream');
+                        return;
+                    }
+
                     const { done, value } = await reader.read();
                     if (done) break;
 
@@ -529,6 +605,13 @@ class KeywordManager {
                 reader.releaseLock();
             }
 
+            // [防护] 显示前最后验证
+            if (operationTracker && !operationTracker.isValid(app)) {
+                console.log(`[KeywordManager] Context changed before display`);
+                if (operationTracker) operationTracker.abort('Context changed before display');
+                return;
+            }
+
             // 存入缓存
             this.explanationCache[cacheKey] = explanation;
 
@@ -542,8 +625,15 @@ class KeywordManager {
                 }
             }
         } catch (error) {
-            console.error("[KeywordManager] Error fetching explanation:", error);
-            contentElement.innerHTML = `<p class="error">Failed to load explanation: ${error.message}</p>`;
+            if (error.name !== 'AbortError') {
+                console.error("[KeywordManager] Error fetching explanation:", error);
+                contentElement.innerHTML = `<p class="error">Failed to load explanation: ${error.message}</p>`;
+            }
+        } finally {
+            // [防护] 标记操作完成
+            if (operationTracker) {
+                operationTracker.abort('Explanation completed');
+            }
         }
     }
 
@@ -631,6 +721,11 @@ class KeywordManager {
      * @param {string} keyword - 要重新解释的关键词
      */
     async reexplainExplanation(keyword) {
+        // === [执行上下文防护] ===
+        const app = window.streamNoteInstance;
+        const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
+        const operationTracker = app?.operationManager?.startExplanation(executionContextSnapshot);
+
         // 查找对应的 keyword-explanation 元素
         const allExplanations = document.querySelectorAll('.keyword-explanation');
         let wrapper = null;
@@ -644,11 +739,22 @@ class KeywordManager {
 
         if (!wrapper) {
             console.warn(`[KeywordManager] Wrapper not found for keyword: ${keyword}`);
+            if (operationTracker) operationTracker.abort('Wrapper not found');
             return;
         }
 
         const contentElement = wrapper.querySelector('.explanation-content');
-        if (!contentElement) return;
+        if (!contentElement) {
+            if (operationTracker) operationTracker.abort('Content element not found');
+            return;
+        }
+
+        // [防护] 操作前验证
+        if (operationTracker && !operationTracker.isValid(app)) {
+            console.log(`[KeywordManager] Context changed before reexplain`);
+            operationTracker.abort('Context changed before reexplain');
+            return;
+        }
 
         // 显示加载状态
         contentElement.innerHTML = '<p class="placeholder">Refreshing...</p>';
@@ -1001,12 +1107,24 @@ class KeywordManager {
             // [防护] 为这个请求分配递增ID，用于检查是否被新请求取代
             const requestId = ++this.currentExpanationRequestId;
 
+            // === [执行上下文防护] ===
+            // 从全局应用获取当前执行上下文的快照
+            const app = window.streamNoteInstance;
+            const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
+            
+            // 启动操作追踪
+            let operationTracker = null;
+            if (app && app.operationManager) {
+                operationTracker = app.operationManager.startExplanation(executionContextSnapshot);
+            }
+
             // [FIX] 确保contentElement有效，如果无效则重新获取
             if (!contentElement || !contentElement.parentElement) {
                 console.warn(`[KeywordManager] Request ${requestId}: contentElement is stale, re-fetching...`);
                 contentElement = document.getElementById("explanation-content");
                 if (!contentElement) {
                     console.error(`[KeywordManager] Request ${requestId}: Cannot find explanation-content element!`);
+                    if (operationTracker) operationTracker.abort('contentElement not found');
                     return;
                 }
             }
@@ -1023,7 +1141,8 @@ class KeywordManager {
                     keyword: keyword,
                     language: explanationLanguage,
                     context: context
-                })
+                }),
+                signal: operationTracker ? operationTracker.getSignal() : undefined
             });
 
             if (!response.ok) {
@@ -1042,9 +1161,17 @@ class KeywordManager {
                     const { done, value } = await reader.read();
                     if (done) break;
 
-                    // [防护] 每次读取chunk前检查是否被新请求取代
+                    // [防护] 每次读取chunk前检查是否被新请求取代（requestId）
                     if (this.currentExpanationRequestId !== requestId) {
                         reader.releaseLock();
+                        if (operationTracker) operationTracker.abort('New explanation requested');
+                        return;
+                    }
+
+                    // [防护] 检查执行上下文是否仍然有效
+                    if (operationTracker && !operationTracker.isValid(app)) {
+                        reader.releaseLock();
+                        console.log(`[KeywordManager] Request ${requestId}: Execution context changed: ${ExecutionContext.getChangeReason(executionContextSnapshot, app)}`);
                         return;
                     }
 
@@ -1074,6 +1201,14 @@ class KeywordManager {
 
                 // [防护] 最后检查一次是否被新请求取代
                 if (this.currentExpanationRequestId !== requestId) {
+                    if (operationTracker) operationTracker.abort('New explanation requested (final check)');
+                    return;
+                }
+
+                // [防护] 检查执行上下文是否仍然有效
+                if (operationTracker && !operationTracker.isValid(app)) {
+                    console.log(`[KeywordManager] Request ${requestId}: Execution context changed at final: ${ExecutionContext.getChangeReason(executionContextSnapshot, app)}`);
+                    if (operationTracker) operationTracker.abort('Execution context changed');
                     return;
                 }
 
@@ -1091,6 +1226,12 @@ class KeywordManager {
                 reader.releaseLock();
             }
 
+            // [防护] 在保存数据前最后检查一次执行上下文
+            if (operationTracker && !operationTracker.isValid(app)) {
+                console.log(`[KeywordManager] Request ${requestId}: Context changed before cache save, discarding result`);
+                return;
+            }
+
             // 存入缓存
             this.explanationCache[cacheKey] = explanation;
 
@@ -1100,8 +1241,31 @@ class KeywordManager {
             // 获取context并保存完整的历史记录
             const contextInfo = this.updateWordContext(keyword);
             this.saveExplanationHistory(keyword, explanation, contextInfo);
+
+            // [防护] 标记操作完成
+            if (operationTracker) {
+                operationTracker.abort('Explanation completed successfully');
+            }
+            if (app && app.operationManager) {
+                app.operationManager.endExplanation();
+            }
         } catch (error) {
             console.error("[KeywordManager] Error fetching explanation:", error);
+            
+            // [防护] 标记操作已出错
+            if (operationTracker) {
+                operationTracker.abort(`Error: ${error.message}`);
+            }
+            if (app && app.operationManager) {
+                app.operationManager.endExplanation();
+            }
+
+            // 只有当执行上下文仍然有效时才显示错误
+            if (operationTracker && !operationTracker.isValid(app)) {
+                console.log(`[KeywordManager] Request ${requestId}: Context changed, not displaying error`);
+                return;
+            }
+
             if (contentElement && contentElement.parentElement) {
                 contentElement.innerHTML = '';
                 const p = document.createElement('p');
@@ -1539,10 +1703,25 @@ class KeywordManager {
      * 重新解释当前显示词
      */
     async reexplainCurrentExplanation() {
+        // === [执行上下文防护] ===
+        const app = window.streamNoteInstance;
+        const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
+        const operationTracker = app?.operationManager?.startExplanation(executionContextSnapshot);
+
         const currentWordEl = document.getElementById("current-explanation-word");
         const contentElement = document.getElementById("explanation-content");
 
-        if (!currentWordEl || !contentElement) return;
+        if (!currentWordEl || !contentElement) {
+            if (operationTracker) operationTracker.abort('Elements not found');
+            return;
+        }
+
+        // [防护] 操作前验证
+        if (operationTracker && !operationTracker.isValid(app)) {
+            console.log(`[KeywordManager] Context changed before reexplain current`);
+            operationTracker.abort('Context changed before reexplain');
+            return;
+        }
 
         const word = currentWordEl.textContent;
         const explanationLanguage = window.streamNoteInstance?.explanationLanguage || "English";
@@ -1694,6 +1873,18 @@ class KeywordManager {
     async restoreExplanationHistoryRecord(historyRecord) {
         if (!historyRecord) return;
 
+        // === [执行上下文防护] ===
+        const app = window.streamNoteInstance;
+        const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
+        const operationTracker = app?.operationManager?.startExplanation(executionContextSnapshot);
+
+        // [防护] 操作前验证
+        if (operationTracker && !operationTracker.isValid(app)) {
+            console.log(`[KeywordManager] Context changed before restore history`);
+            operationTracker.abort('Context changed before restore');
+            return;
+        }
+
         const { word, explanation, context, sourceIndices, language } = historyRecord;
 
         // 更新 UI
@@ -1702,6 +1893,13 @@ class KeywordManager {
         const contextDiv = document.getElementById("word-context");
         const contextText = document.getElementById("context-text");
         const headerDiv = document.querySelector(".explanation-header");
+
+        // [防护] UI元素验证后再操作
+        if (operationTracker && !operationTracker.isValid(app)) {
+            console.log(`[KeywordManager] Context changed during UI setup`);
+            operationTracker.abort('Context changed during setup');
+            return;
+        }
 
         if (wordElement) wordElement.textContent = word;
 
@@ -1727,6 +1925,11 @@ class KeywordManager {
                 sourceIndices: sourceIndices
             };
             this.wordSourcePanel[word] = historyRecord.sourcePanel || 'transcript';
+        }
+
+        // [防护] 标记操作完成
+        if (operationTracker) {
+            operationTracker.abort('History restore completed');
         }
     }
 

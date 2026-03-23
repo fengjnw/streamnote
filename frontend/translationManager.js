@@ -34,6 +34,16 @@ class TranslationManager {
     async translateText(text, index, targetSessionId = null, context = "") {
         if (!text || !this.enabled) return;
 
+        // === [执行上下文防护] ===
+        const app = window.streamNoteInstance;
+        const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
+        
+        // 启动操作追踪
+        let operationTracker = null;
+        if (app && app.operationManager) {
+            operationTracker = app.operationManager.startTranslation(index, executionContextSnapshot);
+        }
+
         try {
             const response = await fetch(this.translateApiUrl, {
                 method: "POST",
@@ -44,11 +54,14 @@ class TranslationManager {
                     text: text,
                     target_lang: this.language,
                     context: context || ""  // 传递上下文信息以改进翻译准确性
-                })
+                }),
+                signal: operationTracker ? operationTracker.getSignal() : undefined
             });
 
             if (!response.ok) {
                 console.error(`[ERROR] Translation API error: ${response.status}`);
+                if (operationTracker) operationTracker.abort(`API error: ${response.status}`);
+                if (app && app.operationManager) app.operationManager.endTranslation(index);
                 return;
             }
 
@@ -61,6 +74,13 @@ class TranslationManager {
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
+
+                    // [防护] 检查执行上下文是否仍然有效
+                    if (operationTracker && !operationTracker.isValid(app)) {
+                        reader.releaseLock();
+                        console.log(`[TranslationManager] Index ${index}: Execution context changed: ${ExecutionContext.getChangeReason(executionContextSnapshot, app)}`);
+                        return;
+                    }
 
                     const chunk = decoder.decode(value, { stream: true });
                     translation += chunk;
@@ -81,6 +101,13 @@ class TranslationManager {
                 // 刷新解码器缓冲区，获取最后的字符
                 const finalChunk = decoder.decode();
                 translation += finalChunk;
+
+                // [防护] 保存前最后检查一次执行上下文
+                if (operationTracker && !operationTracker.isValid(app)) {
+                    console.log(`[TranslationManager] Index ${index}: Context changed before final save, discarding result`);
+                    return;
+                }
+
                 if (finalChunk) {
                     this.translationResults[index] = translation;
                     this.onTranslationProgress({
@@ -95,8 +122,24 @@ class TranslationManager {
                 reader.releaseLock();
             }
 
+            // [防护] 标记操作完成
+            if (operationTracker) {
+                operationTracker.abort('Translation completed successfully');
+            }
+            if (app && app.operationManager) {
+                app.operationManager.endTranslation(index);
+            }
+
         } catch (error) {
             console.error("[ERROR] Translation request failed:", error);
+            
+            // [防护] 清理操作追踪
+            if (operationTracker) {
+                operationTracker.abort(`Error: ${error.message}`);
+            }
+            if (app && app.operationManager) {
+                app.operationManager.endTranslation(index);
+            }
         }
     }
 
@@ -106,6 +149,11 @@ class TranslationManager {
     async retranslateAll() {
         const session = this.getSessionData();
         if (!session) return;
+
+        // === [执行上下文防护 - 记录起始状态] ===
+        const app = window.streamNoteInstance;
+        const initialLanguage = this.language;
+        const initialContextVersion = app ? (app.executionContextVersion || 0) : 0;
 
         // 检查当前语言的缓存是否完整
         const currentLangCache = session.translations[this.language] || {};
@@ -145,6 +193,15 @@ class TranslationManager {
         // 翻译缺失的部分
         let translated = 0;
         for (const [index, item] of Object.entries(preciseResults)) {
+            // [防护] 检查语言或会话是否改变
+            if (app && (this.language !== initialLanguage || (app.executionContextVersion || 0) !== initialContextVersion)) {
+                console.log(`[TranslationManager] retranslateAll interrupted: language or context changed`);
+                if (missingCount > 5) {
+                    this.onStatusUpdate(`Translation interrupted`);
+                }
+                break;
+            }
+
             if (item && item.text && !this.translationResults[index]) {
                 await this.translateText(item.text, index);
                 translated++;
@@ -172,6 +229,11 @@ class TranslationManager {
         const session = this.getSessionData();
         if (!session) return;
 
+        // === [执行上下文防护] ===
+        const app = window.streamNoteInstance;
+        const initialLanguage = this.language;
+        const initialDisplaySessionId = app ? app.displaySessionId : null;
+
         // 加载当前语言的缓存
         const currentLangCache = session.translations[this.language] || {};
         this.translationResults = { ...currentLangCache };
@@ -180,6 +242,12 @@ class TranslationManager {
         const preciseResults = this.getPreciseResults();
         let hasUntranslated = false;
         for (const [index, item] of Object.entries(preciseResults)) {
+            // [防护] 检查会话或语言是否改变
+            if (app && (app.displaySessionId !== initialDisplaySessionId || this.language !== initialLanguage)) {
+                console.log(`[TranslationManager] translateMissingContent interrupted: session or language changed`);
+                break;
+            }
+
             if (item && item.text && !this.translationResults[index]) {
                 hasUntranslated = true;
                 await this.translateText(item.text, index);

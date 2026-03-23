@@ -31,6 +31,14 @@ class StreamNote {
         this.recordingSessionId = null;  // 记录当前正在转录的 session
         this.displaySessionId = null;    // 当前显示的 session（用户看到的）
 
+        // === 执行上下文管理 ===
+        // 版本号：每当会话/语言/格式等关键状态变更时递增
+        // 用于防止竞态条件：并发操作可以通过检查版本号来判断上下文是否已变更
+        this.executionContextVersion = 0;
+
+        // 全局操作管理器：管理所有正在进行的异步操作（解释、翻译、摘要等）
+        this.operationManager = new OperationManager();
+
         // 文本选中菜单
         this.selectedText = "";
         this.selectedTextElement = null;
@@ -266,6 +274,14 @@ class StreamNote {
     loadCurrentSession() {
         const session = this.sessionManager.getCurrentSession();
         if (!session) return;
+
+        // === 执行上下文更新 ===
+        // 递增版本号，标记所有活跃操作的上下文已失效
+        this.executionContextVersion++;
+
+        // 中止所有进行中的操作（解释、翻译、摘要等）
+        // 这样可以避免前一个会话的数据被应用到新会话
+        this.operationManager.abortAll(`Session switched to ${this.sessionManager.currentSessionId}`);
 
         // 设置当前显示的 session
         this.displaySessionId = this.sessionManager.currentSessionId;
@@ -737,6 +753,12 @@ class StreamNote {
         const languageSelector = document.getElementById("target-language");
         if (languageSelector) {
             languageSelector.addEventListener("change", async (e) => {
+                // === 执行上下文更新 ===
+                // 翻译语言变更，递增版本号使所有进行中的翻译操作失效
+                this.executionContextVersion++;
+                // 中止所有进行中的翻译操作
+                this.operationManager.abortAllTranslations(`Translation language changed to ${e.target.value}`);
+
                 this.language = e.target.value;
                 this.translationManager.setLanguage(this.language);
 
@@ -757,6 +779,12 @@ class StreamNote {
         const keywordExplanationLangSelector = document.getElementById("keyword-explanation-language");
         if (keywordExplanationLangSelector) {
             keywordExplanationLangSelector.addEventListener("change", (e) => {
+                // === 执行上下文更新 ===
+                // 解释语言变更，递增版本号使所有进行中的解释操作失效
+                this.executionContextVersion++;
+                // 中止当前进行中的解释操作
+                this.operationManager.endExplanation();
+
                 this.explanationLanguage = e.target.value;
 
                 // 保存设置到 session
@@ -3894,11 +3922,19 @@ class StreamNote {
         }
 
         try {
+            // === [执行上下文防护] ===
+            const executionContextSnapshot = ExecutionContext.createSnapshot(this);
+            
+            // 启动操作追踪
+            const operationTracker = this.operationManager ? this.operationManager.startSummary(executionContextSnapshot) : null;
+
             const language = this.explanationLanguage;
             const cacheKey = `${language}-${style}`;
 
             // 检查该语言和风格组合的缓存（除非强制刷新）
             if (!forceRefresh && this.summaryCache[cacheKey]) {
+                if (operationTracker) operationTracker.abort('Summary found in cache');
+                if (this.operationManager) this.operationManager.endSummary();
                 return this.summaryCache[cacheKey];
             }
 
@@ -3911,11 +3947,14 @@ class StreamNote {
                     text: text,
                     language: language,
                     style: style
-                })
+                }),
+                signal: operationTracker ? operationTracker.getSignal() : undefined
             });
 
             if (!response.ok) {
                 console.error(`[ERROR] Summarization API error: ${response.status}`);
+                if (operationTracker) operationTracker.abort(`API error: ${response.status}`);
+                if (this.operationManager) this.operationManager.endSummary();
                 return null;
             }
 
@@ -3928,6 +3967,14 @@ class StreamNote {
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
+
+                    // [防护] 检查执行上下文是否仍然有效
+                    if (operationTracker && !operationTracker.isValid(this)) {
+                        reader.releaseLock();
+                        console.log(`[Summarization] Execution context changed: ${ExecutionContext.getChangeReason(executionContextSnapshot, this)}`);
+                        if (this.operationManager) this.operationManager.endSummary();
+                        return null;
+                    }
 
                     const chunk = decoder.decode(value, { stream: true });
                     summary += chunk;
@@ -3948,6 +3995,14 @@ class StreamNote {
                 // 刷新解码器缓冲区，获取最后的字符
                 const finalChunk = decoder.decode();
                 summary += finalChunk;
+
+                // [防护] 保存前最后检查一次执行上下文
+                if (operationTracker && !operationTracker.isValid(this)) {
+                    console.log(`[Summarization] Context changed before final save, discarding result`);
+                    if (this.operationManager) this.operationManager.endSummary();
+                    return null;
+                }
+
                 if (finalChunk) {
                     // 按语言和风格缓存结果
                     this.summaryCache[cacheKey] = summary;
@@ -3963,6 +4018,14 @@ class StreamNote {
                 reader.releaseLock();
             }
 
+            // [防护] 标记操作完成
+            if (operationTracker) {
+                operationTracker.abort('Summary completed successfully');
+            }
+            if (this.operationManager) {
+                this.operationManager.endSummary();
+            }
+
             if (summary) {
                 return summary;
             }
@@ -3971,6 +4034,11 @@ class StreamNote {
 
         } catch (error) {
             console.error("[ERROR] Summarization request failed:", error);
+            
+            // [防护] 清理操作追踪
+            if (this.operationManager) {
+                this.operationManager.endSummary();
+            }
             throw error;
         }
     }
@@ -3984,6 +4052,13 @@ class StreamNote {
     async processKeywords(targetSessionId = null) {
         if (!this.keywordManager) return;
 
+        // === [执行上下文防护] ===
+        const executionContextSnapshot = ExecutionContext.createSnapshot(this);
+        let operationTracker = null;
+        if (this.operationManager) {
+            operationTracker = this.operationManager.startKeywords(executionContextSnapshot);
+        }
+
         // 收集所有转录文本（保证准确率）
         const preciseResults = this.recordingManager.getTranscriptData();
         this.currentTranscriptText = Object.values(preciseResults)
@@ -3991,6 +4066,12 @@ class StreamNote {
             .join(" ");
 
         if (this.currentTranscriptText.length > 10) {
+            // [防护] 检查执行上下文是否仍然有效
+            if (operationTracker && !operationTracker.isValid(this)) {
+                console.log(`[Keywords] Execution context changed before extraction`);
+                if (this.operationManager) this.operationManager.endKeywords();
+                return;
+            }
 
             // 基于整个文本提取关键词
             await this.keywordManager.processText(this.currentTranscriptText);
@@ -3998,11 +4079,26 @@ class StreamNote {
             // 更新所有显示
             this.keywordManager.updateAllKeywordDisplays();
 
+            // [防护] 保存前最后检查一次执行上下文
+            if (operationTracker && !operationTracker.isValid(this)) {
+                console.log(`[Keywords] Execution context changed before save, discarding keywords`);
+                if (this.operationManager) this.operationManager.endKeywords();
+                return;
+            }
+
             // 保存提取的关键词到当前 session
             const sessionId = targetSessionId || this.recordingSessionId || this.sessionManager.currentSessionId;
             if (sessionId && this.sessionManager) {
                 this.sessionManager.updateKeywordsForSession(sessionId, this.keywordManager.extracts);
             }
+        }
+
+        // [防护] 标记操作完成
+        if (operationTracker) {
+            operationTracker.abort('Keywords processing completed');
+        }
+        if (this.operationManager) {
+            this.operationManager.endKeywords();
         }
     }
 
@@ -4012,6 +4108,13 @@ class StreamNote {
     async reprocessAllKeywords() {
         if (!this.keywordManager) return;
 
+        // === [执行上下文防护] ===
+        const executionContextSnapshot = ExecutionContext.createSnapshot(this);
+        let operationTracker = null;
+        if (this.operationManager) {
+            operationTracker = this.operationManager.startKeywords(executionContextSnapshot);
+        }
+
         // 获取当前的全文
         const preciseResults = this.recordingManager.getTranscriptData();
         this.currentTranscriptText = Object.values(preciseResults)
@@ -4019,6 +4122,12 @@ class StreamNote {
             .join(" ");
 
         if (this.currentTranscriptText.length > 10) {
+            // [防护] 检查执行上下文是否仍然有效
+            if (operationTracker && !operationTracker.isValid(this)) {
+                console.log(`[Keywords] Execution context changed before reprocessing`);
+                if (this.operationManager) this.operationManager.endKeywords();
+                return;
+            }
 
             // 清空自动提取的关键词（保留高亮的）
             this.keywordManager.extracts = [];
@@ -4026,8 +4135,23 @@ class StreamNote {
             // 重新提取
             await this.keywordManager.processText(this.currentTranscriptText);
 
+            // [防护] 更新前最后检查一次执行上下文
+            if (operationTracker && !operationTracker.isValid(this)) {
+                console.log(`[Keywords] Execution context changed before update, discarding`);
+                if (this.operationManager) this.operationManager.endKeywords();
+                return;
+            }
+
             // 更新所有显示
             this.keywordManager.updateAllKeywordDisplays();
+        }
+
+        // [防护] 标记操作完成
+        if (operationTracker) {
+            operationTracker.abort('Keywords reprocessing completed');
+        }
+        if (this.operationManager) {
+            this.operationManager.endKeywords();
         }
     }
 

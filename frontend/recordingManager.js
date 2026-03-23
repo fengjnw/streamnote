@@ -237,6 +237,10 @@ class RecordingManager {
         this.chunkIndex += 1;
         const sessionIdAtRequest = sessionId;
 
+        // === [执行上下文防护] ===
+        const app = window.streamNoteInstance;
+        const displaySessionIdAtRequest = app ? app.displaySessionId : sessionIdAtRequest;
+
         // 显示转录进行中的状态
         this.isTranscribing = true;
         this.onStatusUpdate("Transcripting...");
@@ -279,6 +283,12 @@ class RecordingManager {
                 if (!this.isRecording) {
                     this.onStatusUpdate("");
                 }
+                return;
+            }
+
+            // [防护] 检查会话是否已切换，防止数据污染
+            if (app && app.displaySessionId !== displaySessionIdAtRequest) {
+                console.log(`[RecordingManager] Session changed from ${displaySessionIdAtRequest} to ${app.displaySessionId}, discarding transcription result`);
                 return;
             }
 
