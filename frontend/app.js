@@ -3092,7 +3092,7 @@ class StreamNote {
 
             // 格式化时间戳为 HH:MM:SS
             let timestamp;
-            if (item.timestamp) {
+            if (item.timestamp !== undefined && item.timestamp !== null && item.timestamp !== '') {
                 let timeValue = item.timestamp;
                 let timestamp_str = null;
 
@@ -3234,7 +3234,7 @@ class StreamNote {
 
             // 格式化时间戳为 HH:MM:SS
             let timestamp;
-            if (item.timestamp) {
+            if (item.timestamp !== undefined && item.timestamp !== null && item.timestamp !== '') {
                 let timeValue = item.timestamp;
                 let timestamp_str = null;
 

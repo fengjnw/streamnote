@@ -11,49 +11,49 @@ const TUTORIAL_SESSION_DATA = {
         0: {
             index: 0,
             text: 'Welcome to StreamNote, your intelligent learning assistant for managing lecture notes and transcripts.',
-            timestamp: 1,
+            timestamp: 0,
             source: 'text'
         },
         1: {
             index: 1,
             text: 'All feature buttons are on the left and right sidebars. Let\'s explore the main features with a quick walkthrough.',
-            timestamp: 6,
+            timestamp: 5,
             source: 'text'
         },
         2: {
             index: 2,
             text: '1. Start Here: Click ➕ to create a new session for your lecture. You can always come back by clicking 📋 to open sessions, then select Tutorial.',
-            timestamp: 11,
+            timestamp: 10,
             source: 'text'
         },
         3: {
             index: 3,
             text: '2. Record Your Lecture: Click the 🎤 button to record audio, or use 📤 to upload files (DOCX, TXT, PDF), or paste text directly. StreamNote converts audio and documents to text automatically.',
-            timestamp: 16,
+            timestamp: 15,
             source: 'text'
         },
         4: {
             index: 4,
             text: '3. Understand Globally: Click 🌐 to translate your recorded content into other languages. Use the toolbar to select your preferred language.',
-            timestamp: 21,
+            timestamp: 20,
             source: 'text'
         },
         5: {
             index: 5,
             text: '4. Interactive Learning: While reviewing, select important phrases to 🚩 highlight them, or for 📖 instant explanation.',
-            timestamp: 26,
+            timestamp: 25,
             source: 'text'
         },
         6: {
             index: 6,
             text: '5. Extract Key Concepts: Click the 🏷️ button to see auto-extracted keywords from your lecture.',
-            timestamp: 31,
+            timestamp: 30,
             source: 'text'
         },
         7: {
             index: 7,
             text: '6. Quick Review: Click 📃 to get intelligent summaries of the entire lecture. Multiple formats available. Perfect for studying later.',
-            timestamp: 36,
+            timestamp: 35,
             source: 'text'
         }
     },
