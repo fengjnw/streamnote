@@ -1064,9 +1064,9 @@ class StreamNote {
             });
         }
 
-        // Summary style selector - load cached summary or show placeholder
+        // Summary style selector - load cached summary or auto-generate if needed
         if (summarizeStyleSelect) {
-            summarizeStyleSelect.addEventListener("change", () => {
+            summarizeStyleSelect.addEventListener("change", async () => {
                 const session = this.sessionManager.getCurrentSession();
                 const language = this.explanationLanguage;
                 const selectedStyle = summarizeStyleSelect.value;
@@ -1076,8 +1076,37 @@ class StreamNote {
                 if (this.summaryCache[cacheKey]) {
                     summaryDisplay.innerHTML = this.formatSummaryDisplay(this.summaryCache[cacheKey], selectedStyle);
                 } else {
-                    // 没有缓存，显示提示需要重新生成
-                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
+                    // 检查是否有其他样式的内容（说明用户已生成过总结）
+                    const hasContent = summaryDisplay.children.length > 0 &&
+                        !summaryDisplay.querySelector(".placeholder");
+
+                    if (hasContent) {
+                        // 自动生成新的风格
+                        try {
+                            let textToSummarize = "";
+                            if (session && session.transcripts) {
+                                textToSummarize = Object.values(session.transcripts)
+                                    .map(item => item && item.text ? item.text : "")
+                                    .filter(text => text.trim().length > 0)
+                                    .join(" ");
+                            }
+
+                            if (textToSummarize && textToSummarize.trim().length > 0) {
+                                this.showStatusMessage("Generating summary...", 1000);
+                                summaryDisplay.innerHTML = '<p class="placeholder">Generating summary...</p>';
+                                const summary = await this.summarizeText(textToSummarize, true, selectedStyle);
+                                if (summary) {
+                                    summaryDisplay.innerHTML = this.formatSummaryDisplay(summary, selectedStyle);
+                                }
+                            }
+                        } catch (error) {
+                            console.error("[SUMMARY] Error auto-generating summary:", error);
+                            summaryDisplay.innerHTML = '<p class="placeholder">Failed to generate summary</p>';
+                        }
+                    } else {
+                        // 没有缓存也没有其他内容，显示提示
+                        summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
+                    }
                 }
             });
         }
@@ -1085,7 +1114,7 @@ class StreamNote {
         // Summary language selector
         const summaryLanguageSelector = document.getElementById("summary-language");
         if (summaryLanguageSelector) {
-            summaryLanguageSelector.addEventListener("change", (e) => {
+            summaryLanguageSelector.addEventListener("change", async (e) => {
                 this.explanationLanguage = e.target.value;
                 const selectedStyle = summarizeStyleSelect ? summarizeStyleSelect.value : "paragraph";
                 const cacheKey = `${this.explanationLanguage}-${selectedStyle}`;
@@ -1094,8 +1123,38 @@ class StreamNote {
                 if (this.summaryCache[cacheKey]) {
                     summaryDisplay.innerHTML = this.formatSummaryDisplay(this.summaryCache[cacheKey], selectedStyle);
                 } else {
-                    // 没有缓存，显示提示需要重新生成
-                    summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
+                    // 检查是否有其他语言的内容（说明用户已生成过总结）
+                    const hasContent = summaryDisplay.children.length > 0 &&
+                        !summaryDisplay.querySelector(".placeholder");
+
+                    if (hasContent) {
+                        // 自动生成新的语言
+                        try {
+                            const session = this.sessionManager.getCurrentSession();
+                            let textToSummarize = "";
+                            if (session && session.transcripts) {
+                                textToSummarize = Object.values(session.transcripts)
+                                    .map(item => item && item.text ? item.text : "")
+                                    .filter(text => text.trim().length > 0)
+                                    .join(" ");
+                            }
+
+                            if (textToSummarize && textToSummarize.trim().length > 0) {
+                                this.showStatusMessage("Generating summary...", 1000);
+                                summaryDisplay.innerHTML = '<p class="placeholder">Generating summary...</p>';
+                                const summary = await this.summarizeText(textToSummarize, true, selectedStyle);
+                                if (summary) {
+                                    summaryDisplay.innerHTML = this.formatSummaryDisplay(summary, selectedStyle);
+                                }
+                            }
+                        } catch (error) {
+                            console.error("[SUMMARY] Error auto-generating summary:", error);
+                            summaryDisplay.innerHTML = '<p class="placeholder">Failed to generate summary</p>';
+                        }
+                    } else {
+                        // 没有缓存也没有其他内容，显示提示
+                        summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
+                    }
                 }
 
                 // 更新其他地方的explanationLanguage选择器
