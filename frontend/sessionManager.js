@@ -13,7 +13,8 @@ class SessionManager {
         // 全局默认设置（新建session时使用）
         this.defaultSettings = {
             defaultLanguage: "Chinese",
-            defaultExplanationLanguage: "Chinese"
+            defaultExplanationLanguage: "Chinese",
+            loadDemoSession: true
         };
 
         // 验证函数：检查是否允许切换到指定 session（由外部代码如 app.js 注册）
@@ -151,16 +152,45 @@ class SessionManager {
                 });
             }
 
-            const currentId = localStorage.getItem(this.CURRENT_SESSION_KEY);
-            if (currentId && this.sessions[currentId]) {
-                this.currentSessionId = currentId;
+            // 检查是否应该加载示例会话（基于设置）
+            if (this.defaultSettings.loadDemoSession !== false) {
+                // 如果启用了 loadDemoSession，则每次都加载/显示演示会话
+                if (createDemoSession) {
+                    createDemoSession();
+                    // 重新加载一次 sessions
+                    const saved = localStorage.getItem(this.STORAGE_KEY);
+                    if (saved) {
+                        this.sessions = JSON.parse(saved);
+                    }
+                    // 将当前 session 设置为示例会话
+                    if (this.sessions[DEMO_SESSION_DATA.id]) {
+                        this.currentSessionId = DEMO_SESSION_DATA.id;
+                    }
+                }
             } else {
-                // 创建默认 session，使用当前时间作为名称
-                this.createNewSession();
+                // 如果禁用了演示会话，使用保存的 currentId 或创建新 session
+                const currentId = localStorage.getItem(this.CURRENT_SESSION_KEY);
+                if (currentId && this.sessions[currentId]) {
+                    this.currentSessionId = currentId;
+                } else {
+                    this.createNewSession();
+                }
             }
         } catch (error) {
             console.error('[SessionManager] Load error:', error);
-            this.createNewSession();
+            // 检查是否应该加载示例会话
+            if (this.defaultSettings.loadDemoSession !== false && createDemoSession) {
+                createDemoSession();
+                const saved = localStorage.getItem(this.STORAGE_KEY);
+                if (saved) {
+                    this.sessions = JSON.parse(saved);
+                }
+                if (this.sessions[DEMO_SESSION_DATA.id]) {
+                    this.currentSessionId = DEMO_SESSION_DATA.id;
+                }
+            } else {
+                this.createNewSession();
+            }
         }
     }
 
@@ -767,6 +797,22 @@ class SessionManager {
         // 清空所有数据
         document.getElementById('clearAllBtn')?.addEventListener('click', () => {
             this.clearAllSessions();
+        });
+
+        // 加载示例会话
+        document.getElementById('loadDemoBtn')?.addEventListener('click', () => {
+            if (createDemoSession) {
+                createDemoSession();
+                // 重新加载 sessions
+                const saved = localStorage.getItem(this.STORAGE_KEY);
+                if (saved) {
+                    this.sessions = JSON.parse(saved);
+                }
+                // 切换到示例会话
+                if (this.sessions[DEMO_SESSION_DATA.id] && DEMO_SESSION_DATA) {
+                    this.switchSession(DEMO_SESSION_DATA.id);
+                }
+            }
         });
 
         // 重命名session

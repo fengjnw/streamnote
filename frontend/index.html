@@ -195,6 +195,8 @@
                             <button class="session-menu-item" id="exportAllBtn" title="Export all sessions">Export
                                 All</button>
                             <button class="session-menu-item" id="importBtn" title="Import sessions">Import</button>
+                            <button class="session-menu-item" id="loadDemoBtn" title="Load demo session">Load
+                                Demo</button>
                             <button class="session-menu-item danger" id="clearAllBtn" title="Clear all sessions">Clear
                                 All</button>
                         </div>
@@ -264,6 +266,17 @@
                                             <option value="Japanese">日本語</option>
                                             <option value="Korean">한국어</option>
                                         </select>
+                                    </div>
+                                </div>
+                                <div class="settings-section">
+                                    <h4 class="settings-section-title">Demo Session</h4>
+                                    <div class="settings-item">
+                                        <label for="loadDemoSessionToggle"
+                                            style="display: flex; align-items: center; cursor: pointer;">
+                                            <input type="checkbox" id="loadDemoSessionToggle" checked
+                                                style="margin-right: 8px; cursor: pointer;" />
+                                            Show Demo Session on Startup
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -433,6 +446,7 @@
     </div>
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="demoSession.js"></script>
     <script src="sessionManager.js"></script>
     <script src="keywordManager.js"></script>
     <script src="recordingManager.js"></script>
