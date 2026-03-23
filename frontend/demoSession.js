@@ -103,7 +103,6 @@ const DEMO_SESSION_DATA = {
 
     // 手动高亮的关键词（演示高亮功能）
     highlights: [
-        'Highlight',
         'Keywords',
         'Summary',
         'Translation'
@@ -111,11 +110,6 @@ const DEMO_SESSION_DATA = {
 
     // 高亮位置信息（用于精确提取上下文）
     highlightPositions: {
-        'Highlight': {
-            sourceIndices: [5],
-            startIndex: 18,
-            endIndex: 27
-        },
         'Keywords': {
             sourceIndices: [6],
             startIndex: 19,
