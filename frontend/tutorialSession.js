@@ -1,12 +1,12 @@
 /**
- * 示例会话数据 - 用于首次用户引导
+ * 教程会话数据 - 用于首次用户引导
  */
 
 const TUTORIAL_SESSION_DATA = {
-    id: 'demo-session',
+    id: 'tutorial-session',
     name: 'Tutorial',
 
-    // 示例转录内容（演示文本选中和高亮功能）
+    // 教程转录内容（演示文本选中和高亮功能）
     transcripts: {
         0: {
             index: 0,
@@ -72,10 +72,54 @@ const TUTORIAL_SESSION_DATA = {
     keywords: [],
 
     // 手动高亮的关键词（演示高亮功能）
-    highlights: [],
+    highlights: [
+        'StreamNote',
+        'Start Here',
+        'Record Your Lecture',
+        'Understand Globally',
+        'Interactive Learning',
+        'Extract Key Concepts',
+        'Quick Review'
+    ],
 
     // 高亮位置信息（用于精确提取上下文）
-    highlightPositions: {},
+    highlightPositions: {
+        'StreamNote': {
+            sourceIndices: [0],
+            startIndex: 11,
+            endIndex: 21
+        },
+        'Start Here': {
+            sourceIndices: [2],
+            startIndex: 3,
+            endIndex: 13
+        },
+        'Record Your Lecture': {
+            sourceIndices: [3],
+            startIndex: 3,
+            endIndex: 23
+        },
+        'Understand Globally': {
+            sourceIndices: [4],
+            startIndex: 3,
+            endIndex: 22
+        },
+        'Interactive Learning': {
+            sourceIndices: [5],
+            startIndex: 3,
+            endIndex: 23
+        },
+        'Extract Key Concepts': {
+            sourceIndices: [6],
+            startIndex: 3,
+            endIndex: 23
+        },
+        'Quick Review': {
+            sourceIndices: [7],
+            startIndex: 3,
+            endIndex: 15
+        }
+    },
 
     // 关键词解释缓存
     keywordCache: {},
@@ -92,7 +136,7 @@ const TUTORIAL_SESSION_DATA = {
     // 元数据
     contentMetadata: {
         source: 'text',
-        sourceFile: 'demo.txt',
+        sourceFile: 'tutorial.txt',
         uploadTime: Date.now(),
         paragraphCount: 10
     },
@@ -116,9 +160,9 @@ const TUTORIAL_SESSION_DATA = {
 };
 
 /**
- * 检查是否应该加载示例会话（第一次使用）
+ * 检查是否应该加载教程会话（第一次使用）
  */
-function shouldLoadDemoSession() {
+function shouldLoadTutorialSession() {
     try {
         const sessions = localStorage.getItem('streamnote_sessions');
         // 如果没有已保存的会话，返回 true
@@ -129,13 +173,13 @@ function shouldLoadDemoSession() {
 }
 
 /**
- * 创建示例会话
+ * 创建教程会话
  */
-function createDemoSession() {
+function createTutorialSession() {
     try {
         const sessions = JSON.parse(localStorage.getItem('streamnote_sessions') || '{}');
 
-        // 如果已经存在 demo session，不创建新的
+        // 如果已经存在 tutorial session，不创建新的
         if (sessions[TUTORIAL_SESSION_DATA.id]) {
             return;
         }
@@ -147,6 +191,6 @@ function createDemoSession() {
         // 设置为当前会话
         localStorage.setItem('streamnote_current_session', TUTORIAL_SESSION_DATA.id);
     } catch (error) {
-        console.error('[Demo] Error creating demo session:', error);
+        console.error('[Tutorial] Error creating tutorial session:', error);
     }
 }

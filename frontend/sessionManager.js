@@ -14,7 +14,7 @@ class SessionManager {
         this.defaultSettings = {
             defaultLanguage: "Chinese",
             defaultExplanationLanguage: "Chinese",
-            loadDemoSession: true
+            loadTutorialSession: true
         };
 
         // 验证函数：检查是否允许切换到指定 session（由外部代码如 app.js 注册）
@@ -153,18 +153,18 @@ class SessionManager {
             }
 
             // 检查是否应该加载示例会话（基于设置）
-            if (this.defaultSettings.loadDemoSession !== false) {
-                // 如果启用了 loadDemoSession，则每次都加载/显示演示会话
-                if (createDemoSession) {
-                    createDemoSession();
+            if (this.defaultSettings.loadTutorialSession !== false) {
+                // 如果启用了 loadTutorialSession，则每次都加载/显示教程会话
+                if (createTutorialSession) {
+                    createTutorialSession();
                     // 重新加载一次 sessions
                     const saved = localStorage.getItem(this.STORAGE_KEY);
                     if (saved) {
                         this.sessions = JSON.parse(saved);
                     }
                     // 将当前 session 设置为示例会话
-                    if (this.sessions[DEMO_SESSION_DATA.id]) {
-                        this.currentSessionId = DEMO_SESSION_DATA.id;
+                    if (this.sessions[TUTORIAL_SESSION_DATA.id]) {
+                        this.currentSessionId = TUTORIAL_SESSION_DATA.id;
                     }
                 }
             } else {
@@ -179,14 +179,14 @@ class SessionManager {
         } catch (error) {
             console.error('[SessionManager] Load error:', error);
             // 检查是否应该加载示例会话
-            if (this.defaultSettings.loadDemoSession !== false && createDemoSession) {
-                createDemoSession();
+            if (this.defaultSettings.loadTutorialSession !== false && createTutorialSession) {
+                createTutorialSession();
                 const saved = localStorage.getItem(this.STORAGE_KEY);
                 if (saved) {
                     this.sessions = JSON.parse(saved);
                 }
-                if (this.sessions[DEMO_SESSION_DATA.id]) {
-                    this.currentSessionId = DEMO_SESSION_DATA.id;
+                if (this.sessions[TUTORIAL_SESSION_DATA.id]) {
+                    this.currentSessionId = TUTORIAL_SESSION_DATA.id;
                 }
             } else {
                 this.createNewSession();
@@ -799,18 +799,18 @@ class SessionManager {
             this.clearAllSessions();
         });
 
-        // 加载示例会话
-        document.getElementById('loadDemoBtn')?.addEventListener('click', () => {
-            if (createDemoSession) {
-                createDemoSession();
+        // 加载教程会话
+        document.getElementById('loadTutorialBtn')?.addEventListener('click', () => {
+            if (createTutorialSession) {
+                createTutorialSession();
                 // 重新加载 sessions
                 const saved = localStorage.getItem(this.STORAGE_KEY);
                 if (saved) {
                     this.sessions = JSON.parse(saved);
                 }
-                // 切换到示例会话
-                if (this.sessions[DEMO_SESSION_DATA.id] && DEMO_SESSION_DATA) {
-                    this.switchSession(DEMO_SESSION_DATA.id);
+                // 切换到教程会话
+                if (this.sessions[TUTORIAL_SESSION_DATA.id] && TUTORIAL_SESSION_DATA) {
+                    this.switchSession(TUTORIAL_SESSION_DATA.id);
                 }
             }
         });
