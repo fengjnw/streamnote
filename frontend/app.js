@@ -3924,7 +3924,7 @@ class StreamNote {
         try {
             // === [执行上下文防护] ===
             const executionContextSnapshot = ExecutionContext.createSnapshot(this);
-            
+
             // 启动操作追踪
             const operationTracker = this.operationManager ? this.operationManager.startSummary(executionContextSnapshot) : null;
 
@@ -4034,7 +4034,7 @@ class StreamNote {
 
         } catch (error) {
             console.error("[ERROR] Summarization request failed:", error);
-            
+
             // [防护] 清理操作追踪
             if (this.operationManager) {
                 this.operationManager.endSummary();

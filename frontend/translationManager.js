@@ -37,7 +37,7 @@ class TranslationManager {
         // === [执行上下文防护] ===
         const app = window.streamNoteInstance;
         const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
-        
+
         // 启动操作追踪
         let operationTracker = null;
         if (app && app.operationManager) {
@@ -132,7 +132,7 @@ class TranslationManager {
 
         } catch (error) {
             console.error("[ERROR] Translation request failed:", error);
-            
+
             // [防护] 清理操作追踪
             if (operationTracker) {
                 operationTracker.abort(`Error: ${error.message}`);

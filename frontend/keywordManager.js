@@ -86,7 +86,7 @@ class KeywordManager {
             // === [执行上下文防护] ===
             const app = window.streamNoteInstance;
             const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
-            
+
             // 启动操作追踪
             let operationTracker = null;
             if (app && app.operationManager) {
@@ -140,13 +140,13 @@ class KeywordManager {
 
         } catch (error) {
             console.error("[KeywordManager] Error:", error);
-            
+
             // [防护] 清理操作追踪
             const app = window.streamNoteInstance;
             if (app && app.operationManager) {
                 app.operationManager.endKeywords();
             }
-            
+
             return [];
         }
     }
@@ -1111,7 +1111,7 @@ class KeywordManager {
             // 从全局应用获取当前执行上下文的快照
             const app = window.streamNoteInstance;
             const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
-            
+
             // 启动操作追踪
             let operationTracker = null;
             if (app && app.operationManager) {
@@ -1251,7 +1251,7 @@ class KeywordManager {
             }
         } catch (error) {
             console.error("[KeywordManager] Error fetching explanation:", error);
-            
+
             // [防护] 标记操作已出错
             if (operationTracker) {
                 operationTracker.abort(`Error: ${error.message}`);
