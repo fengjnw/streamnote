@@ -3338,8 +3338,9 @@ textarea::placeholder {
 }
 
 .floating-menu-item .menu-icon {
-    font-size: 1.1em;
+    font-size: 0.8em;
     flex-shrink: 0;
+    opacity: 0.65;
 }
 
 .floating-menu-item .menu-label {
