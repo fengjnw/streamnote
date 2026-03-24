@@ -610,7 +610,7 @@ header h1 {
 .item-delete-btn {
     background: none;
     border: none;
-    color: var(--color-grey-400);
+    color: var(--color-grey-500);
     font-size: 1.1em;
     cursor: pointer;
     padding: 0 4px;
@@ -634,7 +634,7 @@ header h1 {
 .delete-session-btn {
     background: none;
     border: none;
-    color: var(--color-grey-400);
+    color: var(--color-grey-500);
     font-size: 1.1em;
     cursor: pointer;
     padding: 0 4px;
@@ -2102,7 +2102,7 @@ header h1 {
 .keyword-explain-btn {
     background: none;
     border: none;
-    color: var(--color-primary);
+    color: var(--color-grey-500);
     font-size: 0.75em;
     font-weight: 600;
     cursor: pointer;
@@ -2125,13 +2125,12 @@ header h1 {
 
 .keyword-explain-btn:active {
     opacity: 0.9;
-    transform: scale(0.95);
 }
 
 .keyword-highlight-toggle-btn {
     background: none;
     border: none;
-    color: var(--color-secondary-dark);
+    color: var(--color-grey-500);
     font-size: 0.75em;
     font-weight: 600;
     cursor: pointer;
