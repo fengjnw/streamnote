@@ -263,7 +263,8 @@
                                     <h4 class="settings-section-title">Tutorial Session</h4>
                                     <div class="settings-item">
                                         <label for="loadTutorialSessionToggle" class="settings-toggle-label">
-                                            <input type="checkbox" id="loadTutorialSessionToggle" checked class="settings-toggle-input" />
+                                            <input type="checkbox" id="loadTutorialSessionToggle" checked
+                                                class="settings-toggle-input" />
                                             Show Tutorial Session on Startup
                                         </label>
                                     </div>
@@ -437,18 +438,19 @@
     </div>
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <script src="executionContext.js"></script>
+    <script src="core/executionContext.js"></script>
     <script src="utils/dateTimeUtils.js"></script>
-    <script src="tutorialSession.js"></script>
-    <script src="sessionManager.js"></script>
-    <script src="keywordManager.js"></script>
-    <script src="recordingManager.js"></script>
-    <script src="panelManager.js"></script>
-    <script src="translationManager.js"></script>
-    <script src="settingsPanel.js"></script>
-    <script src="textProcessor.js"></script>
-    <script src="highlightManager.js"></script>
-    <script src="app.js"></script>
+    <script src="data/tutorialSession.js"></script>
+    <script src="managers/sessionManager.js"></script>
+    <script src="managers/keywordManager.js"></script>
+    <script src="managers/recordingManager.js"></script>
+    <script src="managers/panelManager.js"></script>
+    <script src="managers/translationManager.js"></script>
+    <script src="managers/settingsPanel.js"></script>
+    <script src="services/textProcessor.js"></script>
+    <script src="managers/highlightManager.js"></script>
+    <script src="services/apiClient.js"></script>
+    <script src="core/app.js"></script>
 
     <!-- Initialize Feather Icons and Tooltips -->
     <script>

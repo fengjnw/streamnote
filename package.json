@@ -2,7 +2,7 @@
   "name": "streamnote",
   "version": "0.9.0",
   "description": "A real-time audio transcription and analysis tool",
-  "main": "frontend/app.js",
+  "main": "frontend/core/app.js",
   "scripts": {
     "start": "cd backend && python server.py",
     "dev": "cd backend && python server.py"

@@ -1,0 +1,489 @@
+/* ================ Text Highlight Style ================ */
+.text-highlight {
+    background-color: var(--color-highlight-bg);
+    color: inherit;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* 临时高亮（在解释面板显示时） */
+.temp-highlight {
+    background-color: var(--color-highlight-temp);
+    color: inherit;
+    animation: temp-highlight-pulse 2s ease-in-out infinite;
+}
+
+/* 临时高亮的脉动动画 - 仅背景颜色变化 */
+@keyframes temp-highlight-pulse {
+
+    0%,
+    100% {
+        background-color: var(--color-highlight-temp);
+    }
+
+    50% {
+        background-color: var(--color-highlight-temp-pulse);
+    }
+}
+
+/* ==================== Panel Toolbar ==================== */
+.panel-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-secondary-lighter);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    order: -1;
+    align-items: center;
+    min-height: 44px;
+}
+
+
+.toolbar-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.toolbar-actions-row {
+    justify-content: flex-start;
+}
+
+.toolbar-nav-row {
+    justify-content: flex-start;
+}
+
+.toolbar-btn {
+    flex: 0;
+    min-width: 65px;
+    height: 28px;
+    padding: 4px 10px;
+    border: 1px solid var(--color-grey-divider);
+    border-radius: 4px;
+    background: white;
+    color: #333;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.2;
+}
+
+.toolbar-btn:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.toolbar-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.toolbar-btn.danger {
+    color: #d32f2f;
+    border-color: var(--color-danger-border-light);
+}
+
+.toolbar-btn.danger:hover:not(:disabled) {
+    background: var(--color-danger-bg);
+    border-color: #d32f2f;
+}
+
+.toolbar-btn.active {
+    background: var(--color-danger-bg);
+    border-color: #d32f2f;
+    color: #d32f2f;
+    font-weight: 600;
+}
+
+.toolbar-btn.active:hover {
+    background: var(--color-danger-border-light);
+    border-color: #c62828;
+}
+
+#clearHighlightsBtn {
+    margin-left: auto;
+}
+
+#editModalSaveBtn {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+#editModalSaveBtn:hover:not(:disabled) {
+    background: var(--color-primary-light);
+    border-color: var(--color-primary-light);
+}
+
+#editModalCancelBtn,
+#editModalSaveBtn {
+    flex: 0 !important;
+    min-width: 65px !important;
+    height: 28px !important;
+    padding: 4px 10px !important;
+    font-size: 0.8em !important;
+    font-weight: 500 !important;
+}
+
+/* ==================== Explanation Toolbar ==================== */
+.explanation-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 0 0 0;
+    margin-top: 8px;
+    border-top: 1px solid var(--color-grey-100);
+}
+
+/* ==================== Explanation Focus View ==================== */
+
+.explanation-focus-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0;
+    gap: 0;
+}
+
+.explanation-header {
+    padding: var(--spacing-md);
+    background: var(--color-bg-light);
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+    min-height: 0;
+    transition: all 0.2s ease;
+}
+
+.explanation-header.hidden {
+    padding: 0;
+    border: none;
+    display: none;
+}
+
+.current-word {
+    font-size: 1.05em;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.explanation-header-title-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+}
+
+.explanation-header-buttons {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-shrink: 0;
+}
+
+.header-icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 4px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-secondary-dark);
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.header-icon-btn:hover:not(:disabled) {
+    transform: scale(1.1);
+}
+
+.header-icon-btn:active:not(:disabled) {
+    opacity: 0.9;
+    transform: scale(0.95);
+}
+
+#highlight-current-word-btn:active:not(:disabled) {
+    color: #ff8c00;
+    opacity: 0.9;
+}
+
+.header-icon-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.header-icon-btn i {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2;
+}
+
+.header-icon-btn.pronouncing {
+    color: var(--color-primary);
+}
+
+.header-icon-btn.pronouncing:hover:not(:disabled) {
+    color: var(--color-primary);
+    transform: scale(1.1);
+}
+
+.header-icon-btn.active {
+    color: #ff8c00;
+}
+
+.header-icon-btn.active:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: scale(1.1);
+}
+
+.explanation-body {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.explanation-scroll {
+    color: #555;
+    line-height: 1.8;
+    font-size: 0.95em;
+    word-break: break-word;
+    padding: var(--spacing-md);
+    flex-shrink: 0;
+}
+
+.word-context {
+    padding: var(--spacing-md) var(--spacing-md) 0 var(--spacing-md);
+    flex-shrink: 0;
+    display: none;
+}
+
+.context-label {
+    font-size: 0.75em;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    font-weight: 500;
+    padding: 0;
+    margin-top: 0;
+}
+
+.context-text {
+    margin: 0;
+    color: #888;
+    font-size: 0.9em;
+    line-height: 1.6;
+    word-break: break-word;
+    padding: 0;
+    font-style: normal;
+}
+
+.highlighted-word {
+    color: #d32f2f;
+}
+
+/* Summary text container */
+.summary-text {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 200px;
+    background: white;
+    padding: var(--spacing-md);
+    color: #555;
+    line-height: 1.8;
+    font-size: 0.95em;
+    word-break: break-word;
+}
+
+.summary-text p {
+    margin: 0 0 12px 0;
+    line-height: 1.8;
+    color: #333;
+    font-size: 0.95em;
+    word-break: break-word;
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.summary-text p:last-child {
+    margin-bottom: 0;
+}
+
+/* Placeholder text - keep default styling */
+.summary-text .placeholder {
+    color: var(--color-text-lighter);
+    font-style: italic;
+    font-size: 0.9rem !important;
+    text-align: center;
+    padding: 40px var(--spacing-md);
+    margin: 0;
+    line-height: 1.6;
+    background: transparent;
+    border-radius: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+}
+
+/* Key Takeaways style - display as list items */
+.summary-text ul {
+    margin: 0 0 0 var(--spacing-lg);
+    padding: 0;
+    list-style: disc;
+}
+
+.summary-text li {
+    margin: 0 0 8px 0;
+    line-height: 1.6;
+    color: #333;
+    font-size: 0.95em;
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.summary-text li:last-child {
+    margin-bottom: 0;
+}
+
+/* Q&A format styling */
+.summary-text .qa-pair {
+    display: block;
+    margin-bottom: 12px;
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.summary-text .qa-pair:last-child {
+    margin-bottom: 0;
+}
+
+.summary-text .qa-question {
+    font-weight: 600;
+    color: var(--color-primary);
+    font-size: 0.95em;
+    margin: 0 0 6px 0;
+    padding: 0;
+}
+
+.summary-text .qa-answer {
+    color: #666;
+    font-size: 0.9em;
+    line-height: 1.6;
+    margin: 0;
+    padding: var(--spacing-sm) 0 0 var(--spacing-md);
+}
+
+.explanation-scroll {
+    flex: 1;
+    color: #555;
+    line-height: 1.8;
+    font-size: 0.95em;
+    word-break: break-word;
+    padding: var(--spacing-md);
+}
+
+.explanation-scroll p {
+    margin: 0 0 12px 0;
+    line-height: 1.8;
+    padding: 0;
+}
+
+.explanation-scroll p:last-child {
+    margin-bottom: 0;
+}
+
+/* 确保placeholder字体大小统一 */
+.explanation-scroll .placeholder {
+    font-size: 0.9rem !important;
+}
+
+.explanation-scroll .error {
+    color: var(--color-danger);
+    padding: var(--spacing-md);
+    background: var(--color-danger-bg);
+    border-radius: 4px;
+    margin: 0 var(--spacing-lg);
+}
+
+.position-indicator {
+    font-size: 0.8em;
+    color: #999;
+    white-space: nowrap;
+    padding: 0 8px;
+    min-width: 45px;
+    text-align: center;
+}
+
+/* 响应式设计 */
+/* ========================= 模式选择器样式 ========================= */
+
+.mode-selector {
+    user-select: none;
+}
+
+.mode-tab {
+    color: #666;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.mode-tab:hover {
+    background: var(--color-grey-100) !important;
+}
+
+.mode-tab.active {
+    color: var(--color-primary) !important;
+    border-bottom-color: var(--color-primary) !important;
+}
+
+/* ========================= Feather Icons 样式 ========================= */
+
+/* 按钮中的图标样式 */
+button [data-feather] {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+/* 工具栏按钮中的图标 */
+.toolbar-btn [data-feather] {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+}
+
+/* 控制面板按钮中的图标 */
+.control-btn [data-feather] {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+}
+
+/* 菜单项中的图标 */
+.session-menu-item [data-feather],
+.content-menu-item [data-feather] {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2;
+    margin-right: 4px;
+}
+
+/* 图标颜色继承 */
+[data-feather] {
+    stroke: currentColor;
+    fill: none;

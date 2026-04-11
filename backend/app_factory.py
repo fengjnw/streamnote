@@ -1,0 +1,49 @@
+import logging
+import traceback
+
+from flask import Flask
+from flask_cors import CORS
+from openai import OpenAI
+
+from config import OPENAI_API_KEY
+from keyword_manager import create_keyword_manager
+from summarizer import create_summarizer
+from translator import create_translator
+from routes.api_routes import register_api_routes
+from routes.static_routes import register_static_routes
+
+
+log = logging.getLogger("werkzeug")
+log.setLevel(logging.WARNING)
+
+
+def create_app():
+    """Application factory for StreamNote backend."""
+
+    app = Flask(__name__, static_folder="../frontend", static_url_path="")
+    CORS(app)
+
+    @app.after_request
+    def disable_caching(response):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0, public"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        return response
+
+    services = {
+        "client": OpenAI(api_key=OPENAI_API_KEY),
+        "keyword_manager": create_keyword_manager(OPENAI_API_KEY),
+        "translator": create_translator(OPENAI_API_KEY),
+        "summarizer": create_summarizer(OPENAI_API_KEY),
+    }
+
+    def server_error_response(error: Exception, prefix: str = ""):
+        traceback.print_exc()
+        message = f"{prefix}{str(error)}" if prefix else str(error)
+        return {"error": message}, 500
+
+    register_static_routes(app)
+    register_api_routes(app, services, server_error_response)
+
+    return app

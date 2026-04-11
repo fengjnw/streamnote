@@ -1,0 +1,1568 @@
+/* ================ Main Wrapper - Three Column Layout ================ */
+.main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+}
+
+/* ================ Sidebars - Left and Right ================ */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-light);
+    border: none;
+    padding: var(--spacing-md) var(--spacing-sm);
+    gap: var(--spacing-sm);
+    align-items: center;
+    flex-shrink: 0;
+    width: 44px;
+    overflow-y: auto;
+}
+
+.sidebar-left {
+    border-right: 1px solid var(--color-border);
+}
+
+.sidebar-right {
+    border-left: 1px solid var(--color-border);
+}
+
+/* Sidebar Sections */
+.sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    width: 100%;
+    align-items: center;
+}
+
+.sidebar-divider {
+    width: 100%;
+    height: 1px;
+    background: var(--color-border);
+}
+
+.sidebar-spacer {
+    flex: 1;
+}
+
+/* Sidebar Buttons */
+.sidebar-btn {
+    min-width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.75em;
+    font-weight: 500;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    padding: 0;
+    line-height: 1;
+    gap: 4px;
+    white-space: nowrap;
+    background: var(--color-secondary-light);
+    color: var(--color-primary-accent);
+}
+
+.sidebar-btn:hover:not(:disabled) {
+    background: var(--color-primary-lighter);
+    color: white;
+    transform: scale(1.08);
+}
+
+.sidebar-btn.active {
+    background: var(--color-primary) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
+}
+
+.sidebar-btn.active:hover:not(:disabled) {
+    background: var(--color-primary-dark) !important;
+    color: white !important;
+}
+
+/* Icon-only sidebar buttons */
+.sidebar-btn.icon-only {
+    width: 36px;
+    height: 36px;
+    padding: 0 !important;
+    font-size: 0.9em !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative;
+}
+
+/* Custom tooltip for sidebar buttons - via JavaScript */
+.sidebar-tooltip {
+    position: fixed;
+    background: var(--color-grey-900);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    white-space: normal;
+    word-wrap: break-word;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    max-width: 200px;
+    display: inline-block;
+}
+
+.sidebar-tooltip.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ================ Session 管理面板 ================ */
+.session-panel {
+    width: 0;
+    background: var(--color-white);
+    border-right: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.session-panel.expanded {
+    width: 320px;
+}
+
+/* Session Panel Header - 统一表现 */
+.session-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px var(--spacing-md);
+    background: var(--color-primary);
+    color: white;
+    flex-shrink: 0;
+    gap: var(--spacing-sm);
+    border-bottom: none;
+    min-height: 32px;
+}
+
+.session-panel-header h3 {
+    margin: 0;
+    font-size: 0.85em;
+    font-weight: 600;
+    flex: 1;
+}
+
+/* Session Panel Toolbar */
+.session-panel .panel-toolbar {
+    padding: 10px var(--spacing-md);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg-light);
+    flex-shrink: 0;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    order: initial;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+#sessionMenuBtn {
+    flex: 0 0 auto;
+    min-width: 32px;
+    justify-content: center;
+}
+
+/* Session Hidden Menu */
+.session-menu {
+    position: fixed;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px var(--color-black-shadow-15);
+    z-index: 10000;
+    min-width: 160px;
+    overflow: hidden;
+    display: none;
+}
+
+.session-menu-item {
+    display: block;
+    width: 100%;
+    padding: 8px var(--spacing-md);
+    border: none;
+    background: var(--color-white);
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: background 0.2s;
+    border-bottom: 1px solid var(--color-grey-100);
+    color: var(--color-text);
+    font-family: inherit;
+    font-weight: 500;
+}
+
+.session-menu-item:last-child {
+    border-bottom: none;
+}
+
+.session-menu-item:hover {
+    background: var(--color-bg-light);
+}
+
+.session-menu-item.danger {
+    color: var(--color-danger);
+}
+
+.session-menu-item.danger:hover {
+    background: var(--color-danger-bg);
+}
+
+/* Content Menu for Add Content Button */
+.content-menu {
+    position: fixed;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px var(--color-black-shadow-15);
+    z-index: 10001;
+    min-width: 140px;
+    overflow: hidden;
+    display: none;
+}
+
+.content-menu-item {
+    display: block;
+    width: 100%;
+    padding: 8px var(--spacing-md);
+    border: none;
+    background: var(--color-white);
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: background 0.2s;
+    border-bottom: 1px solid var(--color-grey-100);
+    color: var(--color-text);
+    font-family: inherit;
+    font-weight: 500;
+}
+
+.content-menu-item:last-child {
+    border-bottom: none;
+}
+
+.content-menu-item:hover {
+    background: var(--color-bg-light);
+}
+
+#importFileInput,
+#textFileInput {
+    display: none;
+}
+
+/* Session Panel Content - 统一表现 */
+.session-panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    background: var(--color-white);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+#sessionList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 0;
+}
+
+/* 保留旧的session-header和session-header h3用于兼容性 */
+.session-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px var(--spacing-md);
+    background: var(--color-primary);
+    color: white;
+    gap: var(--spacing-sm);
+    border-bottom: none;
+    position: relative;
+}
+
+.session-header h3 {
+    flex: 1;
+    margin: 0;
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
+/* ================ 统一面板和Modal关闭按钮样式 ================ */
+.panel-close-btn {
+    background: none;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.panel-close-btn:hover {
+    transform: scale(1.1);
+}
+
+/* ================ 统一Item删除按钮样式 ================ */
+.item-delete-btn {
+    background: none;
+    border: none;
+    color: var(--color-grey-500);
+    font-size: 1.1em;
+    cursor: pointer;
+    padding: 0 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.item-delete-btn:hover {
+    background: var(--color-danger-shadow-08);
+    color: var(--color-danger);
+}
+
+/* 向后兼容：保留旧的类名但使用新样式 */
+.keyword-delete-btn,
+.delete-session-btn {
+    background: none;
+    border: none;
+    color: var(--color-grey-500);
+    font-size: 1.1em;
+    cursor: pointer;
+    padding: 0 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.keyword-delete-btn:hover,
+.delete-session-btn:hover {
+    background: var(--color-danger-shadow-08);
+    color: var(--color-danger);
+    transform: scale(1.1);
+}
+
+/* ================ 统一行条目样式 ================ */
+.panel-item {
+    background: var(--color-white);
+    border-radius: 6px;
+    padding: 10px var(--spacing-md);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px var(--color-black-shadow-05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--color-border);
+}
+
+.panel-item:hover {
+    box-shadow: 0 4px 8px var(--color-black-shadow-08);
+    transform: translateY(-1px);
+    border-color: var(--color-secondary);
+}
+
+.session-item {
+    background: var(--color-white);
+    border-radius: 6px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px var(--color-black-shadow-08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--color-grey-100);
+}
+
+.session-item:hover {
+    box-shadow: 0 3px 8px var(--color-black-shadow-12);
+    border-color: var(--color-grey-200);
+    background: var(--color-grey-card-bg);
+}
+
+.session-item.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px var(--color-primary-shadow-2);
+}
+
+.session-item.recording {
+    border: 1.5px solid var(--color-danger-light);
+    box-shadow: 0 0 12px var(--color-danger-light-shadow-15);
+}
+
+.session-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.session-name {
+    font-weight: 600;
+    font-size: 0.95em;
+    line-height: 1.4;
+    color: inherit;
+    word-break: break-word;
+}
+
+.session-brief {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: 0.75em;
+}
+
+.brief-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--color-grey-500);
+    background: var(--color-secondary-shadow-04);
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
+.session-item.active .brief-item {
+    color: var(--color-white-shadow-8);
+    background: var(--color-white-shadow-1);
+}
+
+.session-time {
+    font-size: 0.75em;
+    color: var(--color-grey-400);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.session-item.active .session-time {
+    color: var(--color-white-shadow-7);
+}
+
+
+
+.current-session-info {
+    padding: var(--spacing-md);
+    background: var(--color-white);
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+}
+
+/* Session Name Display Mode */
+.session-name-display {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.session-name-text {
+    flex: 1;
+    font-size: 0.95em;
+    font-weight: 500;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#editSessionNameBtn {
+    flex-shrink: 0;
+    min-width: 70px;
+    background: var(--color-white);
+    border: 1px solid var(--color-grey-300);
+    color: var(--color-text);
+    font-weight: 500;
+    font-size: 0.8em;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 4px 10px;
+}
+
+#editSessionNameBtn:hover {
+    border-color: var(--color-secondary);
+    background: var(--color-secondary-lighter);
+    color: var(--color-secondary);
+}
+
+/* Session Name Edit Mode */
+.session-name-edit {
+    display: flex;
+    gap: var(--spacing-xs);
+    align-items: center;
+}
+
+.session-name-input {
+    flex: 1;
+    padding: var(--spacing-sm) 10px;
+    border: 1px solid var(--color-grey-300);
+    border-radius: 4px;
+    font-size: 0.9em;
+    transition: border-color 0.2s;
+    background: var(--color-white);
+    font-family: inherit;
+}
+
+.session-name-input:hover {
+    border-color: var(--color-grey-400);
+}
+
+.session-name-input:focus {
+    outline: none;
+    border-color: var(--color-secondary);
+    box-shadow: 0 0 0 2px rgba(var(--color-secondary-rgb), 0.1);
+}
+
+.session-name-edit .toolbar-btn {
+    flex-shrink: 0;
+    min-width: auto;
+    width: 32px;
+    padding: var(--spacing-xs) 0;
+    font-size: 0.9em;
+}
+
+#confirmSessionNameBtn {
+    color: var(--color-success);
+    border-color: var(--color-success-border);
+}
+
+#confirmSessionNameBtn:hover:not(:disabled) {
+    background: var(--color-success-bg);
+    border-color: var(--color-success);
+}
+
+#cancelSessionNameBtn {
+    color: #d32f2f;
+    border-color: var(--color-danger-border-light);
+}
+
+#cancelSessionNameBtn:hover:not(:disabled) {
+    background: var(--color-danger-bg);
+    border-color: #d32f2f;
+}
+
+.empty-message {
+    text-align: center;
+    color: var(--color-grey-500);
+    font-style: italic;
+    padding: 20px;
+}
+
+/* Text Selection Tools - Quick Access Buttons */
+.text-tools {
+    display: flex;
+    gap: 4px;
+}
+
+/* Panel Controls - Quick Access Buttons */
+.panel-controls {
+    display: flex;
+    gap: 4px;
+}
+
+/* 管理菜单 */
+.manage-menu {
+    position: absolute;
+    top: calc(100% + 5px);
+    right: 0;
+    background: var(--color-white);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px var(--color-black-shadow-15);
+    z-index: 1000;
+    min-width: 200px;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+}
+
+.manage-menu-item {
+    display: block;
+    width: 100%;
+    padding: 10px var(--spacing-md);
+    border: none;
+    background: var(--color-white);
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background 0.2s;
+    border-bottom: 1px solid var(--color-grey-100);
+    color: var(--color-text);
+}
+
+.manage-menu-item:last-child {
+    border-bottom: none;
+}
+
+.manage-menu-item:hover {
+    background: var(--color-secondary-lighter);
+}
+
+.manage-menu-item.danger {
+    color: #d32f2f;
+}
+
+.manage-menu-item.danger:hover {
+    background: var(--color-danger-bg);
+}
+
+/* Main wrapper - 包含 left-sidebar, content-wrapper, right-sidebar */
+.main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+}
+
+.content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+    position: relative;
+    background: var(--color-white);
+}
+
+/* ================ Content Area - 主内容区域 ================ */
+/* Content Area - 主内容区域：文字面板和右侧面板并排显示 */
+.content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+/* ================ Control Panel - 优化的导航栏设计 (DEPRECATED - 已迁移到sidebars) ================ */
+
+.control-panel {
+    display: none;
+}
+
+/* 导航栏分组 */
+.nav-group {
+    display: flex;
+    gap: var(--spacing-xs);
+    align-items: center;
+    flex-shrink: 0;
+    padding: 4px var(--spacing-sm);
+    background: transparent;
+    border-radius: 4px;
+}
+
+/* 按钮组之间的分隔 - 使用spacer处理，这里不再添加margin */
+/* First nav-group (Sessions) - 靠近左边缘 */
+.nav-group:first-of-type {
+    padding: 4px 2px;
+}
+
+/* .nav-group:not(.nav-group-settings) - Regular spacing handled by control-spacer */
+
+/* Section-based grouping for workflow visualization */
+
+/* Content tools group - secondary level (soft purple) */
+.nav-group-content .control-btn-secondary {
+    background: var(--color-primary-lighter);
+    color: var(--color-primary-accent);
+}
+
+.nav-group-content .control-btn-secondary:hover:not(:disabled) {
+    background: var(--color-primary-light);
+    color: white;
+    transform: scale(1.08);
+    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
+}
+
+.nav-group-content .control-btn-secondary.active {
+    background: var(--color-primary) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
+}
+
+.nav-group-content .control-btn-secondary.active:hover:not(:disabled) {
+    background: var(--color-primary-dark) !important;
+}
+
+/* 核心功能组 */
+.nav-group-primary {
+    padding: 4px var(--spacing-sm);
+}
+
+/* 设置按钮组 - 右侧对齐 */
+.nav-group-settings {
+    margin-left: auto;
+    padding: 4px 2px;
+}
+
+/* Sessions button specific styling */
+#openSessionPanel {
+    background: transparent;
+    color: var(--color-grey-500);
+    box-shadow: none;
+}
+
+#openSessionPanel:hover:not(:disabled) {
+    background: transparent;
+    color: var(--color-primary);
+    transform: scale(1.08);
+    box-shadow: none;
+}
+
+#openSessionPanel.active {
+    background: transparent !important;
+    color: var(--color-primary) !important;
+    box-shadow: none !important;
+}
+
+#openSessionPanel.active:hover:not(:disabled) {
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: scale(1.12);
+}
+
+#sidebarNewSessionBtn {
+    background: transparent;
+    color: var(--color-grey-500);
+    box-shadow: none;
+}
+
+#sidebarNewSessionBtn:hover:not(:disabled) {
+    background: transparent;
+    color: var(--color-primary);
+    transform: scale(1.08);
+    box-shadow: none;
+}
+
+#sidebarNewSessionBtn.active {
+    background: transparent !important;
+    color: var(--color-primary) !important;
+    box-shadow: none !important;
+}
+
+#sidebarNewSessionBtn.active:hover:not(:disabled) {
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: scale(1.12);
+}
+
+.nav-group-settings .control-btn-secondary {
+    background: transparent;
+    color: var(--color-grey-500);
+    box-shadow: none;
+    font-size: 1.2em;
+}
+
+.nav-group-settings .control-btn-secondary:hover:not(:disabled) {
+    background: transparent;
+    color: var(--color-primary);
+    transform: scale(1.08);
+    box-shadow: none;
+}
+
+.nav-group-settings .control-btn-secondary.active {
+    background: transparent !important;
+    color: var(--color-primary) !important;
+    box-shadow: none !important;
+}
+
+.nav-group-settings .control-btn-secondary.active:hover:not(:disabled) {
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: scale(1.12);
+}
+
+/* Settings button specific styling */
+#quickAccessSettings {
+    background: transparent;
+    color: var(--color-grey-500);
+    box-shadow: none;
+    font-size: 1.2em;
+}
+
+#quickAccessSettings:hover:not(:disabled) {
+    background: transparent;
+    color: var(--color-primary);
+    transform: scale(1.08);
+    box-shadow: none;
+}
+
+#quickAccessSettings.active {
+    background: transparent !important;
+    color: var(--color-primary) !important;
+    box-shadow: none !important;
+}
+
+#quickAccessSettings.active:hover:not(:disabled) {
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: scale(1.12);
+}
+
+/* Control buttons moved to sidebar - match icon button styling */
+#recordBtn,
+#addContentBtn,
+#editTextBtn {
+    background: transparent;
+    color: var(--color-grey-500);
+    box-shadow: none;
+}
+
+#recordBtn:hover:not(:disabled),
+#addContentBtn:hover:not(:disabled),
+#editTextBtn:hover:not(:disabled) {
+    background: transparent;
+    color: var(--color-primary);
+    transform: scale(1.08);
+    box-shadow: none;
+}
+
+#recordBtn.active {
+    background: transparent !important;
+    color: var(--color-danger) !important;
+    box-shadow: none !important;
+}
+
+#recordBtn.active:hover:not(:disabled) {
+    background: transparent !important;
+    color: var(--color-danger-dark) !important;
+    box-shadow: none !important;
+    transform: scale(1.12);
+}
+
+#addContentBtn.active,
+#editTextBtn.active {
+    background: transparent !important;
+    color: var(--color-primary) !important;
+    box-shadow: none !important;
+}
+
+#addContentBtn.active:hover:not(:disabled),
+#editTextBtn.active:hover:not(:disabled) {
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: scale(1.12);
+}
+
+#editTextBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#editTextBtn:disabled:hover {
+    background: transparent;
+    transform: none;
+}
+
+/* Other sidebar icon buttons - match sessions/settings style */
+#quickAccessHistory,
+#translationToggleBtn,
+#quickAccessHighlights,
+#quickAccessKeywords,
+#quickAccessSummary {
+    background: transparent;
+    color: var(--color-grey-500);
+    box-shadow: none;
+}
+
+#quickAccessHistory:hover:not(:disabled),
+#translationToggleBtn:hover:not(:disabled),
+#quickAccessHighlights:hover:not(:disabled),
+#quickAccessKeywords:hover:not(:disabled),
+#quickAccessSummary:hover:not(:disabled) {
+    background: transparent;
+    color: var(--color-primary);
+    transform: scale(1.08);
+    box-shadow: none;
+}
+
+#quickAccessHistory.active,
+#translationToggleBtn.active,
+#quickAccessHighlights.active,
+#quickAccessKeywords.active,
+#quickAccessSummary.active {
+    background: transparent !important;
+    color: var(--color-primary) !important;
+    box-shadow: none !important;
+}
+
+#quickAccessHistory.active:hover:not(:disabled),
+#translationToggleBtn.active:hover:not(:disabled),
+#quickAccessHighlights.active:hover:not(:disabled),
+#quickAccessKeywords.active:hover:not(:disabled),
+#quickAccessSummary.active:hover:not(:disabled) {
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: scale(1.12);
+}
+
+/* 新控制按钮 - 纯文字版本 */
+.control-btn {
+    min-width: 60px;
+    height: 28px;
+    border: none;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: 500;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    padding: 0 12px;
+    line-height: 1;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+/* Icon-only buttons - 仅显示文字符号 */
+.control-btn.icon-only {
+    padding: 0 !important;
+    min-width: 20px !important;
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 0.8em !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.control-btn.icon-only::after {
+    content: attr(title);
+    display: none;
+}
+
+/* Icon-only buttons without background */
+.control-btn.icon-only.transparent {
+    background: transparent;
+    box-shadow: none;
+    color: var(--color-grey-500);
+}
+
+.control-btn.icon-only.transparent:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.05);
+    box-shadow: none;
+    color: var(--color-primary);
+}
+
+/* 快速访问按钮的紧凑布局 */
+.nav-group:last-of-type .control-btn {
+    min-width: auto;
+    padding: 0 10px;
+    font-size: 0.8em;
+    gap: 4px;
+}
+
+.control-btn-primary {
+    background: var(--color-primary);
+    color: white;
+    box-shadow: 0 2px 6px var(--color-primary-shadow-3);
+}
+
+.control-btn-primary:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px var(--color-primary-shadow-4);
+}
+
+.manage-menu-item.danger:hover {
+    background: var(--color-danger-bg);
+}
+
+/* ================ Text Panels (Transcript & Translation) ================ */
+
+.main-content {
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    padding: 0;
+    position: relative;
+    min-width: 0;
+}
+
+.text-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    background: var(--color-white);
+    border-right: 1px solid var(--color-border);
+}
+
+.text-panel.collapsed {
+    flex: 0;
+    min-width: 0;
+    display: none;
+}
+
+.text-panel:last-child {
+    border-right: none;
+}
+
+.transcript-panel {
+    border-right: none;
+}
+
+/* ===== Layout Presets ===== */
+.main-content.layout-full-transcript .transcript-panel {
+    flex: 1 1 100%;
+    display: flex;
+}
+
+.main-content.layout-full-transcript .translation-panel {
+    flex: 0;
+    min-width: 0;
+    display: none;
+}
+
+
+/* Split Bottom: 翻译在下面（默认） */
+.main-content.layout-split-bottom {
+    flex-direction: column;
+}
+
+.main-content.layout-split-bottom .transcript-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.main-content.layout-split-bottom .translation-panel {
+    flex: 1 1 50%;
+    display: flex;
+}
+
+/* Split Top: 翻译在上面 */
+.main-content.layout-split-top {
+    flex-direction: column;
+}
+
+.main-content.layout-split-top .transcript-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-bottom: 1px solid var(--color-border);
+    order: 2;
+}
+
+.main-content.layout-split-top .translation-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-bottom: 1px solid var(--color-border);
+    order: 1;
+}
+
+/* Split Left: 翻译在左边 */
+.main-content.layout-split-left {
+    flex-direction: row;
+}
+
+.main-content.layout-split-left .transcript-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-right: 1px solid var(--color-border);
+    order: 2;
+}
+
+.main-content.layout-split-left .translation-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-right: 1px solid var(--color-border);
+    order: 1;
+}
+
+/* Split Right: 翻译在右边 */
+.main-content.layout-split-right {
+    flex-direction: row;
+}
+
+.main-content.layout-split-right .transcript-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-right: 1px solid var(--color-border);
+}
+
+.main-content.layout-split-right .translation-panel {
+    flex: 1 1 50%;
+    display: flex;
+}
+
+.main-content.layout-full-translation .transcript-panel {
+    flex: 0;
+    min-width: 0;
+    display: none;
+}
+
+.main-content.layout-full-translation .translation-panel {
+    flex: 1 1 100%;
+    display: flex;
+}
+
+/* Panel Header */
+.text-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px var(--spacing-md);
+    background: var(--color-panel-header-bg);
+    color: var(--color-panel-header-text);
+    flex-shrink: 0;
+    gap: var(--spacing-sm);
+    border-bottom: none;
+    min-height: 32px;
+    order: 0;
+}
+
+.text-panel-header h3 {
+    margin: 0;
+    font-size: 0.85em;
+    font-weight: 600;
+    flex-shrink: 0;
+    flex: 1;
+}
+
+/* ===== Layout Selector ===== */
+.layout-selector {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-white);
+    border: 1px solid var(--color-primary-lighter);
+    border-radius: 6px;
+    font-size: 0.9em;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 160px;
+}
+
+.layout-selector:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
+    box-shadow: 0 2px 6px var(--color-primary-shadow-15);
+}
+
+.layout-selector:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-shadow-1);
+    background: var(--color-primary-lightest);
+}
+
+.side-panel-header .language-selector {
+    padding: 4px var(--spacing-sm) !important;
+    height: auto !important;
+    min-width: 100px;
+    max-width: 100px;
+    margin-left: auto;
+    margin-right: 0;
+}
+
+/* ===== Panel Text Toolbar ===== */
+.text-panel .text-panel-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--color-secondary-lighter);
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+    align-items: center;
+    order: 1 !important;
+    flex-wrap: wrap;
+    min-height: 44px;
+}
+
+.text-panel-toolbar .toolbar-language {
+    flex: 0;
+    min-width: 85px;
+    height: 28px;
+    padding: 4px 10px;
+    border: 1px solid var(--color-primary-lighter);
+    border-radius: 4px;
+    background: var(--color-white);
+    color: var(--color-text);
+    font-size: 0.8em;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.text-panel-toolbar .toolbar-language:hover,
+.text-panel-toolbar .toolbar-language:focus {
+    border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
+}
+
+/* ===== Layout Dropdown ===== */
+.layout-dropdown {
+    flex: 0;
+    min-width: 85px;
+    height: 28px;
+    padding: 4px 10px;
+    border: 1px solid var(--color-primary-lighter);
+    border-radius: 4px;
+    background: var(--color-white);
+    color: var(--color-text);
+    font-size: 0.8em;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.layout-dropdown:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
+}
+
+.layout-dropdown:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-shadow-1);
+}
+
+
+
+/* Panel Content */
+.text-panel-content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-md);
+    order: 2;
+}
+
+.transcript,
+.translation {
+    flex: 1;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+
+/* Enhanced text selection - highlight selected text with brand color */
+.transcript::selection,
+.translation::selection {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.transcript::-moz-selection,
+.translation::-moz-selection {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.control-btn-danger:hover:not(:disabled) {
+    background: var(--color-danger-hover);
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px var(--color-danger-light-shadow-4);
+}
+
+.control-btn-secondary {
+    background: var(--color-secondary-light);
+    color: var(--color-grey-700);
+    box-shadow: 0 1px 3px var(--color-black-shadow-08);
+}
+
+.control-btn-secondary:hover:not(:disabled) {
+    background: var(--color-primary-shadow-08);
+    border-color: var(--color-primary-shadow-15);
+    transform: scale(1.08);
+    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
+}
+
+/* Active/highlighted button state - higher specificity to override secondary style */
+.control-btn.active,
+.control-btn-secondary.active {
+    background: var(--color-primary) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
+}
+
+.control-btn.active:hover:not(:disabled),
+.control-btn-secondary.active:hover:not(:disabled) {
+    background: var(--color-primary-dark) !important;
+    transform: scale(1.12);
+    box-shadow: 0 6px 16px var(--color-primary-shadow-4) !important;
+}
+
+.control-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.control-spacer {
+    flex: 1;
+    margin: 0 var(--spacing-sm);
+    border-right: 1px solid var(--color-border);
+}
+
+.spacer {
+    flex: 1;
+}
+
+.keyword-controls {
+    display: flex;
+    gap: var(--spacing-lg);
+    margin-left: auto;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.keyword-controls label {
+    font-weight: 500;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.keyword-controls input[type="checkbox"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+.translation-controls {
+    display: flex;
+    gap: var(--spacing-lg);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.translation-controls label {
+    font-weight: 500;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.translation-controls input[type="checkbox"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+.language-selector {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-primary-lighter);
+    border-radius: 4px;
+    font-size: 0.95em;
+    background: var(--color-white);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.language-selector:hover,
+.language-selector:focus {
+    border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
+    outline: none;
+}
+
+/* Toolbar language selector */
+.panel-toolbar .toolbar-language {
+    flex: 0;
+    min-width: 85px;
+    height: 28px;
+    padding: 4px 10px;
+    border: 1px solid var(--color-primary-lighter);
+    border-radius: 4px;
+    background: var(--color-white);
+    color: var(--color-text);
+    font-size: 0.8em;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+/* Translation panel language selector */
+.translation-panel .toolbar-language {
+    border-color: var(--color-primary-lighter);
+}
+
+.translation-panel .toolbar-language:hover,
+.translation-panel .toolbar-language:focus {
+    border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
+}
+
+/* Translation panel layout dropdown */
+.translation-panel .layout-dropdown {
+    border-color: var(--color-primary-lighter);
+}
+
+.translation-panel .layout-dropdown:hover,
+.translation-panel .layout-dropdown:focus {
+    border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
+}
+
+/* Toolbar select dropdown */
+.panel-toolbar .toolbar-select {
+    flex: 0;
+    min-width: 100px;
+    height: 28px;
+    padding: 4px 10px;
+    border: 1px solid var(--color-primary-lighter);
+    border-radius: 4px;
+    background: var(--color-white);
+    color: var(--color-text);
+    font-size: 0.8em;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.panel-toolbar .toolbar-language:hover,
+.panel-toolbar .toolbar-select:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
+}
+
+.panel-toolbar .toolbar-language:focus,
+.panel-toolbar .toolbar-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
+    box-shadow: 0 0 0 2px var(--color-primary-shadow-1);
+}
+
+.toggle-panel-btn {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: all 0.3s;
+}
+
+.toggle-panel-btn:hover {
+    background: var(--color-primary-dark);
+    transform: scale(1.05);
+}
+
+
+
+.keyword-controls select {
+    padding: 8px 12px;
+    border: 1px solid var(--color-grey-300);
+    border-radius: 4px;
+    font-size: 0.95em;
+    background: var(--color-white);
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.keyword-controls select:hover,
+.keyword-controls select:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+.btn {
+    padding: 10px var(--spacing-lg);
+    border: none;
+    border-radius: 6px;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: var(--color-danger-light);
+    color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: var(--color-danger-hover);
+}
+
+.btn-secondary {
+    background: var(--color-secondary-dark);
+    color: white;
+}
+
+.btn-auto-scroll {
+    background: var(--color-success);
+    color: white;
+}
+
+.btn-auto-scroll:hover:not(:disabled) {
+    background: var(--color-success-dark);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 主要内容区域 */
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    flex: 1;
+    overflow: hidden;
+    padding: 0;
+}
+

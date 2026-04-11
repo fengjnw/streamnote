@@ -1,0 +1,179 @@
+@media (max-width: 768px) {
+    header {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    header h1 {
+        font-size: 1.4em;
+    }
+
+    #sessionInfoDisplay {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    #sessionStatsDisplay {
+        gap: var(--spacing-lg) !important;
+        font-size: 0.85em;
+    }
+
+    .control-panel {
+        padding: var(--spacing-sm) var(--spacing-md);
+        gap: var(--spacing-sm);
+        overflow-x: auto;
+    }
+
+    .control-btn {
+        min-width: 36px;
+        height: 36px;
+        font-size: 1em;
+        padding: 0 var(--spacing-sm);
+    }
+
+    .text-tools {
+        gap: 2px;
+    }
+
+    .panel-controls {
+        gap: 2px;
+    }
+
+    .keyword-controls {
+        margin-left: 0;
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+    }
+
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+
+    /* 在小屏幕上，左右分割自动改为上下分割 */
+    .main-content.layout-split-left,
+    .main-content.layout-split-right {
+        flex-direction: column;
+    }
+
+    .main-content.layout-split-left .transcript-panel,
+    .main-content.layout-split-right .transcript-panel {
+        border-right: none;
+        border-bottom: 1px solid var(--color-secondary-light);
+        order: 2;
+    }
+
+    .main-content.layout-split-left .translation-panel,
+    .main-content.layout-split-right .translation-panel {
+        border-right: none;
+        border-bottom: 1px solid var(--color-secondary-light);
+        order: 1;
+    }
+
+    .transcript-container {
+        border-right: none;
+        border-bottom: 1px solid var(--color-secondary-light);
+    }
+}
+
+@media (max-width: 768px) {
+    .session-modal {
+        width: 90vw;
+        max-width: 400px;
+    }
+
+    .settings-modal {
+        width: 90vw;
+        max-width: 440px;
+    }
+}
+
+@media (max-width: 768px) {
+    .explanation-header {
+        padding: 10px 0;
+    }
+
+    .current-word {
+        font-size: 1em;
+        padding: 0 12px;
+    }
+
+    .position-indicator {
+        font-size: 0.75em;
+        min-width: 35px;
+    }
+
+    .explanation-scroll {
+        padding: 12px 0;
+        font-size: 0.9em;
+    }
+}
+
+/* 临时单词高亮样式 */
+.temp-word-highlight {
+    animation: wordHighlightFade 4s ease-out forwards;
+    text-decoration: underline;
+    text-decoration-color: var(--color-highlight-jump);
+    text-decoration-thickness: 2px;
+}
+
+@keyframes wordHighlightFade {
+
+    0%,
+    80% {
+        color: var(--color-highlight-jump);
+        text-decoration-color: var(--color-highlight-jump);
+    }
+
+    100% {
+        color: currentColor;
+        text-decoration-color: transparent;
+    }
+}
+
+/* 通用隐藏类 */
+.hidden {
+    display: none !important;
+}
+
+/* 模式选择器样式 */
+.nav-group-mode {
+    border-right: 1px solid #ddd;
+    padding-right: 12px;
+}
+
+.mode-tab {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    background: white;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    color: #333;
+}
+
+.mode-tab:first-child {
+    border-radius: 4px 0 0 4px;
+}
+
+.mode-tab:last-child {
+    border-left: none;
+    border-radius: 0 4px 4px 0;
+    background: var(--color-secondary-lighter);
+    color: #666;
+}
+
+.mode-tab:hover {
+    background: var(--color-grey-100);
+    color: #000;
+}
+
+.mode-tab.active {
+    background: var(--color-success);
+    color: white;
+    border-color: #45a049;
+}
+
