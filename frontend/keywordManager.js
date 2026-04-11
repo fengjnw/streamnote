@@ -72,6 +72,15 @@ class KeywordManager {
         this.currentLoadingKeyword = null;
     }
 
+    finishExplanationOperation(app, operationTracker, reason) {
+        if (operationTracker) {
+            operationTracker.abort(reason);
+        }
+        if (app && app.operationManager) {
+            app.operationManager.endExplanation();
+        }
+    }
+
     /**
      * 提取关键词 (AI 驱动)
      * @param {string} text - 输入文本
@@ -1086,6 +1095,10 @@ class KeywordManager {
      * @param {HTMLElement} contentElement - 显示容器
      */
     async fetchAndShowExplanationForFocusView(keyword, contentElement) {
+        const app = window.streamNoteInstance;
+        let operationTracker = null;
+        let requestId = null;
+
         try {
             const explanationLanguage = window.streamNoteInstance?.explanationLanguage || "English";
             const cacheKey = `${keyword}|${explanationLanguage}`;
@@ -1105,15 +1118,13 @@ class KeywordManager {
             }
 
             // [防护] 为这个请求分配递增ID，用于检查是否被新请求取代
-            const requestId = ++this.currentExpanationRequestId;
+            requestId = ++this.currentExpanationRequestId;
 
             // === [执行上下文防护] ===
             // 从全局应用获取当前执行上下文的快照
-            const app = window.streamNoteInstance;
             const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
 
             // 启动操作追踪
-            let operationTracker = null;
             if (app && app.operationManager) {
                 operationTracker = app.operationManager.startExplanation(executionContextSnapshot);
             }
@@ -1236,29 +1247,16 @@ class KeywordManager {
             this.explanationCache[cacheKey] = explanation;
 
             // 解释加载完成后显示上下文
-            this.updateWordContext(keyword);
-
-            // 获取context并保存完整的历史记录
             const contextInfo = this.updateWordContext(keyword);
             this.saveExplanationHistory(keyword, explanation, contextInfo);
 
             // [防护] 标记操作完成
-            if (operationTracker) {
-                operationTracker.abort('Explanation completed successfully');
-            }
-            if (app && app.operationManager) {
-                app.operationManager.endExplanation();
-            }
+            this.finishExplanationOperation(app, operationTracker, 'Explanation completed successfully');
         } catch (error) {
             console.error("[KeywordManager] Error fetching explanation:", error);
 
             // [防护] 标记操作已出错
-            if (operationTracker) {
-                operationTracker.abort(`Error: ${error.message}`);
-            }
-            if (app && app.operationManager) {
-                app.operationManager.endExplanation();
-            }
+            this.finishExplanationOperation(app, operationTracker, `Error: ${error.message}`);
 
             // 只有当执行上下文仍然有效时才显示错误
             if (operationTracker && !operationTracker.isValid(app)) {
@@ -1928,9 +1926,7 @@ class KeywordManager {
         }
 
         // [防护] 标记操作完成
-        if (operationTracker) {
-            operationTracker.abort('History restore completed');
-        }
+        this.finishExplanationOperation(app, operationTracker, 'History restore completed');
     }
 
     /**

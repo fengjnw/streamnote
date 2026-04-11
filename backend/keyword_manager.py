@@ -125,14 +125,3 @@ def create_keyword_manager(openai_api_key: Optional[str] = None) -> KeywordManag
         KeywordManager 实例
     """
     return KeywordManager(openai_api_key)
-
-
-# 向后兼容：保留旧的工厂函数名称
-def create_extractor(openai_api_key: Optional[str] = None) -> KeywordManager:
-    """向后兼容：旧的工厂函数名称"""
-    return create_keyword_manager(openai_api_key)
-
-
-def create_explainer(openai_api_key: Optional[str] = None) -> KeywordManager:
-    """向后兼容：旧的工厂函数名称"""
-    return create_keyword_manager(openai_api_key)

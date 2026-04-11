@@ -30,20 +30,59 @@ class HighlightManager {
         this.currentTemporaryWord = null;
     }
 
+    normalizeHighlightText(text) {
+        if (!text) return "";
+        let cleanedText = text.trim();
+        cleanedText = cleanedText.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
+        cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
+        return cleanedText;
+    }
+
+    generateHighlightId(prefix = "hl") {
+        return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    persistHighlightState() {
+        this.keywordManager.updateAllKeywordDisplays();
+        this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
+        this.sessionManager.updateCurrentKeywords(this.keywordManager.extracts);
+
+        if (this.sessionManager) {
+            this.sessionManager.updateHighlightPositions(this.highlightPositions);
+        }
+    }
+
+    removeHighlightMarkupById(highlightId) {
+        if (!highlightId) return;
+
+        const transcriptDiv = document.getElementById("transcript");
+        if (transcriptDiv) {
+            const highlights = transcriptDiv.querySelectorAll(`[data-highlight-id="${highlightId}"]`);
+            highlights.forEach(span => {
+                const textNode = document.createTextNode(span.textContent);
+                span.parentNode.replaceChild(textNode, span);
+            });
+            this.mergeAdjacentTextNodes(transcriptDiv);
+        }
+
+        const translationDiv = document.getElementById("translation");
+        if (translationDiv) {
+            const highlights = translationDiv.querySelectorAll(`[data-highlight-id="${highlightId}"]`);
+            highlights.forEach(span => {
+                const textNode = document.createTextNode(span.textContent);
+                span.parentNode.replaceChild(textNode, span);
+            });
+            this.mergeAdjacentTextNodes(translationDiv);
+        }
+    }
+
     /**
      * 添加选中的文本作为高亮
      */
     addSelectedTextAsHighlight(selectedText) {
         if (!selectedText || !this.keywordManager) return;
 
-        let highlightText = selectedText.trim();
-
-        // 移除选中文本中的所有时间戳（可能有多个）
-        // 时间戳格式: [HH:MM:SS]，用全局替换
-        highlightText = highlightText.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
-
-        // 额外清理：移除多余的空格
-        highlightText = highlightText.replace(/\s+/g, ' ').trim();
+        const highlightText = this.normalizeHighlightText(selectedText);
 
         if (!highlightText) {
             this.onStatusMessage("No valid text to highlight", 1500);
@@ -58,7 +97,7 @@ class HighlightManager {
         }
 
         // 生成唯一的高亮ID
-        const highlightId = "hl-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+        const highlightId = this.generateHighlightId();
 
         // 添加到高亮内容
         this.keywordManager.highlights.push(highlightText);
@@ -66,20 +105,10 @@ class HighlightManager {
         // 存储高亮ID映射（用于后续删除）
         this.highlightIdMap[highlightText] = highlightId;
 
-        // 更新所有显示
-        this.keywordManager.updateAllKeywordDisplays();
-
         // 在原文中进行高亮显示
         this.highlightTextInTranscript(highlightText, highlightId);
 
-        // 同时保存高亮和关键词
-        this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
-        this.sessionManager.updateCurrentKeywords(this.keywordManager.extracts);
-
-        // 保存高亮位置信息到session
-        if (this.sessionManager) {
-            this.sessionManager.updateHighlightPositions(this.highlightPositions);
-        }
+        this.persistHighlightState();
 
         this.onStatusMessage(`✓ Highlighted "${highlightText}"`, 1500);
 
@@ -97,11 +126,7 @@ class HighlightManager {
     addSelectedTextAsHighlightWithRange(selectedText, range) {
         if (!selectedText || !range || !this.keywordManager) return;
 
-        let highlightText = selectedText.trim();
-
-        // 移除所有时间戳
-        highlightText = highlightText.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
-        highlightText = highlightText.replace(/\s+/g, ' ').trim();
+        const highlightText = this.normalizeHighlightText(selectedText);
 
         if (!highlightText) {
             this.onStatusMessage("No valid text to highlight", 1500);
@@ -116,7 +141,7 @@ class HighlightManager {
         }
 
         // 生成唯一的高亮ID
-        const highlightId = "hl-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+        const highlightId = this.generateHighlightId();
 
         // 添加到列表
         this.keywordManager.highlights.push(highlightText);
@@ -140,15 +165,7 @@ class HighlightManager {
         // 清除用户的选区（应用完高亮后）
         window.getSelection().removeAllRanges();
 
-        // 更新显示和保存
-        this.keywordManager.updateAllKeywordDisplays();
-        this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
-        this.sessionManager.updateCurrentKeywords(this.keywordManager.extracts);
-
-        // 保存高亮位置信息到session
-        if (this.sessionManager) {
-            this.sessionManager.updateHighlightPositions(this.highlightPositions);
-        }
+        this.persistHighlightState();
 
         this.onStatusMessage(`✓ Highlighted "${highlightText}"`, 1500);
 
@@ -171,10 +188,7 @@ class HighlightManager {
             return false;
         }
 
-        let cleanedText = highlightText.trim();
-        // 移除所有时间戳
-        cleanedText = cleanedText.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
-        cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
+        const cleanedText = this.normalizeHighlightText(highlightText);
 
         if (!cleanedText) {
             this.onStatusMessage("No valid text to highlight", 1500);
@@ -188,7 +202,7 @@ class HighlightManager {
         }
 
         // 生成唯一的高亮ID
-        const highlightId = "hl-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+        const highlightId = this.generateHighlightId();
 
         // 添加到高亮列表
         this.keywordManager.highlights.push(cleanedText);
@@ -217,15 +231,7 @@ class HighlightManager {
             this.highlightTextInTranscript(cleanedText, highlightId);
         }
 
-        // 更新显示和保存
-        this.keywordManager.updateAllKeywordDisplays();
-        this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
-        this.sessionManager.updateCurrentKeywords(this.keywordManager.extracts);
-
-        // 保存高亮位置信息到session
-        if (this.sessionManager) {
-            this.sessionManager.updateHighlightPositions(this.highlightPositions);
-        }
+        this.persistHighlightState();
 
         this.onStatusMessage(`✓ Highlighted "${cleanedText}"`, 1500);
 
@@ -933,27 +939,7 @@ class HighlightManager {
         if (this.highlightIdMap && this.highlightIdMap[text]) {
             const highlightId = this.highlightIdMap[text];
 
-            // 从原文删除
-            const transcriptDiv = document.getElementById("transcript");
-            if (transcriptDiv) {
-                const highlights = transcriptDiv.querySelectorAll(`[data-highlight-id="${highlightId}"]`);
-                highlights.forEach(span => {
-                    const textNode = document.createTextNode(span.textContent);
-                    span.parentNode.replaceChild(textNode, span);
-                });
-                this.mergeAdjacentTextNodes(transcriptDiv);
-            }
-
-            // 从翻译删除
-            const translationDiv = document.getElementById("translation");
-            if (translationDiv) {
-                const highlights = translationDiv.querySelectorAll(`[data-highlight-id="${highlightId}"]`);
-                highlights.forEach(span => {
-                    const textNode = document.createTextNode(span.textContent);
-                    span.parentNode.replaceChild(textNode, span);
-                });
-                this.mergeAdjacentTextNodes(translationDiv);
-            }
+            this.removeHighlightMarkupById(highlightId);
 
             // 删除ID映射
             delete this.highlightIdMap[text];
@@ -1029,9 +1015,7 @@ class HighlightManager {
         if (!text || !this.keywordManager) return false;
 
         // 对输入文本进行相同的清理处理，确保与highlights中的内容匹配
-        let cleanedText = text.trim();
-        cleanedText = cleanedText.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
-        cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
+        const cleanedText = this.normalizeHighlightText(text);
 
         if (!cleanedText) return false;
 
@@ -1142,9 +1126,7 @@ class HighlightManager {
             return false;
         }
 
-        let cleanedWord = word.trim();
-        cleanedWord = cleanedWord.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
-        cleanedWord = cleanedWord.replace(/\s+/g, ' ').trim();
+        const cleanedWord = this.normalizeHighlightText(word);
 
         if (!cleanedWord) return false;
 
@@ -1154,7 +1136,7 @@ class HighlightManager {
         }
 
         // 生成临时高亮ID
-        const tempHighlightId = "temp-hl-" + Date.now();
+        const tempHighlightId = this.generateHighlightId("temp-hl");
 
         // 保存临时高亮信息
         this.temporaryHighlights[cleanedWord] = {
@@ -1213,28 +1195,7 @@ class HighlightManager {
 
         if (tempInfo && tempInfo.highlightId) {
             const tempId = tempInfo.highlightId;
-
-            // 从原文移除临时高亮
-            const transcriptDiv = document.getElementById("transcript");
-            if (transcriptDiv) {
-                const highlights = transcriptDiv.querySelectorAll(`[data-highlight-id="${tempId}"]`);
-                highlights.forEach(span => {
-                    const textNode = document.createTextNode(span.textContent);
-                    span.parentNode.replaceChild(textNode, span);
-                });
-                this.mergeAdjacentTextNodes(transcriptDiv);
-            }
-
-            // 从翻译移除临时高亮
-            const translationDiv = document.getElementById("translation");
-            if (translationDiv) {
-                const highlights = translationDiv.querySelectorAll(`[data-highlight-id="${tempId}"]`);
-                highlights.forEach(span => {
-                    const textNode = document.createTextNode(span.textContent);
-                    span.parentNode.replaceChild(textNode, span);
-                });
-                this.mergeAdjacentTextNodes(translationDiv);
-            }
+            this.removeHighlightMarkupById(tempId);
         }
 
         delete this.temporaryHighlights[word];
@@ -1249,9 +1210,7 @@ class HighlightManager {
     commitTemporaryHighlight(word) {
         if (!word) return false;
 
-        let cleanedWord = word.trim();
-        cleanedWord = cleanedWord.replace(/\[\d{2}:\d{2}:\d{2}\]/g, '').trim();
-        cleanedWord = cleanedWord.replace(/\s+/g, ' ').trim();
+        const cleanedWord = this.normalizeHighlightText(word);
 
         if (!cleanedWord) return false;
 
@@ -1266,7 +1225,7 @@ class HighlightManager {
         }
 
         // 生成永久高亮ID
-        const permanentHighlightId = "hl-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+        const permanentHighlightId = this.generateHighlightId();
 
         // 替换高亮ID（从临时改为永久）并改变样式
         const tempId = tempInfo.highlightId;
@@ -1311,13 +1270,17 @@ class HighlightManager {
         this.currentTemporaryWord = null;
 
         // 更新显示和保存
-        if (this.keywordManager) {
-            this.keywordManager.updateAllKeywordDisplays();
-        }
-        this.sessionManager?.updateCurrentHighlights(this.keywordManager?.highlights || []);
-        this.sessionManager?.updateCurrentKeywords(this.keywordManager?.extracts || []);
-        if (this.sessionManager) {
-            this.sessionManager.updateHighlightPositions(this.highlightPositions);
+        if (this.keywordManager && this.sessionManager) {
+            this.persistHighlightState();
+        } else {
+            if (this.keywordManager) {
+                this.keywordManager.updateAllKeywordDisplays();
+            }
+            this.sessionManager?.updateCurrentHighlights(this.keywordManager?.highlights || []);
+            this.sessionManager?.updateCurrentKeywords(this.keywordManager?.extracts || []);
+            if (this.sessionManager) {
+                this.sessionManager.updateHighlightPositions(this.highlightPositions);
+            }
         }
 
         this.onStatusMessage(`✓ Highlighted "${cleanedWord}"`, 1500);

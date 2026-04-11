@@ -158,18 +158,7 @@ class SessionManager {
             // 检查是否应该加载示例会话（基于设置）
             if (this.defaultSettings.loadTutorialSession !== false) {
                 // 如果启用了 loadTutorialSession，则每次都加载/显示教程会话
-                if (createTutorialSession) {
-                    createTutorialSession();
-                    // 重新加载一次 sessions
-                    const saved = localStorage.getItem(this.STORAGE_KEY);
-                    if (saved) {
-                        this.sessions = JSON.parse(saved);
-                    }
-                    // 将当前 session 设置为示例会话
-                    if (this.sessions[TUTORIAL_SESSION_DATA.id]) {
-                        this.currentSessionId = TUTORIAL_SESSION_DATA.id;
-                    }
-                }
+                this.loadTutorialSessionIntoState(false);
             } else {
                 // 如果禁用了演示会话，使用保存的 currentId 或创建新 session
                 const currentId = localStorage.getItem(this.CURRENT_SESSION_KEY);
@@ -182,19 +171,51 @@ class SessionManager {
         } catch (error) {
             console.error('[SessionManager] Load error:', error);
             // 检查是否应该加载示例会话
-            if (this.defaultSettings.loadTutorialSession !== false && createTutorialSession) {
-                createTutorialSession();
-                const saved = localStorage.getItem(this.STORAGE_KEY);
-                if (saved) {
-                    this.sessions = JSON.parse(saved);
-                }
-                if (this.sessions[TUTORIAL_SESSION_DATA.id]) {
-                    this.currentSessionId = TUTORIAL_SESSION_DATA.id;
-                }
+            if (this.defaultSettings.loadTutorialSession !== false && this.loadTutorialSessionIntoState(false)) {
+                // tutorial session loaded
             } else {
                 this.createNewSession();
             }
         }
+    }
+
+    loadTutorialSessionIntoState(useSwitch = false) {
+        if (typeof createTutorialSession !== 'function' || !TUTORIAL_SESSION_DATA) {
+            return false;
+        }
+
+        createTutorialSession();
+
+        const saved = localStorage.getItem(this.STORAGE_KEY);
+        if (saved) {
+            this.sessions = JSON.parse(saved);
+        }
+
+        if (!this.sessions[TUTORIAL_SESSION_DATA.id]) {
+            return false;
+        }
+
+        if (useSwitch) {
+            this.switchSession(TUTORIAL_SESSION_DATA.id);
+        } else {
+            this.currentSessionId = TUTORIAL_SESSION_DATA.id;
+        }
+
+        return true;
+    }
+
+    formatSessionDefaultName(date = new Date()) {
+        if (window.DateTimeUtils && typeof window.DateTimeUtils.formatDateTime === 'function') {
+            return window.DateTimeUtils.formatDateTime(date);
+        }
+
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     }
 
     /**
@@ -218,14 +239,7 @@ class SessionManager {
         // Generate default name using ISO 8601 format (YYYY-MM-DD HH:MM:SS)
         let defaultName = name;
         if (!defaultName) {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            defaultName = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            defaultName = this.formatSessionDefaultName(new Date());
         }
 
         // 使用全局默认设置
@@ -804,18 +818,7 @@ class SessionManager {
 
         // 加载教程会话
         document.getElementById('loadTutorialBtn')?.addEventListener('click', () => {
-            if (createTutorialSession) {
-                createTutorialSession();
-                // 重新加载 sessions
-                const saved = localStorage.getItem(this.STORAGE_KEY);
-                if (saved) {
-                    this.sessions = JSON.parse(saved);
-                }
-                // 切换到教程会话
-                if (this.sessions[TUTORIAL_SESSION_DATA.id] && TUTORIAL_SESSION_DATA) {
-                    this.switchSession(TUTORIAL_SESSION_DATA.id);
-                }
-            }
+            this.loadTutorialSessionIntoState(true);
         });
 
         // 重命名session
@@ -888,6 +891,9 @@ class SessionManager {
      * 格式化完整日期（ISO 8601 格式）
      */
     formatFullDate(timestamp) {
+        if (window.DateTimeUtils && typeof window.DateTimeUtils.formatDateFromEpochMs === 'function') {
+            return window.DateTimeUtils.formatDateFromEpochMs(timestamp);
+        }
         const date = new Date(timestamp);
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');

@@ -329,16 +329,7 @@ class StreamNote {
         }
 
         // 更新总结语言选择器
-        const summaryLanguageSelector = document.getElementById("summary-language");
-        if (summaryLanguageSelector) {
-            summaryLanguageSelector.value = this.explanationLanguage;
-        }
-
-        // 更新关键词解释语言选择器
-        const keywordExplanationLangSelector = document.getElementById("keyword-explanation-language");
-        if (keywordExplanationLangSelector) {
-            keywordExplanationLangSelector.value = this.explanationLanguage;
-        }
+        this.syncExplanationLanguageSelectors();
 
         // 加载转录内容到 RecordingManager，并设置session开始时间用于时间戳计算
         this.recordingManager.setTranscriptData(session.transcripts || {});
@@ -541,15 +532,7 @@ class StreamNote {
 
         const dateDisplay = document.getElementById('sessionDateDisplay');
         if (dateDisplay) {
-            const date = new Date(displayTime);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            const seconds = String(date.getSeconds()).padStart(2, '0');
-            const dateStr = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-            dateDisplay.textContent = dateStr;
+            dateDisplay.textContent = DateTimeUtils.formatDateTime(new Date(displayTime));
         }
 
         // 计算 items 数量
@@ -678,7 +661,7 @@ class StreamNote {
      * 保存当前布局和翻译设置到会话
      */
     savePanelState() {
-        if (this.currentSession) {
+        if (this.sessionManager.getCurrentSession()) {
             this.sessionManager.updateCurrentSettings({
                 layout: this.panelManager.currentLayout,
                 translationEnabled: this.panelManager.translationEnabled,
@@ -764,9 +747,6 @@ class StreamNote {
 
                 // 语言改变，重新翻译全部
                 if (this.translationEnabled) {
-                    // 如果正在录制，提示用户
-                    if (this.isRecording) {
-                    }
                     await this.translationManager.retranslateAll();
                 }
 
@@ -778,7 +758,7 @@ class StreamNote {
         // 添加解释语言选择
         const keywordExplanationLangSelector = document.getElementById("keyword-explanation-language");
         if (keywordExplanationLangSelector) {
-            keywordExplanationLangSelector.addEventListener("change", (e) => {
+            keywordExplanationLangSelector.addEventListener("change", async (e) => {
                 // === 执行上下文更新 ===
                 // 解释语言变更，递增版本号使所有进行中的解释操作失效
                 this.executionContextVersion++;
@@ -790,17 +770,7 @@ class StreamNote {
                 // 保存设置到 session
                 this.saveSettingsToSession();
 
-                // 同步总结语言选择器的值
-                const summaryLanguageSelector = document.getElementById("summary-language");
-                if (summaryLanguageSelector) {
-                    summaryLanguageSelector.value = this.explanationLanguage;
-                }
-
-                // 同步设置面板的默认解释语言选择器
-                const defaultExplanationLanguageSelector = document.getElementById("defaultExplanationLanguage");
-                if (defaultExplanationLanguageSelector) {
-                    defaultExplanationLanguageSelector.value = this.explanationLanguage;
-                }
+                this.syncExplanationLanguageSelectors();
 
                 // 如果keyword manager存在，刷新显示
                 if (this.keywordManager) {
@@ -814,13 +784,7 @@ class StreamNote {
                 const summarizeStyleSelect = document.getElementById("summarizeStyleSelect");
                 if (summaryDisplay) {
                     const selectedStyle = summarizeStyleSelect ? summarizeStyleSelect.value : "paragraph";
-                    const cacheKey = `${this.explanationLanguage}-${selectedStyle}`;
-                    if (this.summaryCache && this.summaryCache[cacheKey]) {
-                        const cachedSummary = this.summaryCache[cacheKey];
-                        summaryDisplay.innerHTML = this.formatSummaryDisplay(cachedSummary, selectedStyle);
-                    } else {
-                        summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
-                    }
+                    await this.updateSummaryDisplayForSelection(summaryDisplay, selectedStyle, false);
                 }
             });
         }
@@ -987,16 +951,7 @@ class StreamNote {
                             !summaryDisplay.querySelector(".placeholder");
 
                         if (!hasContent) {
-                            // Get transcript text from current session
-                            const session = this.sessionManager.getCurrentSession();
-                            let textToSummarize = "";
-
-                            if (session && session.transcripts) {
-                                textToSummarize = Object.values(session.transcripts)
-                                    .map(item => item && item.text ? item.text : "")
-                                    .filter(text => text.trim().length > 0)
-                                    .join(" ");
-                            }
+                            const textToSummarize = this.getCurrentSessionTranscriptText();
 
                             if (textToSummarize && textToSummarize.trim().length > 0) {
                                 // Auto-trigger summary generation
@@ -1053,17 +1008,7 @@ class StreamNote {
 
         if (regenerateSummaryBtn) {
             regenerateSummaryBtn.addEventListener("click", async () => {
-                // 从当前session获取转录文本
-                const session = this.sessionManager.getCurrentSession();
-                let textToSummarize = "";
-
-                if (session && session.transcripts) {
-                    // session.transcripts 是一个对象，key 是 chunk index，value 是 {text, timestamp} 等
-                    textToSummarize = Object.values(session.transcripts)
-                        .map(item => item && item.text ? item.text : "")
-                        .filter(text => text.trim().length > 0)
-                        .join(" ");
-                }
+                const textToSummarize = this.getCurrentSessionTranscriptText();
 
                 if (!textToSummarize || textToSummarize.trim().length === 0) {
                     alert("No transcript text to summarize");
@@ -1095,47 +1040,8 @@ class StreamNote {
         // Summary style selector - load cached summary or auto-generate if needed
         if (summarizeStyleSelect) {
             summarizeStyleSelect.addEventListener("change", async () => {
-                const session = this.sessionManager.getCurrentSession();
-                const language = this.explanationLanguage;
                 const selectedStyle = summarizeStyleSelect.value;
-                const cacheKey = `${language}-${selectedStyle}`;
-
-                // 如果有缓存，显示缓存的总结
-                if (this.summaryCache[cacheKey]) {
-                    summaryDisplay.innerHTML = this.formatSummaryDisplay(this.summaryCache[cacheKey], selectedStyle);
-                } else {
-                    // 检查是否有其他样式的内容（说明用户已生成过总结）
-                    const hasContent = summaryDisplay.children.length > 0 &&
-                        !summaryDisplay.querySelector(".placeholder");
-
-                    if (hasContent) {
-                        // 自动生成新的风格
-                        try {
-                            let textToSummarize = "";
-                            if (session && session.transcripts) {
-                                textToSummarize = Object.values(session.transcripts)
-                                    .map(item => item && item.text ? item.text : "")
-                                    .filter(text => text.trim().length > 0)
-                                    .join(" ");
-                            }
-
-                            if (textToSummarize && textToSummarize.trim().length > 0) {
-                                this.showStatusMessage("Generating summary...", 1000);
-                                summaryDisplay.innerHTML = '<p class="placeholder">Generating summary...</p>';
-                                const summary = await this.summarizeText(textToSummarize, true, selectedStyle);
-                                if (summary) {
-                                    summaryDisplay.innerHTML = this.formatSummaryDisplay(summary, selectedStyle);
-                                }
-                            }
-                        } catch (error) {
-                            console.error("[SUMMARY] Error auto-generating summary:", error);
-                            summaryDisplay.innerHTML = '<p class="placeholder">Failed to generate summary</p>';
-                        }
-                    } else {
-                        // 没有缓存也没有其他内容，显示提示
-                        summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
-                    }
-                }
+                await this.updateSummaryDisplayForSelection(summaryDisplay, selectedStyle, true);
             });
         }
 
@@ -1145,55 +1051,8 @@ class StreamNote {
             summaryLanguageSelector.addEventListener("change", async (e) => {
                 this.explanationLanguage = e.target.value;
                 const selectedStyle = summarizeStyleSelect ? summarizeStyleSelect.value : "paragraph";
-                const cacheKey = `${this.explanationLanguage}-${selectedStyle}`;
-
-                // 如果有缓存，显示缓存的总结
-                if (this.summaryCache[cacheKey]) {
-                    summaryDisplay.innerHTML = this.formatSummaryDisplay(this.summaryCache[cacheKey], selectedStyle);
-                } else {
-                    // 检查是否有其他语言的内容（说明用户已生成过总结）
-                    const hasContent = summaryDisplay.children.length > 0 &&
-                        !summaryDisplay.querySelector(".placeholder");
-
-                    if (hasContent) {
-                        // 自动生成新的语言
-                        try {
-                            const session = this.sessionManager.getCurrentSession();
-                            let textToSummarize = "";
-                            if (session && session.transcripts) {
-                                textToSummarize = Object.values(session.transcripts)
-                                    .map(item => item && item.text ? item.text : "")
-                                    .filter(text => text.trim().length > 0)
-                                    .join(" ");
-                            }
-
-                            if (textToSummarize && textToSummarize.trim().length > 0) {
-                                this.showStatusMessage("Generating summary...", 1000);
-                                summaryDisplay.innerHTML = '<p class="placeholder">Generating summary...</p>';
-                                const summary = await this.summarizeText(textToSummarize, true, selectedStyle);
-                                if (summary) {
-                                    summaryDisplay.innerHTML = this.formatSummaryDisplay(summary, selectedStyle);
-                                }
-                            }
-                        } catch (error) {
-                            console.error("[SUMMARY] Error auto-generating summary:", error);
-                            summaryDisplay.innerHTML = '<p class="placeholder">Failed to generate summary</p>';
-                        }
-                    } else {
-                        // 没有缓存也没有其他内容，显示提示
-                        summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
-                    }
-                }
-
-                // 更新其他地方的explanationLanguage选择器
-                const explanationLanguageSelector = document.getElementById("keyword-explanation-language");
-                if (explanationLanguageSelector) {
-                    explanationLanguageSelector.value = this.explanationLanguage;
-                }
-                const defaultExplanationLanguageSelector = document.getElementById("defaultExplanationLanguage");
-                if (defaultExplanationLanguageSelector) {
-                    defaultExplanationLanguageSelector.value = this.explanationLanguage;
-                }
+                await this.updateSummaryDisplayForSelection(summaryDisplay, selectedStyle, true);
+                this.syncExplanationLanguageSelectors();
 
                 // 保存设置到session
                 this.saveSettingsToSession();
@@ -1514,12 +1373,10 @@ class StreamNote {
 
         // 编辑 modal 关闭处理
         const editModalBackdrop = document.getElementById("editModalBackdrop");
-        const editModal = document.getElementById("editModal");
         const closeEditModalBtn = document.getElementById("closeEditModal");
 
         const closeEditModal = () => {
-            if (editModalBackdrop) editModalBackdrop.style.display = "none";
-            if (editModal) editModal.style.display = "none";
+            this.setEditModalVisibility(false);
             if (editTextBtn) editTextBtn.classList.remove("active");
         };
 
@@ -1873,12 +1730,7 @@ class StreamNote {
                 this.clear();
 
                 // 关闭模态窗口
-                const backdrop = document.getElementById("editModalBackdrop");
-                const modal = document.getElementById("editModal");
-                if (backdrop && modal) {
-                    backdrop.style.display = "none";
-                    modal.style.display = "none";
-                }
+                this.setEditModalVisibility(false);
             }
         });
 
@@ -1889,21 +1741,11 @@ class StreamNote {
 
         // Cancel 按钮
         cancelBtn.addEventListener("click", () => {
-            const backdrop = document.getElementById("editModalBackdrop");
-            const modal = document.getElementById("editModal");
-            if (backdrop && modal) {
-                backdrop.style.display = "none";
-                modal.style.display = "none";
-            }
+            this.setEditModalVisibility(false);
         });
 
         // 显示 modal
-        const backdrop = document.getElementById("editModalBackdrop");
-        const modal = document.getElementById("editModal");
-        if (backdrop && modal) {
-            backdrop.style.display = "block";
-            modal.style.display = "flex";
-        }
+        this.setEditModalVisibility(true);
     }
 
     /**
@@ -1939,25 +1781,17 @@ class StreamNote {
             if (relativeSeconds !== null && relativeSeconds >= 0) {
                 // 转换为实际时间
                 const actualTimeMs = sessionStartMs + relativeSeconds * 1000;
-                const date = new Date(actualTimeMs);
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                displayDate = `${year}-${month}-${day}`;
-
-                const hours = String(date.getHours()).padStart(2, '0');
-                const minutes = String(date.getMinutes()).padStart(2, '0');
-                const seconds = String(date.getSeconds()).padStart(2, '0');
-                displayTime = `${hours}:${minutes}:${seconds}`;
+                displayDate = DateTimeUtils.formatDateFromEpochMs(actualTimeMs);
+                displayTime = DateTimeUtils.formatTimeFromEpochMs(actualTimeMs);
             }
             else if (typeof timestamp === 'string' && /^\d{2}:\d{2}:\d{2}$/.test(timestamp)) {
                 displayTime = timestamp;
-                displayDate = `${sessionStartDate.getFullYear()}-${String(sessionStartDate.getMonth() + 1).padStart(2, '0')}-${String(sessionStartDate.getDate()).padStart(2, '0')}`;
+                displayDate = DateTimeUtils.formatDate(sessionStartDate);
             }
         } else {
             // 默认为session开始日期时间
-            displayDate = `${sessionStartDate.getFullYear()}-${String(sessionStartDate.getMonth() + 1).padStart(2, '0')}-${String(sessionStartDate.getDate()).padStart(2, '0')}`;
-            displayTime = `${String(sessionStartDate.getHours()).padStart(2, '0')}:${String(sessionStartDate.getMinutes()).padStart(2, '0')}:${String(sessionStartDate.getSeconds()).padStart(2, '0')}`;
+            displayDate = DateTimeUtils.formatDate(sessionStartDate);
+            displayTime = DateTimeUtils.formatTime(sessionStartDate);
         }
 
         // 日期输入框
@@ -2396,12 +2230,7 @@ class StreamNote {
         this.showStatusMessage("Transcript updated", 1500);
 
         // 关闭 modal
-        const backdrop = document.getElementById("editModalBackdrop");
-        const modal = document.getElementById("editModal");
-        if (backdrop && modal) {
-            backdrop.style.display = "none";
-            modal.style.display = "none";
-        }
+        this.setEditModalVisibility(false);
 
         // 清理
         this.editInputs = null;
@@ -3021,12 +2850,7 @@ class StreamNote {
             const text = result.text.trim();
 
             if (text) {
-                const timestamp = new Date().toLocaleTimeString('zh-CN', {
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
+                const timestamp = DateTimeUtils.getNowTimeString();
 
                 // 直接保存到请求时的 session
                 const transcriptData = { [currentChunkIndex]: { text, timestamp } };
@@ -3115,26 +2939,13 @@ class StreamNote {
                     const session = this.sessionManager.getCurrentSession();
                     const sessionStartMs = session && session.startTime ? session.startTime : Date.now();
                     const actualTimeMs = sessionStartMs + timeValue * 1000;
-                    const date = new Date(actualTimeMs);
-                    const hours = String(date.getHours()).padStart(2, '0');
-                    const minutes = String(date.getMinutes()).padStart(2, '0');
-                    const seconds = String(date.getSeconds()).padStart(2, '0');
-                    timestamp = `${hours}:${minutes}:${seconds}`;
+                    timestamp = DateTimeUtils.formatTimeFromEpochMs(actualTimeMs);
                 } else {
                     // 无法解析，使用当前时间
-                    const now = new Date();
-                    const hours = String(now.getHours()).padStart(2, '0');
-                    const minutes = String(now.getMinutes()).padStart(2, '0');
-                    const seconds = String(now.getSeconds()).padStart(2, '0');
-                    timestamp = `${hours}:${minutes}:${seconds}`;
+                    timestamp = DateTimeUtils.getNowTimeString();
                 }
             } else {
-                timestamp = new Date().toLocaleTimeString('zh-CN', {
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
+                timestamp = DateTimeUtils.getNowTimeString();
             }
 
             return `<p data-index="${key}" data-timestamp="[${timestamp}]">${text}</p>`;
@@ -3257,27 +3068,13 @@ class StreamNote {
                     const session = this.sessionManager.getCurrentSession();
                     const sessionStartMs = session && session.startTime ? session.startTime : Date.now();
                     const actualTimeMs = sessionStartMs + timeValue * 1000;
-                    const date = new Date(actualTimeMs);
-                    const hours = String(date.getHours()).padStart(2, '0');
-                    const minutes = String(date.getMinutes()).padStart(2, '0');
-                    const seconds = String(date.getSeconds()).padStart(2, '0');
-                    timestamp = `${hours}:${minutes}:${seconds}`;
+                    timestamp = DateTimeUtils.formatTimeFromEpochMs(actualTimeMs);
                 } else {
                     // 无法解析，使用当前时间
-                    timestamp = new Date().toLocaleTimeString('zh-CN', {
-                        hour12: false,
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    });
+                    timestamp = DateTimeUtils.getNowTimeString();
                 }
             } else {
-                timestamp = new Date().toLocaleTimeString('zh-CN', {
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
+                timestamp = DateTimeUtils.getNowTimeString();
             }
 
             const translation = translationData[key];
@@ -3722,6 +3519,77 @@ class StreamNote {
         // 当status更新为"Listening..."或"Transcripting..."时，同步更新转录框显示
         if (text.includes("Listening") || text.includes("Transcripting")) {
             this.updateDisplay();
+        }
+    }
+
+    syncExplanationLanguageSelectors() {
+        const selectorIds = [
+            "summary-language",
+            "keyword-explanation-language",
+            "defaultExplanationLanguage"
+        ];
+
+        selectorIds.forEach((selectorId) => {
+            const selector = document.getElementById(selectorId);
+            if (selector) {
+                selector.value = this.explanationLanguage;
+            }
+        });
+    }
+
+    setEditModalVisibility(isVisible) {
+        const backdrop = document.getElementById("editModalBackdrop");
+        const modal = document.getElementById("editModal");
+        if (!backdrop || !modal) return;
+
+        backdrop.style.display = isVisible ? "block" : "none";
+        modal.style.display = isVisible ? "flex" : "none";
+    }
+
+    getCurrentSessionTranscriptText() {
+        const session = this.sessionManager.getCurrentSession();
+        if (!session || !session.transcripts) return "";
+
+        return Object.values(session.transcripts)
+            .map(item => item && item.text ? item.text : "")
+            .filter(text => text.trim().length > 0)
+            .join(" ");
+    }
+
+    async updateSummaryDisplayForSelection(summaryDisplay, selectedStyle, autoGenerateOnMiss) {
+        if (!summaryDisplay) return;
+
+        const cacheKey = `${this.explanationLanguage}-${selectedStyle}`;
+
+        if (this.summaryCache[cacheKey]) {
+            summaryDisplay.innerHTML = this.formatSummaryDisplay(this.summaryCache[cacheKey], selectedStyle);
+            return;
+        }
+
+        if (!autoGenerateOnMiss) {
+            summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
+            return;
+        }
+
+        const hasContent = summaryDisplay.children.length > 0 && !summaryDisplay.querySelector(".placeholder");
+        if (!hasContent) {
+            summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
+            return;
+        }
+
+        try {
+            const textToSummarize = this.getCurrentSessionTranscriptText();
+            if (textToSummarize && textToSummarize.trim().length > 0) {
+                this.showStatusMessage("Generating summary...", 1000);
+                summaryDisplay.innerHTML = '<p class="placeholder">Generating summary...</p>';
+                const summary = await this.summarizeText(textToSummarize, true, selectedStyle);
+                if (summary) {
+                    summaryDisplay.innerHTML = this.formatSummaryDisplay(summary, selectedStyle);
+                }
+            }
+        } catch (error) {
+            console.error("[SUMMARY] Error auto-generating summary:", error);
+            summaryDisplay.innerHTML = '<p class="placeholder">Failed to generate summary</p>';
         }
     }
 

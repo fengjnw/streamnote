@@ -28,6 +28,15 @@ class TranslationManager {
         this.language = language;
     }
 
+    finishTranslationOperation(app, operationTracker, index, reason) {
+        if (operationTracker) {
+            operationTracker.abort(reason);
+        }
+        if (app && app.operationManager) {
+            app.operationManager.endTranslation(index);
+        }
+    }
+
     /**
      * 翻译文本 - 流式版本
      */
@@ -60,8 +69,7 @@ class TranslationManager {
 
             if (!response.ok) {
                 console.error(`[ERROR] Translation API error: ${response.status}`);
-                if (operationTracker) operationTracker.abort(`API error: ${response.status}`);
-                if (app && app.operationManager) app.operationManager.endTranslation(index);
+                this.finishTranslationOperation(app, operationTracker, index, `API error: ${response.status}`);
                 return;
             }
 
@@ -123,23 +131,13 @@ class TranslationManager {
             }
 
             // [防护] 标记操作完成
-            if (operationTracker) {
-                operationTracker.abort('Translation completed successfully');
-            }
-            if (app && app.operationManager) {
-                app.operationManager.endTranslation(index);
-            }
+            this.finishTranslationOperation(app, operationTracker, index, 'Translation completed successfully');
 
         } catch (error) {
             console.error("[ERROR] Translation request failed:", error);
 
             // [防护] 清理操作追踪
-            if (operationTracker) {
-                operationTracker.abort(`Error: ${error.message}`);
-            }
-            if (app && app.operationManager) {
-                app.operationManager.endTranslation(index);
-            }
+            this.finishTranslationOperation(app, operationTracker, index, `Error: ${error.message}`);
         }
     }
 

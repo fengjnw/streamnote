@@ -50,20 +50,18 @@
 <body>
     <header>
         <div class="header-logo">
-            <h1 style="margin: 0;">StreamNote</h1>
+            <h1>StreamNote</h1>
         </div>
         <div class="header-info">
-            <div id="sessionInfoDisplay"
-                style="flex: 1; display: flex; gap: 30px; font-size: 0.95em; opacity: 0.9; align-items: center;">
-                <div id="sessionNameDisplay" style="font-weight: 600; min-width: 150px;"></div>
-                <div id="sessionStatsDisplay" style="display: flex; gap: 25px; font-size: 0.9em;">
-                    <div><span style="opacity: 0.8;">Date</span> <span id="sessionDateDisplay">-</span></div>
-                    <div><span style="opacity: 0.8;">Items</span> <span id="sessionItemCountDisplay">0</span>
+            <div id="sessionInfoDisplay">
+                <div id="sessionNameDisplay"></div>
+                <div id="sessionStatsDisplay">
+                    <div><span class="session-stat-label">Date</span> <span id="sessionDateDisplay">-</span></div>
+                    <div><span class="session-stat-label">Items</span> <span id="sessionItemCountDisplay">0</span>
                     </div>
-                    <div><span style="opacity: 0.8;">Keywords</span> <span id="sessionKeywordCountDisplay">0</span>
+                    <div><span class="session-stat-label">Keywords</span> <span id="sessionKeywordCountDisplay">0</span>
                     </div>
-                    <div id="translationStatusDisplay" style="display: none;"><span
-                            style="opacity: 0.8;">Translate</span>
+                    <div id="translationStatusDisplay"><span class="session-stat-label">Translate</span>
                         <span id="translationLangDisplay">中文</span>
                     </div>
                 </div>
@@ -112,17 +110,16 @@
                 <!-- Content Area -->
                 <div class="content-area">
                     <!-- Hidden menu for Add Content -->
-                    <div id="contentMenu" class="content-menu" style="display: none;">
+                    <div id="contentMenu" class="content-menu">
                         <button class="content-menu-item" id="importFromFileOption">From File</button>
                         <button class="content-menu-item" id="importFromTextOption">From Text</button>
                     </div>
 
-                    <input type="file" id="importFileInput" accept=".json" style="display: none;" />
-                    <input type="file" id="textFileInput" accept=".txt,.md,.text,.markdown,.docx,.pdf"
-                        style="display: none;" />
+                    <input type="file" id="importFileInput" accept=".json" />
+                    <input type="file" id="textFileInput" accept=".txt,.md,.text,.markdown,.docx,.pdf" />
 
                     <!-- Modal Overlay Layer -->
-                    <div id="modalOverlay" class="modal-overlay" style="display: none;"></div>
+                    <div id="modalOverlay" class="modal-overlay"></div>
 
                     <!-- Explanation Panel (Left) - for word explanations -->
                     <div class="explanation-panel-left collapsed">
@@ -166,7 +163,7 @@
                                     <div id="explanation-content" class="explanation-scroll">
                                         <p class="placeholder">Select a word to view its explanation</p>
                                     </div>
-                                    <div id="word-context" class="word-context" style="display: none;">
+                                    <div id="word-context" class="word-context">
                                         <div class="context-label">Context:</div>
                                         <p id="context-text" class="context-text"></p>
                                     </div>
@@ -176,7 +173,7 @@
                     </div>
 
                     <!-- Session Modal -->
-                    <div id="sessionModal" class="floating-modal session-modal" style="display: none;">
+                    <div id="sessionModal" class="floating-modal session-modal">
                         <div class="floating-modal-header">
                             <h3>Sessions</h3>
                             <button id="closeSessionModal" class="panel-close-btn toggle-btn"
@@ -189,7 +186,7 @@
                                 title="Delete current session">Delete</button>
                             <button id="sessionMenuBtn" class="toolbar-btn" title="More options">…</button>
                         </div>
-                        <div class="session-menu" id="sessionMenu" style="display: none;">
+                        <div class="session-menu" id="sessionMenu">
                             <button class="session-menu-item" id="exportCurrentBtn"
                                 title="Export current session">Export</button>
                             <button class="session-menu-item" id="exportAllBtn" title="Export all sessions">Export
@@ -208,32 +205,28 @@
                     </div>
 
                     <!-- Edit Modal Backdrop -->
-                    <div id="editModalBackdrop"
-                        style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 9999;">
+                    <div id="editModalBackdrop" class="edit-modal-backdrop">
                     </div>
 
                     <!-- Edit Modal -->
-                    <div id="editModal" class="floating-modal edit-modal"
-                        style="display: none; width: 90%; max-width: 900px; height: auto; max-height: 70vh; flex-direction: column; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000;">
+                    <div id="editModal" class="floating-modal edit-modal">
                         <div class="floating-modal-header input-group-modal-header">
                             <h3>Edit</h3>
                             <button id="closeEditModal" class="panel-close-btn toggle-btn" title="Close">✕</button>
                         </div>
-                        <div class="floating-modal-content" style="padding: 0; overflow-y: auto; flex: 1;">
-                            <div id="editRowsContainer"
-                                style="display: flex; flex-direction: column; gap: 0; overflow: visible;">
+                        <div class="floating-modal-content edit-modal-content">
+                            <div id="editRowsContainer" class="edit-rows-container">
                                 <!-- Toolbar and edit rows will be rendered here -->
                             </div>
                         </div>
-                        <div class="floating-modal-footer"
-                            style="display: none; padding: 12px 16px; border-top: 1px solid #e0e0e0; gap: 8px; justify-content: flex-end; flex-shrink: 0;">
+                        <div class="floating-modal-footer edit-modal-footer">
                             <button id="editModalCancelBtn" class="toolbar-btn">Cancel</button>
                             <button id="editModalSaveBtn" class="toolbar-btn">Save</button>
                         </div>
                     </div>
 
                     <!-- Settings Modal -->
-                    <div id="settingsModal" class="floating-modal settings-modal" style="display: none;">
+                    <div id="settingsModal" class="floating-modal settings-modal">
                         <div class="floating-modal-header">
                             <h3>Settings</h3>
                             <button id="closeSettingsModal" class="panel-close-btn toggle-btn"
@@ -245,8 +238,7 @@
                                     <h4 class="settings-section-title">New Session Defaults</h4>
                                     <div class="settings-item">
                                         <label for="defaultLanguage">Translation Language:</label>
-                                        <select id="defaultLanguage" class="language-selector"
-                                            style="width: 100%; margin-top: 4px;">
+                                        <select id="defaultLanguage" class="language-selector">
                                             <option value="Chinese">中文</option>
                                             <option value="English">English</option>
                                             <option value="Spanish">Español</option>
@@ -257,8 +249,7 @@
                                     </div>
                                     <div class="settings-item">
                                         <label for="defaultExplanationLanguage">Explanation Language:</label>
-                                        <select id="defaultExplanationLanguage" class="language-selector"
-                                            style="width: 100%; margin-top: 4px;">
+                                        <select id="defaultExplanationLanguage" class="language-selector">
                                             <option value="Chinese">中文</option>
                                             <option value="English">English</option>
                                             <option value="Spanish">Español</option>
@@ -271,10 +262,8 @@
                                 <div class="settings-section">
                                     <h4 class="settings-section-title">Tutorial Session</h4>
                                     <div class="settings-item">
-                                        <label for="loadTutorialSessionToggle"
-                                            style="display: flex; align-items: center; cursor: pointer;">
-                                            <input type="checkbox" id="loadTutorialSessionToggle" checked
-                                                style="margin-right: 8px; cursor: pointer;" />
+                                        <label for="loadTutorialSessionToggle" class="settings-toggle-label">
+                                            <input type="checkbox" id="loadTutorialSessionToggle" checked class="settings-toggle-input" />
                                             Show Tutorial Session on Startup
                                         </label>
                                     </div>
@@ -402,7 +391,7 @@
 
                 <div class="status-bar">
                     <span id="status">Ready</span>
-                    <span id="recording-indicator" class="recording-indicator" style="display: none;">Recording in
+                    <span id="recording-indicator" class="recording-indicator">Recording in
                         <strong id="recording-session-name"></strong></span>
                 </div>
             </div>
@@ -449,6 +438,7 @@
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="executionContext.js"></script>
+    <script src="utils/dateTimeUtils.js"></script>
     <script src="tutorialSession.js"></script>
     <script src="sessionManager.js"></script>
     <script src="keywordManager.js"></script>

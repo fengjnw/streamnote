@@ -7,9 +7,8 @@ from translator import create_translator
 from summarizer import create_summarizer
 from file_processor import extract_text_from_file, validate_file
 import io
-import json
-import os
 import logging
+import traceback
 
 app = Flask(__name__, static_folder='../frontend', static_url_path='')
 CORS(app)
@@ -35,30 +34,10 @@ translator = create_translator(OPENAI_API_KEY)
 summarizer = create_summarizer(OPENAI_API_KEY)
 
 
-def _refine_transcription(text: str, context: str) -> str:
-    """用GPT根据上下文纠正转录错误 - 修正术语、专有名词、异常表述"""
-    system_prompt = """You are a transcription error corrector. Your job is:
-1. Use the context to identify and fix transcription errors
-2. Correct misspelled technical terms, names, or domain-specific words based on context
-3. Fix obvious speech-to-text mistakes (e.g., homophones, mishearings)
-4. Keep the original meaning and structure - only fix errors
-5. Return ONLY the corrected text"""
-    user_message = f"Context (for reference):\n{context[:500]}\n\nTranscription to correct:\n{text}"
-    
-    try:
-        refined = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_message}
-            ],
-            temperature=0.1,
-            max_tokens=2000
-        )
-        return refined.choices[0].message.content.strip()
-    except Exception as e:
-        print(f"[ERROR] Refinement error: {e}")
-        raise
+def _server_error_response(error: Exception, prefix: str = ""):
+    traceback.print_exc()
+    message = f"{prefix}{str(error)}" if prefix else str(error)
+    return {"error": message}, 500
 
 
 @app.route("/", methods=["GET"])
@@ -96,9 +75,6 @@ def transcribe():
         audio_buffer = io.BytesIO(audio_data)
         audio_buffer.name = "audio.webm"
 
-        # 获取上下文信息，用于转录后校准
-        context = request.form.get("context", "").strip()
-        
         # 构建Whisper API调用参数 - 不使用prompt，让转录干净自然
         transcribe_kwargs = {
             "model": "gpt-4o-mini-transcribe",  # 更快、更准确的新模型
@@ -108,21 +84,10 @@ def transcribe():
         result = client.audio.transcriptions.create(**transcribe_kwargs)
         text = result.text.strip()
         
-        # 如果有上下文，用GPT校准转录结果（移除重复、纠正术语、确保连贯性）
-        # DISABLED: 暂时禁用后处理，避免重复输出
-        # if context and len(context) > 0 and len(text) > 0:
-        #     try:
-        #         text = _refine_transcription(text, context)
-        #     except Exception as e:
-        #         # 校准失败时返回原始转录，不中断流程
-        #         print(f"[WARNING] Transcription refinement failed: {e}")
-        
         return jsonify({"text": text})
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return {"error": str(e)}, 500
+        return _server_error_response(e)
 
 
 @app.route("/api/extract-keywords", methods=["POST"])
@@ -142,9 +107,7 @@ def extract_keywords():
         return jsonify({"keywords": keywords})
         
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return {"error": str(e)}, 500
+        return _server_error_response(e)
 
 
 @app.route("/api/translate", methods=["POST"])
@@ -184,9 +147,7 @@ def translate():
             return Response(generate(), mimetype='text/plain')
         
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return {"error": str(e)}, 500
+        return _server_error_response(e)
 
 
 @app.route("/api/explain-keyword", methods=["POST"])
@@ -214,9 +175,7 @@ def explain_keyword():
         return Response(generate(), mimetype='text/plain')
         
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return {"error": str(e)}, 500
+        return _server_error_response(e)
 
 
 @app.route("/api/summarize", methods=["POST"])
@@ -244,9 +203,7 @@ def summarize():
         return Response(generate(), mimetype='text/plain')
         
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return {"error": str(e)}, 500
+        return _server_error_response(e)
 
 
 @app.route("/health", methods=["GET"])
@@ -299,9 +256,7 @@ def upload_file():
     except ValueError as e:
         return {"error": str(e)}, 400
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return {"error": f"Server error: {str(e)}"}, 500
+        return _server_error_response(e, "Server error: ")
 
 
 if __name__ == "__main__":
