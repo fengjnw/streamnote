@@ -43,12 +43,12 @@ class KeywordHistoryManager {
         if (!historyRecord) return;
 
         const app = window.streamNoteInstance;
-        const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
-        const operationTracker = app?.operationManager?.startExplanation(executionContextSnapshot);
+        const explanationOperation = OperationGuards.start(app, "explanation");
+        const endExplanationOperation = OperationGuards.endOnce(explanationOperation);
 
-        if (operationTracker && !operationTracker.isValid(app)) {
+        if (!OperationGuards.isValid(explanationOperation)) {
             console.log('[KeywordManager] Context changed before restore history');
-            operationTracker.abort('Context changed before restore');
+            endExplanationOperation('Context changed before restore');
             return;
         }
 
@@ -60,9 +60,9 @@ class KeywordHistoryManager {
         const contextText = document.getElementById("context-text");
         const headerDiv = document.querySelector(".explanation-header");
 
-        if (operationTracker && !operationTracker.isValid(app)) {
+        if (!OperationGuards.isValid(explanationOperation)) {
             console.log('[KeywordManager] Context changed during UI setup');
-            operationTracker.abort('Context changed during setup');
+            endExplanationOperation('Context changed during setup');
             return;
         }
 
@@ -91,7 +91,7 @@ class KeywordHistoryManager {
             this.keywordManager.wordSourcePanel[word] = historyRecord.sourcePanel || 'transcript';
         }
 
-        this.keywordManager.finishExplanationOperation(app, operationTracker, 'History restore completed');
+        endExplanationOperation('History restore completed');
     }
 }
 

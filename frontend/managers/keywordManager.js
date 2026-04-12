@@ -73,7 +73,7 @@ class KeywordManager {
 
         // 语音朗读状态
         this.isPronouncing = false;              // 是否正在发音
-        this.setupPronounceButton();             // 初始化发音按钮
+        this.pronunciationManager?.setupPronounceButton(); // 初始化发音按钮
 
         // [FIX] 备用缓存：保存最后一次成功获取的转录数据
         // 用于当主数据源（recordingManager）暂时为空时的fallback
@@ -82,15 +82,6 @@ class KeywordManager {
         // [防护] 用于防止并发explanation请求的标记
         this.currentExpanationRequestId = 0;  // 用++递增，从1开始
         this.currentLoadingKeyword = null;
-    }
-
-    finishExplanationOperation(app, operationTracker, reason) {
-        if (operationTracker) {
-            operationTracker.abort(reason);
-        }
-        if (app && app.operationManager) {
-            app.operationManager.endExplanation();
-        }
     }
 
     /**
@@ -103,22 +94,16 @@ class KeywordManager {
             return [];
         }
 
+        const app = window.streamNoteInstance;
+        const keywordsOperation = OperationGuards.start(app, "keywords");
+        const endKeywordsOperation = OperationGuards.endOnce(keywordsOperation);
+
         try {
-            // === [执行上下文防护] ===
-            const app = window.streamNoteInstance;
-            const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
-
-            // 启动操作追踪
-            let operationTracker = null;
-            if (app && app.operationManager) {
-                operationTracker = app.operationManager.startKeywords(executionContextSnapshot);
-            }
-
             const payload = {
                 text: text
             };
 
-            const signal = operationTracker ? operationTracker.getSignal() : undefined;
+            const signal = OperationGuards.getSignal(keywordsOperation);
             const response = this.apiClient
                 ? await this.apiClient.extractKeywords(payload, signal)
                 : await fetch(this.apiUrl, {
@@ -135,30 +120,25 @@ class KeywordManager {
             }
 
             // [防护] 检查执行上下文是否仍然有效
-            if (operationTracker && !operationTracker.isValid(app)) {
+            if (!OperationGuards.isValid(keywordsOperation)) {
                 console.log(`[KeywordManager] extractKeywords: Context changed before reading response`);
-                if (app && app.operationManager) app.operationManager.endKeywords();
+                endKeywordsOperation('Context changed before reading response');
                 return [];
             }
 
             const data = await response.json();
 
             // [防护] 最后检查一次执行上下文
-            if (operationTracker && !operationTracker.isValid(app)) {
+            if (!OperationGuards.isValid(keywordsOperation)) {
                 console.log(`[KeywordManager] extractKeywords: Context changed after reading response, discarding keywords`);
-                if (app && app.operationManager) app.operationManager.endKeywords();
+                endKeywordsOperation('Context changed after reading response');
                 return [];
             }
 
             this.currentKeywords = data.keywords || [];
 
             // [防护] 标记操作完成
-            if (operationTracker) {
-                operationTracker.abort('Keywords extraction completed');
-            }
-            if (app && app.operationManager) {
-                app.operationManager.endKeywords();
-            }
+            endKeywordsOperation('Keywords extraction completed');
 
             return this.currentKeywords;
 
@@ -166,22 +146,10 @@ class KeywordManager {
             console.error("[KeywordManager] Error:", error);
 
             // [防护] 清理操作追踪
-            const app = window.streamNoteInstance;
-            if (app && app.operationManager) {
-                app.operationManager.endKeywords();
-            }
+            endKeywordsOperation(`Error: ${error.message}`);
 
             return [];
         }
-    }
-
-    /**
-     * 显示关键词列表（可展开式）
-     * @param {Array<string>} keywords - 关键词数组
-     * @param {HTMLElement} targetElement - 目标显示元素（可选，默认使用 this.keywordElement）
-     */
-    displayKeywordsList(keywords, targetElement = null) {
-        this.displayManager?.displayKeywordsList(keywords, targetElement);
     }
 
     /**
@@ -222,33 +190,6 @@ class KeywordManager {
     }
 
     /**
-     * 获取并显示关键词的解释 - 流式版本，支持基于上下文
-     * @param {string} keyword - 关键词
-     * @param {HTMLElement} container - 显示容器
-     */
-    async fetchAndShowExplanation(keyword, container) {
-        await this.explanationFetchManager?.fetchAndShowExplanation(keyword, container);
-    }
-
-
-
-    /**
-     * 添加项目到解释列表
-     * @param {string} term - 查询词
-     */
-    addToExplanations(term) {
-        this.collectionManager?.addToExplanations(term);
-    }
-
-    /**
-     * 删除解释列表中的项
-     * @param {string} term - 要删除的词
-     */
-    removeFromExplanations(term) {
-        this.collectionManager?.removeFromExplanations(term);
-    }
-
-    /**
      * 删除关键词项（供通用列表使用）
      * @param {string} keyword - 要删除的关键词
      */
@@ -265,22 +206,6 @@ class KeywordManager {
     }
 
     /**
-     * 重新解释关键词
-     * @param {string} keyword - 要重新解释的关键词
-     */
-    async reexplainExplanation(keyword) {
-        await this.explanationActionsManager?.reexplainExplanation(keyword);
-    }
-
-    /**
-     * 复制关键词的解释到剪贴板
-     * @param {string} keyword - 要复制解释的关键词
-     */
-    copyExplanation(keyword) {
-        this.explanationActionsManager?.copyExplanation(keyword);
-    }
-
-    /**
      * 打开解释面板（支持自定义位置信息和源面板）
      * @param {string} word - 要解释的词
      * @param {Object} positionInfo - 可选的位置信息 { sourceIndices: [...] }
@@ -288,81 +213,6 @@ class KeywordManager {
      */
     async openExplanationForWord(word, positionInfo = null, sourcePanel = null) {
         await this.explanationNavigationManager?.openExplanationForWord(word, positionInfo, sourcePanel);
-    }
-
-    /**
-     * 初始化发音按钮事件监听
-     */
-    setupPronounceButton() {
-        this.pronunciationManager?.setupPronounceButton();
-    }
-
-    /**
-     * 发音单词
-     * @param {string} word - 要发音的单词
-     */
-    pronounceWord(word) {
-        this.pronunciationManager?.pronounceWord(word);
-    }
-
-    /**
-     * 显示焦点式解释面板
-     * @param {string} word - 要显示的词
-     */
-    async displayExplanationFocusView(word) {
-        await this.explanationFetchManager?.displayExplanationFocusView(word);
-    }
-
-    /**
-     * 获取并显示关键词的解释（焦点视图版本）
-     * @param {string} keyword - 关键词
-     * @param {HTMLElement} contentElement - 显示容器
-     */
-    async fetchAndShowExplanationForFocusView(keyword, contentElement) {
-        await this.explanationFetchManager?.fetchAndShowExplanationForFocusView(keyword, contentElement);
-    }
-
-    /**
-     * 获取关键词的上下文（用于发送给API）
-     * 即使无法获取本地转录数据，也不会返回null，确保API调用安全
-     * @param {string} keyword - 关键词
-     * @returns {string} 上下文（可能为空字符串，但不会为null）
-     */
-    getContextForKeyword(keyword) {
-        return this.contextManager?.getContextForKeyword(keyword) || "";
-    }
-
-    /**
-     * 更新词语的上下文显示（使用拼接方式：前50字+词+后50字）
-     * @param {string} keyword - 关键词
-     */
-    updateWordContext(keyword) {
-        return this.contextManager?.updateWordContext(keyword) || null;
-    }
-
-    /**
-     * 基于位置信息构建context（前50字+加粗词+后50字，支持跨段）
-     * 始终保留本段的完整内容，从前后段落补充
-     * @private
-     */
-    _buildContextByPosition(positionInfo, keyword, contextLength = 50) {
-        return this.contextManager?._buildContextByPosition(positionInfo, keyword, contextLength) || "";
-    }
-
-    /**
-     * 基于搜索构建context（降级方案，前50字+加粗词+后50字，支持跨段）
-     * 始终保留本段的完整内容，从前后段落补充
-     * @private
-     */
-    _buildContextBySearch(keyword, contextLength = 50) {
-        return this.contextManager?._buildContextBySearch(keyword, contextLength) || "";
-    }
-
-    /**
-     * 重新解释当前显示词
-     */
-    async reexplainCurrentExplanation() {
-        await this.explanationFetchManager?.reexplainCurrentExplanation();
     }
 
     /**
@@ -378,24 +228,6 @@ class KeywordManager {
      */
     async processText(text) {
         return await this.collectionManager?.processText(text);
-    }
-
-    /**
-     * 保存完整的解释历史记录
-     * @param {string} word - 词语
-     * @param {string} explanation - 解释内容
-     * @param {string} contextDisplayText - 上下文显示文本（来自HTML）
-     */
-    saveExplanationHistory(word, explanation, contextDisplayText = null) {
-        this.historyManager?.saveExplanationHistory(word, explanation, contextDisplayText);
-    }
-
-    /**
-     * 恢复并显示历史记录中的某个解释
-     * @param {Object} historyRecord - 历史记录对象 {word, explanation, context, sourceIndices, language, sourcePanel, ...}
-     */
-    async restoreExplanationHistoryRecord(historyRecord) {
-        await this.historyManager?.restoreExplanationHistoryRecord(historyRecord);
     }
 
     /**

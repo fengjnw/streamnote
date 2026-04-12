@@ -103,7 +103,7 @@ class PanelToolbarListenersManager {
         const reexplainExplanationBtn = document.getElementById("reexplain-explanation-btn");
         if (reexplainExplanationBtn) {
             reexplainExplanationBtn.addEventListener("click", () => {
-                app.keywordManager?.reexplainCurrentExplanation();
+                app.keywordManager?.explanationFetchManager?.reexplainCurrentExplanation();
             });
         }
 

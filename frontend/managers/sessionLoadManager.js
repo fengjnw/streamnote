@@ -146,7 +146,7 @@ class SessionLoadManager {
                 const recordToRestore = lastRecordForLanguage || this.app.keywordManager.explanationHistory[0];
 
                 setTimeout(() => {
-                    this.app.keywordManager.restoreExplanationHistoryRecord(recordToRestore);
+                    this.app.keywordManager.historyManager?.restoreExplanationHistoryRecord(recordToRestore);
                 }, 100);
             }
         }

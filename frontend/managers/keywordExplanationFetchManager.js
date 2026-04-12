@@ -15,14 +15,14 @@ class KeywordExplanationFetchManager {
         }
 
         const app = window.streamNoteInstance;
-        const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
-        const operationTracker = app?.operationManager?.startExplanation(executionContextSnapshot);
-        const abortSignal = operationTracker?.abortController.signal;
+        const explanationOperation = OperationGuards.start(app, 'explanation');
+        const endExplanationOperation = OperationGuards.endOnce(explanationOperation);
+        const abortSignal = OperationGuards.getSignal(explanationOperation);
 
         try {
-            if (operationTracker && !operationTracker.isValid(app)) {
+            if (!OperationGuards.isValid(explanationOperation)) {
                 console.log('[KeywordManager] Context changed before explanation fetch');
-                if (operationTracker) operationTracker.abort('Context changed before request');
+                endExplanationOperation('Context changed before request');
                 return;
             }
 
@@ -30,16 +30,16 @@ class KeywordExplanationFetchManager {
             const cacheKey = `${keyword}|${explanationLanguage}`;
 
             if (this.keywordManager.explanationCache[cacheKey]) {
-                if (operationTracker && !operationTracker.isValid(app)) {
-                    if (operationTracker) operationTracker.abort('Context changed during cache check');
+                if (!OperationGuards.isValid(explanationOperation)) {
+                    endExplanationOperation('Context changed during cache check');
                     return;
                 }
                 contentElement.innerHTML = `<p>${this.keywordManager.explanationCache[cacheKey]}</p>`;
-                if (operationTracker) operationTracker.abort('Explanation from cache');
+                endExplanationOperation('Explanation from cache');
                 return;
             }
 
-            const context = this.keywordManager.getContextForKeyword(keyword);
+            const context = this.keywordManager.contextManager?.getContextForKeyword(keyword) || '';
 
             const payload = {
                 keyword,
@@ -57,9 +57,9 @@ class KeywordExplanationFetchManager {
                     signal: abortSignal,
                 });
 
-            if (operationTracker && !operationTracker.isValid(app)) {
+            if (!OperationGuards.isValid(explanationOperation)) {
                 console.log('[KeywordManager] Context changed after fetch');
-                if (operationTracker) operationTracker.abort('Context changed after fetch');
+                endExplanationOperation('Context changed after fetch');
                 return;
             }
 
@@ -75,10 +75,10 @@ class KeywordExplanationFetchManager {
 
             try {
                 while (true) {
-                    if (operationTracker && !operationTracker.isValid(app)) {
+                    if (!OperationGuards.isValid(explanationOperation)) {
                         console.log('[KeywordManager] Context changed during stream');
                         reader.cancel();
-                        if (operationTracker) operationTracker.abort('Context changed during stream');
+                        endExplanationOperation('Context changed during stream');
                         return;
                     }
 
@@ -102,9 +102,9 @@ class KeywordExplanationFetchManager {
                 reader.releaseLock();
             }
 
-            if (operationTracker && !operationTracker.isValid(app)) {
+            if (!OperationGuards.isValid(explanationOperation)) {
                 console.log('[KeywordManager] Context changed before display');
-                if (operationTracker) operationTracker.abort('Context changed before display');
+                endExplanationOperation('Context changed before display');
                 return;
             }
 
@@ -124,9 +124,7 @@ class KeywordExplanationFetchManager {
                 contentElement.innerHTML = `<p class="error">Failed to load explanation: ${error.message}</p>`;
             }
         } finally {
-            if (operationTracker) {
-                operationTracker.abort('Explanation completed');
-            }
+            endExplanationOperation('Explanation completed');
         }
     }
 
@@ -170,8 +168,9 @@ class KeywordExplanationFetchManager {
 
     async fetchAndShowExplanationForFocusView(keyword, contentElement) {
         const app = window.streamNoteInstance;
-        let operationTracker = null;
         let requestId = null;
+        let explanationOperation = null;
+        let endExplanationOperation = () => { };
 
         try {
             const explanationLanguage = window.streamNoteInstance?.explanationLanguage || 'English';
@@ -182,36 +181,33 @@ class KeywordExplanationFetchManager {
                 const p = document.createElement('p');
                 p.textContent = this.keywordManager.explanationCache[cacheKey];
                 contentElement.appendChild(p);
-                const contextInfo = this.keywordManager.updateWordContext(keyword);
-                this.keywordManager.saveExplanationHistory(keyword, this.keywordManager.explanationCache[cacheKey], contextInfo);
+                const contextInfo = this.keywordManager.contextManager?.updateWordContext(keyword) || null;
+                this.keywordManager.historyManager?.saveExplanationHistory(keyword, this.keywordManager.explanationCache[cacheKey], contextInfo);
                 return;
             }
 
             requestId = ++this.keywordManager.currentExpanationRequestId;
-            const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
-
-            if (app && app.operationManager) {
-                operationTracker = app.operationManager.startExplanation(executionContextSnapshot);
-            }
+            explanationOperation = OperationGuards.start(app, 'explanation');
+            endExplanationOperation = OperationGuards.endOnce(explanationOperation);
 
             if (!contentElement || !contentElement.parentElement) {
                 console.warn(`[KeywordManager] Request ${requestId}: contentElement is stale, re-fetching...`);
                 contentElement = document.getElementById('explanation-content');
                 if (!contentElement) {
                     console.error(`[KeywordManager] Request ${requestId}: Cannot find explanation-content element!`);
-                    if (operationTracker) operationTracker.abort('contentElement not found');
+                    endExplanationOperation('contentElement not found');
                     return;
                 }
             }
 
-            const context = this.keywordManager.getContextForKeyword(keyword);
+            const context = this.keywordManager.contextManager?.getContextForKeyword(keyword) || '';
 
             const payload = {
                 keyword,
                 language: explanationLanguage,
                 context,
             };
-            const signal = operationTracker ? operationTracker.getSignal() : undefined;
+            const signal = OperationGuards.getSignal(explanationOperation);
             const response = this.keywordManager.apiClient
                 ? await this.keywordManager.apiClient.explainKeyword(payload, signal)
                 : await fetch(this.keywordManager.explanationApiUrl, {
@@ -240,14 +236,13 @@ class KeywordExplanationFetchManager {
                     if (done) break;
 
                     if (this.keywordManager.currentExpanationRequestId !== requestId) {
-                        reader.releaseLock();
-                        if (operationTracker) operationTracker.abort('New explanation requested');
+                        endExplanationOperation('New explanation requested');
                         return;
                     }
 
-                    if (operationTracker && !operationTracker.isValid(app)) {
-                        reader.releaseLock();
-                        console.log(`[KeywordManager] Request ${requestId}: Execution context changed: ${ExecutionContext.getChangeReason(executionContextSnapshot, app)}`);
+                    if (!OperationGuards.isValid(explanationOperation)) {
+                        console.log(`[KeywordManager] Request ${requestId}: Execution context changed: ${OperationGuards.getChangeReason(explanationOperation)}`);
+                        endExplanationOperation('Execution context changed during stream');
                         return;
                     }
 
@@ -272,13 +267,13 @@ class KeywordExplanationFetchManager {
                 explanation += finalChunk;
 
                 if (this.keywordManager.currentExpanationRequestId !== requestId) {
-                    if (operationTracker) operationTracker.abort('New explanation requested (final check)');
+                    endExplanationOperation('New explanation requested (final check)');
                     return;
                 }
 
-                if (operationTracker && !operationTracker.isValid(app)) {
-                    console.log(`[KeywordManager] Request ${requestId}: Execution context changed at final: ${ExecutionContext.getChangeReason(executionContextSnapshot, app)}`);
-                    if (operationTracker) operationTracker.abort('Execution context changed');
+                if (!OperationGuards.isValid(explanationOperation)) {
+                    console.log(`[KeywordManager] Request ${requestId}: Execution context changed at final: ${OperationGuards.getChangeReason(explanationOperation)}`);
+                    endExplanationOperation('Execution context changed at final');
                     return;
                 }
 
@@ -295,23 +290,24 @@ class KeywordExplanationFetchManager {
                 reader.releaseLock();
             }
 
-            if (operationTracker && !operationTracker.isValid(app)) {
+            if (!OperationGuards.isValid(explanationOperation)) {
                 console.log(`[KeywordManager] Request ${requestId}: Context changed before cache save, discarding result`);
+                endExplanationOperation('Context changed before cache save');
                 return;
             }
 
             this.keywordManager.explanationCache[cacheKey] = explanation;
 
-            const contextInfo = this.keywordManager.updateWordContext(keyword);
-            this.keywordManager.saveExplanationHistory(keyword, explanation, contextInfo);
+            const contextInfo = this.keywordManager.contextManager?.updateWordContext(keyword) || null;
+            this.keywordManager.historyManager?.saveExplanationHistory(keyword, explanation, contextInfo);
 
-            this.keywordManager.finishExplanationOperation(app, operationTracker, 'Explanation completed successfully');
+            endExplanationOperation('Explanation completed successfully');
         } catch (error) {
             console.error('[KeywordManager] Error fetching explanation:', error);
 
-            this.keywordManager.finishExplanationOperation(app, operationTracker, `Error: ${error.message}`);
+            endExplanationOperation(`Error: ${error.message}`);
 
-            if (operationTracker && !operationTracker.isValid(app)) {
+            if (!OperationGuards.isValid(explanationOperation)) {
                 console.log(`[KeywordManager] Request ${requestId}: Context changed, not displaying error`);
                 return;
             }
@@ -324,37 +320,41 @@ class KeywordExplanationFetchManager {
                 contentElement.appendChild(p);
             }
 
-            this.keywordManager.updateWordContext(keyword);
+            this.keywordManager.contextManager?.updateWordContext(keyword);
         }
     }
 
     async reexplainCurrentExplanation() {
         const app = window.streamNoteInstance;
-        const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
-        const operationTracker = app?.operationManager?.startExplanation(executionContextSnapshot);
+        const explanationOperation = OperationGuards.start(app, 'explanation');
+        const endExplanationOperation = OperationGuards.endOnce(explanationOperation);
 
-        const currentWordEl = document.getElementById('current-explanation-word');
-        const contentElement = document.getElementById('explanation-content');
+        try {
+            const currentWordEl = document.getElementById('current-explanation-word');
+            const contentElement = document.getElementById('explanation-content');
 
-        if (!currentWordEl || !contentElement) {
-            if (operationTracker) operationTracker.abort('Elements not found');
-            return;
+            if (!currentWordEl || !contentElement) {
+                endExplanationOperation('Elements not found');
+                return;
+            }
+
+            if (!OperationGuards.isValid(explanationOperation)) {
+                console.log('[KeywordManager] Context changed before reexplain current');
+                endExplanationOperation('Context changed before reexplain');
+                return;
+            }
+
+            const word = currentWordEl.textContent;
+            const explanationLanguage = window.streamNoteInstance?.explanationLanguage || 'English';
+            const cacheKey = `${word}|${explanationLanguage}`;
+
+            delete this.keywordManager.explanationCache[cacheKey];
+
+            contentElement.innerHTML = '<p class="placeholder">Refreshing explanation...</p>';
+            await this.fetchAndShowExplanationForFocusView(word, contentElement);
+        } finally {
+            endExplanationOperation('Reexplain current completed');
         }
-
-        if (operationTracker && !operationTracker.isValid(app)) {
-            console.log('[KeywordManager] Context changed before reexplain current');
-            operationTracker.abort('Context changed before reexplain');
-            return;
-        }
-
-        const word = currentWordEl.textContent;
-        const explanationLanguage = window.streamNoteInstance?.explanationLanguage || 'English';
-        const cacheKey = `${word}|${explanationLanguage}`;
-
-        delete this.keywordManager.explanationCache[cacheKey];
-
-        contentElement.innerHTML = '<p class="placeholder">Refreshing explanation...</p>';
-        await this.fetchAndShowExplanationForFocusView(word, contentElement);
     }
 
     refreshExpandedExplanations() {

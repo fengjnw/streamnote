@@ -41,7 +41,7 @@ class KeywordExplanationNavigationManager {
         }
 
         setTimeout(() => {
-            this.keywordManager.displayExplanationFocusView(word);
+            this.keywordManager.explanationFetchManager?.displayExplanationFocusView(word);
         }, 350);
 
         if (window.streamNoteInstance) {

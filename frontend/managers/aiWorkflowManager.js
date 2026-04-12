@@ -11,16 +11,13 @@ class AiWorkflowManager {
             return null;
         }
 
+        const summaryOperation = OperationGuards.start(this.app, "summary");
         try {
-            const executionContextSnapshot = ExecutionContext.createSnapshot(this.app);
-            const operationTracker = this.app.operationManager ? this.app.operationManager.startSummary(executionContextSnapshot) : null;
-
             const language = this.app.explanationLanguage;
             const cacheKey = `${language}-${style}`;
 
             if (!forceRefresh && this.app.summaryCache[cacheKey]) {
-                if (operationTracker) operationTracker.abort('Summary found in cache');
-                if (this.app.operationManager) this.app.operationManager.endSummary();
+                OperationGuards.end(summaryOperation, "Summary found in cache");
                 return this.app.summaryCache[cacheKey];
             }
 
@@ -29,7 +26,7 @@ class AiWorkflowManager {
                 language: language,
                 style: style
             };
-            const summarySignal = operationTracker ? operationTracker.getSignal() : undefined;
+            const summarySignal = OperationGuards.getSignal(summaryOperation);
 
             const response = this.app.apiClient
                 ? await this.app.apiClient.summarize(summaryPayload, summarySignal)
@@ -44,8 +41,7 @@ class AiWorkflowManager {
 
             if (!response.ok) {
                 console.error(`[ERROR] Summarization API error: ${response.status}`);
-                if (operationTracker) operationTracker.abort(`API error: ${response.status}`);
-                if (this.app.operationManager) this.app.operationManager.endSummary();
+                OperationGuards.end(summaryOperation, `API error: ${response.status}`);
                 return null;
             }
 
@@ -58,10 +54,9 @@ class AiWorkflowManager {
                     const { done, value } = await reader.read();
                     if (done) break;
 
-                    if (operationTracker && !operationTracker.isValid(this.app)) {
-                        reader.releaseLock();
-                        console.log(`[Summarization] Execution context changed: ${ExecutionContext.getChangeReason(executionContextSnapshot, this.app)}`);
-                        if (this.app.operationManager) this.app.operationManager.endSummary();
+                    if (!OperationGuards.isValid(summaryOperation)) {
+                        console.log(`[Summarization] Execution context changed: ${OperationGuards.getChangeReason(summaryOperation)}`);
+                        OperationGuards.end(summaryOperation, "Execution context changed");
                         return null;
                     }
 
@@ -81,9 +76,9 @@ class AiWorkflowManager {
                 const finalChunk = decoder.decode();
                 summary += finalChunk;
 
-                if (operationTracker && !operationTracker.isValid(this.app)) {
+                if (!OperationGuards.isValid(summaryOperation)) {
                     console.log(`[Summarization] Context changed before final save, discarding result`);
-                    if (this.app.operationManager) this.app.operationManager.endSummary();
+                    OperationGuards.end(summaryOperation, "Context changed before final save");
                     return null;
                 }
 
@@ -99,12 +94,7 @@ class AiWorkflowManager {
                 reader.releaseLock();
             }
 
-            if (operationTracker) {
-                operationTracker.abort('Summary completed successfully');
-            }
-            if (this.app.operationManager) {
-                this.app.operationManager.endSummary();
-            }
+            OperationGuards.end(summaryOperation, "Summary completed successfully");
 
             if (summary) {
                 return summary;
@@ -114,9 +104,7 @@ class AiWorkflowManager {
 
         } catch (error) {
             console.error("[ERROR] Summarization request failed:", error);
-            if (this.app.operationManager) {
-                this.app.operationManager.endSummary();
-            }
+            OperationGuards.end(summaryOperation, `Summary error: ${error.message}`);
             throw error;
         }
     }
@@ -124,85 +112,73 @@ class AiWorkflowManager {
     async processKeywords(targetSessionId = null) {
         if (!this.app.keywordManager) return;
 
-        const executionContextSnapshot = ExecutionContext.createSnapshot(this.app);
-        let operationTracker = null;
-        if (this.app.operationManager) {
-            operationTracker = this.app.operationManager.startKeywords(executionContextSnapshot);
-        }
+        const keywordsOperation = OperationGuards.start(this.app, "keywords");
+        const endKeywordsOperation = OperationGuards.endOnce(keywordsOperation);
 
-        const preciseResults = this.app.recordingManager.getTranscriptData();
-        this.app.currentTranscriptText = Object.values(preciseResults)
-            .map(item => item && item.text ? item.text : "")
-            .join(" ");
+        try {
+            const preciseResults = this.app.recordingManager.getTranscriptData();
+            this.app.currentTranscriptText = Object.values(preciseResults)
+                .map(item => item && item.text ? item.text : "")
+                .join(" ");
 
-        if (this.app.currentTranscriptText.length > 10) {
-            if (operationTracker && !operationTracker.isValid(this.app)) {
-                console.log(`[Keywords] Execution context changed before extraction`);
-                if (this.app.operationManager) this.app.operationManager.endKeywords();
-                return;
+            if (this.app.currentTranscriptText.length > 10) {
+                if (!OperationGuards.isValid(keywordsOperation)) {
+                    console.log(`[Keywords] Execution context changed before extraction`);
+                    endKeywordsOperation("Execution context changed before extraction");
+                    return;
+                }
+
+                await this.app.keywordManager.processText(this.app.currentTranscriptText);
+                this.app.keywordManager.updateAllKeywordDisplays();
+
+                if (!OperationGuards.isValid(keywordsOperation)) {
+                    console.log(`[Keywords] Execution context changed before save, discarding keywords`);
+                    endKeywordsOperation("Execution context changed before save");
+                    return;
+                }
+
+                const sessionId = targetSessionId || this.app.recordingSessionId || this.app.sessionManager.currentSessionId;
+                if (sessionId && this.app.sessionManager) {
+                    this.app.sessionManager.updateKeywordsForSession(sessionId, this.app.keywordManager.extracts);
+                }
             }
-
-            await this.app.keywordManager.processText(this.app.currentTranscriptText);
-            this.app.keywordManager.updateAllKeywordDisplays();
-
-            if (operationTracker && !operationTracker.isValid(this.app)) {
-                console.log(`[Keywords] Execution context changed before save, discarding keywords`);
-                if (this.app.operationManager) this.app.operationManager.endKeywords();
-                return;
-            }
-
-            const sessionId = targetSessionId || this.app.recordingSessionId || this.app.sessionManager.currentSessionId;
-            if (sessionId && this.app.sessionManager) {
-                this.app.sessionManager.updateKeywordsForSession(sessionId, this.app.keywordManager.extracts);
-            }
-        }
-
-        if (operationTracker) {
-            operationTracker.abort('Keywords processing completed');
-        }
-        if (this.app.operationManager) {
-            this.app.operationManager.endKeywords();
+        } finally {
+            endKeywordsOperation("Keywords processing completed");
         }
     }
 
     async reprocessAllKeywords() {
         if (!this.app.keywordManager) return;
 
-        const executionContextSnapshot = ExecutionContext.createSnapshot(this.app);
-        let operationTracker = null;
-        if (this.app.operationManager) {
-            operationTracker = this.app.operationManager.startKeywords(executionContextSnapshot);
-        }
+        const keywordsOperation = OperationGuards.start(this.app, "keywords");
+        const endKeywordsOperation = OperationGuards.endOnce(keywordsOperation);
 
-        const preciseResults = this.app.recordingManager.getTranscriptData();
-        this.app.currentTranscriptText = Object.values(preciseResults)
-            .map(item => item && item.text ? item.text : "")
-            .join(" ");
+        try {
+            const preciseResults = this.app.recordingManager.getTranscriptData();
+            this.app.currentTranscriptText = Object.values(preciseResults)
+                .map(item => item && item.text ? item.text : "")
+                .join(" ");
 
-        if (this.app.currentTranscriptText.length > 10) {
-            if (operationTracker && !operationTracker.isValid(this.app)) {
-                console.log(`[Keywords] Execution context changed before reprocessing`);
-                if (this.app.operationManager) this.app.operationManager.endKeywords();
-                return;
+            if (this.app.currentTranscriptText.length > 10) {
+                if (!OperationGuards.isValid(keywordsOperation)) {
+                    console.log(`[Keywords] Execution context changed before reprocessing`);
+                    endKeywordsOperation("Execution context changed before reprocessing");
+                    return;
+                }
+
+                this.app.keywordManager.extracts = [];
+                await this.app.keywordManager.processText(this.app.currentTranscriptText);
+
+                if (!OperationGuards.isValid(keywordsOperation)) {
+                    console.log(`[Keywords] Execution context changed before update, discarding`);
+                    endKeywordsOperation("Execution context changed before update");
+                    return;
+                }
+
+                this.app.keywordManager.updateAllKeywordDisplays();
             }
-
-            this.app.keywordManager.extracts = [];
-            await this.app.keywordManager.processText(this.app.currentTranscriptText);
-
-            if (operationTracker && !operationTracker.isValid(this.app)) {
-                console.log(`[Keywords] Execution context changed before update, discarding`);
-                if (this.app.operationManager) this.app.operationManager.endKeywords();
-                return;
-            }
-
-            this.app.keywordManager.updateAllKeywordDisplays();
-        }
-
-        if (operationTracker) {
-            operationTracker.abort('Keywords reprocessing completed');
-        }
-        if (this.app.operationManager) {
-            this.app.operationManager.endKeywords();
+        } finally {
+            endKeywordsOperation("Keywords reprocessing completed");
         }
     }
 }

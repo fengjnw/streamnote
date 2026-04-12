@@ -8,45 +8,49 @@ class KeywordExplanationActionsManager {
 
     async reexplainExplanation(keyword) {
         const app = window.streamNoteInstance;
-        const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
-        const operationTracker = app?.operationManager?.startExplanation(executionContextSnapshot);
+        const explanationOperation = OperationGuards.start(app, "explanation");
+        const endExplanationOperation = OperationGuards.endOnce(explanationOperation);
 
-        const allExplanations = document.querySelectorAll('.keyword-explanation');
-        let wrapper = null;
+        try {
+            const allExplanations = document.querySelectorAll('.keyword-explanation');
+            let wrapper = null;
 
-        for (const elem of allExplanations) {
-            if (elem.getAttribute('data-keyword-text') === keyword) {
-                wrapper = elem;
-                break;
+            for (const elem of allExplanations) {
+                if (elem.getAttribute('data-keyword-text') === keyword) {
+                    wrapper = elem;
+                    break;
+                }
             }
+
+            if (!wrapper) {
+                console.warn(`[KeywordManager] Wrapper not found for keyword: ${keyword}`);
+                endExplanationOperation('Wrapper not found');
+                return;
+            }
+
+            const contentElement = wrapper.querySelector('.explanation-content');
+            if (!contentElement) {
+                endExplanationOperation('Content element not found');
+                return;
+            }
+
+            if (!OperationGuards.isValid(explanationOperation)) {
+                console.log('[KeywordManager] Context changed before reexplain');
+                endExplanationOperation('Context changed before reexplain');
+                return;
+            }
+
+            contentElement.innerHTML = '<p class="placeholder">Refreshing...</p>';
+
+            const cacheKey = `${keyword}|${window.streamNoteInstance?.explanationLanguage || 'English'}`;
+            if (this.keywordManager.extractsCache[cacheKey]) delete this.keywordManager.extractsCache[cacheKey];
+            if (this.keywordManager.highlightCache[cacheKey]) delete this.keywordManager.highlightCache[cacheKey];
+            if (this.keywordManager.explanationCache[cacheKey]) delete this.keywordManager.explanationCache[cacheKey];
+
+            await this.keywordManager.explanationFetchManager?.fetchAndShowExplanation(keyword, wrapper);
+        } finally {
+            endExplanationOperation('Reexplain action completed');
         }
-
-        if (!wrapper) {
-            console.warn(`[KeywordManager] Wrapper not found for keyword: ${keyword}`);
-            if (operationTracker) operationTracker.abort('Wrapper not found');
-            return;
-        }
-
-        const contentElement = wrapper.querySelector('.explanation-content');
-        if (!contentElement) {
-            if (operationTracker) operationTracker.abort('Content element not found');
-            return;
-        }
-
-        if (operationTracker && !operationTracker.isValid(app)) {
-            console.log('[KeywordManager] Context changed before reexplain');
-            operationTracker.abort('Context changed before reexplain');
-            return;
-        }
-
-        contentElement.innerHTML = '<p class="placeholder">Refreshing...</p>';
-
-        const cacheKey = `${keyword}|${window.streamNoteInstance?.explanationLanguage || 'English'}`;
-        if (this.keywordManager.extractsCache[cacheKey]) delete this.keywordManager.extractsCache[cacheKey];
-        if (this.keywordManager.highlightCache[cacheKey]) delete this.keywordManager.highlightCache[cacheKey];
-        if (this.keywordManager.explanationCache[cacheKey]) delete this.keywordManager.explanationCache[cacheKey];
-
-        await this.keywordManager.fetchAndShowExplanation(keyword, wrapper);
     }
 
     copyExplanation(keyword) {

@@ -29,30 +29,15 @@ class TranslationManager {
         this.language = language;
     }
 
-    finishTranslationOperation(app, operationTracker, index, reason) {
-        if (operationTracker) {
-            operationTracker.abort(reason);
-        }
-        if (app && app.operationManager) {
-            app.operationManager.endTranslation(index);
-        }
-    }
-
     /**
      * 翻译文本 - 流式版本
      */
     async translateText(text, index, targetSessionId = null, context = "") {
         if (!text || !this.enabled) return;
 
-        // === [执行上下文防护] ===
         const app = window.streamNoteInstance;
-        const executionContextSnapshot = app ? ExecutionContext.createSnapshot(app) : null;
-
-        // 启动操作追踪
-        let operationTracker = null;
-        if (app && app.operationManager) {
-            operationTracker = app.operationManager.startTranslation(index, executionContextSnapshot);
-        }
+        const translationOperation = OperationGuards.start(app, "translation", { index });
+        const endTranslationOperation = OperationGuards.endOnce(translationOperation);
 
         try {
             const payload = {
@@ -60,7 +45,7 @@ class TranslationManager {
                 target_lang: this.language,
                 context: context || ""
             };
-            const signal = operationTracker ? operationTracker.getSignal() : undefined;
+            const signal = OperationGuards.getSignal(translationOperation);
 
             const response = this.apiClient
                 ? await this.apiClient.translate(payload, signal)
@@ -75,7 +60,7 @@ class TranslationManager {
 
             if (!response.ok) {
                 console.error(`[ERROR] Translation API error: ${response.status}`);
-                this.finishTranslationOperation(app, operationTracker, index, `API error: ${response.status}`);
+                endTranslationOperation(`API error: ${response.status}`);
                 return;
             }
 
@@ -90,9 +75,9 @@ class TranslationManager {
                     if (done) break;
 
                     // [防护] 检查执行上下文是否仍然有效
-                    if (operationTracker && !operationTracker.isValid(app)) {
-                        reader.releaseLock();
-                        console.log(`[TranslationManager] Index ${index}: Execution context changed: ${ExecutionContext.getChangeReason(executionContextSnapshot, app)}`);
+                    if (!OperationGuards.isValid(translationOperation)) {
+                        console.log(`[TranslationManager] Index ${index}: Execution context changed: ${OperationGuards.getChangeReason(translationOperation)}`);
+                        endTranslationOperation('Execution context changed during stream');
                         return;
                     }
 
@@ -117,8 +102,9 @@ class TranslationManager {
                 translation += finalChunk;
 
                 // [防护] 保存前最后检查一次执行上下文
-                if (operationTracker && !operationTracker.isValid(app)) {
+                if (!OperationGuards.isValid(translationOperation)) {
                     console.log(`[TranslationManager] Index ${index}: Context changed before final save, discarding result`);
+                    endTranslationOperation('Context changed before final save');
                     return;
                 }
 
@@ -137,13 +123,13 @@ class TranslationManager {
             }
 
             // [防护] 标记操作完成
-            this.finishTranslationOperation(app, operationTracker, index, 'Translation completed successfully');
+            endTranslationOperation('Translation completed successfully');
 
         } catch (error) {
             console.error("[ERROR] Translation request failed:", error);
 
             // [防护] 清理操作追踪
-            this.finishTranslationOperation(app, operationTracker, index, `Error: ${error.message}`);
+            endTranslationOperation(`Error: ${error.message}`);
         }
     }
 
