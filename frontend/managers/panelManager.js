@@ -164,18 +164,6 @@ class PanelManager {
     }
 
     /**
-     * 切换左侧解释面板的显示/隐藏
-     */
-    toggleExplanationPanel() {
-        const explanationPanel = document.querySelector(".explanation-panel-left");
-        if (explanationPanel && explanationPanel.classList.contains("expanded")) {
-            this.hideExplanationPanel();
-        } else {
-            this.showExplanationPanel();
-        }
-    }
-
-    /**
      * 切换翻译启用/禁用
      */
     toggleTranslation() {
@@ -464,47 +452,6 @@ class PanelManager {
     }
 
     /**
-     * 获取容器顶部对应的行号（已废弃，保留向后兼容）
-     * @private
-     * @deprecated 使用 getBottomLineNumber 代替底部对齐同步
-     */
-    getTopLineNumber(container) {
-        const paragraphs = container.querySelectorAll('p[data-index]');
-
-        if (paragraphs.length === 0) return null;
-
-        for (let i = 0; i < paragraphs.length; i++) {
-            const p = paragraphs[i];
-            const rect = p.getBoundingClientRect();
-            if (rect.bottom > 0) {
-                return {
-                    index: p.getAttribute('data-index'),
-                    lineNumber: i
-                };
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * 滚动容器使指定行号居顶（带偏移）
-     * @private
-     */
-    scrollToLineNumberTop(container, lineNumber, offsetLines = 0) {
-        const paragraphs = container.querySelectorAll('p[data-index]');
-
-        if (paragraphs.length === 0) return;
-
-        let targetLineNumber = Math.max(0, Math.min(lineNumber + offsetLines, paragraphs.length - 1));
-
-        const targetElement = paragraphs[targetLineNumber];
-        const rect = targetElement.getBoundingClientRect();
-        const elementTop = container.scrollTop + rect.top;
-        container.scrollTop = elementTop;
-    }
-
-    /**
      * 滚动容器使指定 data-index 的元素靠近底部
      * @private
      */
@@ -670,13 +617,6 @@ class PanelManager {
         setTimeout(() => {
             this.isUpdatingUI = false;
         }, 350);
-    }
-
-    /**
-     * 获取当前布局
-     */
-    getLayout() {
-        return this.currentLayout;
     }
 
     /**
