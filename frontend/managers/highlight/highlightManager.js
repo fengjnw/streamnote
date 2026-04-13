@@ -43,12 +43,15 @@ class HighlightManager {
     }
 
     persistHighlightState() {
-        this.keywordManager.updateAllKeywordDisplays();
-        this.sessionManager.updateCurrentHighlights(this.keywordManager.highlights);
-        this.sessionManager.updateCurrentKeywords(this.keywordManager.extracts);
+        this.keywordManager?.updateAllKeywordDisplays();
+        this.sessionManager?.updateCurrentHighlights(this.keywordManager?.highlights || []);
+        this.sessionManager?.updateCurrentKeywords(this.keywordManager?.extracts || []);
+        this.sessionManager?.updateHighlightPositions(this.highlightPositions);
+    }
 
-        if (this.sessionManager) {
-            this.sessionManager.updateHighlightPositions(this.highlightPositions);
+    syncHighlightPositionsToKeywordManager() {
+        if (this.keywordManager?.setHighlightPositions) {
+            this.keywordManager.setHighlightPositions(this.highlightPositions);
         }
     }
 
@@ -74,6 +77,19 @@ class HighlightManager {
             });
             this.mergeAdjacentTextNodes(translationDiv);
         }
+    }
+
+    replaceHighlightIdInContainer(containerId, oldId, newId, newClassName) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        const spans = container.querySelectorAll(`[data-highlight-id="${oldId}"]`);
+        spans.forEach(span => {
+            span.setAttribute("data-highlight-id", newId);
+            if (newClassName) {
+                span.className = newClassName;
+            }
+        });
     }
 
     /**
@@ -154,9 +170,7 @@ class HighlightManager {
         if (positionInfo) {
             this.highlightPositions[highlightText] = positionInfo;
             // 同时更新keywordManager中的highlightPositions
-            if (this.keywordManager && this.keywordManager.setHighlightPositions) {
-                this.keywordManager.setHighlightPositions(this.highlightPositions);
-            }
+            this.syncHighlightPositionsToKeywordManager();
         }
 
         // 直接对Range的内容进行高亮（仅在原文）
@@ -217,9 +231,7 @@ class HighlightManager {
         };
 
         // 同时更新keywordManager中的highlightPositions
-        if (this.keywordManager && this.keywordManager.setHighlightPositions) {
-            this.keywordManager.setHighlightPositions(this.highlightPositions);
-        }
+        this.syncHighlightPositionsToKeywordManager();
 
         // 在原文和翻译中进行高亮显示
         // 如果positionInfo中有container信息，优先在该面板中高亮
@@ -247,6 +259,10 @@ class HighlightManager {
      * @param {string} highlightedWord - 刚添加的高亮词
      */
     updateExplanationPanelHighlightButton(highlightedWord) {
+        this.updateExplanationPanelHighlightButtonState(highlightedWord, true);
+    }
+
+    updateExplanationPanelHighlightButtonState(word, isHighlighted) {
         // 获取当前打开的解释词
         const currentWordEl = document.getElementById("current-explanation-word");
         if (!currentWordEl) return;
@@ -255,10 +271,10 @@ class HighlightManager {
         if (!currentWord) return;
 
         // 检查是否是同一个词（不区分大小写比较）
-        if (currentWord.toLowerCase() === highlightedWord.toLowerCase()) {
+        if (currentWord.toLowerCase() === word.toLowerCase()) {
             // 调用全局的updateHighlightButtonState方法来更新按钮状态
             if (window.streamNoteInstance && window.streamNoteInstance.updateHighlightButtonState) {
-                window.streamNoteInstance.updateHighlightButtonState(highlightedWord, true);
+                window.streamNoteInstance.updateHighlightButtonState(word, isHighlighted);
             }
         }
     }
@@ -893,36 +909,12 @@ class HighlightManager {
         this.removeHighlightFromTranscript(text);
 
         // 更新所有显示
-        this.keywordManager.updateAllKeywordDisplays();
-
-        // 保存到session
-        this.sessionManager?.updateCurrentHighlights(this.keywordManager.highlights);
+        this.persistHighlightState();
 
         // 如果解释面板打开了同一个词，更新高亮按钮状态（改为"Highlight"）
-        this.updateExplanationPanelHighlightButtonAfterRemoval(text);
+        this.updateExplanationPanelHighlightButtonState(text, false);
 
         return true;
-    }
-
-    /**
-     * 删除高亮后更新解释面板按钮状态（改为"Highlight"）
-     * @param {string} removedWord - 刚删除的高亮词
-     */
-    updateExplanationPanelHighlightButtonAfterRemoval(removedWord) {
-        // 获取当前打开的解释词
-        const currentWordEl = document.getElementById("current-explanation-word");
-        if (!currentWordEl) return;
-
-        const currentWord = currentWordEl.textContent?.trim();
-        if (!currentWord) return;
-
-        // 检查是否是同一个词（不区分大小写比较）
-        if (currentWord.toLowerCase() === removedWord.toLowerCase()) {
-            // 调用全局的updateHighlightButtonState方法来更新按钮状态
-            if (window.streamNoteInstance && window.streamNoteInstance.updateHighlightButtonState) {
-                window.streamNoteInstance.updateHighlightButtonState(removedWord, false);
-            }
-        }
     }
 
     /**
@@ -1073,25 +1065,9 @@ class HighlightManager {
         const tempId = tempInfo.highlightId;
         const positionInfo = tempInfo.positionInfo;
 
-        // 在原文中替换ID和className
-        const transcriptDiv = document.getElementById("transcript");
-        if (transcriptDiv) {
-            const tempSpans = transcriptDiv.querySelectorAll(`[data-highlight-id="${tempId}"]`);
-            tempSpans.forEach(span => {
-                span.setAttribute("data-highlight-id", permanentHighlightId);
-                span.className = "text-highlight";  // 改为永久高亮样式
-            });
-        }
-
-        // 在翻译中替换ID和className
-        const translationDiv = document.getElementById("translation");
-        if (translationDiv) {
-            const tempSpans = translationDiv.querySelectorAll(`[data-highlight-id="${tempId}"]`);
-            tempSpans.forEach(span => {
-                span.setAttribute("data-highlight-id", permanentHighlightId);
-                span.className = "text-highlight";  // 改为永久高亮样式
-            });
-        }
+        // 在原文和翻译中替换ID和className
+        this.replaceHighlightIdInContainer("transcript", tempId, permanentHighlightId, "text-highlight");
+        this.replaceHighlightIdInContainer("translation", tempId, permanentHighlightId, "text-highlight");
 
         // 添加到永久列表
         if (this.keywordManager) {
@@ -1103,27 +1079,14 @@ class HighlightManager {
         this.highlightPositions[cleanedWord] = positionInfo;
 
         // 同时更新keywordManager中的highlightPositions
-        if (this.keywordManager?.setHighlightPositions) {
-            this.keywordManager.setHighlightPositions(this.highlightPositions);
-        }
+        this.syncHighlightPositionsToKeywordManager();
 
         // 清无临时数据
         delete this.temporaryHighlights[cleanedWord];
         this.currentTemporaryWord = null;
 
         // 更新显示和保存
-        if (this.keywordManager && this.sessionManager) {
-            this.persistHighlightState();
-        } else {
-            if (this.keywordManager) {
-                this.keywordManager.updateAllKeywordDisplays();
-            }
-            this.sessionManager?.updateCurrentHighlights(this.keywordManager?.highlights || []);
-            this.sessionManager?.updateCurrentKeywords(this.keywordManager?.extracts || []);
-            if (this.sessionManager) {
-                this.sessionManager.updateHighlightPositions(this.highlightPositions);
-            }
-        }
+        this.persistHighlightState();
 
         this.onStatusMessage(`✓ Highlighted "${cleanedWord}"`, 1500);
 

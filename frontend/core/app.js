@@ -1,4 +1,17 @@
 class StreamNote {
+    getElement(id) {
+        return document.getElementById(id);
+    }
+
+    setScrollBehaviorAuto(elementIds) {
+        elementIds.forEach((id) => {
+            const element = this.getElement(id);
+            if (element) {
+                element.style.scrollBehavior = 'auto';
+            }
+        });
+    }
+
     constructor() {
         // Session 管理器
         this.sessionManager = null;
@@ -125,14 +138,7 @@ class StreamNote {
             this.panelManager.setupSyncScroll();
             this.initializeVisibility();
             // 设置容器为 auto 滚动行为（而不是 smooth）
-            const transcript = document.getElementById("transcript");
-            const translation = document.getElementById("translation");
-            if (transcript) {
-                transcript.style.scrollBehavior = 'auto';
-            }
-            if (translation) {
-                translation.style.scrollBehavior = 'auto';
-            }
+            this.setScrollBehaviorAuto(["transcript", "translation"]);
         }, 100);
     }
 
@@ -460,8 +466,8 @@ class StreamNote {
         this.keywordManager = new KeywordManager({
             apiUrl: "/api/extract-keywords",
             apiClient: this.apiClient,
-            transcriptElement: document.getElementById("transcript"),
-            keywordElement: document.getElementById("keywords-display"),
+            transcriptElement: this.getElement("transcript"),
+            keywordElement: this.getElement("keywords-display"),
             topK: 5,
             panelManager: this.panelManager,
             recordingManager: this.recordingManager,
@@ -679,12 +685,12 @@ class StreamNote {
      * 获取模态对应的按钮
      */
     getModalButton(modalId) {
-        if (modalId === "sessionModal") {
-            return document.getElementById("openSessionPanel");
-        } else if (modalId === "settingsModal") {
-            return document.getElementById("quickAccessSettings");
-        }
-        return null;
+        const buttonMap = {
+            sessionModal: "openSessionPanel",
+            settingsModal: "quickAccessSettings"
+        };
+        const buttonId = buttonMap[modalId];
+        return buttonId ? this.getElement(buttonId) : null;
     }
 
     /**

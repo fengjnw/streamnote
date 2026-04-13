@@ -37,6 +37,15 @@ class PanelManager {
         this.setupPanelControls();
     }
 
+    getElement(id) {
+        return document.getElementById(id);
+    }
+
+    toggleClassByState(element, className, shouldHaveClass) {
+        if (!element) return;
+        element.classList.toggle(className, shouldHaveClass);
+    }
+
     /**
      * 初始化所有面板控制
      * @private
@@ -107,60 +116,52 @@ class PanelManager {
         }
     }
 
+    applyExplanationPanelState(isExpanded) {
+        const explanationPanel = document.querySelector(".explanation-panel-left");
+        const quickAccessHistory = document.getElementById("quickAccessHistory");
+
+        if (!explanationPanel) {
+            return;
+        }
+
+        this.isUpdatingUI = true;
+
+        explanationPanel.classList.toggle("collapsed", !isExpanded);
+        explanationPanel.classList.toggle("expanded", isExpanded);
+        quickAccessHistory?.classList.toggle("active", isExpanded);
+
+        setTimeout(() => {
+            this.isUpdatingUI = false;
+        }, 0);
+    }
+
     /**
      * 显示左侧解释面板
      */
     showExplanationPanel() {
-        const explanationPanel = document.querySelector(".explanation-panel-left");
-        const quickAccessHistory = document.getElementById("quickAccessHistory");
-
-        if (explanationPanel) {
-            this.isUpdatingUI = true;
-            explanationPanel.classList.remove("collapsed");
-            explanationPanel.classList.add("expanded");
-            if (quickAccessHistory) {
-                quickAccessHistory.classList.add("active");
-            }
-            setTimeout(() => {
-                this.isUpdatingUI = false;
-            }, 0);
-        }
+        this.applyExplanationPanelState(true);
     }
 
     /**
      * 隐藏左侧解释面板
      */
     hideExplanationPanel() {
-        const explanationPanel = document.querySelector(".explanation-panel-left");
-        const quickAccessHistory = document.getElementById("quickAccessHistory");
-
-        if (explanationPanel) {
-            this.isUpdatingUI = true;
-
-            // 清理临时高亮（用户没有点"Add Highlight"就关闭面板）
-            if (window.streamNoteInstance && window.streamNoteInstance.highlightManager) {
-                window.streamNoteInstance.highlightManager.clearTemporaryHighlight();
-            }
-
-            // 清理状态消息和其超时计时器
-            const statusEl = document.getElementById("status");
-            if (statusEl) {
-                statusEl.textContent = "";
-            }
-            if (window.streamNoteInstance && window.streamNoteInstance.statusMessageTimeout) {
-                clearTimeout(window.streamNoteInstance.statusMessageTimeout);
-                window.streamNoteInstance.statusMessageTimeout = null;
-            }
-
-            explanationPanel.classList.add("collapsed");
-            explanationPanel.classList.remove("expanded");
-            if (quickAccessHistory) {
-                quickAccessHistory.classList.remove("active");
-            }
-            setTimeout(() => {
-                this.isUpdatingUI = false;
-            }, 0);
+        // 清理临时高亮（用户没有点"Add Highlight"就关闭面板）
+        if (window.streamNoteInstance && window.streamNoteInstance.highlightManager) {
+            window.streamNoteInstance.highlightManager.clearTemporaryHighlight();
         }
+
+        // 清理状态消息和其超时计时器
+        const statusEl = document.getElementById("status");
+        if (statusEl) {
+            statusEl.textContent = "";
+        }
+        if (window.streamNoteInstance && window.streamNoteInstance.statusMessageTimeout) {
+            clearTimeout(window.streamNoteInstance.statusMessageTimeout);
+            window.streamNoteInstance.statusMessageTimeout = null;
+        }
+
+        this.applyExplanationPanelState(false);
     }
 
     /**
@@ -198,14 +199,8 @@ class PanelManager {
      * @private
      */
     updateTranslationButton() {
-        const translationToggleBtn = document.getElementById("translationToggleBtn");
-        if (translationToggleBtn) {
-            if (this.translationEnabled) {
-                translationToggleBtn.classList.add('active');
-            } else {
-                translationToggleBtn.classList.remove('active');
-            }
-        }
+        const translationToggleBtn = this.getElement("translationToggleBtn");
+        this.toggleClassByState(translationToggleBtn, 'active', this.translationEnabled);
     }
 
     /**
@@ -213,7 +208,7 @@ class PanelManager {
      * @private
      */
     updateLayoutDropdown() {
-        const layoutDropdown = document.getElementById("layoutDropdown");
+        const layoutDropdown = this.getElement("layoutDropdown");
         if (layoutDropdown) {
             layoutDropdown.value = this.translationLayout;
         }
@@ -298,14 +293,8 @@ class PanelManager {
      * 更新自动滚动按钮显示
      */
     updateAutoScrollButton() {
-        const floatingAutoScrollBtn = document.getElementById("floatingAutoScrollBtn");
-        if (floatingAutoScrollBtn) {
-            if (this.autoScroll) {
-                floatingAutoScrollBtn.classList.add("hidden");
-            } else {
-                floatingAutoScrollBtn.classList.remove("hidden");
-            }
-        }
+        const floatingAutoScrollBtn = this.getElement("floatingAutoScrollBtn");
+        this.toggleClassByState(floatingAutoScrollBtn, "hidden", this.autoScroll);
     }
 
     /**

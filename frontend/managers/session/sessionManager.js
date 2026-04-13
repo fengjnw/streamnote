@@ -321,6 +321,28 @@ class SessionManager {
         return this.sessions[sessionId] || null;
     }
 
+    withCurrentSession(mutator) {
+        const session = this.getCurrentSession();
+        if (!session) return null;
+
+        mutator(session);
+        session.lastModified = Date.now();
+        this.saveSessions();
+        return session;
+    }
+
+    withSessionById(sessionId, mutator) {
+        const session = this.sessions[sessionId];
+        if (!session) {
+            return false;
+        }
+
+        mutator(session);
+        session.lastModified = Date.now();
+        this.saveSessions();
+        return true;
+    }
+
     /**
      * 更新 session 的 lastTextModified（获取最后一条转录的时间戳）
      * @param {string} sessionId - session ID
@@ -390,191 +412,156 @@ class SessionManager {
      */
     updateTranscriptsForSession(sessionId, transcripts) {
         // 检查该 session 是否还存在
-        if (!this.sessions[sessionId]) {
-            return false;
-        }
-
-        // 合并新的转录内容
-        const session = this.sessions[sessionId];
-        session.transcripts = { ...session.transcripts, ...transcripts };
-        session.lastModified = Date.now();
-        this.saveSessions();
-        return true;
+        return this.withSessionById(sessionId, (session) => {
+            // 合并新的转录内容
+            session.transcripts = { ...session.transcripts, ...transcripts };
+        });
     }
 
     /**
      * 更新指定 sessionId 的关键词
      */
     updateKeywordsForSession(sessionId, keywords) {
-        if (!this.sessions[sessionId]) {
-            return false;
-        }
-
-        const session = this.sessions[sessionId];
-        session.keywords = [...keywords];
-        session.lastModified = Date.now();
-        this.saveSessions();
-        return true;
+        return this.withSessionById(sessionId, (session) => {
+            session.keywords = [...keywords];
+        });
     }
 
     /**
      * 更新当前 session 的关键词
      */
     updateCurrentKeywords(keywords) {
-        const session = this.getCurrentSession();
-        if (session) {
+        this.withCurrentSession((session) => {
             session.keywords = [...keywords];
-            session.lastModified = Date.now();
-            this.saveSessions();
-        }
+        });
     }
 
     /**
      * 更新当前 session 的高亮
      */
     updateCurrentHighlights(highlights) {
-        const session = this.getCurrentSession();
-        if (session) {
+        this.withCurrentSession((session) => {
             session.highlights = [...highlights];
-            session.lastModified = Date.now();
-            this.saveSessions();
-        }
+        });
     }
 
     /**
      * 更新当前 session 的高亮位置信息
      */
     updateHighlightPositions(positions) {
-        const session = this.getCurrentSession();
-        if (session) {
+        this.withCurrentSession((session) => {
             // 初始化highlightPositions对象（如果不存在）
             if (!session.highlightPositions) {
                 session.highlightPositions = {};
             }
             session.highlightPositions = { ...positions };
-            session.lastModified = Date.now();
-            this.saveSessions();
-        }
+        });
     }
 
     /**
      * 更新当前 session 的翻译内容（指定语言）
      */
     updateCurrentTranslations(translations, language) {
-        const session = this.getCurrentSession();
-        if (session) {
+        this.withCurrentSession((session) => {
+            if (!session.translations) {
+                session.translations = {};
+            }
             if (!session.translations[language]) {
                 session.translations[language] = {};
             }
             session.translations[language] = { ...session.translations[language], ...translations };
-            session.lastModified = Date.now();
-            this.saveSessions();
-        }
+        });
     }
 
     /**
      * 更新当前 session 的解释列表
      */
     updateCurrentExplanations(explanations) {
-        const session = this.getCurrentSession();
-        if (session) {
+        this.withCurrentSession((session) => {
             session.explanations = [...explanations];
-            session.lastModified = Date.now();
-            this.saveSessions();
-        }
+        });
     }
 
     /**
      * 更新当前 session 的解释历史（新格式，包含完整信息）
      */
     updateCurrentExplanationHistory(explanationHistory) {
-        const session = this.getCurrentSession();
-        if (session) {
+        this.withCurrentSession((session) => {
             session.explanationHistory = [...explanationHistory];
-            session.lastModified = Date.now();
-            this.saveSessions();
-        }
+        });
     }
 
     /**
      * 更新当前 session 的关键词解释缓存
      */
     updateCurrentKeywordCache(cache) {
-        const session = this.getCurrentSession();
-        if (session) {
+        this.withCurrentSession((session) => {
             session.keywordCache = { ...session.keywordCache, ...cache };
-            session.lastModified = Date.now();
-            this.saveSessions();
-        }
+        });
     }
 
     /**
      * 更新当前 session 的高亮解释缓存
      */
     updateCurrentHighlightCache(cache) {
-        const session = this.getCurrentSession();
-        if (session) {
+        this.withCurrentSession((session) => {
             session.highlightCache = { ...session.highlightCache, ...cache };
-            session.lastModified = Date.now();
-            this.saveSessions();
-        }
+        });
     }
 
     /**
      * 更新当前 session 的解释面板查询词缓存
      */
     updateCurrentExplanationCache(cache) {
-        const session = this.getCurrentSession();
-        if (session) {
+        this.withCurrentSession((session) => {
             session.explanationCache = { ...session.explanationCache, ...cache };
-            session.lastModified = Date.now();
-            this.saveSessions();
-        }
+        });
     }
 
     /**
      * 更新当前 session 的总结缓存
      */
     updateCurrentSummaryCache(cache) {
-        const session = this.getCurrentSession();
-        if (session) {
+        this.withCurrentSession((session) => {
             session.summaryCache = { ...session.summaryCache, ...cache };
-            session.lastModified = Date.now();
-            this.saveSessions();
-        }
+        });
     }
 
     /**
      * 更新当前 session 的设置
      */
     updateCurrentSettings(settings) {
-        const session = this.getCurrentSession();
-        if (session) {
+        this.withCurrentSession((session) => {
             session.settings = { ...session.settings, ...settings };
-            session.lastModified = Date.now();
-            this.saveSessions();
-        }
+        });
     }
 
     /**
      * 重命名当前 session
      */
     renameCurrentSession(newName) {
-        const session = this.getCurrentSession();
-        if (session && newName.trim()) {
-            session.name = newName.trim();
-            session.lastModified = Date.now();
-            this.saveSessions();
-            this.renderSessionList();
-
-            // 更新 header 中的 session 名称显示
-            const sessionNameDisplay = document.getElementById('sessionNameDisplay');
-            if (sessionNameDisplay) {
-                sessionNameDisplay.textContent = session.name;
-            }
-
-            return true;
+        const trimmedName = newName.trim();
+        if (!trimmedName) {
+            return false;
         }
+
+        const session = this.withCurrentSession((current) => {
+            current.name = trimmedName;
+        });
+
+        if (!session) {
+            return false;
+        }
+
+        this.renderSessionList();
+
+        // 更新 header 中的 session 名称显示
+        const sessionNameDisplay = document.getElementById('sessionNameDisplay');
+        if (sessionNameDisplay) {
+            sessionNameDisplay.textContent = session.name;
+        }
+
+        return true;
     }
 
     /**
