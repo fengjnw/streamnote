@@ -657,6 +657,7 @@
     overflow: hidden;
     position: relative;
     background: var(--color-white);
+    min-height: 0;
 }
 
 /* ================ Content Area - 主内容区域 ================ */
@@ -668,6 +669,7 @@
     gap: 0;
     overflow: hidden;
     position: relative;
+    min-height: 0;
 }
 
 /* ================ Control Panel - 优化的导航栏设计 (DEPRECATED - 已迁移到sidebars) ================ */
@@ -1017,6 +1019,7 @@
     padding: 0;
     position: relative;
     min-width: 0;
+    min-height: 0;
 }
 
 .text-panel {
@@ -1269,6 +1272,7 @@
     flex-direction: column;
     padding: var(--spacing-md);
     order: 2;
+    min-height: 0;
 }
 
 .transcript,
@@ -1565,4 +1569,3 @@
     overflow: hidden;
     padding: 0;
 }
-

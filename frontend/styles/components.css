@@ -302,7 +302,7 @@
 .summary-text {
     flex: 1;
     overflow-y: auto;
-    min-height: 200px;
+    min-height: 0;
     background: white;
     padding: var(--spacing-md);
     color: #555;
