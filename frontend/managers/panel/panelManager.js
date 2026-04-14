@@ -345,31 +345,14 @@ class PanelManager {
             return;
         }
 
-        // 根据布局确定滚动偏移
-        const getScrollOffset = () => {
-            switch (this.translationLayout) {
-                case 'split-top':
-                    return -6;  // 上布局，偏移 -6
-                case 'split-bottom':
-                    return 8;   // 下布局，偏移 8
-                case 'split-left':
-                case 'split-right':
-                    return 0;   // 左右布局，偏移 0
-                default:
-                    return 0;
-            }
-        };
-
         // 原文容器滚动时，同步译文容器
         transcript.addEventListener('scroll', () => {
-            const offset = getScrollOffset();
-            this._handleScroll(transcript, translation, -offset);
+            this._handleScroll(transcript, translation);
         });
 
         // 译文容器滚动时，同步原文容器
         translation.addEventListener('scroll', () => {
-            const offset = getScrollOffset();
-            this._handleScroll(translation, transcript, offset);
+            this._handleScroll(translation, transcript);
         });
     }
 
@@ -377,7 +360,7 @@ class PanelManager {
      * 处理滚动事件
      * @private
      */
-    _handleScroll(source, target, offset) {
+    _handleScroll(source, target) {
         // 如果是用户手动滚动，关闭自动滚动（但不在 UI 更新期间）
         if (!this.isSyncingScroll && !this.isTogglingAutoScroll && !this.isUpdatingUI && this.autoScroll) {
             this.autoScroll = false;
@@ -615,3 +598,5 @@ class PanelManager {
         return this.currentLayout !== "full-transcript";
     }
 }
+
+window.PanelManager = PanelManager;

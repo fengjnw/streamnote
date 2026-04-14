@@ -97,6 +97,18 @@ class AiWorkflowManager {
             OperationGuards.end(summaryOperation, "Summary completed successfully");
 
             if (summary) {
+                const currentSession = this.app.sessionManager?.getCurrentSession();
+                const currentSessionId = this.app.sessionManager?.currentSessionId;
+                if (currentSessionId && currentSession) {
+                    this.app.sessionManager.updateLastSummaryGeneratedTime(
+                        currentSessionId,
+                        cacheKey,
+                        currentSession.lastTextModified
+                    );
+                }
+            }
+
+            if (summary) {
                 return summary;
             }
 
@@ -140,6 +152,8 @@ class AiWorkflowManager {
                 const sessionId = targetSessionId || this.app.recordingSessionId || this.app.sessionManager.currentSessionId;
                 if (sessionId && this.app.sessionManager) {
                     this.app.sessionManager.updateKeywordsForSession(sessionId, this.app.keywordManager.extracts);
+                    const session = this.app.sessionManager.getSession(sessionId);
+                    this.app.sessionManager.updateLastKeywordExtractedTime(sessionId, session?.lastTextModified);
                 }
             }
         } finally {

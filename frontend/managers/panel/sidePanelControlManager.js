@@ -92,10 +92,16 @@ class SidePanelControlManager {
 
                     const autoKeywordsDisplay = document.getElementById("auto-keywords-display");
                     if (autoKeywordsDisplay) {
-                        const hasContent = autoKeywordsDisplay.children.length > 0 &&
-                            !autoKeywordsDisplay.querySelector(".placeholder");
+                        const session = app.sessionManager?.getCurrentSession();
+                        const transcriptText = app.getCurrentSessionTranscriptText();
+                        const hasTranscriptText = transcriptText && transcriptText.trim().length > 0;
+                        const isKeywordStale = !!session && session.lastTextModified !== null
+                            && session.lastTextModified !== session.lastKeywordExtractedTime;
+                        const hasKeywords = Array.isArray(app.keywordManager?.extracts)
+                            && app.keywordManager.extracts.length > 0;
+                        const shouldAutoExtract = hasTranscriptText && (!hasKeywords || isKeywordStale);
 
-                        if (!hasContent && app.keywordManager && Object.keys(app.preciseResults).length > 0) {
+                        if (shouldAutoExtract && app.keywordManager) {
                             app.showStatusMessage("Extracting keywords...", 1000);
                             autoKeywordsDisplay.innerHTML = '<p class="placeholder">Extracting keywords...</p>';
                             try {
@@ -129,26 +135,31 @@ class SidePanelControlManager {
 
                     const summaryDisplay = document.getElementById("summary-display");
                     if (summaryDisplay) {
-                        const hasContent = summaryDisplay.children.length > 0 &&
-                            !summaryDisplay.querySelector(".placeholder");
+                        const session = app.sessionManager?.getCurrentSession();
+                        const selectedStyle = summarizeStyleSelect ? summarizeStyleSelect.value : "paragraph";
+                        const cacheKey = `${app.explanationLanguage}-${selectedStyle}`;
+                        const summaryCache = session?.summaryCache || {};
+                        const summaryTimestamps = session?.lastSummaryGeneratedTime || {};
+                        const textToSummarize = app.getCurrentSessionTranscriptText();
+                        const hasText = textToSummarize && textToSummarize.trim().length > 0;
+                        const hasValidCache = !!summaryCache[cacheKey];
+                        const isSummaryStale = !!session && session.lastTextModified !== null
+                            && summaryTimestamps[cacheKey] !== session.lastTextModified;
 
-                        if (!hasContent) {
-                            const textToSummarize = app.getCurrentSessionTranscriptText();
-
-                            if (textToSummarize && textToSummarize.trim().length > 0) {
-                                app.showStatusMessage("Generating summary...", 1000);
-                                summaryDisplay.innerHTML = '<p class="placeholder">Generating summary...</p>';
-                                try {
-                                    const selectedStyle = summarizeStyleSelect ? summarizeStyleSelect.value : "paragraph";
-                                    const summary = await app.summarizeText(textToSummarize, true, selectedStyle);
-                                    if (summary) {
-                                        summaryDisplay.innerHTML = TextFormatters.formatSummaryDisplay(summary, selectedStyle);
-                                    }
-                                } catch (error) {
-                                    console.error("[SUMMARY] Error auto-generating summary:", error);
-                                    summaryDisplay.innerHTML = '<p class="placeholder">Failed to generate summary</p>';
+                        if (hasText && (!hasValidCache || isSummaryStale)) {
+                            app.showStatusMessage("Generating summary...", 1000);
+                            summaryDisplay.innerHTML = '<p class="placeholder">Generating summary...</p>';
+                            try {
+                                const summary = await app.summarizeText(textToSummarize, true, selectedStyle);
+                                if (summary) {
+                                    summaryDisplay.innerHTML = TextFormatters.formatSummaryDisplay(summary, selectedStyle);
                                 }
+                            } catch (error) {
+                                console.error("[SUMMARY] Error auto-generating summary:", error);
+                                summaryDisplay.innerHTML = '<p class="placeholder">Failed to generate summary</p>';
                             }
+                        } else if (hasValidCache) {
+                            summaryDisplay.innerHTML = TextFormatters.formatSummaryDisplay(summaryCache[cacheKey], selectedStyle);
                         }
                     }
                 }

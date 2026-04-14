@@ -9,36 +9,6 @@ class PanelToolbarListenersManager {
     setup() {
         const app = this.app;
 
-        const reExtractKeywordsBtn = document.getElementById("reExtractKeywordsBtn");
-        if (reExtractKeywordsBtn) {
-            reExtractKeywordsBtn.addEventListener("click", async () => {
-                if (!app.keywordManager) {
-                    app.showStatusMessage("Keyword extractor not initialized", 2000);
-                    return;
-                }
-
-                if (Object.keys(app.preciseResults).length === 0) {
-                    app.showStatusMessage("No transcript available to extract keywords from", 2000);
-                    return;
-                }
-
-                reExtractKeywordsBtn.disabled = true;
-                const originalText = reExtractKeywordsBtn.textContent;
-                reExtractKeywordsBtn.textContent = "Refreshing...";
-
-                try {
-                    await app.processKeywords(app.recordingSessionId || app.sessionManager.currentSessionId);
-                    app.showStatusMessage("Keywords extracted", 1500);
-                } catch (error) {
-                    console.error("[StreamNote] Error extracting keywords:", error);
-                    app.showStatusMessage("Failed to extract keywords", 2000);
-                } finally {
-                    reExtractKeywordsBtn.disabled = false;
-                    reExtractKeywordsBtn.textContent = originalText;
-                }
-            });
-        }
-
         const clearKeywordsBtn = document.getElementById("clearKeywordsBtn");
         if (clearKeywordsBtn) {
             clearKeywordsBtn.addEventListener("click", () => {
@@ -137,7 +107,7 @@ class PanelToolbarListenersManager {
             clearSummaryBtn.addEventListener("click", () => {
                 const summaryDisplayEl = document.getElementById("summary-display");
                 if (summaryDisplayEl) {
-                    summaryDisplayEl.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
+                    summaryDisplayEl.innerHTML = '<p class="placeholder">Open this panel to auto-generate a summary</p>';
 
                     const styleSelect = document.getElementById("summarizeStyleSelect");
                     const selectedStyle = styleSelect ? styleSelect.value : "paragraph";

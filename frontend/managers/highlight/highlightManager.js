@@ -635,7 +635,6 @@ class HighlightManager {
      * @private
      */
     _highlightInTranslationByIndices(translationDiv, text, sourceIndices, highlightId) {
-        const preciseResults = this.getTranscriptData();
         const translationData = this.translationManager.getTranslationData();
 
         // 为每个涉及的段落构建虚拟全文
@@ -753,7 +752,7 @@ class HighlightManager {
             range.setStart(startNode, startNodeOffset);
             range.setEnd(endNode, endNodeOffset);
             return range;
-        } catch (e) {
+        } catch {
             return null;
         }
     }
@@ -1096,3 +1095,5 @@ class HighlightManager {
         return true;
     }
 }
+
+window.HighlightManager = HighlightManager;

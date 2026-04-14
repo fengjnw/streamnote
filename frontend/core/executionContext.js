@@ -252,3 +252,7 @@ class OperationManager {
         return count;
     }
 }
+
+window.ExecutionContext = ExecutionContext;
+window.OperationTracker = OperationTracker;
+window.OperationManager = OperationManager;

@@ -24,7 +24,7 @@ class ContentImportManager {
             const maxIndex = existingIndices.length > 0 ? Math.max(...existingIndices) : -1;
 
             const mergedTranscripts = { ...(currentSession.transcripts || {}) };
-            Object.entries(preciseResults).forEach(([key, value], idx) => {
+            Object.entries(preciseResults).forEach(([, value], idx) => {
                 const newIndex = maxIndex + 1 + idx;
                 mergedTranscripts[newIndex] = value;
                 newIndices.push(newIndex);

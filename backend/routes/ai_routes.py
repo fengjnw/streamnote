@@ -1,6 +1,8 @@
 import io
 from flask import jsonify, request, Response
 
+from error_utils import api_error
+
 
 def register_ai_routes(app, services, server_error_response):
     """Register AI-related endpoints."""
@@ -19,7 +21,7 @@ def register_ai_routes(app, services, server_error_response):
         try:
             audio_file = request.files.get("file")
             if not audio_file:
-                return {"error": "No audio file"}, 400
+                return api_error("NO_AUDIO_FILE", "No audio file", 400)
 
             audio_data = audio_file.read()
             if len(audio_data) < 10000:
@@ -41,6 +43,9 @@ def register_ai_routes(app, services, server_error_response):
     def extract_keywords():
         try:
             data = request.json
+            if not data:
+                return api_error("INVALID_JSON", "Request body must be JSON", 400)
+
             text = data.get("text", "")
 
             if not text or len(text) < 10:
@@ -55,6 +60,9 @@ def register_ai_routes(app, services, server_error_response):
     def translate():
         try:
             data = request.json
+            if not data:
+                return api_error("INVALID_JSON", "Request body must be JSON", 400)
+
             text = data.get("text", "")
             target_lang = data.get("target_lang", "Chinese")
             context = data.get("context", "").strip()
@@ -84,6 +92,9 @@ def register_ai_routes(app, services, server_error_response):
     def explain_keyword():
         try:
             data = request.json
+            if not data:
+                return api_error("INVALID_JSON", "Request body must be JSON", 400)
+
             keyword = data.get("keyword", "").strip()
             language = data.get("language", "English")
             context = data.get("context", "").strip()
@@ -106,6 +117,9 @@ def register_ai_routes(app, services, server_error_response):
     def summarize():
         try:
             data = request.json
+            if not data:
+                return api_error("INVALID_JSON", "Request body must be JSON", 400)
+
             text = data.get("text", "").strip()
             language = data.get("language", "English")
             style = data.get("style", "paragraph")

@@ -247,7 +247,7 @@ class WordNavigationManager {
             if (highlightCount > 0) {
                 element.innerHTML = newHtml;
             }
-        } catch (e) {
+        } catch {
             return;
         }
 

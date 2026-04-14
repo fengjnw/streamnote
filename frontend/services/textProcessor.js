@@ -266,3 +266,5 @@ class TextProcessor {
         });
     }
 }
+
+window.TextProcessor = TextProcessor;

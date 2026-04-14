@@ -169,3 +169,5 @@ class SettingsPanel {
         }
     }
 }
+
+window.SettingsPanel = SettingsPanel;

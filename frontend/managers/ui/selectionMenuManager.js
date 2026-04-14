@@ -201,7 +201,7 @@ class SelectionMenuManager {
                     rangeToUse = document.createRange();
                     rangeToUse.setStart(rangeInfo.startContainer, rangeInfo.startOffset);
                     rangeToUse.setEnd(rangeInfo.endContainer, rangeInfo.endOffset);
-                } catch (e) {
+                } catch {
                     this.app.showStatusMessage("Cannot highlight: range invalid", 1500);
                     floatingMenu.classList.add("hidden");
                     return;

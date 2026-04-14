@@ -167,7 +167,7 @@ function shouldLoadTutorialSession() {
         const sessions = localStorage.getItem('streamnote_sessions');
         // 如果没有已保存的会话，返回 true
         return !sessions || JSON.parse(sessions) === null || Object.keys(JSON.parse(sessions)).length === 0;
-    } catch (error) {
+    } catch {
         return true;
     }
 }
@@ -189,3 +189,6 @@ function createTutorialSession() {
         console.error('[Tutorial] Error creating tutorial session:', error);
     }
 }
+
+window.shouldLoadTutorialSession = shouldLoadTutorialSession;
+window.createTutorialSession = createTutorialSession;

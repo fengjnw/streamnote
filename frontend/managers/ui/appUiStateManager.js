@@ -51,13 +51,13 @@ class AppUiStateManager {
         }
 
         if (!autoGenerateOnMiss) {
-            summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
+            summaryDisplay.innerHTML = '<p class="placeholder">Open this panel to auto-generate a summary</p>';
             return;
         }
 
         const hasContent = summaryDisplay.children.length > 0 && !summaryDisplay.querySelector(".placeholder");
         if (!hasContent) {
-            summaryDisplay.innerHTML = '<p class="placeholder">Select a style and click Refresh to create a summary</p>';
+            summaryDisplay.innerHTML = '<p class="placeholder">Open this panel to auto-generate a summary</p>';
             return;
         }
 

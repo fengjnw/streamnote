@@ -13,10 +13,15 @@ Real-time classroom transcription with AI-powered keyword extraction, translatio
 
 ## Installation
 
-### Backend
+### Install dependencies
+```bash
+pip install -r requirements.txt
+npm install
+```
+
+### Run backend
 ```bash
 cd backend
-pip install -r requirements.txt
 export OPENAI_API_KEY="your-api-key"
 python server.py
 ```
@@ -46,6 +51,32 @@ Set environment variables in the backend:
 - `OPENAI_API_KEY` - Your OpenAI API key (required)
 - `PORT` - Server port (default: 5500)
 - `FLASK_DEBUG` - Debug mode (default: false)
+
+## Quality Checks
+
+```bash
+# Frontend lint
+npm run lint
+
+# Frontend smoke test
+npm run test:frontend:smoke
+
+# Backend tests
+npm run test:backend
+```
+
+## API Error Contract
+
+API errors are normalized as JSON:
+
+```json
+{
+	"error": {
+		"code": "ERROR_CODE",
+		"message": "Human readable detail"
+	}
+}
+```
 
 ## Project Structure
 

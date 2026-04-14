@@ -46,7 +46,6 @@ class DisplayManager {
         this.app.updateSessionStats();
 
         const transcriptDiv = document.getElementById("transcript");
-        const translationDiv = document.getElementById("translation");
         const preciseResults = this.app.recordingManager.getTranscriptData();
 
         const formattedLines = Object.keys(preciseResults).map(key => {

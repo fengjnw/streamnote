@@ -151,7 +151,6 @@ class TranslationManager {
 
         // 检查是否所有转录都已翻译
         const preciseResults = this.getPreciseResults();
-        const totalSegments = Object.keys(preciseResults).length;
         const cachedSegments = Object.keys(currentLangCache).length;
         const missingSegments = [];
 
@@ -278,3 +277,5 @@ class TranslationManager {
         this.enabled = enabled;
     }
 }
+
+window.TranslationManager = TranslationManager;

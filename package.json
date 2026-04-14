@@ -5,7 +5,10 @@
   "main": "frontend/core/app.js",
   "scripts": {
     "start": "cd backend && python server.py",
-    "dev": "cd backend && python server.py"
+    "dev": "cd backend && python server.py",
+    "lint": "eslint frontend --ext .js",
+    "test:backend": "cd backend && pytest",
+    "test:frontend:smoke": "node scripts/frontend-smoke.cjs"
   },
   "keywords": [
     "transcription",
@@ -15,5 +18,9 @@
     "translation"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^9.25.1",
+    "jsdom": "^26.1.0"
+  }
 }

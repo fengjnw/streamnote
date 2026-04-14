@@ -368,3 +368,5 @@ class RecordingManager {
         return this.isTranscribing;
     }
 }
+
+window.RecordingManager = RecordingManager;

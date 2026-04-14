@@ -99,6 +99,8 @@ class SessionManager {
                     if (!session.explanationCache) session.explanationCache = {};
                     if (!session.summaryCache) session.summaryCache = {};
                     if (!session.highlightPositions) session.highlightPositions = {};
+                    if (session.lastKeywordExtractedTime === undefined) session.lastKeywordExtractedTime = null;
+                    if (!session.lastSummaryGeneratedTime) session.lastSummaryGeneratedTime = {};
 
                     // 向后兼容：添加 startTime 字段（如果缺失），初始化为 createdAt 的值（创建时间而非修改时间）
                     if (!session.startTime) {
@@ -242,12 +244,6 @@ class SessionManager {
         // 使用全局默认设置
         const defaultSettings = this.getDefaultSettings();
 
-        // 获取当前全局布局设置（从 localStorage）
-        const translationEnabled = localStorage.getItem('translationEnabled') !== null
-            ? JSON.parse(localStorage.getItem('translationEnabled'))
-            : true;
-        const translationLayout = localStorage.getItem('translationLayout') || 'split-bottom';
-
         this.sessions[id] = {
             id: id,
             name: defaultName,
@@ -299,7 +295,9 @@ class SessionManager {
             startTime: Date.now(),  // 时间戳计算的基准时间（使用创建时间，而非修改时间）
             lastModified: Date.now(),
             lastAccessed: Date.now(),
-            lastTextModified: null   // 最后一条转录的时间戳（用于判断是否需要重新提取关键词/总结）
+            lastTextModified: null,   // 最后一条转录的时间戳（用于判断是否需要重新提取关键词/总结）
+            lastKeywordExtractedTime: null,
+            lastSummaryGeneratedTime: {}
         };
 
         this.saveSessions();
@@ -365,6 +363,28 @@ class SessionManager {
             session.lastTextModified = null;
         }
 
+        this.saveSessions();
+    }
+
+    updateLastKeywordExtractedTime(sessionId, textTimestamp) {
+        const session = this.getSession(sessionId);
+        if (!session) return;
+
+        session.lastKeywordExtractedTime = textTimestamp ?? null;
+        session.lastModified = Date.now();
+        this.saveSessions();
+    }
+
+    updateLastSummaryGeneratedTime(sessionId, cacheKey, textTimestamp) {
+        const session = this.getSession(sessionId);
+        if (!session || !cacheKey) return;
+
+        if (!session.lastSummaryGeneratedTime) {
+            session.lastSummaryGeneratedTime = {};
+        }
+
+        session.lastSummaryGeneratedTime[cacheKey] = textTimestamp ?? null;
+        session.lastModified = Date.now();
         this.saveSessions();
     }
 
@@ -927,7 +947,7 @@ class SessionManager {
 
         // 绑定点击事件
         listContainer.querySelectorAll('.session-item').forEach(item => {
-            item.addEventListener('click', (e) => {
+            item.addEventListener('click', () => {
                 const sessionId = item.dataset.sessionId;
                 this.switchSession(sessionId);
             });
@@ -1017,3 +1037,5 @@ class SessionManager {
         }
     }
 }
+
+window.SessionManager = SessionManager;

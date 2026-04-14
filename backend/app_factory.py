@@ -6,6 +6,7 @@ from flask_cors import CORS
 from openai import OpenAI
 
 from config import OPENAI_API_KEY
+from error_utils import api_exception
 from keyword_manager import create_keyword_manager
 from summarizer import create_summarizer
 from translator import create_translator
@@ -40,8 +41,7 @@ def create_app():
 
     def server_error_response(error: Exception, prefix: str = ""):
         traceback.print_exc()
-        message = f"{prefix}{str(error)}" if prefix else str(error)
-        return {"error": message}, 500
+        return api_exception(error, prefix=prefix)
 
     register_static_routes(app)
     register_api_routes(app, services, server_error_response)

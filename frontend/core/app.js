@@ -321,7 +321,7 @@ class StreamNote {
         this.translationManager = new TranslationManager({
             translateApiUrl: "/api/translate",
             apiClient: this.apiClient,
-            onTranslationProgress: (data) => {
+            onTranslationProgress: () => {
                 // 翻译进度更新
             },
             onStatusUpdate: (status) => this.updateStatus(status),
@@ -405,7 +405,7 @@ class StreamNote {
         this.sessionManager = new SessionManager();
 
         // 监听 session 切换事件
-        window.addEventListener('sessionChanged', (e) => {
+        window.addEventListener('sessionChanged', () => {
             this.loadCurrentSession();
         });
     }
