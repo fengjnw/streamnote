@@ -52,7 +52,7 @@ const TUTORIAL_SESSION_DATA = {
         },
         7: {
             index: 7,
-            text: '6. Quick Review: Click 📃 to get intelligent summaries of the entire lecture. Multiple formats available. Perfect for studying later.',
+            text: '6. Quick Review: Click 📃 to get intelligent summaries of the entire lecture. Multiple formats available including key takeaways and Q&A. Perfect for studying later.',
             timestamp: 36,
             source: 'text'
         }
