@@ -24,6 +24,9 @@ def create_app():
     app = Flask(__name__, static_folder="../frontend", static_url_path="")
     CORS(app)
 
+    if not OPENAI_API_KEY:
+        raise RuntimeError("Missing OPENAI_API_KEY. Set it in your environment or .env file.")
+
     @app.after_request
     def disable_caching(response):
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0, public"
@@ -41,7 +44,7 @@ def create_app():
 
     def server_error_response(error: Exception, prefix: str = ""):
         traceback.print_exc()
-        return api_exception(error, prefix=prefix)
+        return api_exception(error, prefix=prefix, expose_message=app.debug)
 
     register_static_routes(app)
     register_api_routes(app, services, server_error_response)

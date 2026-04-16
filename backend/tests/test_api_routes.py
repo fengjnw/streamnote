@@ -114,3 +114,63 @@ def test_upload_file_without_file_returns_structured_error():
     assert response.status_code == 400
     payload = response.get_json()
     assert payload["error"]["code"] == "NO_FILE_PART"
+
+
+def test_extract_keywords_non_json_returns_structured_error():
+    app = make_test_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/extract-keywords",
+        data="plain-text",
+        content_type="text/plain",
+    )
+
+    assert response.status_code == 400
+    payload = response.get_json()
+    assert payload["error"]["code"] == "INVALID_JSON"
+
+
+def test_translate_non_json_returns_structured_error():
+    app = make_test_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/translate",
+        data="plain-text",
+        content_type="text/plain",
+    )
+
+    assert response.status_code == 400
+    payload = response.get_json()
+    assert payload["error"]["code"] == "INVALID_JSON"
+
+
+def test_explain_keyword_non_json_returns_structured_error():
+    app = make_test_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/explain-keyword",
+        data="plain-text",
+        content_type="text/plain",
+    )
+
+    assert response.status_code == 400
+    payload = response.get_json()
+    assert payload["error"]["code"] == "INVALID_JSON"
+
+
+def test_summarize_non_json_returns_structured_error():
+    app = make_test_app()
+    client = app.test_client()
+
+    response = client.post(
+        "/api/summarize",
+        data="plain-text",
+        content_type="text/plain",
+    )
+
+    assert response.status_code == 400
+    payload = response.get_json()
+    assert payload["error"]["code"] == "INVALID_JSON"

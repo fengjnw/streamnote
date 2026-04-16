@@ -1,5 +1,5 @@
 import io
-from flask import jsonify, request, Response
+from flask import jsonify, request, Response, current_app
 
 from error_utils import api_error
 
@@ -42,7 +42,7 @@ def register_ai_routes(app, services, server_error_response):
     @app.route("/api/extract-keywords", methods=["POST"])
     def extract_keywords():
         try:
-            data = request.json
+            data = request.get_json(silent=True)
             if not data:
                 return api_error("INVALID_JSON", "Request body must be JSON", 400)
 
@@ -59,7 +59,7 @@ def register_ai_routes(app, services, server_error_response):
     @app.route("/api/translate", methods=["POST"])
     def translate():
         try:
-            data = request.json
+            data = request.get_json(silent=True)
             if not data:
                 return api_error("INVALID_JSON", "Request body must be JSON", 400)
 
@@ -81,8 +81,8 @@ def register_ai_routes(app, services, server_error_response):
                 try:
                     yield from translator.translate_text(text, target_lang, context)
                 except Exception as e:
-                    print(f"[ERROR] Stream error: {e}")
-                    yield f"[ERROR] {str(e)}"
+                    current_app.logger.exception("Translation stream failed")
+                    yield "[ERROR] Translation failed"
 
             return Response(generate(), mimetype="text/plain")
         except Exception as e:
@@ -91,7 +91,7 @@ def register_ai_routes(app, services, server_error_response):
     @app.route("/api/explain-keyword", methods=["POST"])
     def explain_keyword():
         try:
-            data = request.json
+            data = request.get_json(silent=True)
             if not data:
                 return api_error("INVALID_JSON", "Request body must be JSON", 400)
 
@@ -106,8 +106,8 @@ def register_ai_routes(app, services, server_error_response):
                 try:
                     yield from keyword_manager.explain(keyword, language, context)
                 except Exception as e:
-                    print(f"[ERROR] Stream error: {e}")
-                    yield f"[ERROR] {str(e)}"
+                    current_app.logger.exception("Keyword explanation stream failed")
+                    yield "[ERROR] Keyword explanation failed"
 
             return Response(generate(), mimetype="text/plain")
         except Exception as e:
@@ -116,7 +116,7 @@ def register_ai_routes(app, services, server_error_response):
     @app.route("/api/summarize", methods=["POST"])
     def summarize():
         try:
-            data = request.json
+            data = request.get_json(silent=True)
             if not data:
                 return api_error("INVALID_JSON", "Request body must be JSON", 400)
 
@@ -131,8 +131,8 @@ def register_ai_routes(app, services, server_error_response):
                 try:
                     yield from summarizer.summarize(text, language, style)
                 except Exception as e:
-                    print(f"[ERROR] Stream error: {e}")
-                    yield f"[ERROR] {str(e)}"
+                    current_app.logger.exception("Summary stream failed")
+                    yield "[ERROR] Summary failed"
 
             return Response(generate(), mimetype="text/plain")
         except Exception as e:

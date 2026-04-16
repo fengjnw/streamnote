@@ -40,9 +40,9 @@ git clone <your-repo-url>
 cd streamnote
 ```
 
-### 2. Activate your Python environment
+### 2. Prepare your Python environment
 
-Use your preferred Python environment manager (for example: conda, poetry, or pyenv).
+Use your own Python environment (system Python, conda, poetry, pyenv, etc.).
 Make sure `python` and `pip` point to the same environment before continuing.
 
 ### 3. Install dependencies
@@ -90,8 +90,6 @@ Server default URL: http://localhost:5500
 
 - Open http://localhost:5500
 - Or use the deployed demo: https://streamnote-m1cf.onrender.com
-
-Note: activate your chosen Python environment before running backend commands.
 
 ## How To Use
 

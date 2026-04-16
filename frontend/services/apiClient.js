@@ -8,8 +8,12 @@ class StreamNoteApiClient {
         return `${this.baseUrl}${path}`;
     }
 
-    async summarize(payload, signal) {
-        return fetch(this.buildUrl("/api/summarize"), {
+    async request(path, options = {}) {
+        return fetch(this.buildUrl(path), options);
+    }
+
+    async postJson(path, payload, signal) {
+        return this.request(path, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -19,44 +23,27 @@ class StreamNoteApiClient {
         });
     }
 
+    async summarize(payload, signal) {
+        return this.postJson("/api/summarize", payload, signal);
+    }
+
     async transcribe(formData) {
-        return fetch(this.buildUrl("/api/transcribe"), {
+        return this.request("/api/transcribe", {
             method: "POST",
             body: formData,
         });
     }
 
     async translate(payload, signal) {
-        return fetch(this.buildUrl("/api/translate"), {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload),
-            signal,
-        });
+        return this.postJson("/api/translate", payload, signal);
     }
 
     async extractKeywords(payload, signal) {
-        return fetch(this.buildUrl("/api/extract-keywords"), {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload),
-            signal,
-        });
+        return this.postJson("/api/extract-keywords", payload, signal);
     }
 
     async explainKeyword(payload, signal) {
-        return fetch(this.buildUrl("/api/explain-keyword"), {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload),
-            signal,
-        });
+        return this.postJson("/api/explain-keyword", payload, signal);
     }
 }
 
