@@ -32,9 +32,11 @@ const requiredIds = [
 ];
 
 requiredIds.forEach(mustExist);
+console.log("  [OK] Required DOM panels and controls exist");
 
 // Buttons replaced by auto-flow should not exist anymore.
 ["reExtractKeywordsBtn", "regenerateSummaryBtn"].forEach(mustNotExist);
+console.log("  [OK] Legacy auto-flow buttons are removed");
 
 const scripts = Array.from(document.querySelectorAll("script[src]"));
 const scriptSrcList = scripts.map((s) => s.getAttribute("src"));
@@ -53,10 +55,12 @@ requiredScripts.forEach((scriptSrc) => {
         `Missing required script include: ${scriptSrc}`
     );
 });
+console.log("  [OK] Required script includes exist");
 
 const sidePanelIndex = scriptSrcList.indexOf("managers/panel/sidePanelControlManager.js");
 const appIndex = scriptSrcList.indexOf("core/app.js");
 assert(sidePanelIndex > -1 && appIndex > -1 && sidePanelIndex < appIndex,
     "sidePanelControlManager.js must load before core/app.js");
+console.log("  [OK] Critical script load order is correct");
 
 console.log("Frontend smoke test passed.");

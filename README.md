@@ -43,7 +43,7 @@ cd streamnote
 ### 2. Prepare your Python environment
 
 Use your own Python environment (system Python, conda, poetry, pyenv, etc.).
-Make sure `python` and `pip` point to the same environment before continuing.
+Make sure `python3` and `pip` point to the same environment before continuing.
 
 ### 3. Install dependencies
 
@@ -81,7 +81,7 @@ Alternative (manual backend run):
 
 ```bash
 cd backend
-python server.py
+python3 server.py
 ```
 
 Server default URL: http://localhost:5500
@@ -119,12 +119,25 @@ Run from repository root:
 # Frontend lint
 npm run lint
 
+# Frontend unit tests (core logic)
+npm run test:frontend:unit
+
 # Frontend smoke test
 npm run test:frontend:smoke
 
 # Backend tests
 npm run test:backend
+
+# Full local check (lint + frontend unit + smoke + backend)
+npm run test:all
 ```
+
+### Test Structure
+
+- Backend API tests: validate endpoint contracts and error shapes (`backend/tests/test_api_routes.py`).
+- Backend unit tests: validate file processing core logic (`backend/tests/test_file_processor.py`).
+- Frontend unit tests: validate core text processing behavior (`scripts/frontend-unit-text-processor.cjs`).
+- Frontend smoke tests: validate required DOM/script wiring (`scripts/frontend-smoke.cjs`).
 
 ## API Error Contract
 
