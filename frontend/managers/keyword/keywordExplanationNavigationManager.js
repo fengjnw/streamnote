@@ -16,6 +16,7 @@ class KeywordExplanationNavigationManager {
         }
 
         if (!sourcePanel) {
+            // Preserve the original source panel so later context extraction stays consistent.
             sourcePanel = this.keywordManager.wordSourcePanel[word] || 'transcript';
         } else {
             this.keywordManager.wordSourcePanel[word] = sourcePanel;
@@ -35,11 +36,13 @@ class KeywordExplanationNavigationManager {
         }
 
         if (window.streamNoteInstance && window.streamNoteInstance.scrollToWord) {
+            // Let panel state settle first, then scroll to the keyword anchor.
             setTimeout(() => {
                 window.streamNoteInstance.scrollToWord(word, sourcePanel);
             }, 300);
         }
 
+        // Trigger explanation rendering after scroll to reduce layout thrash.
         setTimeout(() => {
             this.keywordManager.explanationFetchManager?.displayExplanationFocusView(word);
         }, 350);

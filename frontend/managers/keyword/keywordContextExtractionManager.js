@@ -11,6 +11,7 @@ class KeywordContextExtractionManager {
             return '';
         }
 
+        // Choose data source based on where the keyword was selected.
         const isTranslationContext = positionInfo.container === 'translation';
         let dataSource = {};
 
@@ -85,6 +86,7 @@ class KeywordContextExtractionManager {
     extractKeywordContext(keyword, fullText, contextLength = 100) {
         if (!keyword) return '';
 
+        // Prefer position-based extraction for deterministic context windows.
         if (this.keywordManager.highlightPositions && this.keywordManager.highlightPositions[keyword]) {
             const positionInfo = this.keywordManager.highlightPositions[keyword];
             const contextByPosition = this.extractContextByPosition(positionInfo, contextLength);
@@ -109,6 +111,7 @@ class KeywordContextExtractionManager {
             } else {
                 let preciseResults = this.keywordManager.getTranscriptData();
 
+                // Fallback to last known transcript snapshot during session restore race windows.
                 if (!preciseResults || Object.keys(preciseResults).length === 0) {
                     if (this.keywordManager.lastKnownTranscriptData && Object.keys(this.keywordManager.lastKnownTranscriptData).length > 0) {
                         console.warn('[KeywordManager] Main transcript data empty, using fallback cache for context extraction');

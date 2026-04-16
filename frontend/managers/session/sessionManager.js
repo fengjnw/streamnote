@@ -1,7 +1,4 @@
-/**
- * SessionManager - 管理转录会话
- * 功能：创建、保存、加载、删除、切换会话
- */
+
 class SessionManager {
     constructor() {
         this.sessions = {};
@@ -10,10 +7,8 @@ class SessionManager {
         this.CURRENT_SESSION_KEY = 'streamnote_current_session';
         this.DEFAULT_SETTINGS_KEY = 'streamnote_default_settings';
 
-        // 保留的系统session ID（不能被用户创建）
         this.RESERVED_SESSION_IDS = ['tutorial-session'];
 
-        // 全局默认设置（新建session时使用）
         this.defaultSettings = {
             defaultLanguage: "Chinese",
             defaultExplanationLanguage: "Chinese",
@@ -25,9 +20,6 @@ class SessionManager {
         this.setupUI();
     }
 
-    /**
-     * 从 localStorage 加载全局默认设置
-     */
     loadDefaultSettings() {
         try {
             const saved = localStorage.getItem(this.DEFAULT_SETTINGS_KEY);
@@ -39,9 +31,6 @@ class SessionManager {
         }
     }
 
-    /**
-     * 保存全局默认设置
-     */
     saveDefaultSettings() {
         try {
             localStorage.setItem(this.DEFAULT_SETTINGS_KEY, JSON.stringify(this.defaultSettings));
@@ -50,39 +39,29 @@ class SessionManager {
         }
     }
 
-    /**
-     * 获取全局默认设置
-     */
     getDefaultSettings() {
         return { ...this.defaultSettings };
     }
 
-    /**
-     * 更新全局默认设置
-     */
     updateDefaultSettings(settings) {
         this.defaultSettings = { ...this.defaultSettings, ...settings };
         this.saveDefaultSettings();
     }
 
-    /**
-     * 从 localStorage 加载所有 session
-     */
     loadSessions() {
         try {
             const saved = localStorage.getItem(this.STORAGE_KEY);
             if (saved) {
                 this.sessions = JSON.parse(saved);
 
-                // 向后兼容：为旧 session 添加默认设置和多语言结构
+                // Migrate legacy session snapshots to current schema in place.
                 Object.keys(this.sessions).forEach(id => {
                     const session = this.sessions[id];
 
-                    // 兼容：将旧的单语言 translations 转为多语言结构
                     if (session.translations && !session.translations.Chinese) {
                         const oldTranslations = { ...session.translations };
                         session.translations = {
-                            Chinese: oldTranslations,  // 假定旧数据是中文
+                            Chinese: oldTranslations,
                             English: {},
                             Spanish: {},
                             French: {},
@@ -91,7 +70,6 @@ class SessionManager {
                         };
                     }
 
-                    // 初始化新的数据结构字段（如果缺失）
                     if (!session.explanations) session.explanations = [];
                     if (!session.explanationHistory) session.explanationHistory = [];
                     if (!session.keywordCache) session.keywordCache = {};
@@ -102,17 +80,14 @@ class SessionManager {
                     if (session.lastKeywordExtractedTime === undefined) session.lastKeywordExtractedTime = null;
                     if (!session.lastSummaryGeneratedTime) session.lastSummaryGeneratedTime = {};
 
-                    // 向后兼容：添加 startTime 字段（如果缺失），初始化为 createdAt 的值（创建时间而非修改时间）
                     if (!session.startTime) {
                         session.startTime = session.createdAt || session.lastModified || Date.now();
                     }
 
-                    // 向后兼容：添加 lastAccessed 字段（如果缺失），初始化为 lastModified 的值
                     if (!session.lastAccessed) {
                         session.lastAccessed = session.lastModified || Date.now();
                     }
 
-                    // 删除旧的冗余字段
                     delete session.translatedKeywords;
 
                     if (!session.settings) {
@@ -123,24 +98,20 @@ class SessionManager {
                             explanationLanguage: "Chinese"
                         };
                     } else {
-                        // 迁移旧设置格式
                         if (session.settings.targetLanguage && !session.settings.language) {
                             session.settings.language = session.settings.targetLanguage;
                         }
                         delete session.settings.targetLanguage;
 
-                        // 迁移 layout 到 translationLayout
                         if (session.settings.layout && !session.settings.translationLayout) {
                             session.settings.translationLayout = session.settings.layout;
                         }
                         delete session.settings.layout;
 
-                        // 保证 translationEnabled 存在，并与 translationLayout 保持一致
                         if (session.settings.translationEnabled === undefined) {
                             session.settings.translationEnabled = session.settings.translationLayout !== 'full-transcript';
                         }
 
-                        // 初始化 explanationLanguage（如果缺失）
                         if (!session.settings.explanationLanguage) {
                             session.settings.explanationLanguage = session.settings.language || "Chinese";
                         }
@@ -154,12 +125,9 @@ class SessionManager {
                 });
             }
 
-            // 检查是否应该加载示例会话（基于设置）
             if (this.defaultSettings.loadTutorialSession !== false) {
-                // 如果启用了 loadTutorialSession，则每次都加载/显示教程会话
                 this.loadTutorialSessionIntoState(false);
             } else {
-                // 如果禁用了演示会话，使用保存的 currentId 或创建新 session
                 const currentId = localStorage.getItem(this.CURRENT_SESSION_KEY);
                 if (currentId && this.sessions[currentId]) {
                     this.currentSessionId = currentId;
@@ -169,7 +137,6 @@ class SessionManager {
             }
         } catch (error) {
             console.error('[SessionManager] Load error:', error);
-            // 检查是否应该加载示例会话
             if (this.defaultSettings.loadTutorialSession !== false && this.loadTutorialSessionIntoState(false)) {
                 // tutorial session loaded
             } else {
@@ -217,9 +184,6 @@ class SessionManager {
         return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     }
 
-    /**
-     * 保存所有 session 到 localStorage
-     */
     saveSessions() {
         try {
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.sessions));
@@ -229,9 +193,6 @@ class SessionManager {
         }
     }
 
-    /**
-     * 创建新 session
-     */
     createNewSession(name = null) {
         const id = Date.now().toString();
 
@@ -241,22 +202,19 @@ class SessionManager {
             defaultName = this.formatSessionDefaultName(new Date());
         }
 
-        // 使用全局默认设置
         const defaultSettings = this.getDefaultSettings();
 
         this.sessions[id] = {
             id: id,
             name: defaultName,
 
-            // 核心内容
             transcripts: {},
 
-            // 内容元数据（记录当前内容的来源）
             contentMetadata: {
-                source: 'transcript',  // 'transcript' 或 'text'
-                sourceFile: null,      // text 模式时的文件名
-                uploadTime: null,      // 上传/更新时间
-                paragraphCount: 0      // 段落数
+                source: 'transcript',
+                sourceFile: null,
+                uploadTime: null,
+                paragraphCount: 0
             },
 
             translations: {
@@ -268,34 +226,29 @@ class SessionManager {
                 Korean: {}
             },
 
-            // 词列表（三种）
-            keywords: [],       // 自动提取的关键词
-            highlights: [],     // 手动标记的关键词
-            explanations: [],   // 在解释面板查询过的词（旧格式，仅字词列表）
-            explanationHistory: [], // 解释查询历史（新格式，包含完整信息）
+            keywords: [],
+            highlights: [],
+            explanations: [],
+            explanationHistory: [],
 
-            // 高亮位置信息（用于精确提取上下文）
             highlightPositions: {}, // { "highlightText": { sourceIndices: [...], startIndex: ..., endIndex: ... } }
 
-            // 解释缓存（与词列表对应）
             keywordCache: {},      // { "keyword|language": "explanation", ... }
             highlightCache: {},    // { "keyword|language": "explanation", ... }
             explanationCache: {},  // { "keyword|language": "explanation", ... }
 
-            // 总结缓存
             summaryCache: {},      // { language: "summary", ... }
 
-            // 配置设置（使用全局默认设置和当前全局布局）
             settings: {
                 language: defaultSettings.defaultLanguage,
                 explanationLanguage: defaultSettings.defaultExplanationLanguage
             },
 
             createdAt: Date.now(),
-            startTime: Date.now(),  // 时间戳计算的基准时间（使用创建时间，而非修改时间）
+            startTime: Date.now(),
             lastModified: Date.now(),
             lastAccessed: Date.now(),
-            lastTextModified: null,   // 最后一条转录的时间戳（用于判断是否需要重新提取关键词/总结）
+            lastTextModified: null,
             lastKeywordExtractedTime: null,
             lastSummaryGeneratedTime: {}
         };
@@ -305,16 +258,10 @@ class SessionManager {
         return id;
     }
 
-    /**
-     * 获取当前 session
-     */
     getCurrentSession() {
         return this.sessions[this.currentSessionId];
     }
 
-    /**
-     * 获取指定 ID 的 session
-     */
     getSession(sessionId) {
         return this.sessions[sessionId] || null;
     }
@@ -342,22 +289,19 @@ class SessionManager {
     }
 
     /**
-     * 更新 session 的 lastTextModified（获取最后一条转录的时间戳）
      * @param {string} sessionId - session ID
      */
     updateLastTextModified(sessionId) {
         const session = this.getSession(sessionId);
         if (!session || !session.transcripts) return;
 
-        // 获取最后一条转录的时间戳
         const indices = Object.keys(session.transcripts)
             .map(Number)
             .filter(k => !isNaN(k))
-            .sort((a, b) => b - a);  // 降序排列，最大的在前
+            .sort((a, b) => b - a);
 
         if (indices.length > 0) {
             const lastItem = session.transcripts[indices[0]];
-            // timestamp 是相对秒数，直接保存
             session.lastTextModified = lastItem?.timestamp || 0;
         } else {
             session.lastTextModified = null;
@@ -388,9 +332,6 @@ class SessionManager {
         this.saveSessions();
     }
 
-    /**
-     * 切换到指定 session
-     */
     switchSession(sessionId) {
         if (!this.sessions[sessionId]) {
             console.error('[SessionManager] Session not found:', sessionId);
@@ -401,13 +342,11 @@ class SessionManager {
         this.saveSessions();
         this.renderSessionList();
 
-        // 更新 header 中的 session 名称和信息
         const sessionNameDisplay = document.getElementById('sessionNameDisplay');
         if (sessionNameDisplay) {
             sessionNameDisplay.textContent = this.sessions[sessionId].name;
         }
 
-        // 触发自定义事件通知 StreamNote
         window.dispatchEvent(new CustomEvent('sessionChanged', {
             detail: { sessionId: sessionId }
         }));
@@ -415,9 +354,6 @@ class SessionManager {
         return true;
     }
 
-    /**
-     * 更新指定 session 的转录内容
-     */
     updateCurrentTranscripts(transcripts) {
         const session = this.getCurrentSession();
         if (session) {
@@ -427,50 +363,32 @@ class SessionManager {
         }
     }
 
-    /**
-     * 更新指定 sessionId 的转录内容（用于处理切换 session 期间的转录）
-     */
     updateTranscriptsForSession(sessionId, transcripts) {
-        // 检查该 session 是否还存在
         return this.withSessionById(sessionId, (session) => {
-            // 合并新的转录内容
             session.transcripts = { ...session.transcripts, ...transcripts };
         });
     }
 
-    /**
-     * 更新指定 sessionId 的关键词
-     */
     updateKeywordsForSession(sessionId, keywords) {
         return this.withSessionById(sessionId, (session) => {
             session.keywords = [...keywords];
         });
     }
 
-    /**
-     * 更新当前 session 的关键词
-     */
     updateCurrentKeywords(keywords) {
         this.withCurrentSession((session) => {
             session.keywords = [...keywords];
         });
     }
 
-    /**
-     * 更新当前 session 的高亮
-     */
     updateCurrentHighlights(highlights) {
         this.withCurrentSession((session) => {
             session.highlights = [...highlights];
         });
     }
 
-    /**
-     * 更新当前 session 的高亮位置信息
-     */
     updateHighlightPositions(positions) {
         this.withCurrentSession((session) => {
-            // 初始化highlightPositions对象（如果不存在）
             if (!session.highlightPositions) {
                 session.highlightPositions = {};
             }
@@ -478,9 +396,6 @@ class SessionManager {
         });
     }
 
-    /**
-     * 更新当前 session 的翻译内容（指定语言）
-     */
     updateCurrentTranslations(translations, language) {
         this.withCurrentSession((session) => {
             if (!session.translations) {
@@ -493,72 +408,48 @@ class SessionManager {
         });
     }
 
-    /**
-     * 更新当前 session 的解释列表
-     */
     updateCurrentExplanations(explanations) {
         this.withCurrentSession((session) => {
             session.explanations = [...explanations];
         });
     }
 
-    /**
-     * 更新当前 session 的解释历史（新格式，包含完整信息）
-     */
     updateCurrentExplanationHistory(explanationHistory) {
         this.withCurrentSession((session) => {
             session.explanationHistory = [...explanationHistory];
         });
     }
 
-    /**
-     * 更新当前 session 的关键词解释缓存
-     */
     updateCurrentKeywordCache(cache) {
         this.withCurrentSession((session) => {
             session.keywordCache = { ...session.keywordCache, ...cache };
         });
     }
 
-    /**
-     * 更新当前 session 的高亮解释缓存
-     */
     updateCurrentHighlightCache(cache) {
         this.withCurrentSession((session) => {
             session.highlightCache = { ...session.highlightCache, ...cache };
         });
     }
 
-    /**
-     * 更新当前 session 的解释面板查询词缓存
-     */
     updateCurrentExplanationCache(cache) {
         this.withCurrentSession((session) => {
             session.explanationCache = { ...session.explanationCache, ...cache };
         });
     }
 
-    /**
-     * 更新当前 session 的总结缓存
-     */
     updateCurrentSummaryCache(cache) {
         this.withCurrentSession((session) => {
             session.summaryCache = { ...session.summaryCache, ...cache };
         });
     }
 
-    /**
-     * 更新当前 session 的设置
-     */
     updateCurrentSettings(settings) {
         this.withCurrentSession((session) => {
             session.settings = { ...session.settings, ...settings };
         });
     }
 
-    /**
-     * 重命名当前 session
-     */
     renameCurrentSession(newName) {
         const trimmedName = newName.trim();
         if (!trimmedName) {
@@ -575,7 +466,6 @@ class SessionManager {
 
         this.renderSessionList();
 
-        // 更新 header 中的 session 名称显示
         const sessionNameDisplay = document.getElementById('sessionNameDisplay');
         if (sessionNameDisplay) {
             sessionNameDisplay.textContent = session.name;
@@ -584,9 +474,6 @@ class SessionManager {
         return true;
     }
 
-    /**
-     * 导出当前 session 为 JSON 文件
-     */
     exportCurrentSession() {
         const session = this.getCurrentSession();
         if (!session) return;
@@ -600,9 +487,6 @@ class SessionManager {
         this.downloadJSON(data, `StreamNote_${session.name}_${this.formatDate()}.json`);
     }
 
-    /**
-     * 导出所有 sessions 为 JSON 文件
-     */
     exportAllSessions() {
         const data = {
             version: '1.0',
@@ -613,9 +497,6 @@ class SessionManager {
         this.downloadJSON(data, `StreamNote_All_Sessions_${this.formatDate()}.json`);
     }
 
-    /**
-     * 导入 sessions 数据
-     */
     importSessions(file) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -650,9 +531,6 @@ class SessionManager {
         reader.readAsText(file);
     }
 
-    /**
-     * 清空所有 session 数据
-     */
     clearAllSessions() {
         const confirmMsg = '⚠️ Clear all session data?\nThis action cannot be undone!';
         if (confirm(confirmMsg)) {
@@ -667,9 +545,6 @@ class SessionManager {
         }
     }
 
-    /**
-     * 下载 JSON 数据
-     */
     downloadJSON(data, filename) {
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -680,39 +555,26 @@ class SessionManager {
         URL.revokeObjectURL(url);
     }
 
-    /**
-     * 格式化日期用于文件名
-     */
     formatDate() {
         const now = new Date();
         return now.toISOString().slice(0, 19).replace(/[T:]/g, '-');
     }
 
-    /**
-     * 删除指定 session
-     */
     deleteSession(sessionId) {
         if (!this.sessions[sessionId]) return;
         delete this.sessions[sessionId];
 
-        // 如果删除的是当前 session，切换到其他 session
         if (this.currentSessionId === sessionId) {
             const sessionIds = Object.keys(this.sessions);
             if (sessionIds.length > 0) {
-                // 定位到最新的 session（最后一个）
                 this.switchSession(sessionIds[sessionIds.length - 1]);
             } else {
-                // 没有 session 了，创建新的
                 this.createNewSession("Default Session");
             }
         }
     }
 
-    /**
-     * 设置 UI 事件监听
-     */
     setupUI() {
-        // 新建 session 按钮
         const newSessionBtn = document.getElementById('newSessionBtn');
         if (newSessionBtn) {
             newSessionBtn.addEventListener('click', () => {
@@ -720,7 +582,6 @@ class SessionManager {
             });
         }
 
-        // 侧栏新建 session 按钮
         const sidebarNewSessionBtn = document.getElementById('sidebarNewSessionBtn');
         if (sidebarNewSessionBtn) {
             sidebarNewSessionBtn.addEventListener('click', () => {
@@ -728,7 +589,6 @@ class SessionManager {
             });
         }
 
-        // Session modal 打开按钮
         const openBtn = document.getElementById('openSessionPanel');
         if (openBtn) {
             openBtn.addEventListener('click', () => {
@@ -738,13 +598,10 @@ class SessionManager {
             });
         }
 
-        // Session modal 关闭按钮（如果需要在 sessionManager 中处理）
         const toggleBtn = document.getElementById('closeSessionModal');
         if (toggleBtn) {
-            // 这个按钮的事件处理已经在 streamNote 中添加了
         }
 
-        // Session 名称编辑模式切换
         const editBtn = document.getElementById('editSessionNameBtn');
         const confirmBtn = document.getElementById('confirmSessionNameBtn');
         const cancelBtn = document.getElementById('cancelSessionNameBtn');
@@ -752,7 +609,6 @@ class SessionManager {
         const displayMode = document.getElementById('sessionNameDisplay');
         const editMode = document.getElementById('sessionNameEdit');
 
-        // 进入编辑模式
         editBtn?.addEventListener('click', () => {
             const session = this.getCurrentSession();
             if (session) {
@@ -764,7 +620,6 @@ class SessionManager {
             }
         });
 
-        // 确认编辑
         confirmBtn?.addEventListener('click', () => {
             const newName = nameInput.value.trim();
             if (newName) {
@@ -774,13 +629,11 @@ class SessionManager {
             editMode.style.display = 'none';
         });
 
-        // 取消编辑
         cancelBtn?.addEventListener('click', () => {
             displayMode.style.display = 'flex';
             editMode.style.display = 'none';
         });
 
-        // 按 Enter 确认，按 Escape 取消
         nameInput?.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 confirmBtn.click();
@@ -789,17 +642,14 @@ class SessionManager {
             }
         });
 
-        // 导出当前 session
         document.getElementById('exportCurrentBtn')?.addEventListener('click', () => {
             this.exportCurrentSession();
         });
 
-        // 导出所有 sessions
         document.getElementById('exportAllBtn')?.addEventListener('click', () => {
             this.exportAllSessions();
         });
 
-        // 导入
         const importBtn = document.getElementById('importBtn');
         const importInput = document.getElementById('importFileInput');
 
@@ -811,55 +661,47 @@ class SessionManager {
             const file = e.target.files[0];
             if (file) {
                 this.importSessions(file);
-                e.target.value = ''; // 重置以便可以重复导入同一文件
+                e.target.value = '';
             }
         });
 
-        // 清空所有数据
         document.getElementById('clearAllBtn')?.addEventListener('click', () => {
             this.clearAllSessions();
         });
 
-        // 加载教程会话
         document.getElementById('loadTutorialBtn')?.addEventListener('click', () => {
             this.loadTutorialSessionIntoState(true);
         });
 
-        // 重命名session
         document.getElementById('renameSessionBtn')?.addEventListener('click', () => {
             this.enterRenameMode();
         });
 
-        // 删除session
         document.getElementById('deleteSessionBtn')?.addEventListener('click', () => {
             this.deleteCurrentSession();
         });
 
-        // 菜单按钮切换
         const menuBtn = document.getElementById('sessionMenuBtn');
         const menu = document.getElementById('sessionMenu');
         if (menuBtn && menu) {
             menuBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (menu.style.display === 'none') {
-                    // 显示菜单
                     const rect = menuBtn.getBoundingClientRect();
                     menu.style.top = (rect.bottom + 5) + 'px';
-                    menu.style.left = (rect.right - 160) + 'px'; // 菜单由右对齐
+                    menu.style.left = (rect.right - 160) + 'px';
                     menu.style.display = 'block';
                 } else {
                     menu.style.display = 'none';
                 }
             });
 
-            // 点击菜单项后关闭菜单
             menu.querySelectorAll('.session-menu-item').forEach(item => {
                 item.addEventListener('click', () => {
                     menu.style.display = 'none';
                 });
             });
 
-            // 点击别的地方关闭菜单
             document.addEventListener('click', (e) => {
                 if (!menuBtn.contains(e.target) && !menu.contains(e.target)) {
                     menu.style.display = 'none';
@@ -870,9 +712,6 @@ class SessionManager {
         this.renderSessionList();
     }
 
-    /**
-     * 格式化日期为相对时间或日期字符串
-     */
     formatRelativeTime(timestamp) {
         const now = Date.now();
         const diff = now - timestamp;
@@ -886,14 +725,10 @@ class SessionManager {
         if (hours < 24) return `${hours}h ago`;
         if (days < 7) return `${days}d ago`;
 
-        // 超过7天显示日期
         const date = new Date(timestamp);
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
 
-    /**
-     * 格式化完整日期（ISO 8601 格式）
-     */
     formatFullDate(timestamp) {
         if (window.DateTimeUtils && typeof window.DateTimeUtils.formatDateFromEpochMs === 'function') {
             return window.DateTimeUtils.formatDateFromEpochMs(timestamp);
@@ -905,15 +740,12 @@ class SessionManager {
         return `${year}-${month}-${day}`;
     }
 
-    /**
-     * 渲染 session 列表
-     */
     renderSessionList() {
         const listContainer = document.getElementById('sessionList');
         if (!listContainer) return;
 
+        // Keep newest sessions on top for predictable recency-first browsing.
         const sessionIds = Object.keys(this.sessions).sort((a, b) => {
-            // 按创建时间排序（最新创建的在前）
             return this.sessions[b].createdAt - this.sessions[a].createdAt;
         });
 
@@ -926,7 +758,6 @@ class SessionManager {
             const session = this.sessions[id];
             const isActive = id === this.currentSessionId;
 
-            // 计算统计信息
             const itemCount = Object.keys(session.transcripts || {}).length || 0;
             const createdDate = this.formatFullDate(session.createdAt);
             const lastModified = this.formatRelativeTime(session.lastModified || session.createdAt);
@@ -945,7 +776,6 @@ class SessionManager {
             `;
         }).join('');
 
-        // 绑定点击事件
         listContainer.querySelectorAll('.session-item').forEach(item => {
             item.addEventListener('click', () => {
                 const sessionId = item.dataset.sessionId;
@@ -954,9 +784,6 @@ class SessionManager {
         });
     }
 
-    /**
-     * 进入重命名模式 - 在当前session项上进行inline编辑
-     */
     enterRenameMode() {
         const currentSessionId = this.currentSessionId;
         if (!currentSessionId) {
@@ -971,7 +798,6 @@ class SessionManager {
         const sessionNameDiv = sessionItem.querySelector('.session-name');
         const currentName = session.name;
 
-        // 创建编辑输入框
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'session-name-input-inline';
@@ -983,10 +809,8 @@ class SessionManager {
         input.style.fontSize = '1em';
         input.style.fontWeight = '600';
 
-        // 替换原来的名称div
         sessionNameDiv.replaceWith(input);
 
-        // 保存函数
         const saveRename = () => {
             const newName = input.value.trim();
             if (newName && newName !== currentName) {
@@ -995,12 +819,10 @@ class SessionManager {
             this.renderSessionList();
         };
 
-        // 取消编辑函数
         const cancelEdit = () => {
             this.renderSessionList();
         };
 
-        // Enter键保存
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -1011,19 +833,14 @@ class SessionManager {
             }
         });
 
-        // 失焦自动保存
         input.addEventListener('blur', () => {
             saveRename();
         });
 
-        // 自动获焦并全选
         input.focus();
         input.select();
     }
 
-    /**
-     * 删除当前选中的session
-     */
     deleteCurrentSession() {
         const currentSessionId = this.currentSessionId;
         if (!currentSessionId) {

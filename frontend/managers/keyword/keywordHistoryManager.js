@@ -30,6 +30,7 @@ class KeywordHistoryManager {
 
         this.keywordManager.explanationHistory.unshift(historyRecord);
 
+        // Keep history bounded to control localStorage payload size.
         if (this.keywordManager.explanationHistory.length > 50) {
             this.keywordManager.explanationHistory = this.keywordManager.explanationHistory.slice(0, 50);
         }
@@ -43,6 +44,7 @@ class KeywordHistoryManager {
         if (!historyRecord) return;
 
         const app = window.streamNoteInstance;
+        // Restore is also context-sensitive to avoid cross-session UI pollution.
         const explanationOperation = OperationGuards.start(app, "explanation");
         const endExplanationOperation = OperationGuards.endOnce(explanationOperation);
 

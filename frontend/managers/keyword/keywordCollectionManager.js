@@ -10,6 +10,7 @@ class KeywordCollectionManager {
         term = term.trim();
         if (!term) return;
 
+        // Move term to front (dedupe + recency ordering).
         this.keywordManager.explanations = this.keywordManager.explanations.filter(t => t !== term);
         this.keywordManager.explanations.unshift(term);
 
@@ -49,6 +50,7 @@ class KeywordCollectionManager {
             return;
         }
 
+        // Toggle only affects manual highlight collection; extracted list remains intact.
         this.keywordManager.highlightManager.toggleHighlight(keyword);
         this.keywordManager.displayExtracts();
         this.keywordManager.displayHighlights();

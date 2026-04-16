@@ -9,7 +9,6 @@ class UiListenersManager {
     setupUIListeners() {
         const app = this.app;
 
-        // 侧栏按钮点击时关闭模态窗口（除了打开 modal 的按钮）
         const sidebars = document.querySelectorAll(".sidebar");
         sidebars.forEach(sidebar => {
             sidebar.addEventListener("click", (e) => {
@@ -23,7 +22,6 @@ class UiListenersManager {
             });
         });
 
-        // 控制栏按钮点击时关闭模态窗口
         const controlBar = document.querySelector(".control-bar");
         if (controlBar) {
             controlBar.addEventListener("click", (e) => {
@@ -39,10 +37,10 @@ class UiListenersManager {
             recordBtn.addEventListener("click", () => app.toggleRecording());
         }
 
-        // 添加翻译语言选择
         const languageSelector = document.getElementById("target-language");
         if (languageSelector) {
             languageSelector.addEventListener("change", async (e) => {
+                // Cancel stale translation streams before switching language target.
                 app.executionContextVersion++;
                 app.operationManager.abortAllTranslations(`Translation language changed to ${e.target.value}`);
 
@@ -57,10 +55,10 @@ class UiListenersManager {
             });
         }
 
-        // 添加解释语言选择
         const keywordExplanationLangSelector = document.getElementById("keyword-explanation-language");
         if (keywordExplanationLangSelector) {
             keywordExplanationLangSelector.addEventListener("change", async (e) => {
+                // Explanation text depends on language; force refresh of expanded entries.
                 app.executionContextVersion++;
                 app.operationManager.endExplanation();
 
@@ -81,7 +79,6 @@ class UiListenersManager {
             });
         }
 
-        // 自动提取关键词按钮（在Keywords面板中）
         const autoExtractKeywordsBtn = document.getElementById("autoExtractKeywordsBtn");
         if (autoExtractKeywordsBtn) {
             autoExtractKeywordsBtn.addEventListener("click", async () => {
@@ -112,7 +109,6 @@ class UiListenersManager {
             });
         }
 
-        // 初始化文本选中菜单功能
         app.initTextSelectionMenu();
 
         const sidePanelControlManager = new SidePanelControlManager(app);

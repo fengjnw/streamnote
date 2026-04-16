@@ -1,58 +1,119 @@
 # StreamNote
 
-Real-time classroom transcription with AI-powered keyword extraction, translation, and summarization.
+StreamNote is a web app for classroom speech-to-text and AI-assisted learning support.
+It captures or imports content, then provides transcription, keyword extraction, translation, summary, and keyword explanation in one interface.
 
-## Features
+## Core Features Implemented
 
-- Real-time audio transcription using OpenAI Whisper API
-- Automatic keyword extraction with AI analysis
-- Multi-language translation support
-- Text summarization and keyword explanation
-- Session management with local storage
-- Split-view interface for transcript and translation
+- Audio transcription via OpenAI transcription API
+- Smart keyword extraction from transcript/content
+- Text translation and keyword translation
+- AI summary generation with style options
+- Keyword explanation generation
+- Session persistence in browser local storage
+- Built-in tutorial session data for guided first-run demo
 
-## Installation
+## Tech Stack
 
-### Install dependencies
+- Frontend: Vanilla JavaScript, modular managers, CSS modules
+- Backend: Flask API server
+- AI services: OpenAI API
+
+## Requirements
+
+- Python 3.8+
+- Node.js 18+
+- npm 9+
+- OpenAI API key
+- Modern browser with microphone access for live recording
+
+## Quick Start (Marker-Friendly)
+
+### 1. Clone and enter project
+
+```bash
+git clone <your-repo-url>
+cd streamnote
+```
+
+### 2. Create and activate Python virtual environment
+
+macOS/Linux:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Windows (PowerShell):
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+### 3. Install dependencies
+
 ```bash
 pip install -r requirements.txt
 npm install
 ```
 
-### Run backend
+### 4. Configure environment variables
+
+Copy `.env.example` to `.env` and set your key:
+
+```bash
+cp .env.example .env
+```
+
+Required:
+
+- OPENAI_API_KEY=your_real_key
+
+Optional:
+
+- PORT=5500
+- FLASK_DEBUG=false
+
+### 5. Run backend server
+
 ```bash
 cd backend
-export OPENAI_API_KEY="your-api-key"
 python server.py
 ```
 
-The server will run on `http://localhost:5500` by default.
+Server default URL: http://localhost:5500
 
-### Frontend
-Open `frontend/index.html` in your browser or visit the server URL above.
+### 6. Open frontend
 
-## Usage
+- Preferred: open http://localhost:5500
+- Alternative (static only): open `frontend/index.html`
 
-1. Click the record button to start capturing audio
-2. Transcription appears in real-time on screen
-3. Keywords are automatically extracted
-4. Use the translation and summarization features as needed
-5. Sessions are automatically saved
+## How To Use
 
-## Requirements
+1. Open StreamNote in the browser.
+2. Start recording or import content.
+3. Confirm transcript appears in the transcript panel.
+4. Trigger keyword extraction and check keyword list.
+5. Run translation and summary on the content.
+6. Click a keyword to view explanation.
+7. Switch sessions and confirm persistence.
 
-- Python 3.8+
-- OpenAI API key
-- Modern web browser with microphone access
+## Suggested Demo Flow (5 Minutes)
 
-## Configuration
+1. Show app startup from terminal and browser.
+2. Show built-in tutorial session loaded on first run.
+3. Demonstrate one end-to-end path:
+	 input content -> transcript/content visible -> keyword extraction -> summary or translation output.
+4. Show result state kept in session storage and re-opened.
+5. End with limitations and next steps.
 
-Set environment variables in the backend:
-- `OPENAI_API_KEY` - Your OpenAI API key (required)
-- `PORT` - Server port (default: 5500)
-- `FLASK_DEBUG` - Debug mode (default: false)
+Reference script: see `docs/DEMO_SCRIPT.md`.
 
 ## Quality Checks
+
+Run from repository root:
 
 ```bash
 # Frontend lint
@@ -78,41 +139,36 @@ API errors are normalized as JSON:
 }
 ```
 
+## Known Limitations
+
+- Most AI features depend on valid OpenAI API key and network connection.
+- Live transcription quality varies with microphone quality and noise.
+- Browser audio permissions are required for recording.
+- No multi-user account/authentication workflow yet.
+- Limited automated tests for full browser interaction and streaming edge cases.
+
 ## Project Structure
 
 ### Backend (Flask)
 
-- `backend/server.py`: Thin entrypoint (run only)
-- `backend/app_factory.py`: App factory, CORS and no-cache headers, dependency wiring
-- `backend/routes/static_routes.py`: Frontend static file routes (`/`, `/<path:path>`)
-- `backend/routes/api_routes.py`: API route registrar (aggregates module routes)
-- `backend/routes/ai_routes.py`: AI endpoints (`/api/transcribe`, `/api/translate`, `/api/summarize`, keyword extract/explain, `/health`)
-- `backend/routes/file_routes.py`: File endpoint (`/api/upload-file`)
-- `backend/keyword_manager.py`: Keyword extraction and explanation service
-- `backend/translator.py`: Translation service
-- `backend/summarizer.py`: Summarization service
-- `backend/file_processor.py`: File upload validation and text extraction
+- `backend/server.py`: thin run entrypoint
+- `backend/app_factory.py`: app factory, wiring, CORS, no-cache headers
+- `backend/routes/`: route registration and API endpoints
+- `backend/file_processor.py`: upload validation and text extraction
+- `backend/keyword_manager.py`: keyword extraction and explanation
+- `backend/translator.py`: translation service
+- `backend/summarizer.py`: summarization service
 
 ### Frontend (Vanilla JS)
 
-- `frontend/core/app.js`: Application orchestrator
-- `frontend/core/executionContext.js`: Async operation validity and cancellation helpers
-- `frontend/managers/sessionManager.js`: Session persistence and switching
-- `frontend/managers/recordingManager.js`: Recording/transcript state
-- `frontend/managers/translationManager.js`: Translation flow and cache updates
-- `frontend/managers/keywordManager.js`: Keyword extraction/explanation state
-- `frontend/managers/highlightManager.js`: Highlight lifecycle and rendering
-- `frontend/managers/panelManager.js`: Panel layout and visibility states
-- `frontend/managers/settingsPanel.js`: Settings modal and defaults management
-- `frontend/services/apiClient.js`: Shared API request layer for frontend modules
-- `frontend/services/textProcessor.js`: Frontend text/file conversion utilities
-- `frontend/data/tutorialSession.js`: Built-in tutorial session dataset
-- `frontend/styles.css`: CSS entry that aggregates style modules
-- `frontend/styles/`: CSS modules (`tokens`, `base`, `layout`, `features`, `components`, `responsive`)
-- `frontend/utils/dateTimeUtils.js`: Shared date/time formatting helpers
+- `frontend/core/app.js`: app orchestrator
+- `frontend/managers/`: feature managers by domain
+- `frontend/services/apiClient.js`: API request client
+- `frontend/data/tutorialSession.js`: built-in tutorial data
+- `frontend/styles/`: style modules
 
-## Refactor Notes
+## Submission Snapshot Guidance
 
-- Backend routing is now modularized for easier onboarding and explanation.
-- Service dependency creation is centralized in the app factory.
-- Entry point and route logic are decoupled to reduce file-level complexity.
+- Create one final commit for marking.
+- Add a clear tag such as `v0.9.4-a3-final`.
+- Keep README and demo script aligned with the exact tagged state.

@@ -1,23 +1,20 @@
-"""
-关键词管理模块 - AI 驱动的关键词提取和解释功能
-"""
+"""AI-driven keyword extraction and explanation module."""
 
 from ai_service import AIService
 from typing import List, Optional, Generator
 
 
 class KeywordManager(AIService):
-    """关键词管理器 - 提取关键词和生成解释"""
+    """Extract keywords and generate keyword explanations."""
 
     def extract_smart(self, text: str) -> List[str]:
-        """
-        使用 OpenAI 进行智能关键词识别
-        
+        """Extract important keywords from input text.
+
         Args:
-            text: 输入文本
-            
+            text: Input text.
+
         Returns:
-            关键词列表
+            List of extracted keywords.
         """
         if not self.client:
             print("[ERROR] OpenAI client not configured")
@@ -60,16 +57,15 @@ Text:\n""" + text
         language: str = "English",
         context: Optional[str] = None
     ) -> Generator[str, None, None]:
-        """
-        流式生成关键词解释（支持基于context的解释）
-        
+        """Stream a keyword explanation.
+
         Args:
-            keyword: 要解释的关键词
-            language: 解释的语言
-            context: 关键词在原文中的前后文本上下文（可选）
-            
+            keyword: Keyword to explain.
+            language: Explanation language.
+            context: Optional surrounding context from source text.
+
         Yields:
-            流式解释结果
+            Streamed explanation chunks.
         """
         keyword = keyword.strip()
         
@@ -77,7 +73,6 @@ Text:\n""" + text
             return
         
         if language == "English":
-            # 英文解释
             system_message = """You are an expert educator. Provide a clear, concise explanation of the following keyword/term.
 Format: One paragraph (2-3 sentences maximum), explain what this term means and its context.
 Keep it simple and suitable for students."""
@@ -91,7 +86,6 @@ Please explain the keyword: {keyword}"""
             else:
                 user_message = f"Explain this keyword: {keyword}"
         else:
-            # 其他语言的解释
             system_message = f"""You are an expert educator who speaks {language}. 
 Provide a clear, concise explanation of the following keyword/term in {language}.
 Format: One paragraph (2-3 sentences maximum), explain what this term means and its context.
@@ -115,13 +109,12 @@ Keep it simple and suitable for students."""
 
 
 def create_keyword_manager(openai_api_key: Optional[str] = None) -> KeywordManager:
-    """
-    创建关键词管理器实例工厂函数
-    
+    """Factory for KeywordManager.
+
     Args:
-        openai_api_key: OpenAI API 密钥
-        
+        openai_api_key: OpenAI API key.
+
     Returns:
-        KeywordManager 实例
+        KeywordManager instance.
     """
     return KeywordManager(openai_api_key)

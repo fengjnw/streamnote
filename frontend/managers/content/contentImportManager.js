@@ -6,12 +6,6 @@ class ContentImportManager {
         this.app = app;
     }
 
-    /**
-     * 导入文本内容到当前 session
-     * @param {Object} preciseResults - 精确结果对象 {index: {text, timestamp, source}}
-     * @param {string} sourceFile - 文件名或来源标识
-     * @param {string} sourceType - 'file' 或 'edit'
-     */
     importTextContent(preciseResults, sourceFile, sourceType) {
         const currentSession = this.app.sessionManager.getCurrentSession();
         const sessionId = this.app.sessionManager.currentSessionId;
@@ -65,9 +59,6 @@ class ContentImportManager {
         this.app.saveToSession();
     }
 
-    /**
-     * 显示添加纯文本的对话框
-     */
     showAddTextDialog() {
         const backdrop = document.createElement("div");
         backdrop.style.cssText = `

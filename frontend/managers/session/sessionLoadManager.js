@@ -10,6 +10,7 @@ class SessionLoadManager {
         const session = this.app.sessionManager.getCurrentSession();
         if (!session) return;
 
+        // Invalidate all in-flight async work from the previous session before restoring state.
         this.app.executionContextVersion++;
         this.app.operationManager.abortAll(`Session switched to ${this.app.sessionManager.currentSessionId}`);
 
@@ -178,6 +179,7 @@ class SessionLoadManager {
         }
 
         if (this.app.panelManager && this.app.panelManager.isTranslationEnabled() && this.app.translationEnabled) {
+            // Run a deferred completion pass to fill missing translation cache after UI is restored.
             setTimeout(() => {
                 if (this.app.translationManager) {
                     this.app.translationManager.translateMissingContent();

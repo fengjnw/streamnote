@@ -31,6 +31,7 @@ class KeywordContextBuilderManager {
             return '';
         }
 
+        // Prefer exact position-based context when source indices are available.
         const isTranslationContext = positionInfo.container === 'translation';
         let dataSource = {};
 
@@ -149,6 +150,7 @@ class KeywordContextBuilderManager {
 
         if (!cleanedKeyword) return '';
 
+        // Fallback path: infer from full-text search in the recorded source panel.
         const sourcePanel = this.keywordManager.wordSourcePanel[keyword];
         let dataSource = {};
         let sortedKeys = [];

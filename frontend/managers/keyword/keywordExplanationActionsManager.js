@@ -42,6 +42,7 @@ class KeywordExplanationActionsManager {
 
             contentElement.innerHTML = '<p class="placeholder">Refreshing...</p>';
 
+            // Remove all scoped caches so re-explain always fetches a fresh answer.
             const cacheKey = `${keyword}|${window.streamNoteInstance?.explanationLanguage || 'English'}`;
             if (this.keywordManager.extractsCache[cacheKey]) delete this.keywordManager.extractsCache[cacheKey];
             if (this.keywordManager.highlightCache[cacheKey]) delete this.keywordManager.highlightCache[cacheKey];

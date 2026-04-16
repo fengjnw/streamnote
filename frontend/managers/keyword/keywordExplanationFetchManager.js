@@ -15,6 +15,7 @@ class KeywordExplanationFetchManager {
         }
 
         const app = window.streamNoteInstance;
+        // Tie request lifecycle to current app context so stale streams are ignored.
         const explanationOperation = OperationGuards.start(app, 'explanation');
         const endExplanationOperation = OperationGuards.endOnce(explanationOperation);
         const abortSignal = OperationGuards.getSignal(explanationOperation);
@@ -89,6 +90,7 @@ class KeywordExplanationFetchManager {
                     explanation += chunk;
 
                     if (explanation && contentElement && contentElement.parentElement) {
+                        // Render incrementally for better perceived latency.
                         contentElement.innerHTML = `<p>${explanation}</p>`;
                     }
                 }
@@ -113,6 +115,7 @@ class KeywordExplanationFetchManager {
             if (contentElement && contentElement.parentElement) {
                 contentElement.innerHTML = `<p>${explanation}</p>`;
             } else {
+                // Fallback in case the original container was unmounted during async work.
                 const latestContentElement = document.getElementById('explanation-content');
                 if (latestContentElement) {
                     latestContentElement.innerHTML = `<p>${explanation}</p>`;
@@ -187,6 +190,7 @@ class KeywordExplanationFetchManager {
             }
 
             requestId = ++this.keywordManager.currentExpanationRequestId;
+            // Request ID enforces last-request-wins when users click multiple words quickly.
             explanationOperation = OperationGuards.start(app, 'explanation');
             endExplanationOperation = OperationGuards.endOnce(explanationOperation);
 
