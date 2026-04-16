@@ -14,11 +14,6 @@ function mustExist(id) {
     assert(el, `Missing required element: #${id}`);
 }
 
-function mustNotExist(id) {
-    const el = document.getElementById(id);
-    assert(!el, `Element should be removed in auto mode: #${id}`);
-}
-
 const requiredIds = [
     "transcript",
     "translation",
@@ -27,16 +22,14 @@ const requiredIds = [
     "summary-display",
     "auto-keywords-display",
     "summarizeStyleSelect",
+    "reExtractKeywordsBtn",
+    "regenerateSummaryBtn",
     "clearSummaryBtn",
     "clearKeywordsBtn"
 ];
 
 requiredIds.forEach(mustExist);
 console.log("  [OK] Required DOM panels and controls exist");
-
-// Buttons replaced by auto-flow should not exist anymore.
-["reExtractKeywordsBtn", "regenerateSummaryBtn"].forEach(mustNotExist);
-console.log("  [OK] Legacy auto-flow buttons are removed");
 
 const scripts = Array.from(document.querySelectorAll("script[src]"));
 const scriptSrcList = scripts.map((s) => s.getAttribute("src"));

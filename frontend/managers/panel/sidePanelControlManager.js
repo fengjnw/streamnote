@@ -95,11 +95,13 @@ class SidePanelControlManager {
                         const session = app.sessionManager?.getCurrentSession();
                         const transcriptText = app.getCurrentSessionTranscriptText();
                         const hasTranscriptText = transcriptText && transcriptText.trim().length > 0;
+                        const hasKeywordPanelContent = !!autoKeywordsDisplay.querySelector(".keyword-item-wrapper");
                         const isKeywordStale = !!session && session.lastTextModified !== null
                             && session.lastTextModified !== session.lastKeywordExtractedTime;
                         const hasKeywords = Array.isArray(app.keywordManager?.extracts)
                             && app.keywordManager.extracts.length > 0;
-                        const shouldAutoExtract = hasTranscriptText && (!hasKeywords || isKeywordStale);
+                        const shouldAutoExtract = hasTranscriptText && !hasKeywordPanelContent
+                            && (!hasKeywords || isKeywordStale);
 
                         if (shouldAutoExtract && app.keywordManager) {
                             app.showStatusMessage("Extracting keywords...", 1000);
@@ -142,11 +144,13 @@ class SidePanelControlManager {
                         const summaryTimestamps = session?.lastSummaryGeneratedTime || {};
                         const textToSummarize = app.getCurrentSessionTranscriptText();
                         const hasText = textToSummarize && textToSummarize.trim().length > 0;
+                        const hasSummaryPanelContent = !summaryDisplay.querySelector(".placeholder")
+                            && summaryDisplay.textContent.trim().length > 0;
                         const hasValidCache = !!summaryCache[cacheKey];
                         const isSummaryStale = !!session && session.lastTextModified !== null
                             && summaryTimestamps[cacheKey] !== session.lastTextModified;
 
-                        if (hasText && (!hasValidCache || isSummaryStale)) {
+                        if (hasText && !hasSummaryPanelContent && (!hasValidCache || isSummaryStale)) {
                             app.showStatusMessage("Generating summary...", 1000);
                             summaryDisplay.innerHTML = '<p class="placeholder">Generating summary...</p>';
                             try {
@@ -158,7 +162,7 @@ class SidePanelControlManager {
                                 console.error("[SUMMARY] Error auto-generating summary:", error);
                                 summaryDisplay.innerHTML = '<p class="placeholder">Failed to generate summary</p>';
                             }
-                        } else if (hasValidCache) {
+                        } else if (!hasSummaryPanelContent && hasValidCache) {
                             summaryDisplay.innerHTML = TextFormatters.formatSummaryDisplay(summaryCache[cacheKey], selectedStyle);
                         }
                     }
