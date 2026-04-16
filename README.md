@@ -3,7 +3,11 @@
 StreamNote is a web app for classroom speech-to-text and AI-assisted learning support.
 It captures or imports content, then provides transcription, keyword extraction, translation, summary, and keyword explanation in one interface.
 
-## Core Features Implemented
+## Live Demo
+
+- https://streamnote-m1cf.onrender.com
+
+## Features
 
 - Audio transcription via OpenAI transcription API
 - Smart keyword extraction from transcript/content
@@ -27,7 +31,7 @@ It captures or imports content, then provides transcription, keyword extraction,
 - OpenAI API key
 - Modern browser with microphone access for live recording
 
-## Quick Start (Marker-Friendly)
+## Quick Start
 
 ### 1. Clone and enter project
 
@@ -36,21 +40,10 @@ git clone <your-repo-url>
 cd streamnote
 ```
 
-### 2. Create and activate Python virtual environment
+### 2. Activate your Python environment
 
-macOS/Linux:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-Windows (PowerShell):
-
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-```
+Use your preferred Python environment manager (for example: conda, poetry, or pyenv).
+Make sure `python` and `pip` point to the same environment before continuing.
 
 ### 3. Install dependencies
 
@@ -78,6 +71,14 @@ Optional:
 
 ### 5. Run backend server
 
+From repository root (recommended):
+
+```bash
+npm start
+```
+
+Alternative (manual backend run):
+
 ```bash
 cd backend
 python server.py
@@ -87,8 +88,10 @@ Server default URL: http://localhost:5500
 
 ### 6. Open frontend
 
-- Preferred: open http://localhost:5500
-- Alternative (static only): open `frontend/index.html`
+- Open http://localhost:5500
+- Or use the deployed demo: https://streamnote-m1cf.onrender.com
+
+Note: activate your chosen Python environment before running backend commands.
 
 ## How To Use
 
@@ -100,16 +103,15 @@ Server default URL: http://localhost:5500
 6. Click a keyword to view explanation.
 7. Switch sessions and confirm persistence.
 
-## Suggested Demo Flow (5 Minutes)
+## Sample Input
 
-1. Show app startup from terminal and browser.
-2. Show built-in tutorial session loaded on first run.
-3. Demonstrate one end-to-end path:
-	 input content -> transcript/content visible -> keyword extraction -> summary or translation output.
-4. Show result state kept in session storage and re-opened.
-5. End with limitations and next steps.
+Use either of the following input paths for a stable end-to-end demo:
 
-Reference script: see `docs/DEMO_SCRIPT.md`.
+1. Record a short speech (15-30 seconds).
+
+2. Upload a text/document file (supported: TXT, MD, DOCX, PDF).
+
+If no external input is prepared, open the built-in Tutorial session and use its preloaded transcript content.
 
 ## Quality Checks
 
@@ -167,8 +169,3 @@ API errors are normalized as JSON:
 - `frontend/data/tutorialSession.js`: built-in tutorial data
 - `frontend/styles/`: style modules
 
-## Submission Snapshot Guidance
-
-- Create one final commit for marking.
-- Add a clear tag such as `v0.9.4-a3-final`.
-- Keep README and demo script aligned with the exact tagged state.

@@ -4,10 +4,10 @@
   "description": "A real-time audio transcription and analysis tool",
   "main": "frontend/core/app.js",
   "scripts": {
-    "start": "cd backend && ../.venv/bin/python server.py",
-    "dev": "cd backend && ../.venv/bin/python server.py",
+    "start": "cd backend && python server.py",
+    "dev": "cd backend && python server.py",
     "lint": "eslint frontend --ext .js",
-    "test:backend": "cd backend && ../.venv/bin/python -m pytest",
+    "test:backend": "cd backend && python -m pytest",
     "test:frontend:smoke": "node scripts/frontend-smoke.cjs"
   },
   "keywords": [
