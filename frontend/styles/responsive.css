@@ -99,13 +99,13 @@
 
 @media (max-width: 768px) {
     .session-modal {
-        width: 90vw;
-        max-width: 400px;
+        --modal-width: min(90vw, 400px);
+        --modal-height: min(78vh, 680px);
     }
 
     .settings-modal {
-        width: 90vw;
-        max-width: 440px;
+        --modal-width: min(90vw, 440px);
+        --modal-height: min(74vh, 620px);
     }
 }
 

@@ -895,6 +895,10 @@ class SessionManager {
                     menu.style.display = 'none';
                 }
             });
+
+            window.addEventListener('ui:close-transient-layers', () => {
+                menu.style.display = 'none';
+            });
         }
 
         this.renderSessionList();

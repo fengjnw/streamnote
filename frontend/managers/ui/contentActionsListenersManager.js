@@ -37,6 +37,11 @@ class ContentActionsListenersManager {
                     addContentBtn.classList.remove("active");
                 }
             });
+
+            window.addEventListener("ui:close-transient-layers", () => {
+                contentMenu.style.display = "none";
+                addContentBtn.classList.remove("active");
+            });
         }
 
         if (importFromFileOption && textFileInput) {

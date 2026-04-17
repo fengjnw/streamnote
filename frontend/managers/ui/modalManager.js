@@ -6,6 +6,13 @@ class ModalManager {
         this.overlayId = config.overlayId || "modalOverlay";
         this.openModals = new Set();
         this.buttonResolver = config.buttonResolver || (() => null);
+        this._onEscapeKey = (event) => {
+            if (event.key !== "Escape" || this.openModals.size === 0) return;
+            const topModalId = Array.from(this.openModals).pop();
+            if (topModalId) {
+                this.close(topModalId);
+            }
+        };
     }
 
     toggle(modalId) {
@@ -42,6 +49,10 @@ class ModalManager {
             this.openModals.clear();
         }
 
+        window.dispatchEvent(new CustomEvent("ui:close-transient-layers", {
+            detail: { source: "modal", modalId }
+        }));
+
         if (overlay) {
             overlay.style.display = "block";
             overlay.onclick = () => this.close(modalId);
@@ -55,6 +66,7 @@ class ModalManager {
         }
 
         document.body.style.overflow = "hidden";
+        document.addEventListener("keydown", this._onEscapeKey);
     }
 
     close(modalId) {
@@ -77,6 +89,7 @@ class ModalManager {
                 overlay.onclick = null;
             }
             document.body.style.overflow = "auto";
+            document.removeEventListener("keydown", this._onEscapeKey);
         }
     }
 

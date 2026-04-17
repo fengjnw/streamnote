@@ -32,6 +32,10 @@ class AppUiStateManager {
             }
         });
 
+        window.addEventListener("ui:close-transient-layers", () => {
+            panel.classList.add("hidden");
+        });
+
         window.addEventListener("deviceIdentityChanged", () => this.renderDeviceIdentity());
         window.addEventListener("sessionSyncStatusChanged", () => this.renderDeviceIdentity());
 

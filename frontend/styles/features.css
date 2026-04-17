@@ -1089,7 +1089,7 @@ textarea::placeholder {
 
 /* Modal overlay backdrop */
 .modal-overlay {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
@@ -1113,15 +1113,22 @@ textarea::placeholder {
 
 /* Floating Modal Base */
 .floating-modal {
-    position: absolute;
+    --modal-width: min(760px, 92vw);
+    --modal-height: min(76vh, 680px);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     z-index: 2010;
     background: white;
     border-radius: 8px;
     box-shadow: 0 12px 40px var(--color-black-shadow-2);
-    display: flex;
+    display: none;
     flex-direction: column;
-    max-height: 100%;
-    max-width: 100%;
+    width: var(--modal-width);
+    height: var(--modal-height);
+    max-height: min(80vh, 760px);
+    max-width: min(94vw, 960px);
     overflow: hidden;
 }
 
@@ -1149,39 +1156,28 @@ textarea::placeholder {
     }
 }
 
-/* Session Modal - 左侧弹出 */
+/* Session Modal */
 .session-modal {
-    width: 280px;
-    height: 100%;
-    top: 0;
-    left: 0;
-    border-radius: 0;
-    display: none;
+    --modal-width: min(760px, 92vw);
+    --modal-height: min(76vh, 680px);
 }
 
 .session-modal .floating-modal-header {
     background: var(--color-primary);
     color: white;
-    border-radius: 0;
 }
 
 
 
-/* Settings Modal - 右侧弹出 */
+/* Settings Modal */
 .settings-modal {
-    width: 280px;
-    height: 100%;
-    top: 0;
-    right: 0;
-    left: auto;
-    border-radius: 0;
-    display: none;
+    --modal-width: min(520px, 92vw);
+    --modal-height: min(72vh, 620px);
 }
 
 .settings-modal .floating-modal-header {
     background: var(--color-primary);
     color: white;
-    border-radius: 0;
 }
 
 .edit-modal-backdrop {
@@ -1472,4 +1468,3 @@ textarea::placeholder {
 .keywords-tab-content.active {
     display: flex;
 }
-
