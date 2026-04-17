@@ -1,13 +1,20 @@
 
 class SessionManager {
-    constructor() {
+    constructor(options = {}) {
         this.sessions = {};
         this.currentSessionId = null;
         this.STORAGE_KEY = 'streamnote_sessions';
         this.CURRENT_SESSION_KEY = 'streamnote_current_session';
         this.DEFAULT_SETTINGS_KEY = 'streamnote_default_settings';
+        this.DEVICE_ID_KEY = 'streamnote_device_id';
 
         this.RESERVED_SESSION_IDS = ['tutorial-session'];
+
+        this.apiClient = options.apiClient || null;
+        this.remoteSyncTimer = null;
+        this.isHydratingFromRemote = false;
+        this.remoteSyncInFlight = false;
+        this.deviceId = this.getOrCreateDeviceId();
 
         this.defaultSettings = {
             defaultLanguage: "Chinese",
@@ -18,6 +25,7 @@ class SessionManager {
         this.loadDefaultSettings();
         this.loadSessions();
         this.setupUI();
+        this.loadRemoteStateIfAvailable();
     }
 
     loadDefaultSettings() {
@@ -53,76 +61,7 @@ class SessionManager {
             const saved = localStorage.getItem(this.STORAGE_KEY);
             if (saved) {
                 this.sessions = JSON.parse(saved);
-
-                // Migrate legacy session snapshots to current schema in place.
-                Object.keys(this.sessions).forEach(id => {
-                    const session = this.sessions[id];
-
-                    if (session.translations && !session.translations.Chinese) {
-                        const oldTranslations = { ...session.translations };
-                        session.translations = {
-                            Chinese: oldTranslations,
-                            English: {},
-                            Spanish: {},
-                            French: {},
-                            Japanese: {},
-                            Korean: {}
-                        };
-                    }
-
-                    if (!session.explanations) session.explanations = [];
-                    if (!session.explanationHistory) session.explanationHistory = [];
-                    if (!session.keywordCache) session.keywordCache = {};
-                    if (!session.highlightCache) session.highlightCache = {};
-                    if (!session.explanationCache) session.explanationCache = {};
-                    if (!session.summaryCache) session.summaryCache = {};
-                    if (!session.highlightPositions) session.highlightPositions = {};
-                    if (session.lastKeywordExtractedTime === undefined) session.lastKeywordExtractedTime = null;
-                    if (!session.lastSummaryGeneratedTime) session.lastSummaryGeneratedTime = {};
-
-                    if (!session.startTime) {
-                        session.startTime = session.createdAt || session.lastModified || Date.now();
-                    }
-
-                    if (!session.lastAccessed) {
-                        session.lastAccessed = session.lastModified || Date.now();
-                    }
-
-                    delete session.translatedKeywords;
-
-                    if (!session.settings) {
-                        session.settings = {
-                            translationEnabled: true,
-                            translationLayout: "split-bottom",
-                            language: "Chinese",
-                            explanationLanguage: "Chinese"
-                        };
-                    } else {
-                        if (session.settings.targetLanguage && !session.settings.language) {
-                            session.settings.language = session.settings.targetLanguage;
-                        }
-                        delete session.settings.targetLanguage;
-
-                        if (session.settings.layout && !session.settings.translationLayout) {
-                            session.settings.translationLayout = session.settings.layout;
-                        }
-                        delete session.settings.layout;
-
-                        if (session.settings.translationEnabled === undefined) {
-                            session.settings.translationEnabled = session.settings.translationLayout !== 'full-transcript';
-                        }
-
-                        if (!session.settings.explanationLanguage) {
-                            session.settings.explanationLanguage = session.settings.language || "Chinese";
-                        }
-
-                        delete session.settings.keywordEnabled;
-                        delete session.settings.keywordExplanationLanguage;
-                        delete session.settings.explanationCache;
-                        delete session.settings.queryHistory;
-                        delete session.settings.summaryCache;
-                    }
-                });
+                this.normalizeLoadedSessions(this.sessions);
             }
 
             if (this.defaultSettings.loadTutorialSession !== false) {
@@ -142,6 +81,201 @@ class SessionManager {
             } else {
                 this.createNewSession();
             }
+        }
+    }
+
+    generateDeviceId() {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+            return crypto.randomUUID();
+        }
+        return `dev-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+    }
+
+    getOrCreateDeviceId() {
+        try {
+            const existing = localStorage.getItem(this.DEVICE_ID_KEY);
+            if (existing && existing.trim()) {
+                return existing;
+            }
+            const created = this.generateDeviceId();
+            localStorage.setItem(this.DEVICE_ID_KEY, created);
+            return created;
+        } catch (error) {
+            console.error('[SessionManager] Device ID error:', error);
+            return this.generateDeviceId();
+        }
+    }
+
+    normalizeLoadedSessions(sessionMap) {
+        Object.keys(sessionMap).forEach(id => {
+            const session = sessionMap[id];
+
+            if (session.translations && !session.translations.Chinese) {
+                const oldTranslations = { ...session.translations };
+                session.translations = {
+                    Chinese: oldTranslations,
+                    English: {},
+                    Spanish: {},
+                    French: {},
+                    Japanese: {},
+                    Korean: {}
+                };
+            }
+
+            if (!session.explanations) session.explanations = [];
+            if (!session.explanationHistory) session.explanationHistory = [];
+            if (!session.keywordCache) session.keywordCache = {};
+            if (!session.highlightCache) session.highlightCache = {};
+            if (!session.explanationCache) session.explanationCache = {};
+            if (!session.summaryCache) session.summaryCache = {};
+            if (!session.highlightPositions) session.highlightPositions = {};
+            if (session.lastKeywordExtractedTime === undefined) session.lastKeywordExtractedTime = null;
+            if (!session.lastSummaryGeneratedTime) session.lastSummaryGeneratedTime = {};
+
+            if (!session.startTime) {
+                session.startTime = session.createdAt || session.lastModified || Date.now();
+            }
+
+            if (!session.lastAccessed) {
+                session.lastAccessed = session.lastModified || Date.now();
+            }
+
+            delete session.translatedKeywords;
+
+            if (!session.settings) {
+                session.settings = {
+                    translationEnabled: true,
+                    translationLayout: "split-bottom",
+                    language: "Chinese",
+                    explanationLanguage: "Chinese"
+                };
+            } else {
+                if (session.settings.targetLanguage && !session.settings.language) {
+                    session.settings.language = session.settings.targetLanguage;
+                }
+                delete session.settings.targetLanguage;
+
+                if (session.settings.layout && !session.settings.translationLayout) {
+                    session.settings.translationLayout = session.settings.layout;
+                }
+                delete session.settings.layout;
+
+                if (session.settings.translationEnabled === undefined) {
+                    session.settings.translationEnabled = session.settings.translationLayout !== 'full-transcript';
+                }
+
+                if (!session.settings.explanationLanguage) {
+                    session.settings.explanationLanguage = session.settings.language || "Chinese";
+                }
+
+                delete session.settings.keywordEnabled;
+                delete session.settings.keywordExplanationLanguage;
+                delete session.settings.explanationCache;
+                delete session.settings.queryHistory;
+                delete session.settings.summaryCache;
+            }
+        });
+    }
+
+    snapshotState() {
+        return {
+            sessions: this.sessions,
+            currentSessionId: this.currentSessionId,
+            defaultSettings: this.defaultSettings,
+        };
+    }
+
+    scheduleRemoteSync() {
+        if (!this.apiClient || !this.deviceId || this.isHydratingFromRemote) {
+            return;
+        }
+
+        if (this.remoteSyncTimer) {
+            clearTimeout(this.remoteSyncTimer);
+        }
+
+        this.remoteSyncTimer = setTimeout(() => {
+            this.remoteSyncTimer = null;
+            this.syncStateToBackend();
+        }, 350);
+    }
+
+    async syncStateToBackend() {
+        if (!this.apiClient || !this.deviceId || this.remoteSyncInFlight) {
+            return;
+        }
+
+        this.remoteSyncInFlight = true;
+        try {
+            const response = await this.apiClient.saveSessionState(this.deviceId, this.snapshotState());
+            if (!response.ok) {
+                console.warn('[SessionManager] Remote sync failed with status:', response.status);
+            }
+        } catch (error) {
+            console.warn('[SessionManager] Remote sync skipped:', error);
+        } finally {
+            this.remoteSyncInFlight = false;
+        }
+    }
+
+    async loadRemoteStateIfAvailable() {
+        if (!this.apiClient || !this.deviceId) {
+            return;
+        }
+
+        try {
+            const response = await this.apiClient.getSessionState(this.deviceId);
+            if (!response.ok) {
+                return;
+            }
+
+            const payload = await response.json();
+            const remoteState = payload?.state;
+            if (!remoteState || typeof remoteState !== 'object') {
+                return;
+            }
+
+            this.isHydratingFromRemote = true;
+            if (remoteState.defaultSettings && typeof remoteState.defaultSettings === 'object') {
+                this.defaultSettings = { ...this.defaultSettings, ...remoteState.defaultSettings };
+                this.saveDefaultSettings();
+            }
+
+            if (remoteState.sessions && typeof remoteState.sessions === 'object') {
+                this.sessions = remoteState.sessions;
+                this.normalizeLoadedSessions(this.sessions);
+            }
+
+            if (
+                remoteState.currentSessionId
+                && typeof remoteState.currentSessionId === 'string'
+                && this.sessions[remoteState.currentSessionId]
+            ) {
+                this.currentSessionId = remoteState.currentSessionId;
+            } else if (!this.currentSessionId || !this.sessions[this.currentSessionId]) {
+                const firstId = Object.keys(this.sessions)[0];
+                this.currentSessionId = firstId || null;
+            }
+
+            if (!this.currentSessionId) {
+                this.createNewSession();
+            } else {
+                this.saveSessions();
+                this.renderSessionList();
+
+                const sessionNameDisplay = document.getElementById('sessionNameDisplay');
+                if (sessionNameDisplay && this.sessions[this.currentSessionId]) {
+                    sessionNameDisplay.textContent = this.sessions[this.currentSessionId].name;
+                }
+
+                window.dispatchEvent(new CustomEvent('sessionChanged', {
+                    detail: { sessionId: this.currentSessionId }
+                }));
+            }
+        } catch (error) {
+            console.warn('[SessionManager] Remote load skipped:', error);
+        } finally {
+            this.isHydratingFromRemote = false;
         }
     }
 
@@ -188,6 +322,7 @@ class SessionManager {
         try {
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.sessions));
             localStorage.setItem(this.CURRENT_SESSION_KEY, this.currentSessionId);
+            this.scheduleRemoteSync();
         } catch (error) {
             console.error('[SessionManager] Save error:', error);
         }

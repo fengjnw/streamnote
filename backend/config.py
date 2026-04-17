@@ -10,3 +10,5 @@ FLASK_CONFIG = {
     "port": int(os.getenv("PORT", 5500)),
     "debug": os.getenv("FLASK_DEBUG", "False").lower() == "true",
 }
+
+SESSION_DB_PATH = os.getenv("SESSION_DB_PATH", "backend/data/streamnote.db")

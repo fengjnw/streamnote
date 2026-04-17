@@ -14,7 +14,7 @@ It captures or imports content, then provides transcription, keyword extraction,
 - Text translation and keyword translation
 - AI summary generation with style options
 - Keyword explanation generation
-- Session persistence in browser local storage
+- Session persistence in browser local storage with backend database sync (anonymous device ID)
 - Built-in tutorial session data for guided first-run demo
 
 ## Tech Stack
@@ -68,6 +68,7 @@ Optional:
 
 - PORT=5500
 - FLASK_DEBUG=false
+- SESSION_DB_PATH=backend/data/streamnote.db
 
 ### 5. Run backend server
 
@@ -159,6 +160,14 @@ API errors are normalized as JSON:
 - Browser audio permissions are required for recording.
 - No multi-user account/authentication workflow yet.
 - Limited automated tests for full browser interaction and streaming edge cases.
+
+## Session Persistence Architecture
+
+- Current stage uses anonymous device-based persistence, not user login.
+- Frontend keeps local state for resilience and instant UX.
+- Backend stores the same session snapshot in SQLite via `/api/session-state`.
+- Device identity is a generated `deviceId` stored locally in browser storage.
+- This enables seamless migration toward full account-based sync later.
 
 ## Project Structure
 

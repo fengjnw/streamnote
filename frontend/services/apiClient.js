@@ -45,6 +45,28 @@ class StreamNoteApiClient {
     async explainKeyword(payload, signal) {
         return this.postJson("/api/explain-keyword", payload, signal);
     }
+
+    async getSessionState(deviceId, signal) {
+        const encodedDeviceId = encodeURIComponent(deviceId);
+        return this.request(`/api/session-state?deviceId=${encodedDeviceId}`, {
+            method: "GET",
+            signal,
+        });
+    }
+
+    async saveSessionState(deviceId, state, signal) {
+        return this.request("/api/session-state", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                deviceId,
+                state,
+            }),
+            signal,
+        });
+    }
 }
 
 window.StreamNoteApiClient = StreamNoteApiClient;

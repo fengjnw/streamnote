@@ -279,7 +279,9 @@ class StreamNote {
     }
 
     initSessionManager() {
-        this.sessionManager = new SessionManager();
+        this.sessionManager = new SessionManager({
+            apiClient: this.apiClient,
+        });
 
         window.addEventListener('sessionChanged', () => {
             this.loadCurrentSession();

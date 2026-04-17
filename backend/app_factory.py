@@ -5,9 +5,10 @@ from flask import Flask
 from flask_cors import CORS
 from openai import OpenAI
 
-from config import OPENAI_API_KEY
+from config import OPENAI_API_KEY, SESSION_DB_PATH
 from error_utils import api_exception
 from keyword_manager import create_keyword_manager
+from session_store import create_session_store
 from summarizer import create_summarizer
 from translator import create_translator
 from routes.api_routes import register_api_routes
@@ -40,6 +41,7 @@ def create_app():
         "keyword_manager": create_keyword_manager(OPENAI_API_KEY),
         "translator": create_translator(OPENAI_API_KEY),
         "summarizer": create_summarizer(OPENAI_API_KEY),
+        "session_store": create_session_store(SESSION_DB_PATH),
     }
 
     def server_error_response(error: Exception, prefix: str = ""):
