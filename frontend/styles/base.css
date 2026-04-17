@@ -19,6 +19,9 @@ header {
     flex-shrink: 0;
     height: auto;
     border-bottom: 1px solid var(--color-border);
+    position: relative;
+    z-index: 1200;
+    overflow: visible;
 }
 
 .header-logo {
@@ -37,6 +40,10 @@ header {
     flex: 1;
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    position: relative;
+    overflow: visible;
 }
 
 header h1 {
@@ -55,6 +62,143 @@ header h1 {
     opacity: 0.9;
     align-items: center;
     flex-wrap: wrap;
+}
+
+.device-identity {
+    position: relative;
+    flex-shrink: 0;
+    z-index: 2;
+}
+
+.device-identity-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 28px;
+    min-width: 65px;
+    border: 1px solid var(--color-border);
+    background: var(--color-white);
+    color: #333;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 0.8em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1.2;
+}
+
+.device-identity-btn:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.device-identity-btn i {
+    width: 14px;
+    height: 14px;
+}
+
+.sync-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    background: var(--color-grey-500);
+}
+
+.sync-dot.sync-syncing {
+    background: #2563eb;
+    animation: sync-pulse 1.2s infinite;
+}
+
+.sync-dot.sync-synced {
+    background: var(--color-success);
+}
+
+.sync-dot.sync-offline,
+.sync-dot.sync-error {
+    background: var(--color-danger);
+}
+
+@keyframes sync-pulse {
+    0% {
+        transform: scale(0.9);
+        opacity: 0.5;
+    }
+
+    70% {
+        transform: scale(1.15);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0.9);
+        opacity: 0.5;
+    }
+}
+
+.device-identity-popover {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    width: min(340px, 88vw);
+    background: var(--color-white);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px var(--color-black-shadow-15);
+    padding: 12px;
+    z-index: 10020;
+}
+
+.device-identity-title {
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.device-identity-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 5px 0;
+    border-bottom: 1px dashed var(--color-grey-100);
+}
+
+.device-identity-row:last-of-type {
+    border-bottom: none;
+}
+
+.device-id-row {
+    align-items: flex-start;
+}
+
+.identity-label {
+    color: var(--color-text-light);
+    font-size: 0.8em;
+}
+
+.identity-value {
+    font-size: 0.8em;
+    font-weight: 500;
+    text-align: right;
+}
+
+.identity-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.75em;
+    max-width: 200px;
+    overflow-wrap: anywhere;
+}
+
+.device-identity-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
 }
 
 #sessionNameDisplay {

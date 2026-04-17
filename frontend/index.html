@@ -63,6 +63,39 @@
                     </div>
                 </div>
             </div>
+            <div class="device-identity" id="deviceIdentityRoot">
+                <button id="deviceIdentityBtn" class="device-identity-btn" title="Device identity">
+                    <i data-feather="hard-drive"></i>
+                    <span id="deviceIdentityLabel">Device #------</span>
+                    <span id="deviceSyncDot" class="sync-dot sync-idle"></span>
+                </button>
+                <div id="deviceIdentityPopover" class="device-identity-popover hidden">
+                    <div class="device-identity-title">Local Identity</div>
+                    <div class="device-identity-row">
+                        <span class="identity-label">Type</span>
+                        <span class="identity-value">Anonymous device</span>
+                    </div>
+                    <div class="device-identity-row">
+                        <span class="identity-label">Short ID</span>
+                        <span class="identity-value" id="deviceIdentityShortId">------</span>
+                    </div>
+                    <div class="device-identity-row device-id-row">
+                        <span class="identity-label">Device ID</span>
+                        <span class="identity-value identity-mono" id="deviceIdentityFullId">-</span>
+                    </div>
+                    <div class="device-identity-row">
+                        <span class="identity-label">Sync status</span>
+                        <span class="identity-value" id="deviceSyncStatus">Pending</span>
+                    </div>
+                    <div class="device-identity-row">
+                        <span class="identity-label">Last sync</span>
+                        <span class="identity-value" id="deviceLastSyncTime">Not yet</span>
+                    </div>
+                    <div class="device-identity-actions">
+                        <button id="deviceLoginBtn" class="toolbar-btn" title="Log in (coming soon)">Log In</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
 

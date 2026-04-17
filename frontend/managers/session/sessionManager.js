@@ -15,6 +15,9 @@ class SessionManager {
         this.isHydratingFromRemote = false;
         this.remoteSyncInFlight = false;
         this.deviceId = this.getOrCreateDeviceId();
+        this.syncStatus = this.apiClient ? 'idle' : 'offline';
+        this.lastSyncedAt = null;
+        this.lastSyncError = null;
 
         this.defaultSettings = {
             defaultLanguage: "Chinese",
@@ -25,6 +28,8 @@ class SessionManager {
         this.loadDefaultSettings();
         this.loadSessions();
         this.setupUI();
+        this.emitIdentityUpdate();
+        this.emitSyncStatusChanged();
         this.loadRemoteStateIfAvailable();
     }
 
@@ -104,6 +109,41 @@ class SessionManager {
             console.error('[SessionManager] Device ID error:', error);
             return this.generateDeviceId();
         }
+    }
+
+    getDeviceIdentityInfo() {
+        const fullId = this.deviceId || '';
+        const compact = fullId.replace(/-/g, '').toUpperCase();
+        const shortId = compact ? compact.slice(-6) : '------';
+        return {
+            deviceId: fullId,
+            shortId,
+            label: `Device #${shortId}`,
+        };
+    }
+
+    setSyncStatus(status, errorMessage = null) {
+        this.syncStatus = status;
+        if (errorMessage) {
+            this.lastSyncError = errorMessage;
+        }
+        this.emitSyncStatusChanged();
+    }
+
+    emitIdentityUpdate() {
+        window.dispatchEvent(new CustomEvent('deviceIdentityChanged', {
+            detail: this.getDeviceIdentityInfo(),
+        }));
+    }
+
+    emitSyncStatusChanged() {
+        window.dispatchEvent(new CustomEvent('sessionSyncStatusChanged', {
+            detail: {
+                status: this.syncStatus,
+                lastSyncedAt: this.lastSyncedAt,
+                lastSyncError: this.lastSyncError,
+            }
+        }));
     }
 
     normalizeLoadedSessions(sessionMap) {
@@ -206,13 +246,20 @@ class SessionManager {
         }
 
         this.remoteSyncInFlight = true;
+        this.setSyncStatus('syncing');
         try {
             const response = await this.apiClient.saveSessionState(this.deviceId, this.snapshotState());
             if (!response.ok) {
                 console.warn('[SessionManager] Remote sync failed with status:', response.status);
+                this.setSyncStatus('error', `HTTP ${response.status}`);
+                return;
             }
+            this.lastSyncedAt = Date.now();
+            this.lastSyncError = null;
+            this.setSyncStatus('synced');
         } catch (error) {
             console.warn('[SessionManager] Remote sync skipped:', error);
+            this.setSyncStatus('offline', error?.message || 'Network unavailable');
         } finally {
             this.remoteSyncInFlight = false;
         }
@@ -224,13 +271,18 @@ class SessionManager {
         }
 
         try {
+            this.setSyncStatus('syncing');
             const response = await this.apiClient.getSessionState(this.deviceId);
             if (!response.ok) {
+                this.setSyncStatus('error', `HTTP ${response.status}`);
                 return;
             }
 
             const payload = await response.json();
             const remoteState = payload?.state;
+            this.lastSyncedAt = Date.now();
+            this.lastSyncError = null;
+            this.setSyncStatus('synced');
             if (!remoteState || typeof remoteState !== 'object') {
                 return;
             }
@@ -274,6 +326,7 @@ class SessionManager {
             }
         } catch (error) {
             console.warn('[SessionManager] Remote load skipped:', error);
+            this.setSyncStatus('offline', error?.message || 'Network unavailable');
         } finally {
             this.isHydratingFromRemote = false;
         }

@@ -9,6 +9,8 @@ class GlobalUiListenersManager {
     setup() {
         const app = this.app;
 
+        app.initDeviceIdentityUI();
+
         const floatingAutoScrollBtn = document.getElementById("floatingAutoScrollBtn");
         if (floatingAutoScrollBtn) {
             floatingAutoScrollBtn.addEventListener("click", () => {

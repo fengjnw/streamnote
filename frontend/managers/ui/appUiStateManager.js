@@ -4,6 +4,117 @@
 class AppUiStateManager {
     constructor(app) {
         this.app = app;
+        this.identityRefreshTimer = null;
+    }
+
+    initDeviceIdentityUI() {
+        const triggerBtn = document.getElementById("deviceIdentityBtn");
+        const panel = document.getElementById("deviceIdentityPopover");
+        if (!triggerBtn || !panel) return;
+
+        triggerBtn.addEventListener("click", (event) => {
+            event.stopPropagation();
+            panel.classList.toggle("hidden");
+        });
+
+        const loginBtn = document.getElementById("deviceLoginBtn");
+        if (loginBtn) {
+            loginBtn.addEventListener("click", () => {
+                this.showStatusMessage("Log in flow coming soon", 1800);
+            });
+        }
+
+        document.addEventListener("click", (event) => {
+            if (panel.classList.contains("hidden")) return;
+            const identityRoot = document.getElementById("deviceIdentityRoot");
+            if (!identityRoot || !identityRoot.contains(event.target)) {
+                panel.classList.add("hidden");
+            }
+        });
+
+        window.addEventListener("deviceIdentityChanged", () => this.renderDeviceIdentity());
+        window.addEventListener("sessionSyncStatusChanged", () => this.renderDeviceIdentity());
+
+        if (this.identityRefreshTimer) {
+            clearInterval(this.identityRefreshTimer);
+        }
+
+        this.identityRefreshTimer = setInterval(() => {
+            this.renderDeviceIdentity();
+        }, 15000);
+
+        this.renderDeviceIdentity();
+    }
+
+    getSyncStatusLabel(status) {
+        switch (status) {
+            case "syncing":
+                return "Syncing";
+            case "synced":
+                return "Synced";
+            case "offline":
+                return "Offline";
+            case "error":
+                return "Sync error";
+            default:
+                return "Pending";
+        }
+    }
+
+    formatRelativeSyncTime(timestamp) {
+        if (!timestamp) return "Not yet";
+
+        const diffMs = Math.max(0, Date.now() - timestamp);
+        const sec = Math.floor(diffMs / 1000);
+        if (sec < 5) return "just now";
+        if (sec < 60) return `${sec}s ago`;
+
+        const min = Math.floor(sec / 60);
+        if (min < 60) return `${min}m ago`;
+
+        const hour = Math.floor(min / 60);
+        if (hour < 24) return `${hour}h ago`;
+
+        const day = Math.floor(hour / 24);
+        return `${day}d ago`;
+    }
+
+    renderDeviceIdentity() {
+        const identityInfo = this.app.sessionManager?.getDeviceIdentityInfo();
+        if (!identityInfo) return;
+
+        const labelEl = document.getElementById("deviceIdentityLabel");
+        if (labelEl) {
+            labelEl.textContent = identityInfo.label;
+        }
+
+        const fullIdEl = document.getElementById("deviceIdentityFullId");
+        if (fullIdEl) {
+            fullIdEl.textContent = identityInfo.deviceId || "-";
+        }
+
+        const shortIdEl = document.getElementById("deviceIdentityShortId");
+        if (shortIdEl) {
+            shortIdEl.textContent = identityInfo.shortId || "------";
+        }
+
+        const status = this.app.sessionManager?.syncStatus || "idle";
+        const statusLabel = this.getSyncStatusLabel(status);
+
+        const statusEl = document.getElementById("deviceSyncStatus");
+        if (statusEl) {
+            statusEl.textContent = statusLabel;
+        }
+
+        const dotEl = document.getElementById("deviceSyncDot");
+        if (dotEl) {
+            dotEl.className = `sync-dot sync-${status}`;
+        }
+
+        const syncTimeEl = document.getElementById("deviceLastSyncTime");
+        if (syncTimeEl) {
+            syncTimeEl.textContent = this.formatRelativeSyncTime(this.app.sessionManager?.lastSyncedAt || null);
+        }
     }
 
     syncExplanationLanguageSelectors() {
