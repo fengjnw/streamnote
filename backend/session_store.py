@@ -31,9 +31,20 @@ class SessionStateStore:
 
     def _connect(self):
         use_uri = self.db_path.startswith("file:")
-        conn = sqlite3.connect(self.db_path, check_same_thread=False, uri=use_uri)
+        conn = sqlite3.connect(
+            self.db_path,
+            check_same_thread=False,
+            uri=use_uri,
+            timeout=5.0,
+        )
         conn.row_factory = sqlite3.Row
+        self._configure_connection(conn)
         return conn
+
+    def _configure_connection(self, conn):
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA synchronous=NORMAL")
+        conn.execute("PRAGMA busy_timeout=5000")
 
     def _init_db(self):
         with self._lock:

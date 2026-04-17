@@ -169,6 +169,42 @@ API errors are normalized as JSON:
 - Device identity is a generated `deviceId` stored locally in browser storage.
 - This enables seamless migration toward full account-based sync later.
 
+## SQLite Stable Deployment
+
+### Recommended configuration
+
+- Keep SQLite as the production database for this project stage.
+- Use a persistent disk/volume on your hosting platform.
+- Set `SESSION_DB_PATH` to that persistent path.
+
+Examples:
+
+- Local: `SESSION_DB_PATH=backend/data/streamnote.db`
+- Railway with volume mounted at `/data`: `SESSION_DB_PATH=/data/streamnote.db`
+
+### Backup workflow
+
+Create a timestamped backup:
+
+```bash
+npm run backup:session-db
+```
+
+Optional custom source/output:
+
+```bash
+cd backend
+python3 tools/backup_session_db.py --db /data/streamnote.db --output-dir /data/backups
+```
+
+### Deployment checklist (Railway)
+
+1. Add environment variable `OPENAI_API_KEY`.
+2. Attach a volume (persistent storage).
+3. Set `SESSION_DB_PATH` to a file under the mounted volume.
+4. Deploy and verify `/health` returns `{"status":"ok"}`.
+5. Create a session in UI, restart service, and confirm data still exists.
+
 ## Project Structure
 
 ### Backend (Flask)

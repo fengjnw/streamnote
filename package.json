@@ -10,7 +10,8 @@
     "test:backend": "cd backend && python3 -m pytest -v -ra",
     "test:frontend:smoke": "node scripts/frontend-smoke.cjs",
     "test:frontend:unit": "node scripts/frontend-unit-text-processor.cjs",
-    "test:all": "node scripts/test-all.cjs"
+    "test:all": "node scripts/test-all.cjs",
+    "backup:session-db": "cd backend && python3 tools/backup_session_db.py"
   },
   "keywords": [
     "transcription",
