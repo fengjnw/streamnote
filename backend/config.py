@@ -11,4 +11,4 @@ FLASK_CONFIG = {
     "debug": os.getenv("FLASK_DEBUG", "False").lower() == "true",
 }
 
-SESSION_DB_PATH = os.getenv("SESSION_DB_PATH", "backend/data/streamnote.db")
+SESSION_DB_PATH = os.getenv("SESSION_DB_PATH", "data/streamnote.db")

@@ -68,7 +68,7 @@ Optional:
 
 - PORT=5500
 - FLASK_DEBUG=false
-- SESSION_DB_PATH=backend/data/streamnote.db
+- SESSION_DB_PATH=data/streamnote.db
 
 ### 5. Run backend server
 
@@ -179,7 +179,7 @@ API errors are normalized as JSON:
 
 Examples:
 
-- Local: `SESSION_DB_PATH=backend/data/streamnote.db`
+- Local: `SESSION_DB_PATH=data/streamnote.db`
 - Railway with volume mounted at `/data`: `SESSION_DB_PATH=/data/streamnote.db`
 
 ### Backup workflow

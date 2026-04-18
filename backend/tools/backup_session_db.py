@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-DEFAULT_DB_PATH = "backend/data/streamnote.db"
+DEFAULT_DB_PATH = "data/streamnote.db"
 
 
 def resolve_db_path(cli_db_path: Optional[str]) -> Path:
