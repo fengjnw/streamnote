@@ -259,7 +259,11 @@ class AppUiStateManager {
         return Math.abs(hash);
     }
 
-    avatarStyleForSeed(seed) {
+    avatarStyleForSeed(seed, isLoggedIn) {
+        if (!isLoggedIn) {
+            return "#6b7280";
+        }
+
         const hash = this.hashCode(seed);
         const hue = hash % 360;
         return `hsl(${hue}, 58%, 43%)`;
@@ -343,11 +347,6 @@ class AppUiStateManager {
             statusEl.textContent = statusLabel;
         }
 
-        const dotEl = document.getElementById("deviceSyncDot");
-        if (dotEl) {
-            dotEl.className = `sync-dot sync-${status}`;
-        }
-
         const syncTimeEl = document.getElementById("deviceLastSyncTime");
         if (syncTimeEl) {
             syncTimeEl.textContent = this.formatRelativeSyncTime(this.app.sessionManager?.lastSyncedAt || null);
@@ -357,7 +356,7 @@ class AppUiStateManager {
         if (avatarEl) {
             const seed = this.buildAvatarSeed(identityInfo);
             avatarEl.textContent = this.avatarInitialForSeed(seed);
-            avatarEl.style.background = this.avatarStyleForSeed(seed);
+            avatarEl.style.background = this.avatarStyleForSeed(seed, !!this.authUser?.email);
         }
 
         const authBtn = document.getElementById("headerAuthBtn");
