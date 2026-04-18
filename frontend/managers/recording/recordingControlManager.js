@@ -30,21 +30,24 @@ class RecordingControlManager {
             if (sessionBtn) {
                 sessionBtn.disabled = true;
                 sessionBtn.title = 'Cannot switch sessions while recording';
-                sessionBtn.style.opacity = '0.5';
             }
 
             const addContentBtn = document.getElementById('addContentBtn');
             if (addContentBtn) {
                 addContentBtn.disabled = true;
                 addContentBtn.title = 'Cannot add content while recording';
-                addContentBtn.style.opacity = '0.5';
+            }
+
+            const downloadSessionBtn = document.getElementById('downloadSessionBtn');
+            if (downloadSessionBtn) {
+                downloadSessionBtn.disabled = true;
+                downloadSessionBtn.title = 'Cannot download sessions while recording';
             }
 
             const editBtn = document.getElementById('editTextBtn');
             if (editBtn) {
                 editBtn.disabled = true;
                 editBtn.title = 'Cannot edit while recording';
-                editBtn.style.opacity = '0.5';
             }
 
             this.app.updateTranscriptionContext();
@@ -85,21 +88,24 @@ class RecordingControlManager {
             if (sessionBtn) {
                 sessionBtn.disabled = false;
                 sessionBtn.title = 'Open Sessions';
-                sessionBtn.style.opacity = '1';
             }
 
             const addContentBtn = document.getElementById('addContentBtn');
             if (addContentBtn) {
                 addContentBtn.disabled = false;
                 addContentBtn.title = 'Add content from file or text';
-                addContentBtn.style.opacity = '1';
+            }
+
+            const downloadSessionBtn = document.getElementById('downloadSessionBtn');
+            if (downloadSessionBtn) {
+                downloadSessionBtn.disabled = false;
+                downloadSessionBtn.title = 'Download sessions';
             }
 
             const editBtn = document.getElementById('editTextBtn');
             if (editBtn && Object.keys(this.app.recordingManager.preciseResults).length > 0) {
                 editBtn.disabled = false;
                 editBtn.title = 'Edit transcript';
-                editBtn.style.opacity = '1';
             }
 
             this.updateRecordingButtonState();

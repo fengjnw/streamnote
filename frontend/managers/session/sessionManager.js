@@ -8,7 +8,7 @@ class SessionManager {
         this.DEFAULT_SETTINGS_KEY = 'streamnote_default_settings';
         this.DEVICE_ID_KEY = 'streamnote_device_id';
 
-        this.RESERVED_SESSION_IDS = ['tutorial-session'];
+        this.RESERVED_SESSION_IDS = ['welcome-session'];
 
         this.apiClient = options.apiClient || null;
         this.remoteSyncTimer = null;
@@ -22,7 +22,7 @@ class SessionManager {
         this.defaultSettings = {
             defaultLanguage: "Chinese",
             defaultExplanationLanguage: "Chinese",
-            loadTutorialSession: true
+            loadWelcomeSession: true
         };
 
         this.loadDefaultSettings();
@@ -38,6 +38,16 @@ class SessionManager {
             const saved = localStorage.getItem(this.DEFAULT_SETTINGS_KEY);
             if (saved) {
                 this.defaultSettings = JSON.parse(saved);
+
+                // Backward compatibility: migrate legacy tutorial toggle key.
+                if (
+                    this.defaultSettings.loadWelcomeSession === undefined
+                    && this.defaultSettings.loadTutorialSession !== undefined
+                ) {
+                    this.defaultSettings.loadWelcomeSession = this.defaultSettings.loadTutorialSession;
+                    delete this.defaultSettings.loadTutorialSession;
+                    this.saveDefaultSettings();
+                }
             }
         } catch (error) {
             console.error('[SessionManager] Load default settings error:', error);
@@ -67,10 +77,11 @@ class SessionManager {
             if (saved) {
                 this.sessions = JSON.parse(saved);
                 this.normalizeLoadedSessions(this.sessions);
+                this.migrateLegacyWelcomeSessionId();
             }
 
-            if (this.defaultSettings.loadTutorialSession !== false) {
-                this.loadTutorialSessionIntoState(false);
+            if (this.defaultSettings.loadWelcomeSession !== false) {
+                this.loadWelcomeSessionIntoState(false);
             } else {
                 const currentId = localStorage.getItem(this.CURRENT_SESSION_KEY);
                 if (currentId && this.sessions[currentId]) {
@@ -81,12 +92,40 @@ class SessionManager {
             }
         } catch (error) {
             console.error('[SessionManager] Load error:', error);
-            if (this.defaultSettings.loadTutorialSession !== false && this.loadTutorialSessionIntoState(false)) {
-                // tutorial session loaded
+            if (this.defaultSettings.loadWelcomeSession !== false && this.loadWelcomeSessionIntoState(false)) {
+                // welcome session loaded
             } else {
                 this.createNewSession();
             }
         }
+    }
+
+    migrateLegacyWelcomeSessionId() {
+        const legacyId = 'tutorial-session';
+        const welcomeId = 'welcome-session';
+        const legacySession = this.sessions[legacyId];
+        const welcomeSession = this.sessions[welcomeId];
+        let changed = false;
+
+        if (legacySession && !welcomeSession) {
+            this.sessions[welcomeId] = {
+                ...legacySession,
+                id: welcomeId,
+                name: legacySession.name === 'Tutorial' ? 'Welcome' : legacySession.name,
+            };
+            delete this.sessions[legacyId];
+            changed = true;
+        } else if (legacySession && welcomeSession) {
+            delete this.sessions[legacyId];
+            changed = true;
+        }
+
+        if (this.currentSessionId === legacyId) {
+            this.currentSessionId = welcomeId;
+            changed = true;
+        }
+
+        return changed;
     }
 
     generateDeviceId() {
@@ -290,20 +329,34 @@ class SessionManager {
             this.isHydratingFromRemote = true;
             if (remoteState.defaultSettings && typeof remoteState.defaultSettings === 'object') {
                 this.defaultSettings = { ...this.defaultSettings, ...remoteState.defaultSettings };
+
+                if (
+                    this.defaultSettings.loadWelcomeSession === undefined
+                    && this.defaultSettings.loadTutorialSession !== undefined
+                ) {
+                    this.defaultSettings.loadWelcomeSession = this.defaultSettings.loadTutorialSession;
+                    delete this.defaultSettings.loadTutorialSession;
+                }
+
                 this.saveDefaultSettings();
             }
 
             if (remoteState.sessions && typeof remoteState.sessions === 'object') {
                 this.sessions = remoteState.sessions;
                 this.normalizeLoadedSessions(this.sessions);
+                this.migrateLegacyWelcomeSessionId();
             }
 
+            const remoteCurrentSessionId = remoteState.currentSessionId === 'tutorial-session'
+                ? 'welcome-session'
+                : remoteState.currentSessionId;
+
             if (
-                remoteState.currentSessionId
-                && typeof remoteState.currentSessionId === 'string'
-                && this.sessions[remoteState.currentSessionId]
+                remoteCurrentSessionId
+                && typeof remoteCurrentSessionId === 'string'
+                && this.sessions[remoteCurrentSessionId]
             ) {
-                this.currentSessionId = remoteState.currentSessionId;
+                this.currentSessionId = remoteCurrentSessionId;
             } else if (!this.currentSessionId || !this.sessions[this.currentSessionId]) {
                 const firstId = Object.keys(this.sessions)[0];
                 this.currentSessionId = firstId || null;
@@ -332,26 +385,26 @@ class SessionManager {
         }
     }
 
-    loadTutorialSessionIntoState(useSwitch = false) {
-        if (typeof createTutorialSession !== 'function' || !TUTORIAL_SESSION_DATA) {
+    loadWelcomeSessionIntoState(useSwitch = false) {
+        if (typeof createWelcomeSession !== 'function' || !WELCOME_SESSION_DATA) {
             return false;
         }
 
-        createTutorialSession();
+        createWelcomeSession();
 
         const saved = localStorage.getItem(this.STORAGE_KEY);
         if (saved) {
             this.sessions = JSON.parse(saved);
         }
 
-        if (!this.sessions[TUTORIAL_SESSION_DATA.id]) {
+        if (!this.sessions[WELCOME_SESSION_DATA.id]) {
             return false;
         }
 
         if (useSwitch) {
-            this.switchSession(TUTORIAL_SESSION_DATA.id);
+            this.switchSession(WELCOME_SESSION_DATA.id);
         } else {
-            this.currentSessionId = TUTORIAL_SESSION_DATA.id;
+            this.currentSessionId = WELCOME_SESSION_DATA.id;
         }
 
         return true;
@@ -830,20 +883,7 @@ class SessionManager {
             }
         });
 
-        document.getElementById('exportCurrentBtn')?.addEventListener('click', () => {
-            this.exportCurrentSession();
-        });
-
-        document.getElementById('exportAllBtn')?.addEventListener('click', () => {
-            this.exportAllSessions();
-        });
-
-        const importBtn = document.getElementById('importBtn');
         const importInput = document.getElementById('importFileInput');
-
-        importBtn?.addEventListener('click', () => {
-            importInput.click();
-        });
 
         importInput?.addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -853,14 +893,6 @@ class SessionManager {
             }
         });
 
-        document.getElementById('clearAllBtn')?.addEventListener('click', () => {
-            this.clearAllSessions();
-        });
-
-        document.getElementById('loadTutorialBtn')?.addEventListener('click', () => {
-            this.loadTutorialSessionIntoState(true);
-        });
-
         document.getElementById('renameSessionBtn')?.addEventListener('click', () => {
             this.enterRenameMode();
         });
@@ -868,38 +900,6 @@ class SessionManager {
         document.getElementById('deleteSessionBtn')?.addEventListener('click', () => {
             this.deleteCurrentSession();
         });
-
-        const menuBtn = document.getElementById('sessionMenuBtn');
-        const menu = document.getElementById('sessionMenu');
-        if (menuBtn && menu) {
-            menuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (menu.style.display === 'none') {
-                    const rect = menuBtn.getBoundingClientRect();
-                    menu.style.top = (rect.bottom + 5) + 'px';
-                    menu.style.left = (rect.right - 160) + 'px';
-                    menu.style.display = 'block';
-                } else {
-                    menu.style.display = 'none';
-                }
-            });
-
-            menu.querySelectorAll('.session-menu-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    menu.style.display = 'none';
-                });
-            });
-
-            document.addEventListener('click', (e) => {
-                if (!menuBtn.contains(e.target) && !menu.contains(e.target)) {
-                    menu.style.display = 'none';
-                }
-            });
-
-            window.addEventListener('ui:close-transient-layers', () => {
-                menu.style.display = 'none';
-            });
-        }
 
         this.renderSessionList();
     }

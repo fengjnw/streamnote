@@ -475,7 +475,6 @@ button [data-feather] {
 }
 
 /* 菜单项中的图标 */
-.session-menu-item [data-feather],
 .content-menu-item [data-feather] {
     width: 14px;
     height: 14px;

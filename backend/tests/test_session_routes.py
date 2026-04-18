@@ -50,7 +50,7 @@ def test_put_then_get_session_state_roundtrip():
             "defaultSettings": {
                 "defaultLanguage": "Chinese",
                 "defaultExplanationLanguage": "Chinese",
-                "loadTutorialSession": True,
+                "loadWelcomeSession": True,
             },
         }
 

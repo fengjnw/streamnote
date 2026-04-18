@@ -15,7 +15,7 @@ It captures or imports content, then provides transcription, keyword extraction,
 - AI summary generation with style options
 - Keyword explanation generation
 - Session persistence in browser local storage with backend database sync (anonymous device ID)
-- Built-in tutorial session data for guided first-run demo
+- Built-in welcome session data for guided first-run demo
 
 ## Tech Stack
 
@@ -110,7 +110,7 @@ Use either of the following input paths for a stable end-to-end demo:
 
 2. Upload a text/document file (supported: TXT, MD, DOCX, PDF).
 
-If no external input is prepared, open the built-in Tutorial session and use its preloaded transcript content.
+If no external input is prepared, open the built-in Welcome session and use its preloaded transcript content.
 
 ## Quality Checks
 
@@ -222,6 +222,6 @@ python3 tools/backup_session_db.py --db /data/streamnote.db --output-dir /data/b
 - `frontend/core/app.js`: app orchestrator
 - `frontend/managers/`: feature managers by domain
 - `frontend/services/apiClient.js`: API request client
-- `frontend/data/tutorialSession.js`: built-in tutorial data
+- `frontend/data/welcomeSession.js`: built-in welcome data
 - `frontend/styles/`: style modules
 

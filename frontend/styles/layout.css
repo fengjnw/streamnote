@@ -172,57 +172,6 @@
     position: relative;
 }
 
-#sessionMenuBtn {
-    flex: 0 0 auto;
-    min-width: 32px;
-    justify-content: center;
-}
-
-/* Session Hidden Menu */
-.session-menu {
-    position: fixed;
-    background: var(--color-white);
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    box-shadow: 0 4px 12px var(--color-black-shadow-15);
-    z-index: 10000;
-    min-width: 160px;
-    overflow: hidden;
-    display: none;
-}
-
-.session-menu-item {
-    display: block;
-    width: 100%;
-    padding: 8px var(--spacing-md);
-    border: none;
-    background: var(--color-white);
-    text-align: left;
-    cursor: pointer;
-    font-size: 0.85em;
-    transition: background 0.2s;
-    border-bottom: 1px solid var(--color-grey-100);
-    color: var(--color-text);
-    font-family: inherit;
-    font-weight: 500;
-}
-
-.session-menu-item:last-child {
-    border-bottom: none;
-}
-
-.session-menu-item:hover {
-    background: var(--color-bg-light);
-}
-
-.session-menu-item.danger {
-    color: var(--color-danger);
-}
-
-.session-menu-item.danger:hover {
-    background: var(--color-danger-bg);
-}
-
 /* Content Menu for Add Content Button */
 .content-menu {
     position: fixed;
@@ -840,6 +789,7 @@
 /* Control buttons moved to sidebar - match icon button styling */
 #recordBtn,
 #addContentBtn,
+#downloadSessionBtn,
 #editTextBtn {
     background: transparent;
     color: var(--color-grey-500);
@@ -848,6 +798,7 @@
 
 #recordBtn:hover:not(:disabled),
 #addContentBtn:hover:not(:disabled),
+#downloadSessionBtn:hover:not(:disabled),
 #editTextBtn:hover:not(:disabled) {
     background: transparent;
     color: var(--color-primary);
@@ -869,6 +820,7 @@
 }
 
 #addContentBtn.active,
+#downloadSessionBtn.active,
 #editTextBtn.active {
     background: transparent !important;
     color: var(--color-primary) !important;
@@ -876,17 +828,24 @@
 }
 
 #addContentBtn.active:hover:not(:disabled),
+#downloadSessionBtn.active:hover:not(:disabled),
 #editTextBtn.active:hover:not(:disabled) {
     background: transparent !important;
     box-shadow: none !important;
     transform: scale(1.12);
 }
 
+#recordBtn:disabled,
+#addContentBtn:disabled,
+#downloadSessionBtn:disabled,
 #editTextBtn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
+#recordBtn:disabled:hover,
+#addContentBtn:disabled:hover,
+#downloadSessionBtn:disabled:hover,
 #editTextBtn:disabled:hover {
     background: transparent;
     transform: none;

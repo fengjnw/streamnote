@@ -9,15 +9,40 @@ class ContentActionsListenersManager {
     setup() {
         const app = this.app;
         const addContentBtn = document.getElementById("addContentBtn");
+        const downloadSessionBtn = document.getElementById("downloadSessionBtn");
         const contentMenu = document.getElementById("contentMenu");
+        const downloadMenu = document.getElementById("downloadMenu");
         const importFromFileOption = document.getElementById("importFromFileOption");
         const importFromTextOption = document.getElementById("importFromTextOption");
+        const importSessionOption = document.getElementById("importSessionOption");
+        const downloadCurrentSessionOption = document.getElementById("downloadCurrentSessionOption");
+        const downloadAllSessionsOption = document.getElementById("downloadAllSessionsOption");
+        const importFileInput = document.getElementById("importFileInput");
         const textFileInput = document.getElementById("textFileInput");
+
+        const hideUploadMenu = () => {
+            if (contentMenu) {
+                contentMenu.style.display = "none";
+            }
+            if (addContentBtn) {
+                addContentBtn.classList.remove("active");
+            }
+        };
+
+        const hideDownloadMenu = () => {
+            if (downloadMenu) {
+                downloadMenu.style.display = "none";
+            }
+            if (downloadSessionBtn) {
+                downloadSessionBtn.classList.remove("active");
+            }
+        };
 
         if (addContentBtn && contentMenu) {
             addContentBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
                 const isVisible = contentMenu.style.display !== "none";
+                hideDownloadMenu();
 
                 if (!isVisible) {
                     const rect = addContentBtn.getBoundingClientRect();
@@ -26,28 +51,51 @@ class ContentActionsListenersManager {
                     contentMenu.style.display = "block";
                     addContentBtn.classList.add("active");
                 } else {
-                    contentMenu.style.display = "none";
-                    addContentBtn.classList.remove("active");
+                    hideUploadMenu();
                 }
             });
 
             document.addEventListener("click", (e) => {
-                if (!addContentBtn.contains(e.target) && !contentMenu.contains(e.target)) {
-                    contentMenu.style.display = "none";
-                    addContentBtn.classList.remove("active");
+                const clickedUploadArea = addContentBtn.contains(e.target) || contentMenu.contains(e.target);
+                const clickedDownloadArea = downloadSessionBtn && downloadMenu
+                    ? downloadSessionBtn.contains(e.target) || downloadMenu.contains(e.target)
+                    : false;
+
+                if (!clickedUploadArea) {
+                    hideUploadMenu();
+                }
+                if (!clickedDownloadArea) {
+                    hideDownloadMenu();
                 }
             });
 
             window.addEventListener("ui:close-transient-layers", () => {
-                contentMenu.style.display = "none";
-                addContentBtn.classList.remove("active");
+                hideUploadMenu();
+                hideDownloadMenu();
+            });
+        }
+
+        if (downloadSessionBtn && downloadMenu) {
+            downloadSessionBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const isVisible = downloadMenu.style.display !== "none";
+                hideUploadMenu();
+
+                if (!isVisible) {
+                    const rect = downloadSessionBtn.getBoundingClientRect();
+                    downloadMenu.style.left = (rect.right + 8) + "px";
+                    downloadMenu.style.top = (rect.top - 4) + "px";
+                    downloadMenu.style.display = "block";
+                    downloadSessionBtn.classList.add("active");
+                } else {
+                    hideDownloadMenu();
+                }
             });
         }
 
         if (importFromFileOption && textFileInput) {
             importFromFileOption.addEventListener("click", () => {
-                contentMenu.style.display = "none";
-                addContentBtn.classList.remove("active");
+                hideUploadMenu();
                 textFileInput.click();
             });
 
@@ -71,9 +119,29 @@ class ContentActionsListenersManager {
 
         if (importFromTextOption) {
             importFromTextOption.addEventListener("click", () => {
-                contentMenu.style.display = "none";
-                addContentBtn.classList.remove("active");
+                hideUploadMenu();
                 app.showAddTextDialog();
+            });
+        }
+
+        if (importSessionOption && importFileInput) {
+            importSessionOption.addEventListener("click", () => {
+                hideUploadMenu();
+                importFileInput.click();
+            });
+        }
+
+        if (downloadCurrentSessionOption) {
+            downloadCurrentSessionOption.addEventListener("click", () => {
+                hideDownloadMenu();
+                app.sessionManager.exportCurrentSession();
+            });
+        }
+
+        if (downloadAllSessionsOption) {
+            downloadAllSessionsOption.addEventListener("click", () => {
+                hideDownloadMenu();
+                app.sessionManager.exportAllSessions();
             });
         }
 

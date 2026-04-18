@@ -41,17 +41,17 @@ class SettingsPanel {
             });
         }
 
-        const loadTutorialSessionToggle = document.getElementById("loadTutorialSessionToggle");
-        if (loadTutorialSessionToggle) {
-            loadTutorialSessionToggle.checked = defaultSettings.loadTutorialSession !== false;
+        const loadWelcomeSessionToggle = document.getElementById("loadWelcomeSessionToggle");
+        if (loadWelcomeSessionToggle) {
+            loadWelcomeSessionToggle.checked = defaultSettings.loadWelcomeSession !== false;
 
-            loadTutorialSessionToggle.addEventListener("change", (e) => {
+            loadWelcomeSessionToggle.addEventListener("change", (e) => {
                 this.sessionManager.updateDefaultSettings({
-                    loadTutorialSession: e.target.checked
+                    loadWelcomeSession: e.target.checked
                 });
                 const status = e.target.checked
-                    ? "Tutorial session will be shown on next startup"
-                    : "Tutorial session disabled";
+                    ? "Welcome session will be shown on next startup"
+                    : "Welcome session disabled";
                 this.onStatusUpdate(status);
             });
         }
@@ -64,7 +64,6 @@ class SettingsPanel {
         const exportAllBtn = document.getElementById("exportAllBtn");
         const importBtn = document.getElementById("importBtn");
         const importFileInput = document.getElementById("importFileInput");
-        const clearAllBtn = document.getElementById("clearAllBtn");
 
         if (exportCurrentBtn) {
             exportCurrentBtn.onclick = () => {
@@ -138,14 +137,6 @@ class SettingsPanel {
             });
         }
 
-        if (clearAllBtn) {
-            clearAllBtn.onclick = () => {
-                if (confirm("⚠️ Are you sure you want to delete all data? This cannot be undone.")) {
-                    localStorage.clear();
-                    alert("All data cleared. Please refresh the page.");
-                }
-            };
-        }
     }
 }
 
