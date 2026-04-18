@@ -106,8 +106,8 @@
             <aside class="sidebar sidebar-left">
                 <div class="sidebar-section">
                     <button id="leftSidebarGuideToggle" class="sidebar-btn" aria-label="Expand toolbar">
-                        <i data-feather="chevrons-left"></i>
-                        <span class="sidebar-btn-label">Toolbar</span>
+                        <i data-feather="menu"></i>
+                        <span class="sidebar-btn-label">Menu</span>
                     </button>
                 </div>
 
@@ -145,7 +145,25 @@
                             data-feather="globe"></i><span class="sidebar-btn-label">Translate</span></button>
                 </div>
 
+                <div class="sidebar-divider"></div>
+
+                <!-- Group 4: Insights (moved from right sidebar) -->
+                <div class="sidebar-section">
+                    <button id="quickAccessHighlights" class="sidebar-btn" aria-label="View Highlights"><i
+                            data-feather="flag"></i><span class="sidebar-btn-label">Highlights</span></button>
+                    <button id="quickAccessKeywords" class="sidebar-btn" aria-label="Extract Keywords"><i
+                            data-feather="tag"></i><span class="sidebar-btn-label">Keywords</span></button>
+                    <button id="quickAccessSummary" class="sidebar-btn" aria-label="Summarise"><i
+                            data-feather="file-text"></i><span class="sidebar-btn-label">Summary</span></button>
+                </div>
+
                 <div class="sidebar-spacer"></div>
+
+                <!-- Group 5: Settings (moved from right sidebar) -->
+                <div class="sidebar-section">
+                    <button id="quickAccessSettings" class="sidebar-btn" aria-label="Settings"><i
+                            data-feather="settings"></i><span class="sidebar-btn-label">Settings</span></button>
+                </div>
             </aside>
 
             <div class="content-wrapper">
@@ -467,39 +485,6 @@
             </div>
         </div>
 
-        <!-- Right Sidebar -->
-        <aside class="sidebar sidebar-right">
-            <div class="sidebar-section">
-                <button id="rightSidebarGuideToggle" class="sidebar-btn" aria-label="Expand toolbar">
-                    <i data-feather="chevrons-left"></i>
-                    <span class="sidebar-btn-label">Toolbar</span>
-                </button>
-            </div>
-
-            <div class="sidebar-divider"></div>
-
-            <!-- Group 1: Highlights -->
-            <div class="sidebar-section">
-                <button id="quickAccessHighlights" class="sidebar-btn" aria-label="View Highlights"><i
-                        data-feather="flag"></i><span class="sidebar-btn-label">Highlights</span></button>
-            </div>
-
-            <!-- Group 2: Keywords + Summary -->
-            <div class="sidebar-section">
-                <button id="quickAccessKeywords" class="sidebar-btn" aria-label="Extract Keywords"><i
-                        data-feather="tag"></i><span class="sidebar-btn-label">Keywords</span></button>
-                <button id="quickAccessSummary" class="sidebar-btn" aria-label="Summarise"><i
-                        data-feather="file-text"></i><span class="sidebar-btn-label">Summary</span></button>
-            </div>
-
-            <div class="sidebar-spacer"></div>
-
-            <!-- Group 3: Settings -->
-            <div class="sidebar-section">
-                <button id="quickAccessSettings" class="sidebar-btn" aria-label="Settings"><i
-                        data-feather="settings"></i><span class="sidebar-btn-label">Settings</span></button>
-            </div>
-        </aside>
     </div>
     </div>
 
@@ -564,17 +549,24 @@
 
     <!-- Initialize Feather Icons -->
     <script>
+        function syncSidebarExpandedWidth() {
+            const headerLogo = document.querySelector('.header-logo');
+            if (!headerLogo) {
+                return;
+            }
+
+            const width = Math.round(headerLogo.getBoundingClientRect().width);
+            if (width > 0) {
+                document.documentElement.style.setProperty('--sidebar-expanded-width', `${width}px`);
+            }
+        }
+
         function initSidebarExpansionControls() {
             const configs = [
                 {
                     sidebar: document.querySelector('.sidebar-left'),
                     toggleBtn: document.getElementById('leftSidebarGuideToggle'),
                     key: 'streamnote_sidebar_expanded_left'
-                },
-                {
-                    sidebar: document.querySelector('.sidebar-right'),
-                    toggleBtn: document.getElementById('rightSidebarGuideToggle'),
-                    key: 'streamnote_sidebar_expanded_right'
                 }
             ];
 
@@ -586,14 +578,9 @@
                 sidebar.classList.toggle('expanded', isExpanded);
                 toggleBtn.setAttribute('aria-label', isExpanded ? 'Collapse toolbar' : 'Expand toolbar');
 
-                const icon = toggleBtn.querySelector('i');
-                if (icon) {
-                    icon.setAttribute('data-feather', isExpanded ? 'chevrons-left' : 'chevrons-right');
-                }
-
                 const label = toggleBtn.querySelector('.sidebar-btn-label');
                 if (label) {
-                    label.textContent = 'Toolbar';
+                    label.textContent = 'Hide Menu';
                 }
             };
 
@@ -617,10 +604,13 @@
 
         // Initialize Feather Icons when DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
+            syncSidebarExpandedWidth();
             feather.replace();
             initSidebarExpansionControls();
             feather.replace();
         });
+
+        window.addEventListener('resize', syncSidebarExpandedWidth);
 
         // Reinitialize when DOM contents change (for dynamically added icons)
         const iconObserver = new MutationObserver(() => {

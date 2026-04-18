@@ -21,16 +21,12 @@
 }
 
 .sidebar.expanded {
-    width: 170px;
+    width: var(--sidebar-expanded-width, 170px);
     align-items: stretch;
 }
 
 .sidebar-left {
     border-right: 1px solid var(--color-border);
-}
-
-.sidebar-right {
-    border-left: 1px solid var(--color-border);
 }
 
 /* Sidebar Sections */
@@ -68,7 +64,7 @@
     cursor: pointer;
     font-size: 0.9em;
     font-weight: 500;
-    transition: all 0.2s;
+    transition: none;
     flex-shrink: 0;
     padding: 0;
     line-height: 1;
@@ -82,7 +78,7 @@
 .sidebar-btn:hover:not(:disabled) {
     background: transparent;
     color: var(--color-primary);
-    transform: scale(1.08);
+    transform: none;
     box-shadow: none;
 }
 
@@ -95,7 +91,7 @@
 .sidebar-btn.active:hover:not(:disabled) {
     background: transparent !important;
     color: var(--color-primary) !important;
-    transform: scale(1.12);
+    transform: none;
 }
 
 #recordBtn.active {
@@ -132,8 +128,6 @@
     width: 100%;
     justify-content: flex-start !important;
     padding: 0 10px !important;
-    font-size: 0.8em !important;
-    gap: 8px;
 }
 
 .sidebar.expanded .sidebar-btn-label {
