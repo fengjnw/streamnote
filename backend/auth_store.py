@@ -196,6 +196,33 @@ class AuthStore:
             finally:
                 conn.close()
 
+    def verify_user_password(self, user_id: int, password: str) -> bool:
+        with self._lock:
+            conn = self._connect()
+            try:
+                row = conn.execute(
+                    "SELECT password_hash FROM users WHERE id = ?",
+                    (user_id,),
+                ).fetchone()
+            finally:
+                conn.close()
+
+        if not row:
+            return False
+
+        return check_password_hash(row["password_hash"], password)
+
+    def delete_user_account(self, user_id: int):
+        with self._lock:
+            conn = self._connect()
+            try:
+                conn.execute("DELETE FROM auth_sessions WHERE user_id = ?", (user_id,))
+                conn.execute("DELETE FROM device_user_bindings WHERE user_id = ?", (user_id,))
+                conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+                conn.commit()
+            finally:
+                conn.close()
+
 
 def create_auth_store(db_path: str) -> AuthStore:
     return AuthStore(db_path=db_path)

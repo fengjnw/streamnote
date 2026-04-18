@@ -86,3 +86,31 @@ def test_register_duplicate_email_returns_409():
         assert duplicate.status_code == 409
         payload = duplicate.get_json()
         assert payload["error"]["code"] == "EMAIL_EXISTS"
+
+
+def test_delete_account_requires_correct_password_and_logs_out():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        db_path = str(Path(tmpdir) / "auth.db")
+        app = make_test_app(db_path)
+        client = app.test_client()
+
+        client.post(
+            "/api/auth/register",
+            json={"email": "remove@example.com", "password": "123456"},
+        )
+
+        bad_delete = client.post(
+            "/api/auth/delete-account",
+            json={"password": "wrong123"},
+        )
+        assert bad_delete.status_code == 401
+
+        good_delete = client.post(
+            "/api/auth/delete-account",
+            json={"password": "123456"},
+        )
+        assert good_delete.status_code == 200
+        assert good_delete.get_json()["ok"] is True
+
+        me_after_delete = client.get("/api/auth/me")
+        assert me_after_delete.status_code == 401

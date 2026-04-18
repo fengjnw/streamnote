@@ -197,6 +197,35 @@ cd backend
 python3 tools/backup_session_db.py --db /data/streamnote.db --output-dir /data/backups
 ```
 
+### Reset test data before deployment
+
+One-click cleanup (uses `SESSION_DB_PATH` or default `data/streamnote.db`):
+
+```bash
+npm run reset:test-data
+```
+
+Direct script usage:
+
+```bash
+cd backend
+python3 tools/reset_test_data.py --yes
+```
+
+Custom database path:
+
+```bash
+cd backend
+python3 tools/reset_test_data.py --db /data/streamnote.db --yes
+```
+
+This clears all rows in these tables:
+
+- `device_session_state`
+- `auth_sessions`
+- `device_user_bindings`
+- `users`
+
 ### Deployment checklist (Railway)
 
 1. Add environment variable `OPENAI_API_KEY`.

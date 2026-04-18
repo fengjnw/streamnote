@@ -26,6 +26,13 @@ class AppUiStateManager {
             });
         }
 
+        const deleteAccountBtn = document.getElementById("deleteAccountBtn");
+        if (deleteAccountBtn) {
+            deleteAccountBtn.addEventListener("click", async () => {
+                await this.handleDeleteAccount();
+            });
+        }
+
         this.initAuthModal();
 
         document.addEventListener("click", (event) => {
@@ -246,6 +253,36 @@ class AppUiStateManager {
         this.renderDeviceIdentity();
     }
 
+    async handleDeleteAccount() {
+        if (!this.authUser?.email) {
+            this.showStatusMessage("Please log in first", 1800);
+            return;
+        }
+
+        const confirmed = window.confirm("Delete this account permanently? This action cannot be undone.");
+        if (!confirmed) return;
+
+        const password = window.prompt("Enter your password to confirm account deletion") || "";
+        if (!password) return;
+
+        try {
+            const response = await this.app.apiClient.deleteAccount({ password });
+            if (!response.ok) {
+                const payload = await response.json().catch(() => ({}));
+                const message = payload?.error?.message || "Delete account failed";
+                this.showStatusMessage(message, 2200);
+                return;
+            }
+
+            this.authUser = null;
+            this.showStatusMessage("Account deleted", 1800);
+            this.renderDeviceIdentity();
+            this.app.closeModal("settingsModal");
+        } catch (error) {
+            this.showStatusMessage("Network error during account deletion", 2200);
+        }
+    }
+
     buildAvatarSeed(identityInfo) {
         return this.authUser?.email || identityInfo?.deviceId || "anonymous";
     }
@@ -368,6 +405,17 @@ class AppUiStateManager {
                 authBtn.textContent = "Log In";
                 authBtn.title = "Log in";
             }
+        }
+
+        const settingsAccountEmailEl = document.getElementById("settingsAccountEmail");
+        if (settingsAccountEmailEl) {
+            settingsAccountEmailEl.textContent = this.authUser?.email || "Not logged in";
+        }
+
+        const deleteAccountBtn = document.getElementById("deleteAccountBtn");
+        if (deleteAccountBtn) {
+            deleteAccountBtn.disabled = !this.authUser?.email;
+            deleteAccountBtn.title = this.authUser?.email ? "Delete current account" : "Log in to enable account deletion";
         }
     }
 

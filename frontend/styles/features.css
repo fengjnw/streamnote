@@ -957,6 +957,14 @@ textarea::placeholder {
     margin: 0;
 }
 
+.settings-value-inline {
+    display: block;
+    font-size: 0.84em;
+    color: #333;
+    font-weight: 600;
+    word-break: break-word;
+}
+
 .settings-toggle-label {
     display: flex !important;
     align-items: center;
