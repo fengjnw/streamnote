@@ -21,8 +21,7 @@ class SessionManager {
 
         this.defaultSettings = {
             defaultLanguage: "Chinese",
-            defaultExplanationLanguage: "Chinese",
-            loadWelcomeSession: true
+            defaultExplanationLanguage: "Chinese"
         };
 
         this.loadDefaultSettings();
@@ -39,12 +38,12 @@ class SessionManager {
             if (saved) {
                 this.defaultSettings = JSON.parse(saved);
 
-                // Backward compatibility: migrate legacy tutorial toggle key.
+                // Drop removed welcome/tutorial toggle keys from older saved settings.
                 if (
-                    this.defaultSettings.loadWelcomeSession === undefined
-                    && this.defaultSettings.loadTutorialSession !== undefined
+                    this.defaultSettings.loadWelcomeSession !== undefined
+                    || this.defaultSettings.loadTutorialSession !== undefined
                 ) {
-                    this.defaultSettings.loadWelcomeSession = this.defaultSettings.loadTutorialSession;
+                    delete this.defaultSettings.loadWelcomeSession;
                     delete this.defaultSettings.loadTutorialSession;
                     this.saveDefaultSettings();
                 }
@@ -80,8 +79,13 @@ class SessionManager {
                 this.migrateLegacyWelcomeSessionId();
             }
 
-            if (this.defaultSettings.loadWelcomeSession !== false) {
-                this.loadWelcomeSessionIntoState(false);
+            const hasSessions = Object.keys(this.sessions).length > 0;
+
+            if (!hasSessions) {
+                const loaded = this.loadWelcomeSessionIntoState(false);
+                if (!loaded) {
+                    this.createNewSession();
+                }
             } else {
                 const currentId = localStorage.getItem(this.CURRENT_SESSION_KEY);
                 if (currentId && this.sessions[currentId]) {
@@ -92,7 +96,8 @@ class SessionManager {
             }
         } catch (error) {
             console.error('[SessionManager] Load error:', error);
-            if (this.defaultSettings.loadWelcomeSession !== false && this.loadWelcomeSessionIntoState(false)) {
+            const loaded = this.loadWelcomeSessionIntoState(false);
+            if (loaded) {
                 // welcome session loaded
             } else {
                 this.createNewSession();
@@ -330,13 +335,8 @@ class SessionManager {
             if (remoteState.defaultSettings && typeof remoteState.defaultSettings === 'object') {
                 this.defaultSettings = { ...this.defaultSettings, ...remoteState.defaultSettings };
 
-                if (
-                    this.defaultSettings.loadWelcomeSession === undefined
-                    && this.defaultSettings.loadTutorialSession !== undefined
-                ) {
-                    this.defaultSettings.loadWelcomeSession = this.defaultSettings.loadTutorialSession;
-                    delete this.defaultSettings.loadTutorialSession;
-                }
+                delete this.defaultSettings.loadWelcomeSession;
+                delete this.defaultSettings.loadTutorialSession;
 
                 this.saveDefaultSettings();
             }

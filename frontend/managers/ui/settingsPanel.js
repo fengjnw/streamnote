@@ -41,21 +41,6 @@ class SettingsPanel {
             });
         }
 
-        const loadWelcomeSessionToggle = document.getElementById("loadWelcomeSessionToggle");
-        if (loadWelcomeSessionToggle) {
-            loadWelcomeSessionToggle.checked = defaultSettings.loadWelcomeSession !== false;
-
-            loadWelcomeSessionToggle.addEventListener("change", (e) => {
-                this.sessionManager.updateDefaultSettings({
-                    loadWelcomeSession: e.target.checked
-                });
-                const status = e.target.checked
-                    ? "Welcome session will be shown on next startup"
-                    : "Welcome session disabled";
-                this.onStatusUpdate(status);
-            });
-        }
-
         this.initializeSessionManagementButtons();
     }
 

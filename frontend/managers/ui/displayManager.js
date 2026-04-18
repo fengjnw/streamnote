@@ -98,9 +98,17 @@ class DisplayManager {
             this.app.panelManager.isUpdatingUI = false;
 
             const transcript = document.getElementById("transcript");
-            if (transcript && !this.app.panelManager.isScrolledToBottom(transcript)) {
-                this.app.panelManager.autoScroll = false;
-                this.app.panelManager.updateAutoScrollButton();
+            if (transcript) {
+                const canScroll = transcript.scrollHeight > transcript.clientHeight + 1;
+                const atBottom = this.app.panelManager.isScrolledToBottom(transcript);
+
+                // Keep auto-scroll enabled when content does not overflow to avoid a stuck "Back to Latest" button.
+                const shouldEnableAutoScroll = !canScroll || atBottom;
+                if (this.app.panelManager.autoScroll !== shouldEnableAutoScroll) {
+                    this.app.panelManager.autoScroll = shouldEnableAutoScroll;
+                    this.app.panelManager.updateAutoScrollButton();
+                    this.app.panelManager.savePanelState();
+                }
             }
 
             const editTextBtn = document.getElementById("editTextBtn");
