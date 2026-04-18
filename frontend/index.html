@@ -104,12 +104,24 @@
         <div class="main-wrapper">
             <!-- Left Sidebar -->
             <aside class="sidebar sidebar-left">
+                <div class="sidebar-section sidebar-toggle-section">
+                    <button id="leftSidebarGuideToggle" class="sidebar-btn icon-only sidebar-expand-toggle"
+                        title="Expand toolbar" data-tooltip="Expand to show function labels" aria-pressed="false">
+                        <i data-feather="chevrons-left"></i>
+                        <span class="sidebar-btn-label">Collapse</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-divider"></div>
+
                 <!-- Group 1: Session Management -->
                 <div class="sidebar-section">
-                    <button id="openSessionPanel" class="sidebar-btn icon-only" title="Sessions"
-                        data-tooltip="Manage sessions"><i data-feather="list"></i></button>
                     <button id="sidebarNewSessionBtn" class="sidebar-btn icon-only" title="New Session"
-                        data-tooltip="Create new session"><i data-feather="plus"></i></button>
+                        data-tooltip="Create new session"><i data-feather="plus"></i><span
+                            class="sidebar-btn-label">New</span></button>
+                    <button id="openSessionPanel" class="sidebar-btn icon-only" title="Sessions"
+                        data-tooltip="Manage sessions"><i data-feather="folder"></i><span
+                            class="sidebar-btn-label">Sessions</span></button>
                 </div>
 
                 <div class="sidebar-divider"></div>
@@ -117,13 +129,17 @@
                 <!-- Group 2: Recording & Content Management -->
                 <div class="sidebar-section">
                     <button id="recordBtn" class="sidebar-btn icon-only" title="Start/Stop Recording"
-                        data-tooltip="Start or stop recording"><i data-feather="mic"></i></button>
+                        data-tooltip="Start or stop recording"><i data-feather="mic"></i><span
+                            class="sidebar-btn-label">Record</span></button>
                     <button id="addContentBtn" class="sidebar-btn icon-only" title="Add content from file or text"
-                        data-tooltip="Add content from file or text"><i data-feather="upload"></i></button>
+                        data-tooltip="Add content from file or text"><i data-feather="upload"></i><span
+                            class="sidebar-btn-label">Import</span></button>
                     <button id="downloadSessionBtn" class="sidebar-btn icon-only" title="Download sessions"
-                        data-tooltip="Download session data"><i data-feather="download"></i></button>
+                        data-tooltip="Download session data"><i data-feather="download"></i><span
+                            class="sidebar-btn-label">Export</span></button>
                     <button id="editTextBtn" class="sidebar-btn icon-only" title="Edit transcript"
-                        data-tooltip="Edit transcript"><i data-feather="edit"></i></button>
+                        data-tooltip="Edit transcript"><i data-feather="edit"></i><span
+                            class="sidebar-btn-label">Edit</span></button>
                 </div>
 
                 <div class="sidebar-divider"></div>
@@ -131,9 +147,11 @@
                 <!-- Group 3: Left Panel (Explanation + Translation) -->
                 <div class="sidebar-section">
                     <button id="quickAccessHistory" class="sidebar-btn icon-only" title="Explain"
-                        data-tooltip="Show word explanations"><i data-feather="book-open"></i></button>
+                        data-tooltip="Show word explanations"><i data-feather="book-open"></i><span
+                            class="sidebar-btn-label">Explain</span></button>
                     <button id="translationToggleBtn" class="sidebar-btn icon-only" title="Translate"
-                        data-tooltip="Toggle translation panel"><i data-feather="globe"></i></button>
+                        data-tooltip="Toggle translation panel"><i data-feather="globe"></i><span
+                            class="sidebar-btn-label">Translate</span></button>
                 </div>
 
                 <div class="sidebar-spacer"></div>
@@ -460,18 +478,31 @@
 
         <!-- Right Sidebar -->
         <aside class="sidebar sidebar-right">
+            <div class="sidebar-section sidebar-toggle-section">
+                <button id="rightSidebarGuideToggle" class="sidebar-btn icon-only sidebar-expand-toggle"
+                    title="Expand toolbar" data-tooltip="Expand to show function labels" aria-pressed="false">
+                    <i data-feather="chevrons-left"></i>
+                    <span class="sidebar-btn-label">Collapse</span>
+                </button>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
             <!-- Group 1: Highlights -->
             <div class="sidebar-section">
                 <button id="quickAccessHighlights" class="sidebar-btn icon-only" title="View Highlights"
-                    data-tooltip="Show all highlighted text"><i data-feather="flag"></i></button>
+                    data-tooltip="Show all highlighted text"><i data-feather="flag"></i><span
+                        class="sidebar-btn-label">Highlights</span></button>
             </div>
 
             <!-- Group 2: Keywords + Summary -->
             <div class="sidebar-section">
                 <button id="quickAccessKeywords" class="sidebar-btn icon-only" title="Extract Keywords"
-                    data-tooltip="Show extracted keywords and terms"><i data-feather="tag"></i></button>
+                    data-tooltip="Show extracted keywords and terms"><i data-feather="tag"></i><span
+                        class="sidebar-btn-label">Keywords</span></button>
                 <button id="quickAccessSummary" class="sidebar-btn icon-only" title="Summarise"
-                    data-tooltip="Generate text summary"><i data-feather="file-text"></i></button>
+                    data-tooltip="Generate text summary"><i data-feather="file-text"></i><span
+                        class="sidebar-btn-label">Summary</span></button>
             </div>
 
             <div class="sidebar-spacer"></div>
@@ -479,7 +510,8 @@
             <!-- Group 3: Settings -->
             <div class="sidebar-section">
                 <button id="quickAccessSettings" class="sidebar-btn icon-only" title="Settings"
-                    data-tooltip="Configure app settings"><i data-feather="settings"></i></button>
+                    data-tooltip="Configure app settings"><i data-feather="settings"></i><span
+                        class="sidebar-btn-label">Settings</span></button>
             </div>
         </aside>
     </div>
@@ -556,6 +588,14 @@
                 btn.addEventListener('mouseenter', function () {
                     clearTimeout(tooltipTimeout);
 
+                    const sidebar = this.closest('.sidebar');
+                    if (sidebar && sidebar.classList.contains('expanded')) {
+                        if (tooltipElement) {
+                            tooltipElement.classList.remove('show');
+                        }
+                        return;
+                    }
+
                     // Create tooltip if not exists
                     if (!tooltipElement) {
                         tooltipElement = document.createElement('div');
@@ -597,8 +637,66 @@
             });
         }
 
+        function initSidebarExpansionControls() {
+            const configs = [
+                {
+                    sidebar: document.querySelector('.sidebar-left'),
+                    toggleBtn: document.getElementById('leftSidebarGuideToggle'),
+                    key: 'streamnote_sidebar_expanded_left'
+                },
+                {
+                    sidebar: document.querySelector('.sidebar-right'),
+                    toggleBtn: document.getElementById('rightSidebarGuideToggle'),
+                    key: 'streamnote_sidebar_expanded_right'
+                }
+            ];
+
+            const applyState = (sidebar, toggleBtn, isExpanded) => {
+                if (!sidebar || !toggleBtn) {
+                    return;
+                }
+
+                sidebar.classList.toggle('expanded', isExpanded);
+                toggleBtn.classList.toggle('active', isExpanded);
+                toggleBtn.setAttribute('aria-pressed', String(isExpanded));
+                toggleBtn.title = isExpanded ? 'Collapse toolbar' : 'Expand toolbar';
+                toggleBtn.setAttribute('data-tooltip', isExpanded
+                    ? 'Collapse to icon-only toolbar'
+                    : 'Expand to show function labels');
+
+                const icon = toggleBtn.querySelector('i');
+                if (icon) {
+                    icon.setAttribute('data-feather', isExpanded ? 'chevrons-left' : 'chevrons-right');
+                }
+
+                const label = toggleBtn.querySelector('.sidebar-btn-label');
+                if (label) {
+                    label.textContent = isExpanded ? 'Collapse' : 'Expand';
+                }
+            };
+
+            configs.forEach(({ sidebar, toggleBtn, key }) => {
+                if (!sidebar || !toggleBtn) {
+                    return;
+                }
+
+                const stored = localStorage.getItem(key);
+                const initialExpanded = stored === null ? true : stored === 'true';
+                applyState(sidebar, toggleBtn, initialExpanded);
+
+                toggleBtn.addEventListener('click', () => {
+                    const nextExpanded = !sidebar.classList.contains('expanded');
+                    applyState(sidebar, toggleBtn, nextExpanded);
+                    localStorage.setItem(key, String(nextExpanded));
+                    feather.replace();
+                });
+            });
+        }
+
         // Initialize Feather Icons when DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
+            feather.replace();
+            initSidebarExpansionControls();
             feather.replace();
             initSidebarTooltips();
         });

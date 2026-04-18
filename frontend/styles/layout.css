@@ -18,6 +18,13 @@
     flex-shrink: 0;
     width: 44px;
     overflow-y: auto;
+    transition: width 0.2s ease, padding 0.2s ease;
+}
+
+.sidebar.expanded {
+    width: 170px;
+    align-items: stretch;
+    padding: var(--spacing-md) var(--spacing-sm);
 }
 
 .sidebar-left {
@@ -35,6 +42,14 @@
     gap: var(--spacing-sm);
     width: 100%;
     align-items: center;
+}
+
+.sidebar.expanded .sidebar-section {
+    align-items: stretch;
+}
+
+.sidebar-toggle-section {
+    margin-bottom: 0;
 }
 
 .sidebar-divider {
@@ -96,6 +111,40 @@
     align-items: center !important;
     justify-content: center !important;
     position: relative;
+}
+
+.sidebar-btn i {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.sidebar-btn-label {
+    display: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar.expanded .sidebar-btn.icon-only {
+    width: 100%;
+    justify-content: flex-start !important;
+    padding: 0 10px !important;
+    font-size: 0.8em !important;
+    gap: 8px;
+}
+
+.sidebar.expanded .sidebar-btn-label {
+    display: inline;
+}
+
+.sidebar-expand-toggle {
+    background: var(--color-primary-lighter);
+    color: var(--color-white);
+}
+
+.sidebar-expand-toggle:hover:not(:disabled) {
+    background: var(--color-primary);
+    transform: scale(1.02);
 }
 
 /* Custom tooltip for sidebar buttons - via JavaScript */
