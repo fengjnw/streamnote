@@ -154,15 +154,6 @@
     stroke-width: 2.3;
 }
 
-.sidebar.expanded .sidebar-section.workflow-active {
-    border-left: 2px solid var(--color-primary-lighter);
-    padding-left: 6px;
-}
-
-.sidebar.expanded .sidebar-section.workflow-active .sidebar-group-title {
-    color: var(--color-primary);
-}
-
 .sidebar.expanded .sidebar-btn {
     width: 100%;
     justify-content: flex-start !important;

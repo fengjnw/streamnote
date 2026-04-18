@@ -114,7 +114,7 @@
                 <div class="sidebar-divider"></div>
 
                 <!-- Group 1: Session Management -->
-                <div class="sidebar-section" data-workflow-group="start">
+                <div class="sidebar-section">
                     <div class="sidebar-group-title">Start</div>
                     <button id="sidebarNewSessionBtn" class="sidebar-btn" aria-label="Create session"><i
                             data-feather="plus"></i><span class="sidebar-btn-label">New Session</span></button>
@@ -125,7 +125,7 @@
                 <div class="sidebar-divider"></div>
 
                 <!-- Group 2: Recording & Content Management -->
-                <div class="sidebar-section" data-workflow-group="input">
+                <div class="sidebar-section">
                     <div class="sidebar-group-title">Input</div>
                     <button id="recordBtn" class="sidebar-btn sidebar-btn-primary" aria-label="Start recording"><i
                             data-feather="mic"></i><span class="sidebar-btn-label">Record</span></button>
@@ -140,7 +140,7 @@
                 <div class="sidebar-divider"></div>
 
                 <!-- Group 3: Understand -->
-                <div class="sidebar-section" data-workflow-group="understand">
+                <div class="sidebar-section">
                     <div class="sidebar-group-title">Understand</div>
                     <button id="translationToggleBtn" class="sidebar-btn" aria-label="Show translation"><i
                             data-feather="globe"></i><span class="sidebar-btn-label">Translate</span></button>
@@ -155,7 +155,7 @@
                 <div class="sidebar-divider"></div>
 
                 <!-- Group 4: Output -->
-                <div class="sidebar-section" data-workflow-group="output">
+                <div class="sidebar-section">
                     <div class="sidebar-group-title">Output</div>
                     <button id="quickAccessSummary" class="sidebar-btn" aria-label="Generate summary"><i
                             data-feather="file-text"></i><span class="sidebar-btn-label">Summary</span></button>
@@ -164,7 +164,7 @@
                 <div class="sidebar-spacer"></div>
 
                 <!-- Bottom: Settings -->
-                <div class="sidebar-section" data-workflow-group="manage">
+                <div class="sidebar-section">
                     <button id="quickAccessSettings" class="sidebar-btn" aria-label="Open settings"><i
                             data-feather="settings"></i><span class="sidebar-btn-label">Settings</span></button>
                 </div>
@@ -679,43 +679,12 @@
             updateOnboardingGuideVisibility();
         }
 
-        function updateSidebarWorkflowHighlights() {
-            const groupMap = {
-                start: ['sidebarNewSessionBtn', 'openSessionPanel'],
-                input: ['recordBtn', 'addContentBtn', 'downloadSessionBtn', 'editTextBtn'],
-                understand: ['translationToggleBtn', 'quickAccessKeywords', 'quickAccessHighlights', 'quickAccessHistory'],
-                output: ['quickAccessSummary'],
-                manage: ['quickAccessSettings']
-            };
-
-            Object.entries(groupMap).forEach(([groupName, buttonIds]) => {
-                const section = document.querySelector(`[data-workflow-group="${groupName}"]`);
-                if (!section) {
-                    return;
-                }
-
-                const hasActiveButton = buttonIds.some((id) => {
-                    const button = document.getElementById(id);
-                    return !!button && button.classList.contains('active');
-                });
-
-                section.classList.toggle('workflow-active', hasActiveButton);
-            });
-        }
-
-        function initWorkflowGroupHighlights() {
-            updateSidebarWorkflowHighlights();
-            window.addEventListener('sessionChanged', updateSidebarWorkflowHighlights);
-            setInterval(updateSidebarWorkflowHighlights, 1200);
-        }
-
         // Initialize Feather Icons when DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
             syncSidebarExpandedWidth();
             feather.replace();
             initSidebarExpansionControls();
             initOnboardingGuideActions();
-            initWorkflowGroupHighlights();
             feather.replace();
         });
 
