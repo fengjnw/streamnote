@@ -11,8 +11,8 @@
     "test:frontend:smoke": "node scripts/frontend-smoke.cjs",
     "test:frontend:unit": "node scripts/frontend-unit-text-processor.cjs",
     "test:all": "node scripts/test-all.cjs",
-    "backup:session-db": "cd backend && python3 tools/backup_session_db.py",
-    "reset:test-data": "cd backend && python3 tools/reset_test_data.py --yes"
+    "backup": "cd backend && python3 tools/backup_session_db.py",
+    "reset": "cd backend && python3 tools/reset_test_data.py --yes"
   },
   "keywords": [
     "transcription",

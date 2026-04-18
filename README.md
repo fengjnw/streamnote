@@ -187,7 +187,7 @@ Examples:
 Create a timestamped backup:
 
 ```bash
-npm run backup:session-db
+npm run backup
 ```
 
 Optional custom source/output:
@@ -202,7 +202,7 @@ python3 tools/backup_session_db.py --db /data/streamnote.db --output-dir /data/b
 One-click cleanup (uses `SESSION_DB_PATH` or default `data/streamnote.db`):
 
 ```bash
-npm run reset:test-data
+npm run reset
 ```
 
 Direct script usage:
