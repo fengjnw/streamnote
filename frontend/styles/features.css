@@ -1180,6 +1180,100 @@ textarea::placeholder {
     color: white;
 }
 
+/* Auth Modal */
+.auth-modal {
+    --modal-width: min(420px, 92vw);
+    --modal-height: auto;
+    height: auto;
+    max-height: min(82vh, 620px);
+}
+
+.auth-modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.auth-form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.auth-form-row label {
+    font-size: 0.82em;
+    color: #555;
+    font-weight: 600;
+}
+
+.auth-form-row input {
+    min-height: 32px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 0.86em;
+    font-family: inherit;
+}
+
+.auth-password-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.auth-password-field input {
+    flex: 1;
+}
+
+.auth-password-toggle {
+    min-width: 56px;
+    height: 32px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background: var(--color-white);
+    color: #333;
+    font-size: 0.78em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.auth-password-toggle:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.auth-password-toggle:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-shadow-2);
+}
+
+.auth-form-row input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-shadow-2);
+}
+
+.auth-error-message {
+    margin: 0;
+    color: var(--color-danger);
+    font-size: 0.82em;
+    line-height: 1.4;
+}
+
+.auth-modal-footer {
+    justify-content: space-between;
+}
+
+.auth-modal-footer .toolbar-btn {
+    flex: 0;
+    min-width: 92px;
+    white-space: nowrap;
+}
+
 .edit-modal-backdrop {
     display: none;
     position: fixed;

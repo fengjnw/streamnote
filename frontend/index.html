@@ -65,15 +65,20 @@
             </div>
             <div class="device-identity" id="deviceIdentityRoot">
                 <button id="deviceIdentityBtn" class="device-identity-btn" title="Device identity">
-                    <i data-feather="hard-drive"></i>
+                    <span id="identityAvatar" class="identity-avatar">A</span>
                     <span id="deviceIdentityLabel">Device #------</span>
                     <span id="deviceSyncDot" class="sync-dot sync-idle"></span>
                 </button>
+                <button id="headerAuthBtn" class="device-auth-btn" title="Log in">Log In</button>
                 <div id="deviceIdentityPopover" class="device-identity-popover hidden">
                     <div class="device-identity-title">Local Identity</div>
                     <div class="device-identity-row">
                         <span class="identity-label">Type</span>
-                        <span class="identity-value">Anonymous device</span>
+                        <span class="identity-value" id="identityTypeValue">Anonymous device</span>
+                    </div>
+                    <div class="device-identity-row">
+                        <span class="identity-label">Account</span>
+                        <span class="identity-value" id="identityAccountEmail">-</span>
                     </div>
                     <div class="device-identity-row">
                         <span class="identity-label">Short ID</span>
@@ -90,9 +95,6 @@
                     <div class="device-identity-row">
                         <span class="identity-label">Last sync</span>
                         <span class="identity-value" id="deviceLastSyncTime">Not yet</span>
-                    </div>
-                    <div class="device-identity-actions">
-                        <button id="deviceLoginBtn" class="toolbar-btn" title="Log in (coming soon)">Log In</button>
                     </div>
                 </div>
             </div>
@@ -287,6 +289,36 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Auth Modal -->
+                    <div id="authModal" class="floating-modal auth-modal">
+                        <div class="floating-modal-header">
+                            <h3>Account</h3>
+                            <button id="closeAuthModal" class="panel-close-btn toggle-btn"
+                                title="Close Panel">✕</button>
+                        </div>
+                        <div class="floating-modal-content auth-modal-content">
+                            <div class="auth-form-row">
+                                <label for="authEmailInput">Email</label>
+                                <input id="authEmailInput" type="email" autocomplete="email"
+                                    placeholder="you@example.com" />
+                            </div>
+                            <div class="auth-form-row">
+                                <label for="authPasswordInput">Password</label>
+                                <div class="auth-password-field">
+                                    <input id="authPasswordInput" type="password" autocomplete="current-password"
+                                        placeholder="At least 6 characters" />
+                                    <button id="toggleAuthPasswordBtn" type="button" class="auth-password-toggle"
+                                        aria-label="Show password" title="Show password">Show</button>
+                                </div>
+                            </div>
+                            <p id="authErrorMessage" class="auth-error-message hidden"></p>
+                        </div>
+                        <div class="floating-modal-footer auth-modal-footer">
+                            <button id="authRegisterBtn" class="toolbar-btn">Sign Up</button>
+                            <button id="authLoginBtn" class="toolbar-btn">Sign In</button>
                         </div>
                     </div>
 

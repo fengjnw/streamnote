@@ -5,6 +5,7 @@ class AppUiStateManager {
     constructor(app) {
         this.app = app;
         this.identityRefreshTimer = null;
+        this.authUser = null;
     }
 
     initDeviceIdentityUI() {
@@ -17,12 +18,15 @@ class AppUiStateManager {
             panel.classList.toggle("hidden");
         });
 
-        const loginBtn = document.getElementById("deviceLoginBtn");
-        if (loginBtn) {
-            loginBtn.addEventListener("click", () => {
-                this.showStatusMessage("Log in flow coming soon", 1800);
+        const authBtn = document.getElementById("headerAuthBtn");
+        if (authBtn) {
+            authBtn.addEventListener("click", async (event) => {
+                event.stopPropagation();
+                await this.handleAuthAction();
             });
         }
+
+        this.initAuthModal();
 
         document.addEventListener("click", (event) => {
             if (panel.classList.contains("hidden")) return;
@@ -47,7 +51,226 @@ class AppUiStateManager {
             this.renderDeviceIdentity();
         }, 15000);
 
+        this.refreshAuthState();
         this.renderDeviceIdentity();
+    }
+
+    async refreshAuthState() {
+        if (!this.app.apiClient || typeof this.app.apiClient.getCurrentUser !== "function") {
+            return;
+        }
+
+        try {
+            const response = await this.app.apiClient.getCurrentUser();
+            if (!response.ok) {
+                this.authUser = null;
+                this.renderDeviceIdentity();
+                return;
+            }
+            const payload = await response.json();
+            this.authUser = payload?.user || null;
+        } catch (error) {
+            this.authUser = null;
+        }
+
+        this.renderDeviceIdentity();
+    }
+
+    async handleAuthAction() {
+        if (!this.app.apiClient) {
+            this.showStatusMessage("API client unavailable", 1800);
+            return;
+        }
+
+        if (this.authUser) {
+            await this.logoutCurrentUser();
+            return;
+        }
+
+        this.openAuthModal();
+    }
+
+    initAuthModal() {
+        const closeBtn = document.getElementById("closeAuthModal");
+        const loginBtn = document.getElementById("authLoginBtn");
+        const registerBtn = document.getElementById("authRegisterBtn");
+        const passwordInput = document.getElementById("authPasswordInput");
+        const togglePasswordBtn = document.getElementById("toggleAuthPasswordBtn");
+
+        closeBtn?.addEventListener("click", () => {
+            this.closeAuthModal();
+        });
+
+        loginBtn?.addEventListener("click", async () => {
+            await this.submitAuth("login");
+        });
+
+        registerBtn?.addEventListener("click", async () => {
+            await this.submitAuth("register");
+        });
+
+        passwordInput?.addEventListener("keydown", async (event) => {
+            if (event.key !== "Enter") return;
+            event.preventDefault();
+            await this.submitAuth("login");
+        });
+
+        togglePasswordBtn?.addEventListener("click", () => {
+            this.toggleAuthPasswordVisibility();
+        });
+    }
+
+    openAuthModal() {
+        this.clearAuthError();
+        this.app.openModal("authModal");
+
+        const emailInput = document.getElementById("authEmailInput");
+        const passwordInput = document.getElementById("authPasswordInput");
+
+        if (emailInput) {
+            emailInput.value = this.authUser?.email || "";
+        }
+        if (passwordInput) {
+            passwordInput.value = "";
+        }
+        this.setAuthPasswordVisibility(false);
+
+        setTimeout(() => {
+            emailInput?.focus();
+        }, 0);
+    }
+
+    closeAuthModal() {
+        this.setAuthPasswordVisibility(false);
+        this.app.closeModal("authModal");
+    }
+
+    setAuthPasswordVisibility(visible) {
+        const passwordInput = document.getElementById("authPasswordInput");
+        const toggleBtn = document.getElementById("toggleAuthPasswordBtn");
+        if (!passwordInput || !toggleBtn) return;
+
+        passwordInput.type = visible ? "text" : "password";
+        toggleBtn.textContent = visible ? "Hide" : "Show";
+        toggleBtn.setAttribute("aria-label", visible ? "Hide password" : "Show password");
+        toggleBtn.setAttribute("title", visible ? "Hide password" : "Show password");
+    }
+
+    toggleAuthPasswordVisibility() {
+        const passwordInput = document.getElementById("authPasswordInput");
+        if (!passwordInput) return;
+        this.setAuthPasswordVisibility(passwordInput.type !== "text");
+    }
+
+    showAuthError(message) {
+        const errorEl = document.getElementById("authErrorMessage");
+        if (!errorEl) return;
+        errorEl.textContent = message;
+        errorEl.classList.remove("hidden");
+    }
+
+    clearAuthError() {
+        const errorEl = document.getElementById("authErrorMessage");
+        if (!errorEl) return;
+        errorEl.textContent = "";
+        errorEl.classList.add("hidden");
+    }
+
+    async submitAuth(mode) {
+        const emailInput = document.getElementById("authEmailInput");
+        const passwordInput = document.getElementById("authPasswordInput");
+        const loginBtn = document.getElementById("authLoginBtn");
+        const registerBtn = document.getElementById("authRegisterBtn");
+
+        const email = (emailInput?.value || "").trim().toLowerCase();
+        const password = passwordInput?.value || "";
+
+        this.clearAuthError();
+
+        if (!email) {
+            this.showAuthError("Email is required.");
+            return;
+        }
+        if (password.length < 6) {
+            this.showAuthError("Password must be at least 6 characters.");
+            return;
+        }
+
+        loginBtn && (loginBtn.disabled = true);
+        registerBtn && (registerBtn.disabled = true);
+
+        try {
+            const payload = {
+                email,
+                password,
+                deviceId: this.app.sessionManager?.deviceId || "",
+            };
+
+            const response = mode === "register"
+                ? await this.app.apiClient.register(payload)
+                : await this.app.apiClient.login(payload);
+
+            if (response.ok) {
+                const data = await response.json();
+                this.authUser = data?.user || null;
+                this.closeAuthModal();
+                this.showStatusMessage(mode === "register" ? "Account created and logged in" : "Logged in", 1800);
+                this.renderDeviceIdentity();
+                return;
+            }
+
+            const errorPayload = await response.json().catch(() => ({}));
+            const message = errorPayload?.error?.message || (mode === "register" ? "Register failed" : "Login failed");
+            this.showAuthError(message);
+        } catch (error) {
+            this.showAuthError(mode === "register" ? "Network error during register" : "Network error during login");
+        } finally {
+            loginBtn && (loginBtn.disabled = false);
+            registerBtn && (registerBtn.disabled = false);
+        }
+    }
+
+    async logoutCurrentUser() {
+        if (!this.app.apiClient || typeof this.app.apiClient.logout !== "function") {
+            return;
+        }
+
+        try {
+            await this.app.apiClient.logout();
+        } catch (error) {
+            // Best-effort logout to keep UI consistent with browser cookie state.
+        }
+
+        this.authUser = null;
+        this.showStatusMessage("Logged out", 1500);
+        this.renderDeviceIdentity();
+    }
+
+    buildAvatarSeed(identityInfo) {
+        return this.authUser?.email || identityInfo?.deviceId || "anonymous";
+    }
+
+    hashCode(text) {
+        let hash = 0;
+        for (let i = 0; i < text.length; i++) {
+            hash = ((hash << 5) - hash) + text.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash);
+    }
+
+    avatarStyleForSeed(seed) {
+        const hash = this.hashCode(seed);
+        const hue = hash % 360;
+        return `hsl(${hue}, 58%, 43%)`;
+    }
+
+    avatarInitialForSeed(seed) {
+        if (!seed) return "A";
+        const normalized = seed.trim();
+        if (!normalized) return "A";
+        const char = normalized[0].toUpperCase();
+        return /[A-Z0-9]/.test(char) ? char : "A";
     }
 
     getSyncStatusLabel(status) {
@@ -89,7 +312,17 @@ class AppUiStateManager {
 
         const labelEl = document.getElementById("deviceIdentityLabel");
         if (labelEl) {
-            labelEl.textContent = identityInfo.label;
+            labelEl.textContent = this.authUser?.email ? `User: ${this.authUser.email}` : identityInfo.label;
+        }
+
+        const typeEl = document.getElementById("identityTypeValue");
+        if (typeEl) {
+            typeEl.textContent = this.authUser?.email ? "Logged in user" : "Anonymous device";
+        }
+
+        const accountEmailEl = document.getElementById("identityAccountEmail");
+        if (accountEmailEl) {
+            accountEmailEl.textContent = this.authUser?.email || "-";
         }
 
         const fullIdEl = document.getElementById("deviceIdentityFullId");
@@ -118,6 +351,24 @@ class AppUiStateManager {
         const syncTimeEl = document.getElementById("deviceLastSyncTime");
         if (syncTimeEl) {
             syncTimeEl.textContent = this.formatRelativeSyncTime(this.app.sessionManager?.lastSyncedAt || null);
+        }
+
+        const avatarEl = document.getElementById("identityAvatar");
+        if (avatarEl) {
+            const seed = this.buildAvatarSeed(identityInfo);
+            avatarEl.textContent = this.avatarInitialForSeed(seed);
+            avatarEl.style.background = this.avatarStyleForSeed(seed);
+        }
+
+        const authBtn = document.getElementById("headerAuthBtn");
+        if (authBtn) {
+            if (this.authUser?.email) {
+                authBtn.textContent = "Log Out";
+                authBtn.title = "Log out";
+            } else {
+                authBtn.textContent = "Log In";
+                authBtn.title = "Log in";
+            }
         }
     }
 

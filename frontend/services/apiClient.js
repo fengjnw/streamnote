@@ -67,6 +67,46 @@ class StreamNoteApiClient {
             signal,
         });
     }
+
+    async register(payload, signal) {
+        return this.request("/api/auth/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload),
+            credentials: "same-origin",
+            signal,
+        });
+    }
+
+    async login(payload, signal) {
+        return this.request("/api/auth/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload),
+            credentials: "same-origin",
+            signal,
+        });
+    }
+
+    async getCurrentUser(signal) {
+        return this.request("/api/auth/me", {
+            method: "GET",
+            credentials: "same-origin",
+            signal,
+        });
+    }
+
+    async logout(signal) {
+        return this.request("/api/auth/logout", {
+            method: "POST",
+            credentials: "same-origin",
+            signal,
+        });
+    }
 }
 
 window.StreamNoteApiClient = StreamNoteApiClient;

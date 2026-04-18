@@ -460,7 +460,8 @@ class StreamNote {
     getModalButton(modalId) {
         const buttonMap = {
             sessionModal: "openSessionPanel",
-            settingsModal: "quickAccessSettings"
+            settingsModal: "quickAccessSettings",
+            authModal: "headerAuthBtn"
         };
         const buttonId = buttonMap[modalId];
         return buttonId ? this.getElement(buttonId) : null;

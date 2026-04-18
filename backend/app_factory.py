@@ -6,6 +6,7 @@ from flask_cors import CORS
 from openai import OpenAI
 
 from config import OPENAI_API_KEY, SESSION_DB_PATH
+from auth_store import create_auth_store
 from error_utils import api_exception
 from keyword_manager import create_keyword_manager
 from session_store import create_session_store
@@ -42,6 +43,7 @@ def create_app():
         "translator": create_translator(OPENAI_API_KEY),
         "summarizer": create_summarizer(OPENAI_API_KEY),
         "session_store": create_session_store(SESSION_DB_PATH),
+        "auth_store": create_auth_store(SESSION_DB_PATH),
     }
 
     def server_error_response(error: Exception, prefix: str = ""):
