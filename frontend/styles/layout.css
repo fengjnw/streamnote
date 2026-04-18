@@ -18,13 +18,11 @@
     flex-shrink: 0;
     width: 44px;
     overflow-y: auto;
-    transition: width 0.2s ease, padding 0.2s ease;
 }
 
 .sidebar.expanded {
     width: 170px;
     align-items: stretch;
-    padding: var(--spacing-md) var(--spacing-sm);
 }
 
 .sidebar-left {
@@ -48,10 +46,6 @@
     align-items: stretch;
 }
 
-.sidebar-toggle-section {
-    margin-bottom: 0;
-}
-
 .sidebar-divider {
     width: 100%;
     height: 1px;
@@ -64,7 +58,7 @@
 
 /* Sidebar Buttons */
 .sidebar-btn {
-    min-width: 36px;
+    width: 36px;
     height: 36px;
     border: none;
     border-radius: 6px;
@@ -72,7 +66,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 0.75em;
+    font-size: 0.9em;
     font-weight: 500;
     transition: all 0.2s;
     flex-shrink: 0;
@@ -80,37 +74,46 @@
     line-height: 1;
     gap: 4px;
     white-space: nowrap;
-    background: var(--color-secondary-light);
-    color: var(--color-primary-accent);
+    background: transparent;
+    color: var(--color-grey-500);
+    position: relative;
 }
 
 .sidebar-btn:hover:not(:disabled) {
-    background: var(--color-primary-lighter);
-    color: white;
+    background: transparent;
+    color: var(--color-primary);
     transform: scale(1.08);
+    box-shadow: none;
 }
 
 .sidebar-btn.active {
-    background: var(--color-primary) !important;
-    color: white !important;
-    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
+    background: transparent !important;
+    color: var(--color-primary) !important;
+    box-shadow: none !important;
 }
 
 .sidebar-btn.active:hover:not(:disabled) {
-    background: var(--color-primary-dark) !important;
-    color: white !important;
+    background: transparent !important;
+    color: var(--color-primary) !important;
+    transform: scale(1.12);
 }
 
-/* Icon-only sidebar buttons */
-.sidebar-btn.icon-only {
-    width: 36px;
-    height: 36px;
-    padding: 0 !important;
-    font-size: 0.9em !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    position: relative;
+#recordBtn.active {
+    color: var(--color-danger) !important;
+}
+
+#recordBtn.active:hover:not(:disabled) {
+    color: var(--color-danger-dark) !important;
+}
+
+.sidebar-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sidebar-btn:disabled:hover {
+    background: transparent;
+    transform: none;
 }
 
 .sidebar-btn i {
@@ -125,7 +128,7 @@
     text-overflow: ellipsis;
 }
 
-.sidebar.expanded .sidebar-btn.icon-only {
+.sidebar.expanded .sidebar-btn {
     width: 100%;
     justify-content: flex-start !important;
     padding: 0 10px !important;
@@ -135,41 +138,6 @@
 
 .sidebar.expanded .sidebar-btn-label {
     display: inline;
-}
-
-.sidebar-expand-toggle {
-    background: var(--color-primary-lighter);
-    color: var(--color-white);
-}
-
-.sidebar-expand-toggle:hover:not(:disabled) {
-    background: var(--color-primary);
-    transform: scale(1.02);
-}
-
-/* Custom tooltip for sidebar buttons - via JavaScript */
-.sidebar-tooltip {
-    position: fixed;
-    background: var(--color-grey-900);
-    color: white;
-    padding: 6px 10px;
-    border-radius: 4px;
-    font-size: 0.75em;
-    white-space: normal;
-    word-wrap: break-word;
-    z-index: 10000;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s, visibility 0.2s;
-    pointer-events: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    max-width: 200px;
-    display: inline-block;
-}
-
-.sidebar-tooltip.show {
-    opacity: 1;
-    visibility: visible;
 }
 
 /* ================ Session 管理面板 ================ */
@@ -670,348 +638,6 @@
     min-height: 0;
 }
 
-/* ================ Control Panel - 优化的导航栏设计 (DEPRECATED - 已迁移到sidebars) ================ */
-
-.control-panel {
-    display: none;
-}
-
-/* 导航栏分组 */
-.nav-group {
-    display: flex;
-    gap: var(--spacing-xs);
-    align-items: center;
-    flex-shrink: 0;
-    padding: 4px var(--spacing-sm);
-    background: transparent;
-    border-radius: 4px;
-}
-
-/* 按钮组之间的分隔 - 使用spacer处理，这里不再添加margin */
-/* First nav-group (Sessions) - 靠近左边缘 */
-.nav-group:first-of-type {
-    padding: 4px 2px;
-}
-
-/* .nav-group:not(.nav-group-settings) - Regular spacing handled by control-spacer */
-
-/* Section-based grouping for workflow visualization */
-
-/* Content tools group - secondary level (soft purple) */
-.nav-group-content .control-btn-secondary {
-    background: var(--color-primary-lighter);
-    color: var(--color-primary-accent);
-}
-
-.nav-group-content .control-btn-secondary:hover:not(:disabled) {
-    background: var(--color-primary-light);
-    color: white;
-    transform: scale(1.08);
-    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
-}
-
-.nav-group-content .control-btn-secondary.active {
-    background: var(--color-primary) !important;
-    color: white !important;
-    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
-}
-
-.nav-group-content .control-btn-secondary.active:hover:not(:disabled) {
-    background: var(--color-primary-dark) !important;
-}
-
-/* 核心功能组 */
-.nav-group-primary {
-    padding: 4px var(--spacing-sm);
-}
-
-/* 设置按钮组 - 右侧对齐 */
-.nav-group-settings {
-    margin-left: auto;
-    padding: 4px 2px;
-}
-
-/* Sessions button specific styling */
-#openSessionPanel {
-    background: transparent;
-    color: var(--color-grey-500);
-    box-shadow: none;
-}
-
-#openSessionPanel:hover:not(:disabled) {
-    background: transparent;
-    color: var(--color-primary);
-    transform: scale(1.08);
-    box-shadow: none;
-}
-
-#openSessionPanel.active {
-    background: transparent !important;
-    color: var(--color-primary) !important;
-    box-shadow: none !important;
-}
-
-#openSessionPanel.active:hover:not(:disabled) {
-    background: transparent !important;
-    box-shadow: none !important;
-    transform: scale(1.12);
-}
-
-#sidebarNewSessionBtn {
-    background: transparent;
-    color: var(--color-grey-500);
-    box-shadow: none;
-}
-
-#sidebarNewSessionBtn:hover:not(:disabled) {
-    background: transparent;
-    color: var(--color-primary);
-    transform: scale(1.08);
-    box-shadow: none;
-}
-
-#sidebarNewSessionBtn.active {
-    background: transparent !important;
-    color: var(--color-primary) !important;
-    box-shadow: none !important;
-}
-
-#sidebarNewSessionBtn.active:hover:not(:disabled) {
-    background: transparent !important;
-    box-shadow: none !important;
-    transform: scale(1.12);
-}
-
-.nav-group-settings .control-btn-secondary {
-    background: transparent;
-    color: var(--color-grey-500);
-    box-shadow: none;
-    font-size: 1.2em;
-}
-
-.nav-group-settings .control-btn-secondary:hover:not(:disabled) {
-    background: transparent;
-    color: var(--color-primary);
-    transform: scale(1.08);
-    box-shadow: none;
-}
-
-.nav-group-settings .control-btn-secondary.active {
-    background: transparent !important;
-    color: var(--color-primary) !important;
-    box-shadow: none !important;
-}
-
-.nav-group-settings .control-btn-secondary.active:hover:not(:disabled) {
-    background: transparent !important;
-    box-shadow: none !important;
-    transform: scale(1.12);
-}
-
-/* Settings button specific styling */
-#quickAccessSettings {
-    background: transparent;
-    color: var(--color-grey-500);
-    box-shadow: none;
-    font-size: 1.2em;
-}
-
-#quickAccessSettings:hover:not(:disabled) {
-    background: transparent;
-    color: var(--color-primary);
-    transform: scale(1.08);
-    box-shadow: none;
-}
-
-#quickAccessSettings.active {
-    background: transparent !important;
-    color: var(--color-primary) !important;
-    box-shadow: none !important;
-}
-
-#quickAccessSettings.active:hover:not(:disabled) {
-    background: transparent !important;
-    box-shadow: none !important;
-    transform: scale(1.12);
-}
-
-/* Control buttons moved to sidebar - match icon button styling */
-#recordBtn,
-#addContentBtn,
-#downloadSessionBtn,
-#editTextBtn {
-    background: transparent;
-    color: var(--color-grey-500);
-    box-shadow: none;
-}
-
-#recordBtn:hover:not(:disabled),
-#addContentBtn:hover:not(:disabled),
-#downloadSessionBtn:hover:not(:disabled),
-#editTextBtn:hover:not(:disabled) {
-    background: transparent;
-    color: var(--color-primary);
-    transform: scale(1.08);
-    box-shadow: none;
-}
-
-#recordBtn.active {
-    background: transparent !important;
-    color: var(--color-danger) !important;
-    box-shadow: none !important;
-}
-
-#recordBtn.active:hover:not(:disabled) {
-    background: transparent !important;
-    color: var(--color-danger-dark) !important;
-    box-shadow: none !important;
-    transform: scale(1.12);
-}
-
-#addContentBtn.active,
-#downloadSessionBtn.active,
-#editTextBtn.active {
-    background: transparent !important;
-    color: var(--color-primary) !important;
-    box-shadow: none !important;
-}
-
-#addContentBtn.active:hover:not(:disabled),
-#downloadSessionBtn.active:hover:not(:disabled),
-#editTextBtn.active:hover:not(:disabled) {
-    background: transparent !important;
-    box-shadow: none !important;
-    transform: scale(1.12);
-}
-
-#recordBtn:disabled,
-#addContentBtn:disabled,
-#downloadSessionBtn:disabled,
-#editTextBtn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-#recordBtn:disabled:hover,
-#addContentBtn:disabled:hover,
-#downloadSessionBtn:disabled:hover,
-#editTextBtn:disabled:hover {
-    background: transparent;
-    transform: none;
-}
-
-/* Other sidebar icon buttons - match sessions/settings style */
-#quickAccessHistory,
-#translationToggleBtn,
-#quickAccessHighlights,
-#quickAccessKeywords,
-#quickAccessSummary {
-    background: transparent;
-    color: var(--color-grey-500);
-    box-shadow: none;
-}
-
-#quickAccessHistory:hover:not(:disabled),
-#translationToggleBtn:hover:not(:disabled),
-#quickAccessHighlights:hover:not(:disabled),
-#quickAccessKeywords:hover:not(:disabled),
-#quickAccessSummary:hover:not(:disabled) {
-    background: transparent;
-    color: var(--color-primary);
-    transform: scale(1.08);
-    box-shadow: none;
-}
-
-#quickAccessHistory.active,
-#translationToggleBtn.active,
-#quickAccessHighlights.active,
-#quickAccessKeywords.active,
-#quickAccessSummary.active {
-    background: transparent !important;
-    color: var(--color-primary) !important;
-    box-shadow: none !important;
-}
-
-#quickAccessHistory.active:hover:not(:disabled),
-#translationToggleBtn.active:hover:not(:disabled),
-#quickAccessHighlights.active:hover:not(:disabled),
-#quickAccessKeywords.active:hover:not(:disabled),
-#quickAccessSummary.active:hover:not(:disabled) {
-    background: transparent !important;
-    box-shadow: none !important;
-    transform: scale(1.12);
-}
-
-/* 新控制按钮 - 纯文字版本 */
-.control-btn {
-    min-width: 60px;
-    height: 28px;
-    border: none;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 0.85em;
-    font-weight: 500;
-    transition: all 0.2s;
-    flex-shrink: 0;
-    padding: 0 12px;
-    line-height: 1;
-    gap: 6px;
-    white-space: nowrap;
-}
-
-/* Icon-only buttons - 仅显示文字符号 */
-.control-btn.icon-only {
-    padding: 0 !important;
-    min-width: 20px !important;
-    width: 20px !important;
-    height: 20px !important;
-    font-size: 0.8em !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-.control-btn.icon-only::after {
-    content: attr(title);
-    display: none;
-}
-
-/* Icon-only buttons without background */
-.control-btn.icon-only.transparent {
-    background: transparent;
-    box-shadow: none;
-    color: var(--color-grey-500);
-}
-
-.control-btn.icon-only.transparent:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.05);
-    box-shadow: none;
-    color: var(--color-primary);
-}
-
-/* 快速访问按钮的紧凑布局 */
-.nav-group:last-of-type .control-btn {
-    min-width: auto;
-    padding: 0 10px;
-    font-size: 0.8em;
-    gap: 4px;
-}
-
-.control-btn-primary {
-    background: var(--color-primary);
-    color: white;
-    box-shadow: 0 2px 6px var(--color-primary-shadow-3);
-}
-
-.control-btn-primary:hover:not(:disabled) {
-    background: var(--color-primary-dark);
-    transform: scale(1.08);
-    box-shadow: 0 4px 12px var(--color-primary-shadow-4);
-}
-
 .manage-menu-item.danger:hover {
     background: var(--color-danger-bg);
 }
@@ -1301,55 +927,6 @@
 .translation::-moz-selection {
     background-color: var(--color-primary);
     color: white;
-}
-
-.control-btn-danger:hover:not(:disabled) {
-    background: var(--color-danger-hover);
-    transform: scale(1.08);
-    box-shadow: 0 4px 12px var(--color-danger-light-shadow-4);
-}
-
-.control-btn-secondary {
-    background: var(--color-secondary-light);
-    color: var(--color-grey-700);
-    box-shadow: 0 1px 3px var(--color-black-shadow-08);
-}
-
-.control-btn-secondary:hover:not(:disabled) {
-    background: var(--color-primary-shadow-08);
-    border-color: var(--color-primary-shadow-15);
-    transform: scale(1.08);
-    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
-}
-
-/* Active/highlighted button state - higher specificity to override secondary style */
-.control-btn.active,
-.control-btn-secondary.active {
-    background: var(--color-primary) !important;
-    color: white !important;
-    box-shadow: 0 4px 12px var(--color-primary-shadow-4) !important;
-}
-
-.control-btn.active:hover:not(:disabled),
-.control-btn-secondary.active:hover:not(:disabled) {
-    background: var(--color-primary-dark) !important;
-    transform: scale(1.12);
-    box-shadow: 0 6px 16px var(--color-primary-shadow-4) !important;
-}
-
-.control-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.control-spacer {
-    flex: 1;
-    margin: 0 var(--spacing-sm);
-    border-right: 1px solid var(--color-border);
-}
-
-.spacer {
-    flex: 1;
 }
 
 .keyword-controls {

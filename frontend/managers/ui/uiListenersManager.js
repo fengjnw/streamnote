@@ -22,16 +22,6 @@ class UiListenersManager {
             });
         });
 
-        const controlBar = document.querySelector(".control-bar");
-        if (controlBar) {
-            controlBar.addEventListener("click", (e) => {
-                const btn = e.target.closest(".control-btn");
-                if (btn) {
-                    app.closeAllModals();
-                }
-            });
-        }
-
         const recordBtn = document.getElementById("recordBtn");
         if (recordBtn) {
             recordBtn.addEventListener("click", () => app.toggleRecording());

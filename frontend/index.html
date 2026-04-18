@@ -104,11 +104,10 @@
         <div class="main-wrapper">
             <!-- Left Sidebar -->
             <aside class="sidebar sidebar-left">
-                <div class="sidebar-section sidebar-toggle-section">
-                    <button id="leftSidebarGuideToggle" class="sidebar-btn icon-only sidebar-expand-toggle"
-                        title="Expand toolbar" data-tooltip="Expand to show function labels" aria-pressed="false">
+                <div class="sidebar-section">
+                    <button id="leftSidebarGuideToggle" class="sidebar-btn" aria-label="Expand toolbar">
                         <i data-feather="chevrons-left"></i>
-                        <span class="sidebar-btn-label">Collapse</span>
+                        <span class="sidebar-btn-label">Toolbar</span>
                     </button>
                 </div>
 
@@ -116,42 +115,34 @@
 
                 <!-- Group 1: Session Management -->
                 <div class="sidebar-section">
-                    <button id="sidebarNewSessionBtn" class="sidebar-btn icon-only" title="New Session"
-                        data-tooltip="Create new session"><i data-feather="plus"></i><span
-                            class="sidebar-btn-label">New</span></button>
-                    <button id="openSessionPanel" class="sidebar-btn icon-only" title="Sessions"
-                        data-tooltip="Manage sessions"><i data-feather="folder"></i><span
-                            class="sidebar-btn-label">Sessions</span></button>
+                    <button id="sidebarNewSessionBtn" class="sidebar-btn" aria-label="New Session"><i
+                            data-feather="plus"></i><span class="sidebar-btn-label">New</span></button>
+                    <button id="openSessionPanel" class="sidebar-btn" aria-label="Sessions"><i
+                            data-feather="folder"></i><span class="sidebar-btn-label">Sessions</span></button>
                 </div>
 
                 <div class="sidebar-divider"></div>
 
                 <!-- Group 2: Recording & Content Management -->
                 <div class="sidebar-section">
-                    <button id="recordBtn" class="sidebar-btn icon-only" title="Start/Stop Recording"
-                        data-tooltip="Start or stop recording"><i data-feather="mic"></i><span
-                            class="sidebar-btn-label">Record</span></button>
-                    <button id="addContentBtn" class="sidebar-btn icon-only" title="Add content from file or text"
-                        data-tooltip="Add content from file or text"><i data-feather="upload"></i><span
-                            class="sidebar-btn-label">Import</span></button>
-                    <button id="downloadSessionBtn" class="sidebar-btn icon-only" title="Download sessions"
-                        data-tooltip="Download session data"><i data-feather="download"></i><span
-                            class="sidebar-btn-label">Export</span></button>
-                    <button id="editTextBtn" class="sidebar-btn icon-only" title="Edit transcript"
-                        data-tooltip="Edit transcript"><i data-feather="edit"></i><span
-                            class="sidebar-btn-label">Edit</span></button>
+                    <button id="recordBtn" class="sidebar-btn" aria-label="Start or stop recording"><i
+                            data-feather="mic"></i><span class="sidebar-btn-label">Record</span></button>
+                    <button id="addContentBtn" class="sidebar-btn" aria-label="Add content from file or text"><i
+                            data-feather="upload"></i><span class="sidebar-btn-label">Import</span></button>
+                    <button id="downloadSessionBtn" class="sidebar-btn" aria-label="Download sessions"><i
+                            data-feather="download"></i><span class="sidebar-btn-label">Export</span></button>
+                    <button id="editTextBtn" class="sidebar-btn" aria-label="Edit transcript"><i
+                            data-feather="edit"></i><span class="sidebar-btn-label">Edit</span></button>
                 </div>
 
                 <div class="sidebar-divider"></div>
 
                 <!-- Group 3: Left Panel (Explanation + Translation) -->
                 <div class="sidebar-section">
-                    <button id="quickAccessHistory" class="sidebar-btn icon-only" title="Explain"
-                        data-tooltip="Show word explanations"><i data-feather="book-open"></i><span
-                            class="sidebar-btn-label">Explain</span></button>
-                    <button id="translationToggleBtn" class="sidebar-btn icon-only" title="Translate"
-                        data-tooltip="Toggle translation panel"><i data-feather="globe"></i><span
-                            class="sidebar-btn-label">Translate</span></button>
+                    <button id="quickAccessHistory" class="sidebar-btn" aria-label="Explain"><i
+                            data-feather="book-open"></i><span class="sidebar-btn-label">Explain</span></button>
+                    <button id="translationToggleBtn" class="sidebar-btn" aria-label="Translate"><i
+                            data-feather="globe"></i><span class="sidebar-btn-label">Translate</span></button>
                 </div>
 
                 <div class="sidebar-spacer"></div>
@@ -478,11 +469,10 @@
 
         <!-- Right Sidebar -->
         <aside class="sidebar sidebar-right">
-            <div class="sidebar-section sidebar-toggle-section">
-                <button id="rightSidebarGuideToggle" class="sidebar-btn icon-only sidebar-expand-toggle"
-                    title="Expand toolbar" data-tooltip="Expand to show function labels" aria-pressed="false">
+            <div class="sidebar-section">
+                <button id="rightSidebarGuideToggle" class="sidebar-btn" aria-label="Expand toolbar">
                     <i data-feather="chevrons-left"></i>
-                    <span class="sidebar-btn-label">Collapse</span>
+                    <span class="sidebar-btn-label">Toolbar</span>
                 </button>
             </div>
 
@@ -490,28 +480,24 @@
 
             <!-- Group 1: Highlights -->
             <div class="sidebar-section">
-                <button id="quickAccessHighlights" class="sidebar-btn icon-only" title="View Highlights"
-                    data-tooltip="Show all highlighted text"><i data-feather="flag"></i><span
-                        class="sidebar-btn-label">Highlights</span></button>
+                <button id="quickAccessHighlights" class="sidebar-btn" aria-label="View Highlights"><i
+                        data-feather="flag"></i><span class="sidebar-btn-label">Highlights</span></button>
             </div>
 
             <!-- Group 2: Keywords + Summary -->
             <div class="sidebar-section">
-                <button id="quickAccessKeywords" class="sidebar-btn icon-only" title="Extract Keywords"
-                    data-tooltip="Show extracted keywords and terms"><i data-feather="tag"></i><span
-                        class="sidebar-btn-label">Keywords</span></button>
-                <button id="quickAccessSummary" class="sidebar-btn icon-only" title="Summarise"
-                    data-tooltip="Generate text summary"><i data-feather="file-text"></i><span
-                        class="sidebar-btn-label">Summary</span></button>
+                <button id="quickAccessKeywords" class="sidebar-btn" aria-label="Extract Keywords"><i
+                        data-feather="tag"></i><span class="sidebar-btn-label">Keywords</span></button>
+                <button id="quickAccessSummary" class="sidebar-btn" aria-label="Summarise"><i
+                        data-feather="file-text"></i><span class="sidebar-btn-label">Summary</span></button>
             </div>
 
             <div class="sidebar-spacer"></div>
 
             <!-- Group 3: Settings -->
             <div class="sidebar-section">
-                <button id="quickAccessSettings" class="sidebar-btn icon-only" title="Settings"
-                    data-tooltip="Configure app settings"><i data-feather="settings"></i><span
-                        class="sidebar-btn-label">Settings</span></button>
+                <button id="quickAccessSettings" class="sidebar-btn" aria-label="Settings"><i
+                        data-feather="settings"></i><span class="sidebar-btn-label">Settings</span></button>
             </div>
         </aside>
     </div>
@@ -576,67 +562,8 @@
     <script src="services/apiClient.js"></script>
     <script src="core/app.js"></script>
 
-    <!-- Initialize Feather Icons and Tooltips -->
+    <!-- Initialize Feather Icons -->
     <script>
-        // Initialize tooltips for sidebar icon buttons
-        function initSidebarTooltips() {
-            const sidebarBtns = document.querySelectorAll('.sidebar-btn.icon-only[data-tooltip]');
-            let tooltipElement = null;
-            let tooltipTimeout = null;
-
-            sidebarBtns.forEach(btn => {
-                btn.addEventListener('mouseenter', function () {
-                    clearTimeout(tooltipTimeout);
-
-                    const sidebar = this.closest('.sidebar');
-                    if (sidebar && sidebar.classList.contains('expanded')) {
-                        if (tooltipElement) {
-                            tooltipElement.classList.remove('show');
-                        }
-                        return;
-                    }
-
-                    // Create tooltip if not exists
-                    if (!tooltipElement) {
-                        tooltipElement = document.createElement('div');
-                        tooltipElement.className = 'sidebar-tooltip';
-                        document.body.appendChild(tooltipElement);
-                    }
-
-                    tooltipElement.textContent = this.getAttribute('data-tooltip');
-
-                    // Position tooltip - reset all position properties first
-                    const rect = this.getBoundingClientRect();
-                    const isLeftSidebar = this.closest('.sidebar-left') !== null;
-
-                    tooltipElement.style.left = 'auto';
-                    tooltipElement.style.right = 'auto';
-
-                    if (isLeftSidebar) {
-                        // Right side of button
-                        tooltipElement.style.left = (rect.right + 10) + 'px';
-                    } else {
-                        // Left side of button (for right sidebar)
-                        tooltipElement.style.right = (window.innerWidth - rect.left + 10) + 'px';
-                    }
-                    tooltipElement.style.top = (rect.top + rect.height / 2) + 'px';
-                    tooltipElement.style.transform = 'translateY(-50%)';
-
-                    // Show with 100ms delay
-                    tooltipTimeout = setTimeout(() => {
-                        tooltipElement.classList.add('show');
-                    }, 100);
-                });
-
-                btn.addEventListener('mouseleave', function () {
-                    clearTimeout(tooltipTimeout);
-                    if (tooltipElement) {
-                        tooltipElement.classList.remove('show');
-                    }
-                });
-            });
-        }
-
         function initSidebarExpansionControls() {
             const configs = [
                 {
@@ -657,12 +584,7 @@
                 }
 
                 sidebar.classList.toggle('expanded', isExpanded);
-                toggleBtn.classList.toggle('active', isExpanded);
-                toggleBtn.setAttribute('aria-pressed', String(isExpanded));
-                toggleBtn.title = isExpanded ? 'Collapse toolbar' : 'Expand toolbar';
-                toggleBtn.setAttribute('data-tooltip', isExpanded
-                    ? 'Collapse to icon-only toolbar'
-                    : 'Expand to show function labels');
+                toggleBtn.setAttribute('aria-label', isExpanded ? 'Collapse toolbar' : 'Expand toolbar');
 
                 const icon = toggleBtn.querySelector('i');
                 if (icon) {
@@ -671,7 +593,7 @@
 
                 const label = toggleBtn.querySelector('.sidebar-btn-label');
                 if (label) {
-                    label.textContent = isExpanded ? 'Collapse' : 'Expand';
+                    label.textContent = 'Toolbar';
                 }
             };
 
@@ -698,7 +620,6 @@
             feather.replace();
             initSidebarExpansionControls();
             feather.replace();
-            initSidebarTooltips();
         });
 
         // Reinitialize when DOM contents change (for dynamically added icons)
