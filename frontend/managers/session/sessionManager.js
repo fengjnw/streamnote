@@ -74,19 +74,18 @@ class SessionManager {
     loadSessions() {
         try {
             const saved = localStorage.getItem(this.STORAGE_KEY);
+            let pruned = false;
             if (saved) {
                 this.sessions = JSON.parse(saved);
                 this.normalizeLoadedSessions(this.sessions);
                 this.migrateLegacyWelcomeSessionId();
+                pruned = this.pruneRedundantDefaultSession();
             }
 
             const hasSessions = Object.keys(this.sessions).length > 0;
 
             if (!hasSessions) {
-                const loaded = this.loadWelcomeSessionIntoState(false);
-                if (!loaded) {
-                    this.createNewSession();
-                }
+                this.ensureWelcomeAsDefault(false);
             } else {
                 const currentId = localStorage.getItem(this.CURRENT_SESSION_KEY);
                 if (currentId && this.sessions[currentId]) {
@@ -100,21 +99,20 @@ class SessionManager {
                         this.currentSessionId = firstSessionId;
                         localStorage.setItem(this.CURRENT_SESSION_KEY, this.currentSessionId);
                     } else {
-                        const loaded = this.loadWelcomeSessionIntoState(false);
-                        if (!loaded) {
-                            this.createNewSession();
-                        }
+                        this.ensureWelcomeAsDefault(false);
                     }
+                }
+            }
+
+            if (pruned) {
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.sessions));
+                if (this.currentSessionId) {
+                    localStorage.setItem(this.CURRENT_SESSION_KEY, this.currentSessionId);
                 }
             }
         } catch (error) {
             console.error('[SessionManager] Load error:', error);
-            const loaded = this.loadWelcomeSessionIntoState(false);
-            if (loaded) {
-                // welcome session loaded
-            } else {
-                this.createNewSession();
-            }
+            this.ensureWelcomeAsDefault(false);
         }
     }
 
@@ -272,6 +270,62 @@ class SessionManager {
                 delete session.settings.summaryCache;
             }
         });
+    }
+
+    isSessionEffectivelyEmpty(session) {
+        if (!session || typeof session !== 'object') {
+            return true;
+        }
+
+        const transcriptCount = Object.keys(session.transcripts || {}).length;
+        const keywordCount = Array.isArray(session.keywords) ? session.keywords.length : 0;
+        const highlightCount = Array.isArray(session.highlights) ? session.highlights.length : 0;
+        const explanationCount = Array.isArray(session.explanations) ? session.explanations.length : 0;
+
+        const translationCount = Object.values(session.translations || {}).reduce((sum, langMap) => {
+            if (!langMap || typeof langMap !== 'object') {
+                return sum;
+            }
+            return sum + Object.keys(langMap).length;
+        }, 0);
+
+        return (
+            transcriptCount === 0
+            && keywordCount === 0
+            && highlightCount === 0
+            && explanationCount === 0
+            && translationCount === 0
+        );
+    }
+
+    pruneRedundantDefaultSession() {
+        const welcomeId = 'welcome-session';
+        if (!this.sessions[welcomeId]) {
+            return false;
+        }
+
+        const ids = Object.keys(this.sessions);
+        if (ids.length !== 2) {
+            return false;
+        }
+
+        const candidateId = ids.find((id) => id !== welcomeId);
+        if (!candidateId) {
+            return false;
+        }
+
+        const candidate = this.sessions[candidateId];
+        if (!this.isSessionEffectivelyEmpty(candidate)) {
+            return false;
+        }
+
+        delete this.sessions[candidateId];
+
+        if (!this.currentSessionId || this.currentSessionId === candidateId) {
+            this.currentSessionId = welcomeId;
+        }
+
+        return true;
     }
 
     snapshotState() {
@@ -535,6 +589,7 @@ class SessionManager {
             this.sessions = JSON.parse(JSON.stringify(state.sessions));
             this.normalizeLoadedSessions(this.sessions);
             this.migrateLegacyWelcomeSessionId();
+            this.pruneRedundantDefaultSession();
         }
 
         const incomingCurrent = state.currentSessionId === 'tutorial-session'
@@ -543,18 +598,15 @@ class SessionManager {
 
         if (incomingCurrent && this.sessions[incomingCurrent]) {
             this.currentSessionId = incomingCurrent;
+        } else if (this.sessions['welcome-session']) {
+            this.currentSessionId = 'welcome-session';
         } else if (!this.currentSessionId || !this.sessions[this.currentSessionId]) {
             const firstId = Object.keys(this.sessions)[0] || null;
             this.currentSessionId = firstId;
         }
 
         if (!this.currentSessionId) {
-            const loaded = this.loadWelcomeSessionIntoState(false);
-            if (!loaded) {
-                this.createNewSession();
-                this.isHydratingFromRemote = false;
-                return;
-            }
+            this.ensureWelcomeAsDefault(false);
         }
 
         if (shouldPersist) {
@@ -709,6 +761,14 @@ class SessionManager {
         }
 
         return true;
+    }
+
+    ensureWelcomeAsDefault(useSwitch = false) {
+        const loaded = this.loadWelcomeSessionIntoState(useSwitch);
+        if (!loaded) {
+            console.error('[SessionManager] Failed to load welcome session as default');
+        }
+        return loaded;
     }
 
     formatSessionDefaultName(date = new Date()) {
@@ -1082,10 +1142,7 @@ class SessionManager {
                 localStorage.removeItem(this.STORAGE_KEY);
                 localStorage.removeItem(this.CURRENT_SESSION_KEY);
 
-                const loaded = this.loadWelcomeSessionIntoState(true);
-                if (!loaded) {
-                    this.createNewSession();
-                }
+                this.ensureWelcomeAsDefault(true);
                 alert('All data cleared');
             }
         }
@@ -1115,10 +1172,7 @@ class SessionManager {
             if (sessionIds.length > 0) {
                 this.switchSession(sessionIds[sessionIds.length - 1]);
             } else {
-                const loaded = this.loadWelcomeSessionIntoState(true);
-                if (!loaded) {
-                    this.createNewSession();
-                }
+                this.ensureWelcomeAsDefault(true);
             }
         }
     }

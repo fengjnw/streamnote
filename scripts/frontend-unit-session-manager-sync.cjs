@@ -166,11 +166,42 @@ function testNonEquivalentWhenTranscriptActuallyDiffers() {
     assert.strictEqual(equivalent, false, "Actual content difference must remain non-equivalent");
 }
 
+function testLoadSessionsUsesWelcomeOnlyWhenNoSessions() {
+    const sm = createSessionManagerLikeInstance();
+    sm.sessions = {};
+    sm.STORAGE_KEY = "streamnote_sessions";
+    sm.CURRENT_SESSION_KEY = "streamnote_current_session";
+
+    let ensureWelcomeCallCount = 0;
+    let createNewSessionCallCount = 0;
+
+    sm.ensureWelcomeAsDefault = (useSwitch = false) => {
+        ensureWelcomeCallCount += 1;
+        assert.strictEqual(useSwitch, false, "loadSessions should initialize Welcome without switching");
+        sm.sessions["welcome-session"] = { id: "welcome-session", name: "Welcome" };
+        sm.currentSessionId = "welcome-session";
+        return true;
+    };
+
+    sm.createNewSession = () => {
+        createNewSessionCallCount += 1;
+    };
+
+    context.localStorage._data = {};
+
+    sm.loadSessions();
+
+    assert.strictEqual(ensureWelcomeCallCount, 1, "Empty session state should only trigger Welcome initialization once");
+    assert.strictEqual(createNewSessionCallCount, 0, "Empty session state should not create a default session");
+    assert.strictEqual(sm.currentSessionId, "welcome-session", "Welcome should become current session in empty state");
+}
+
 function run() {
     console.log("Frontend unit tests (SessionManager sync equivalence)");
     runCheck("normalizes legacy tutorial-session and deprecated default settings", testEquivalentWithLegacySessionIdAndDeprecatedDefaults);
     runCheck("ignores object key order when comparing states", testEquivalentIgnoresObjectKeyOrder);
     runCheck("detects true transcript content difference", testNonEquivalentWhenTranscriptActuallyDiffers);
+    runCheck("uses Welcome only when no sessions exist", testLoadSessionsUsesWelcomeOnlyWhenNoSessions);
     console.log("Frontend unit test (SessionManager sync equivalence) passed.");
 }
 
