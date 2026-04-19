@@ -37,13 +37,13 @@ const WELCOME_SESSION_DATA = {
         },
         5: {
             index: 5,
-            text: 'Deepen: Keywords surfaces core concepts, and Highlights marks important lines for later review and revision.',
+            text: 'Understand continues with Keywords, which surface core concepts. Highlights lets you manually mark important lines for later review and revision.',
             timestamp: 26,
             source: 'text'
         },
         6: {
             index: 6,
-            text: 'Output: Summary builds a compact overview for quick recap, while Export saves your session artifacts for reuse.',
+            text: 'Output: Summary builds a compact overview for quick recap and study follow-up.',
             timestamp: 31,
             source: 'text'
         },
@@ -71,7 +71,7 @@ const WELCOME_SESSION_DATA = {
         'Start',
         'Input',
         'Understand',
-        'Deepen',
+        'Keywords',
         'Output',
         'Tip'
     ],
@@ -97,10 +97,10 @@ const WELCOME_SESSION_DATA = {
             startIndex: 0,
             endIndex: 10
         },
-        'Deepen': {
+        'Keywords': {
             sourceIndices: [5],
-            startIndex: 0,
-            endIndex: 6
+            startIndex: 26,
+            endIndex: 34
         },
         'Output': {
             sourceIndices: [6],
