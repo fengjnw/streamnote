@@ -47,13 +47,13 @@ function buildWelcomeSessionData() {
         },
         4: {
             index: 4,
-            text: 'Understand: Translate rewrites content into your target language. Explain helps you inspect difficult phrases in context.',
+            text: 'Understand: Follow the same toolbar order: Translate first for target-language reading, then Keywords to surface core concepts quickly.',
             timestamp: 21,
             source: 'text'
         },
         5: {
             index: 5,
-            text: 'Understand continues with Keywords, which surface core concepts. Highlights lets you manually mark important lines for later review and revision.',
+            text: 'For Highlights and Explain, the primary workflow is text selection: select any phrase in transcript or translation, then use the floating menu to choose 🚩 Highlight or 📖 Explain.',
             timestamp: 26,
             source: 'text'
         },
