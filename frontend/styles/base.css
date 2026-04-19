@@ -64,41 +64,26 @@ header h1 {
     flex-wrap: wrap;
 }
 
-.device-identity {
-    position: relative;
+.account-status {
     flex-shrink: 0;
-    z-index: 2;
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.device-identity-btn {
+.account-identity-pill {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
     min-height: 28px;
-    min-width: 65px;
+    min-width: 120px;
     border: 1px solid var(--color-border);
-    background: var(--color-white);
-    color: #333;
     border-radius: 4px;
-    padding: 4px 10px;
-    font-size: 0.8em;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    line-height: 1.2;
+    background: var(--color-white);
+    padding: 4px 8px;
 }
 
-.device-identity-btn:hover {
-    background: var(--color-bg-hover);
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-}
-
-.identity-avatar {
+.account-avatar {
     width: 18px;
     height: 18px;
     border-radius: 50%;
@@ -112,7 +97,17 @@ header h1 {
     flex-shrink: 0;
 }
 
-.device-auth-btn {
+.account-status-label {
+    font-size: 0.82em;
+    font-weight: 500;
+    color: var(--color-text-light);
+    white-space: nowrap;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.account-auth-btn {
     min-height: 28px;
     min-width: 65px;
     padding: 4px 10px;
@@ -127,65 +122,10 @@ header h1 {
     line-height: 1.2;
 }
 
-.device-auth-btn:hover {
+.account-auth-btn:hover {
     background: var(--color-bg-hover);
     border-color: var(--color-primary);
     color: var(--color-primary);
-}
-
-.device-identity-popover {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 10px);
-    width: min(340px, 88vw);
-    background: var(--color-white);
-    color: var(--color-text);
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    box-shadow: 0 4px 12px var(--color-black-shadow-15);
-    padding: 12px;
-    z-index: 10020;
-}
-
-.device-identity-title {
-    font-size: 0.85em;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: #333;
-}
-
-.device-identity-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 5px 0;
-    border-bottom: 1px dashed var(--color-grey-100);
-}
-
-.device-identity-row:last-of-type {
-    border-bottom: none;
-}
-
-.device-id-row {
-    align-items: flex-start;
-}
-
-.identity-label {
-    color: var(--color-text-light);
-    font-size: 0.8em;
-}
-
-.identity-value {
-    font-size: 0.8em;
-    font-weight: 500;
-    text-align: right;
-}
-
-.identity-mono {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-size: 0.75em;
-    max-width: 200px;
-    overflow-wrap: anywhere;
 }
 
 #sessionNameDisplay {

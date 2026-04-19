@@ -68,6 +68,26 @@ class StreamNoteApiClient {
         });
     }
 
+    async getAccountSessionState(signal) {
+        return this.request("/api/account-session-state", {
+            method: "GET",
+            credentials: "same-origin",
+            signal,
+        });
+    }
+
+    async saveAccountSessionState(state, signal) {
+        return this.request("/api/account-session-state", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ state }),
+            credentials: "same-origin",
+            signal,
+        });
+    }
+
     async register(payload, signal) {
         return this.request("/api/auth/register", {
             method: "POST",

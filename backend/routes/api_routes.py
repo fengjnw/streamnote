@@ -9,4 +9,9 @@ def register_api_routes(app, services, server_error_response):
     register_ai_routes(app, services, server_error_response)
     register_auth_routes(app, services.get("auth_store"), server_error_response)
     register_file_routes(app, server_error_response)
-    register_session_routes(app, services.get("session_store"), server_error_response)
+    register_session_routes(
+        app,
+        services.get("session_store"),
+        server_error_response,
+        auth_store=services.get("auth_store"),
+    )

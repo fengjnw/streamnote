@@ -48,7 +48,10 @@ const steps = [
         label: "[Frontend] Unit tests",
         command: "npm",
         args: ["run", "test:frontend:unit"],
-        covers: ["Core text-processing logic: cleanText/validateFile/convertToPreciseResults"],
+        covers: [
+            "Core text-processing logic: cleanText/validateFile/convertToPreciseResults",
+            "Session sync equivalence normalization: legacy IDs, deprecated defaults, stable key-order-insensitive compare",
+        ],
     },
     {
         label: "[Frontend] Smoke tests",

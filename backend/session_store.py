@@ -60,6 +60,16 @@ class SessionStateStore:
                     )
                     """
                 )
+                conn.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS user_session_state (
+                        user_id INTEGER PRIMARY KEY,
+                        payload_json TEXT NOT NULL,
+                        created_at INTEGER NOT NULL,
+                        updated_at INTEGER NOT NULL
+                    )
+                    """
+                )
                 conn.commit()
             finally:
                 conn.close()
@@ -99,6 +109,48 @@ class SessionStateStore:
                         updated_at=excluded.updated_at
                     """,
                     (device_id, payload_json, now, now),
+                )
+                conn.commit()
+            finally:
+                conn.close()
+
+        return now
+
+    def get_user_state(self, user_id: int):
+        with self._lock:
+            conn = self._connect()
+            try:
+                row = conn.execute(
+                    "SELECT payload_json, updated_at FROM user_session_state WHERE user_id = ?",
+                    (user_id,),
+                ).fetchone()
+            finally:
+                conn.close()
+
+        if not row:
+            return None
+
+        return {
+            "state": json.loads(row["payload_json"]),
+            "updated_at": row["updated_at"],
+        }
+
+    def save_user_state(self, user_id: int, state: dict):
+        payload_json = json.dumps(state, ensure_ascii=True)
+        now = _now_ms()
+
+        with self._lock:
+            conn = self._connect()
+            try:
+                conn.execute(
+                    """
+                    INSERT INTO user_session_state (user_id, payload_json, created_at, updated_at)
+                    VALUES (?, ?, ?, ?)
+                    ON CONFLICT(user_id) DO UPDATE SET
+                        payload_json=excluded.payload_json,
+                        updated_at=excluded.updated_at
+                    """,
+                    (user_id, payload_json, now, now),
                 )
                 conn.commit()
             finally:

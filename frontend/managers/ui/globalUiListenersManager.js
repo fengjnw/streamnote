@@ -9,7 +9,7 @@ class GlobalUiListenersManager {
     setup() {
         const app = this.app;
 
-        app.initDeviceIdentityUI();
+        app.initAccountStatusUI();
 
         const floatingAutoScrollBtn = document.getElementById("floatingAutoScrollBtn");
         if (floatingAutoScrollBtn) {

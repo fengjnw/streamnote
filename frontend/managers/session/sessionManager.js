@@ -14,8 +14,10 @@ class SessionManager {
         this.remoteSyncTimer = null;
         this.isHydratingFromRemote = false;
         this.remoteSyncInFlight = false;
+        this.accountSyncEnabled = false;
+        this.accountUserKey = null;
         this.deviceId = this.getOrCreateDeviceId();
-        this.syncStatus = this.apiClient ? 'idle' : 'offline';
+        this.syncStatus = this.apiClient ? 'local' : 'offline';
         this.lastSyncedAt = null;
         this.lastSyncError = null;
 
@@ -29,7 +31,6 @@ class SessionManager {
         this.setupUI();
         this.emitIdentityUpdate();
         this.emitSyncStatusChanged();
-        this.loadRemoteStateIfAvailable();
     }
 
     loadDefaultSettings() {
@@ -262,15 +263,374 @@ class SessionManager {
     }
 
     snapshotState() {
+        const sessions = JSON.parse(JSON.stringify(this.sessions || {}));
+        const defaultSettings = JSON.parse(JSON.stringify(this.defaultSettings || {}));
         return {
-            sessions: this.sessions,
+            sessions,
             currentSessionId: this.currentSessionId,
-            defaultSettings: this.defaultSettings,
+            defaultSettings,
         };
     }
 
+    normalizeStateForSync(state) {
+        if (!state || typeof state !== 'object') {
+            return {
+                sessions: {},
+                currentSessionId: null,
+                defaultSettings: {},
+            };
+        }
+
+        const normalized = JSON.parse(JSON.stringify(state));
+
+        if (!normalized.sessions || typeof normalized.sessions !== 'object') {
+            normalized.sessions = {};
+        }
+
+        this.normalizeLoadedSessions(normalized.sessions);
+        const migrated = this.migrateLegacyWelcomeSessionIdInMap(normalized.sessions, normalized.currentSessionId);
+        normalized.currentSessionId = migrated.currentSessionId;
+
+        if (!normalized.defaultSettings || typeof normalized.defaultSettings !== 'object') {
+            normalized.defaultSettings = {};
+        }
+
+        delete normalized.defaultSettings.loadWelcomeSession;
+        delete normalized.defaultSettings.loadTutorialSession;
+
+        if (normalized.currentSessionId && !normalized.sessions[normalized.currentSessionId]) {
+            const firstId = Object.keys(normalized.sessions)[0];
+            normalized.currentSessionId = firstId || null;
+        }
+
+        return normalized;
+    }
+
+    migrateLegacyWelcomeSessionIdInMap(sessionMap, currentSessionId) {
+        const legacyId = 'tutorial-session';
+        const welcomeId = 'welcome-session';
+        const legacySession = sessionMap[legacyId];
+        const welcomeSession = sessionMap[welcomeId];
+        let nextCurrent = currentSessionId;
+
+        if (legacySession && !welcomeSession) {
+            sessionMap[welcomeId] = {
+                ...legacySession,
+                id: welcomeId,
+                name: legacySession.name === 'Tutorial' ? 'Welcome' : legacySession.name,
+            };
+            delete sessionMap[legacyId];
+        } else if (legacySession && welcomeSession) {
+            delete sessionMap[legacyId];
+        }
+
+        if (nextCurrent === legacyId) {
+            nextCurrent = welcomeId;
+        }
+
+        return { currentSessionId: nextCurrent };
+    }
+
+    stableSerialize(value) {
+        if (value === null || value === undefined) {
+            return 'null';
+        }
+
+        if (Array.isArray(value)) {
+            return `[${value.map((item) => this.stableSerialize(item)).join(',')}]`;
+        }
+
+        if (typeof value === 'object') {
+            const keys = Object.keys(value).sort();
+            const body = keys
+                .map((key) => `${JSON.stringify(key)}:${this.stableSerialize(value[key])}`)
+                .join(',');
+            return `{${body}}`;
+        }
+
+        return JSON.stringify(value);
+    }
+
+    normalizeSyncChoice(choice) {
+        if (!choice) {
+            return 'merge';
+        }
+
+        if (typeof choice === 'string') {
+            const mode = choice.trim().toLowerCase();
+            if (mode === 'local' || mode === 'cloud' || mode === 'merge') {
+                return mode;
+            }
+            return 'merge';
+        }
+
+        if (typeof choice === 'object') {
+            const mode = typeof choice.mode === 'string' ? choice.mode.trim().toLowerCase() : 'merge';
+            return (mode === 'local' || mode === 'cloud' || mode === 'merge') ? mode : 'merge';
+        }
+
+        return 'merge';
+    }
+
+    async resolvePostLoginSyncChoice(options = {}) {
+        if (typeof options.syncChoiceResolver === 'function') {
+            try {
+                const result = await options.syncChoiceResolver();
+                return this.normalizeSyncChoice(result);
+            } catch (error) {
+                console.warn('[SessionManager] Sync choice resolver failed, fallback to prompt:', error);
+            }
+        }
+
+        const promptText = [
+            'Local and account data are both available.',
+            'Choose sync mode: merge / local / cloud',
+            'merge = combine both, local = upload local only, cloud = use account data only',
+            'Press Cancel or leave empty to use merge.'
+        ].join('\n');
+
+        const raw = window.prompt(promptText, 'merge');
+        return this.normalizeSyncChoice(raw || 'merge');
+    }
+
+    statesAreEquivalent(a, b) {
+        if (!a || !b) return false;
+        try {
+            const normalizedA = this.normalizeStateForSync(a);
+            const normalizedB = this.normalizeStateForSync(b);
+            return this.stableSerialize(normalizedA) === this.stableSerialize(normalizedB);
+        } catch {
+            return false;
+        }
+    }
+
+    hasMeaningfulState(state) {
+        const normalized = this.normalizeStateForSync(state);
+        const sessions = normalized.sessions || {};
+        const ids = Object.keys(sessions);
+        if (ids.length === 0) return false;
+
+        return ids.some((id) => {
+            const session = sessions[id] || {};
+            const transcriptCount = Object.keys(session.transcripts || {}).length;
+            const isReserved = this.RESERVED_SESSION_IDS.includes(id);
+            return transcriptCount > 0 || (!isReserved && ids.length > 1);
+        });
+    }
+
+    mergeStates(localState, remoteState) {
+        const normalizedLocal = this.normalizeStateForSync(localState);
+        const normalizedRemote = this.normalizeStateForSync(remoteState);
+
+        const localSessions = normalizedLocal.sessions || {};
+        const remoteSessions = normalizedRemote.sessions || {};
+        const mergedSessions = JSON.parse(JSON.stringify(remoteSessions));
+
+        Object.keys(localSessions).forEach((sessionId) => {
+            const localSession = localSessions[sessionId] || {};
+            const remoteSession = mergedSessions[sessionId] || null;
+
+            if (!remoteSession) {
+                mergedSessions[sessionId] = JSON.parse(JSON.stringify(localSession));
+                return;
+            }
+
+            const localUpdated = Number(localSession.lastModified || localSession.lastAccessed || localSession.createdAt || 0);
+            const remoteUpdated = Number(remoteSession.lastModified || remoteSession.lastAccessed || remoteSession.createdAt || 0);
+
+            const newer = localUpdated >= remoteUpdated ? localSession : remoteSession;
+            const older = localUpdated >= remoteUpdated ? remoteSession : localSession;
+
+            const merged = {
+                ...JSON.parse(JSON.stringify(older)),
+                ...JSON.parse(JSON.stringify(newer)),
+                transcripts: {
+                    ...(older.transcripts || {}),
+                    ...(newer.transcripts || {}),
+                },
+                translations: {
+                    ...(older.translations || {}),
+                    ...(newer.translations || {}),
+                },
+                keywordCache: {
+                    ...(older.keywordCache || {}),
+                    ...(newer.keywordCache || {}),
+                },
+                highlightCache: {
+                    ...(older.highlightCache || {}),
+                    ...(newer.highlightCache || {}),
+                },
+                explanationCache: {
+                    ...(older.explanationCache || {}),
+                    ...(newer.explanationCache || {}),
+                },
+                summaryCache: {
+                    ...(older.summaryCache || {}),
+                    ...(newer.summaryCache || {}),
+                },
+                settings: {
+                    ...(older.settings || {}),
+                    ...(newer.settings || {}),
+                },
+                highlights: [...new Set([...(older.highlights || []), ...(newer.highlights || [])])],
+                keywords: [...new Set([...(older.keywords || []), ...(newer.keywords || [])])],
+                explanationHistory: [...(newer.explanationHistory || older.explanationHistory || [])],
+                explanations: [...(newer.explanations || older.explanations || [])],
+                lastModified: Math.max(localUpdated, remoteUpdated),
+            };
+
+            mergedSessions[sessionId] = merged;
+        });
+
+        const mergedDefaultSettings = {
+            ...(normalizedRemote.defaultSettings || {}),
+            ...(normalizedLocal.defaultSettings || {}),
+        };
+        delete mergedDefaultSettings.loadWelcomeSession;
+        delete mergedDefaultSettings.loadTutorialSession;
+
+        let mergedCurrentSessionId = normalizedLocal.currentSessionId || normalizedRemote.currentSessionId || null;
+        if (!mergedCurrentSessionId || !mergedSessions[mergedCurrentSessionId]) {
+            const fallbackIds = Object.keys(mergedSessions);
+            mergedCurrentSessionId = fallbackIds.length > 0 ? fallbackIds[0] : null;
+        }
+
+        return {
+            sessions: mergedSessions,
+            currentSessionId: mergedCurrentSessionId,
+            defaultSettings: mergedDefaultSettings,
+        };
+    }
+
+    applyStateSnapshot(state, options = {}) {
+        if (!state || typeof state !== 'object') {
+            return;
+        }
+
+        const shouldEmit = options.emitSessionChanged !== false;
+        const shouldPersist = options.persist !== false;
+
+        this.isHydratingFromRemote = true;
+
+        if (state.defaultSettings && typeof state.defaultSettings === 'object') {
+            this.defaultSettings = { ...this.defaultSettings, ...state.defaultSettings };
+            delete this.defaultSettings.loadWelcomeSession;
+            delete this.defaultSettings.loadTutorialSession;
+            this.saveDefaultSettings();
+        }
+
+        if (state.sessions && typeof state.sessions === 'object') {
+            this.sessions = JSON.parse(JSON.stringify(state.sessions));
+            this.normalizeLoadedSessions(this.sessions);
+            this.migrateLegacyWelcomeSessionId();
+        }
+
+        const incomingCurrent = state.currentSessionId === 'tutorial-session'
+            ? 'welcome-session'
+            : state.currentSessionId;
+
+        if (incomingCurrent && this.sessions[incomingCurrent]) {
+            this.currentSessionId = incomingCurrent;
+        } else if (!this.currentSessionId || !this.sessions[this.currentSessionId]) {
+            const firstId = Object.keys(this.sessions)[0] || null;
+            this.currentSessionId = firstId;
+        }
+
+        if (!this.currentSessionId) {
+            this.createNewSession();
+        } else {
+            if (shouldPersist) {
+                this.saveSessions();
+            } else {
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.sessions));
+                localStorage.setItem(this.CURRENT_SESSION_KEY, this.currentSessionId);
+            }
+            this.renderSessionList();
+
+            const sessionNameDisplay = document.getElementById('sessionNameDisplay');
+            if (sessionNameDisplay && this.sessions[this.currentSessionId]) {
+                sessionNameDisplay.textContent = this.sessions[this.currentSessionId].name;
+            }
+
+            if (shouldEmit) {
+                window.dispatchEvent(new CustomEvent('sessionChanged', {
+                    detail: { sessionId: this.currentSessionId }
+                }));
+            }
+        }
+
+        this.isHydratingFromRemote = false;
+    }
+
+    async initializeAccountSync(options = {}) {
+        if (!this.apiClient) {
+            return;
+        }
+
+        const userKey = options.userKey || null;
+        const interactive = options.interactive !== false;
+
+        if (userKey && this.accountSyncEnabled && this.accountUserKey === userKey) {
+            return;
+        }
+
+        try {
+            this.setSyncStatus('syncing');
+            const localState = this.snapshotState();
+
+            const response = await this.apiClient.getAccountSessionState();
+            if (!response.ok) {
+                this.setSyncStatus('error', `HTTP ${response.status}`);
+                return;
+            }
+
+            const payload = await response.json();
+            const remoteState = payload?.state && typeof payload.state === 'object' ? payload.state : null;
+
+            const hasLocal = this.hasMeaningfulState(localState);
+            const hasRemote = this.hasMeaningfulState(remoteState);
+
+            let chosenMode = 'merge';
+            if (hasLocal && hasRemote && !this.statesAreEquivalent(localState, remoteState) && interactive) {
+                chosenMode = await this.resolvePostLoginSyncChoice(options);
+            } else if (hasLocal && !hasRemote) {
+                chosenMode = 'local';
+            } else if (!hasLocal && hasRemote) {
+                chosenMode = 'cloud';
+            }
+
+            if (chosenMode === 'cloud') {
+                if (remoteState) {
+                    this.applyStateSnapshot(remoteState, { emitSessionChanged: true, persist: false });
+                }
+            } else if (chosenMode === 'local') {
+                await this.apiClient.saveAccountSessionState(localState);
+            } else {
+                const mergedState = this.mergeStates(localState, remoteState || { sessions: {}, currentSessionId: null, defaultSettings: {} });
+                this.applyStateSnapshot(mergedState, { emitSessionChanged: true, persist: false });
+                await this.apiClient.saveAccountSessionState(mergedState);
+            }
+
+            this.accountSyncEnabled = true;
+            this.accountUserKey = userKey;
+            this.lastSyncedAt = Date.now();
+            this.lastSyncError = null;
+            this.setSyncStatus('synced');
+        } catch (error) {
+            console.warn('[SessionManager] Account sync initialization failed:', error);
+            this.setSyncStatus('offline', error?.message || 'Network unavailable');
+        }
+    }
+
+    disableAccountSync() {
+        this.accountSyncEnabled = false;
+        this.accountUserKey = null;
+        this.lastSyncError = null;
+        this.setSyncStatus(this.apiClient ? 'local' : 'offline');
+    }
+
     scheduleRemoteSync() {
-        if (!this.apiClient || !this.deviceId || this.isHydratingFromRemote) {
+        if (!this.apiClient || !this.accountSyncEnabled || this.isHydratingFromRemote) {
             return;
         }
 
@@ -285,14 +645,14 @@ class SessionManager {
     }
 
     async syncStateToBackend() {
-        if (!this.apiClient || !this.deviceId || this.remoteSyncInFlight) {
+        if (!this.apiClient || !this.accountSyncEnabled || this.remoteSyncInFlight) {
             return;
         }
 
         this.remoteSyncInFlight = true;
         this.setSyncStatus('syncing');
         try {
-            const response = await this.apiClient.saveSessionState(this.deviceId, this.snapshotState());
+            const response = await this.apiClient.saveAccountSessionState(this.snapshotState());
             if (!response.ok) {
                 console.warn('[SessionManager] Remote sync failed with status:', response.status);
                 this.setSyncStatus('error', `HTTP ${response.status}`);
@@ -306,82 +666,6 @@ class SessionManager {
             this.setSyncStatus('offline', error?.message || 'Network unavailable');
         } finally {
             this.remoteSyncInFlight = false;
-        }
-    }
-
-    async loadRemoteStateIfAvailable() {
-        if (!this.apiClient || !this.deviceId) {
-            return;
-        }
-
-        try {
-            this.setSyncStatus('syncing');
-            const response = await this.apiClient.getSessionState(this.deviceId);
-            if (!response.ok) {
-                this.setSyncStatus('error', `HTTP ${response.status}`);
-                return;
-            }
-
-            const payload = await response.json();
-            const remoteState = payload?.state;
-            this.lastSyncedAt = Date.now();
-            this.lastSyncError = null;
-            this.setSyncStatus('synced');
-            if (!remoteState || typeof remoteState !== 'object') {
-                return;
-            }
-
-            this.isHydratingFromRemote = true;
-            if (remoteState.defaultSettings && typeof remoteState.defaultSettings === 'object') {
-                this.defaultSettings = { ...this.defaultSettings, ...remoteState.defaultSettings };
-
-                delete this.defaultSettings.loadWelcomeSession;
-                delete this.defaultSettings.loadTutorialSession;
-
-                this.saveDefaultSettings();
-            }
-
-            if (remoteState.sessions && typeof remoteState.sessions === 'object') {
-                this.sessions = remoteState.sessions;
-                this.normalizeLoadedSessions(this.sessions);
-                this.migrateLegacyWelcomeSessionId();
-            }
-
-            const remoteCurrentSessionId = remoteState.currentSessionId === 'tutorial-session'
-                ? 'welcome-session'
-                : remoteState.currentSessionId;
-
-            if (
-                remoteCurrentSessionId
-                && typeof remoteCurrentSessionId === 'string'
-                && this.sessions[remoteCurrentSessionId]
-            ) {
-                this.currentSessionId = remoteCurrentSessionId;
-            } else if (!this.currentSessionId || !this.sessions[this.currentSessionId]) {
-                const firstId = Object.keys(this.sessions)[0];
-                this.currentSessionId = firstId || null;
-            }
-
-            if (!this.currentSessionId) {
-                this.createNewSession();
-            } else {
-                this.saveSessions();
-                this.renderSessionList();
-
-                const sessionNameDisplay = document.getElementById('sessionNameDisplay');
-                if (sessionNameDisplay && this.sessions[this.currentSessionId]) {
-                    sessionNameDisplay.textContent = this.sessions[this.currentSessionId].name;
-                }
-
-                window.dispatchEvent(new CustomEvent('sessionChanged', {
-                    detail: { sessionId: this.currentSessionId }
-                }));
-            }
-        } catch (error) {
-            console.warn('[SessionManager] Remote load skipped:', error);
-            this.setSyncStatus('offline', error?.message || 'Network unavailable');
-        } finally {
-            this.isHydratingFromRemote = false;
         }
     }
 

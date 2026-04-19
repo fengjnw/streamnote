@@ -22,24 +22,30 @@
         font-size: 0.85em;
     }
 
-    .device-identity {
+    .account-status {
         align-self: flex-end;
     }
 
-    .device-identity-btn {
-        font-size: 0.78em;
-        padding: 4px 8px;
+    .account-identity-pill {
+        min-width: 96px;
+        padding: 4px 7px;
     }
 
-    .device-auth-btn {
+    .account-avatar {
+        width: 16px;
+        height: 16px;
+        font-size: 0.68em;
+    }
+
+    .account-status-label {
+        font-size: 0.78em;
+        max-width: 130px;
+    }
+
+    .account-auth-btn {
         font-size: 0.78em;
         padding: 4px 8px;
         min-width: 60px;
-    }
-
-    .device-identity-popover {
-        right: 0;
-        width: min(320px, 92vw);
     }
 
     .control-panel {

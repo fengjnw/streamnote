@@ -60,6 +60,9 @@ class ModalManager {
 
         modal.style.display = "flex";
         this.openModals.add(modalId);
+        window.dispatchEvent(new CustomEvent("modal:opened", {
+            detail: { modalId }
+        }));
 
         if (button) {
             button.classList.add("active");
@@ -78,6 +81,9 @@ class ModalManager {
 
         modal.style.display = "none";
         this.openModals.delete(modalId);
+        window.dispatchEvent(new CustomEvent("modal:closed", {
+            detail: { modalId }
+        }));
 
         if (button) {
             button.classList.remove("active");

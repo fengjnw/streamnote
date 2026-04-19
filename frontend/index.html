@@ -63,39 +63,12 @@
                     </div>
                 </div>
             </div>
-            <div class="device-identity" id="deviceIdentityRoot">
-                <button id="deviceIdentityBtn" class="device-identity-btn" title="Device identity">
-                    <span id="identityAvatar" class="identity-avatar">A</span>
-                    <span id="deviceIdentityLabel">Device #------</span>
-                </button>
-                <button id="headerAuthBtn" class="device-auth-btn" title="Sign in">Sign In</button>
-                <div id="deviceIdentityPopover" class="device-identity-popover hidden">
-                    <div class="device-identity-title">Local Identity</div>
-                    <div class="device-identity-row">
-                        <span class="identity-label">Type</span>
-                        <span class="identity-value" id="identityTypeValue">Anonymous device</span>
-                    </div>
-                    <div class="device-identity-row">
-                        <span class="identity-label">Account</span>
-                        <span class="identity-value" id="identityAccountEmail">-</span>
-                    </div>
-                    <div class="device-identity-row">
-                        <span class="identity-label">Short ID</span>
-                        <span class="identity-value" id="deviceIdentityShortId">------</span>
-                    </div>
-                    <div class="device-identity-row device-id-row">
-                        <span class="identity-label">Device ID</span>
-                        <span class="identity-value identity-mono" id="deviceIdentityFullId">-</span>
-                    </div>
-                    <div class="device-identity-row">
-                        <span class="identity-label">Sync status</span>
-                        <span class="identity-value" id="deviceSyncStatus">Pending</span>
-                    </div>
-                    <div class="device-identity-row">
-                        <span class="identity-label">Last sync</span>
-                        <span class="identity-value" id="deviceLastSyncTime">Not yet</span>
-                    </div>
+            <div class="account-status" id="accountStatusRoot">
+                <div class="account-identity-pill" title="Account status">
+                    <span id="accountAvatar" class="account-avatar">A</span>
+                    <span id="accountStatusLabel" class="account-status-label">Not signed in</span>
                 </div>
+                <button id="headerAuthBtn" class="account-auth-btn" title="Sign in">Sign In</button>
             </div>
         </div>
     </header>
@@ -105,7 +78,7 @@
             <!-- Left Sidebar -->
             <aside class="sidebar sidebar-left">
                 <div class="sidebar-section">
-                    <button id="leftSidebarGuideToggle" class="sidebar-btn" aria-label="Expand toolbar">
+                    <button id="leftSidebarGuideToggle" class="sidebar-btn" aria-label="Show menu">
                         <i data-feather="menu"></i>
                         <span class="sidebar-btn-label">Menu</span>
                     </button>
@@ -364,6 +337,30 @@
                         </div>
                     </div>
 
+                    <!-- Session Sync Choice Modal -->
+                    <div id="sessionSyncModal" class="floating-modal session-sync-modal">
+                        <div class="floating-modal-header">
+                            <h3>Sync Local Data To Account</h3>
+                            <button id="closeSessionSyncModal" class="panel-close-btn toggle-btn"
+                                title="Close Panel">✕</button>
+                        </div>
+                        <div class="floating-modal-content session-sync-modal-content">
+                            <p class="sync-choice-intro">Both local data and account data were found.</p>
+                            <p class="sync-choice-intro">Choose how to continue this login sync:</p>
+                            <div class="sync-choice-grid">
+                                <button id="syncChoiceMergeBtn" class="toolbar-btn sync-choice-btn">
+                                    Merge Both
+                                </button>
+                                <button id="syncChoiceLocalBtn" class="toolbar-btn sync-choice-btn">
+                                    Upload Local Only
+                                </button>
+                                <button id="syncChoiceCloudBtn" class="toolbar-btn sync-choice-btn">
+                                    Use Account Only
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="main-content layout-full-transcript">
                         <!-- Transcript Panel (Left) -->
                         <div class="text-panel transcript-panel expanded">
@@ -580,7 +577,7 @@
                 }
 
                 sidebar.classList.toggle('expanded', isExpanded);
-                toggleBtn.setAttribute('aria-label', isExpanded ? 'Collapse toolbar' : 'Expand toolbar');
+                toggleBtn.setAttribute('aria-label', isExpanded ? 'Hide menu' : 'Show menu');
 
                 const label = toggleBtn.querySelector('.sidebar-btn-label');
                 if (label) {

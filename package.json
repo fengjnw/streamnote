@@ -9,7 +9,7 @@
     "lint": "eslint frontend --ext .js",
     "test:backend": "cd backend && python3 -m pytest -v -ra",
     "test:frontend:smoke": "node scripts/frontend-smoke.cjs",
-    "test:frontend:unit": "node scripts/frontend-unit-text-processor.cjs",
+    "test:frontend:unit": "node scripts/frontend-unit-text-processor.cjs && node scripts/frontend-unit-session-manager-sync.cjs",
     "test:all": "node scripts/test-all.cjs",
     "backup": "cd backend && python3 tools/backup_session_db.py",
     "reset": "cd backend && python3 tools/reset_test_data.py --yes"

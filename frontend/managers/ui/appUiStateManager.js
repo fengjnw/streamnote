@@ -4,20 +4,11 @@
 class AppUiStateManager {
     constructor(app) {
         this.app = app;
-        this.identityRefreshTimer = null;
         this.authUser = null;
+        this.pendingSyncChoiceResolver = null;
     }
 
-    initDeviceIdentityUI() {
-        const triggerBtn = document.getElementById("deviceIdentityBtn");
-        const panel = document.getElementById("deviceIdentityPopover");
-        if (!triggerBtn || !panel) return;
-
-        triggerBtn.addEventListener("click", (event) => {
-            event.stopPropagation();
-            panel.classList.toggle("hidden");
-        });
-
+    initAccountStatusUI() {
         const authBtn = document.getElementById("headerAuthBtn");
         if (authBtn) {
             authBtn.addEventListener("click", async (event) => {
@@ -34,32 +25,10 @@ class AppUiStateManager {
         }
 
         this.initAuthModal();
-
-        document.addEventListener("click", (event) => {
-            if (panel.classList.contains("hidden")) return;
-            const identityRoot = document.getElementById("deviceIdentityRoot");
-            if (!identityRoot || !identityRoot.contains(event.target)) {
-                panel.classList.add("hidden");
-            }
-        });
-
-        window.addEventListener("ui:close-transient-layers", () => {
-            panel.classList.add("hidden");
-        });
-
-        window.addEventListener("deviceIdentityChanged", () => this.renderDeviceIdentity());
-        window.addEventListener("sessionSyncStatusChanged", () => this.renderDeviceIdentity());
-
-        if (this.identityRefreshTimer) {
-            clearInterval(this.identityRefreshTimer);
-        }
-
-        this.identityRefreshTimer = setInterval(() => {
-            this.renderDeviceIdentity();
-        }, 15000);
+        this.initSessionSyncModal();
 
         this.refreshAuthState();
-        this.renderDeviceIdentity();
+        this.renderAccountStatus();
     }
 
     async refreshAuthState() {
@@ -71,16 +40,27 @@ class AppUiStateManager {
             const response = await this.app.apiClient.getCurrentUser();
             if (!response.ok) {
                 this.authUser = null;
-                this.renderDeviceIdentity();
+                this.app.sessionManager?.disableAccountSync();
+                this.renderAccountStatus();
                 return;
             }
             const payload = await response.json();
             this.authUser = payload?.user || null;
-        } catch (error) {
+            if (this.authUser?.email) {
+                await this.app.sessionManager?.initializeAccountSync({
+                    userKey: this.authUser.email,
+                    interactive: true,
+                    syncChoiceResolver: () => this.openSessionSyncChoiceModal(),
+                });
+            } else {
+                this.app.sessionManager?.disableAccountSync();
+            }
+        } catch {
             this.authUser = null;
+            this.app.sessionManager?.disableAccountSync();
         }
 
-        this.renderDeviceIdentity();
+        this.renderAccountStatus();
     }
 
     async handleAuthAction() {
@@ -125,6 +105,53 @@ class AppUiStateManager {
         togglePasswordBtn?.addEventListener("click", () => {
             this.toggleAuthPasswordVisibility();
         });
+    }
+
+    initSessionSyncModal() {
+        const closeBtn = document.getElementById("closeSessionSyncModal");
+        const mergeBtn = document.getElementById("syncChoiceMergeBtn");
+        const localBtn = document.getElementById("syncChoiceLocalBtn");
+        const cloudBtn = document.getElementById("syncChoiceCloudBtn");
+
+        closeBtn?.addEventListener("click", () => {
+            this.resolveSessionSyncChoice({ mode: "merge", remember: false });
+        });
+
+        mergeBtn?.addEventListener("click", () => {
+            this.resolveSessionSyncChoice("merge");
+        });
+
+        localBtn?.addEventListener("click", () => {
+            this.resolveSessionSyncChoice("local");
+        });
+
+        cloudBtn?.addEventListener("click", () => {
+            this.resolveSessionSyncChoice("cloud");
+        });
+
+        window.addEventListener("modal:closed", (event) => {
+            const modalId = event?.detail?.modalId;
+            if (modalId !== "sessionSyncModal") return;
+            if (!this.pendingSyncChoiceResolver) return;
+            this.resolveSessionSyncChoice("merge");
+        });
+    }
+
+    openSessionSyncChoiceModal() {
+        this.app.openModal("sessionSyncModal");
+
+        return new Promise((resolve) => {
+            this.pendingSyncChoiceResolver = resolve;
+        });
+    }
+
+    resolveSessionSyncChoice(result) {
+        if (this.pendingSyncChoiceResolver) {
+            const resolver = this.pendingSyncChoiceResolver;
+            this.pendingSyncChoiceResolver = null;
+            resolver(result);
+        }
+        this.app.closeModal("sessionSyncModal");
     }
 
     openAuthModal() {
@@ -220,16 +247,23 @@ class AppUiStateManager {
             if (response.ok) {
                 const data = await response.json();
                 this.authUser = data?.user || null;
+                if (this.authUser?.email) {
+                    await this.app.sessionManager?.initializeAccountSync({
+                        userKey: this.authUser.email,
+                        interactive: true,
+                        syncChoiceResolver: () => this.openSessionSyncChoiceModal(),
+                    });
+                }
                 this.closeAuthModal();
                 this.showStatusMessage(mode === "register" ? "Account created and signed in" : "Signed in", 1800);
-                this.renderDeviceIdentity();
+                this.renderAccountStatus();
                 return;
             }
 
             const errorPayload = await response.json().catch(() => ({}));
             const message = errorPayload?.error?.message || (mode === "register" ? "Sign up failed" : "Sign in failed");
             this.showAuthError(message);
-        } catch (error) {
+        } catch {
             this.showAuthError(mode === "register" ? "Network error during sign up" : "Network error during sign in");
         } finally {
             loginBtn && (loginBtn.disabled = false);
@@ -244,13 +278,14 @@ class AppUiStateManager {
 
         try {
             await this.app.apiClient.logout();
-        } catch (error) {
+        } catch {
             // Best-effort logout to keep UI consistent with browser cookie state.
         }
 
         this.authUser = null;
+        this.app.sessionManager?.disableAccountSync();
         this.showStatusMessage("Signed out", 1500);
-        this.renderDeviceIdentity();
+        this.renderAccountStatus();
     }
 
     async handleDeleteAccount() {
@@ -276,15 +311,11 @@ class AppUiStateManager {
 
             this.authUser = null;
             this.showStatusMessage("Account deleted", 1800);
-            this.renderDeviceIdentity();
+            this.renderAccountStatus();
             this.app.closeModal("settingsModal");
-        } catch (error) {
+        } catch {
             this.showStatusMessage("Network error during account deletion", 2200);
         }
-    }
-
-    buildAvatarSeed(identityInfo) {
-        return this.authUser?.email || identityInfo?.deviceId || "anonymous";
     }
 
     hashCode(text) {
@@ -314,86 +345,20 @@ class AppUiStateManager {
         return /[A-Z0-9]/.test(char) ? char : "A";
     }
 
-    getSyncStatusLabel(status) {
-        switch (status) {
-            case "syncing":
-                return "Syncing";
-            case "synced":
-                return "Synced";
-            case "offline":
-                return "Offline";
-            case "error":
-                return "Sync error";
-            default:
-                return "Pending";
-        }
-    }
-
-    formatRelativeSyncTime(timestamp) {
-        if (!timestamp) return "Not yet";
-
-        const diffMs = Math.max(0, Date.now() - timestamp);
-        const sec = Math.floor(diffMs / 1000);
-        if (sec < 5) return "just now";
-        if (sec < 60) return `${sec}s ago`;
-
-        const min = Math.floor(sec / 60);
-        if (min < 60) return `${min}m ago`;
-
-        const hour = Math.floor(min / 60);
-        if (hour < 24) return `${hour}h ago`;
-
-        const day = Math.floor(hour / 24);
-        return `${day}d ago`;
-    }
-
-    renderDeviceIdentity() {
-        const identityInfo = this.app.sessionManager?.getDeviceIdentityInfo();
-        if (!identityInfo) return;
-
-        const labelEl = document.getElementById("deviceIdentityLabel");
-        if (labelEl) {
-            labelEl.textContent = this.authUser?.email ? `User: ${this.authUser.email}` : identityInfo.label;
+    renderAccountStatus() {
+        const accountStatusEl = document.getElementById("accountStatusLabel");
+        const email = this.authUser?.email || "";
+        const statusText = email || "Not signed in";
+        if (accountStatusEl) {
+            accountStatusEl.textContent = statusText;
+            accountStatusEl.title = statusText;
         }
 
-        const typeEl = document.getElementById("identityTypeValue");
-        if (typeEl) {
-            typeEl.textContent = this.authUser?.email ? "Signed-in user" : "Anonymous device";
-        }
-
-        const accountEmailEl = document.getElementById("identityAccountEmail");
-        if (accountEmailEl) {
-            accountEmailEl.textContent = this.authUser?.email || "-";
-        }
-
-        const fullIdEl = document.getElementById("deviceIdentityFullId");
-        if (fullIdEl) {
-            fullIdEl.textContent = identityInfo.deviceId || "-";
-        }
-
-        const shortIdEl = document.getElementById("deviceIdentityShortId");
-        if (shortIdEl) {
-            shortIdEl.textContent = identityInfo.shortId || "------";
-        }
-
-        const status = this.app.sessionManager?.syncStatus || "idle";
-        const statusLabel = this.getSyncStatusLabel(status);
-
-        const statusEl = document.getElementById("deviceSyncStatus");
-        if (statusEl) {
-            statusEl.textContent = statusLabel;
-        }
-
-        const syncTimeEl = document.getElementById("deviceLastSyncTime");
-        if (syncTimeEl) {
-            syncTimeEl.textContent = this.formatRelativeSyncTime(this.app.sessionManager?.lastSyncedAt || null);
-        }
-
-        const avatarEl = document.getElementById("identityAvatar");
+        const avatarEl = document.getElementById("accountAvatar");
         if (avatarEl) {
-            const seed = this.buildAvatarSeed(identityInfo);
+            const seed = email || "anonymous";
             avatarEl.textContent = this.avatarInitialForSeed(seed);
-            avatarEl.style.background = this.avatarStyleForSeed(seed, !!this.authUser?.email);
+            avatarEl.style.background = this.avatarStyleForSeed(seed, !!email);
         }
 
         const authBtn = document.getElementById("headerAuthBtn");

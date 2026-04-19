@@ -1282,6 +1282,38 @@ textarea::placeholder {
     white-space: nowrap;
 }
 
+.session-sync-modal {
+    --modal-width: min(500px, 92vw);
+    --modal-height: auto;
+    height: auto;
+    max-height: min(82vh, 620px);
+}
+
+.session-sync-modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sync-choice-intro {
+    margin: 0;
+    color: #444;
+    font-size: 0.9em;
+    line-height: 1.55;
+}
+
+.sync-choice-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.sync-choice-btn {
+    width: 100%;
+    justify-content: flex-start;
+    min-height: 34px;
+}
+
 .edit-modal-backdrop {
     display: none;
     position: fixed;

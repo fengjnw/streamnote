@@ -425,8 +425,8 @@ class StreamNote {
         this.appUiStateManager?.syncExplanationLanguageSelectors();
     }
 
-    initDeviceIdentityUI() {
-        this.appUiStateManager?.initDeviceIdentityUI();
+    initAccountStatusUI() {
+        this.appUiStateManager?.initAccountStatusUI();
     }
 
     setEditModalVisibility(isVisible) {
