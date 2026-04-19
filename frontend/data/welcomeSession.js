@@ -1,8 +1,24 @@
 
+const WELCOME_SESSION_VERSION = '2026.04.19.1';
 
-const WELCOME_SESSION_DATA = {
+function computeWelcomeSessionSignature(session) {
+    return JSON.stringify({
+        name: session.name,
+        transcripts: session.transcripts,
+        highlights: session.highlights,
+        highlightPositions: session.highlightPositions,
+        explanations: session.explanations,
+        settings: session.settings
+    });
+}
+
+function buildWelcomeSessionData() {
+    const now = Date.now();
+
+    const data = {
     id: 'welcome-session',
     name: 'Welcome',
+    welcomeVersion: WELCOME_SESSION_VERSION,
 
     transcripts: {
         0: {
@@ -125,7 +141,7 @@ const WELCOME_SESSION_DATA = {
     contentMetadata: {
         source: 'text',
         sourceFile: 'welcome.txt',
-        uploadTime: Date.now(),
+        uploadTime: now,
         paragraphCount: 8
     },
 
@@ -137,12 +153,18 @@ const WELCOME_SESSION_DATA = {
         explanationLanguage: 'Chinese'
     },
 
-    createdAt: Date.now(),
-    startTime: Date.now(),
-    lastModified: Date.now(),
-    lastAccessed: Date.now(),
+    createdAt: now,
+    startTime: now,
+    lastModified: now,
+    lastAccessed: now,
     lastTextModified: 0
 };
+
+    data.welcomeSignature = computeWelcomeSessionSignature(data);
+    return data;
+}
+
+const WELCOME_SESSION_DATA = buildWelcomeSessionData();
 
 function shouldLoadWelcomeSession() {
     try {
@@ -156,15 +178,60 @@ function shouldLoadWelcomeSession() {
 function createWelcomeSession() {
     try {
         const sessions = JSON.parse(localStorage.getItem('streamnote_sessions') || '{}');
+        const welcomeData = buildWelcomeSessionData();
 
-        sessions[WELCOME_SESSION_DATA.id] = WELCOME_SESSION_DATA;
+        sessions[welcomeData.id] = welcomeData;
         localStorage.setItem('streamnote_sessions', JSON.stringify(sessions));
 
-        localStorage.setItem('streamnote_current_session', WELCOME_SESSION_DATA.id);
+        localStorage.setItem('streamnote_current_session', welcomeData.id);
     } catch (error) {
         console.error('[Welcome] Error creating welcome session:', error);
     }
 }
 
+function syncWelcomeSessionVersion() {
+    try {
+        const sessionsRaw = localStorage.getItem('streamnote_sessions');
+        if (!sessionsRaw) {
+            return false;
+        }
+
+        const sessions = JSON.parse(sessionsRaw);
+        const welcomeId = WELCOME_SESSION_DATA.id;
+        const existing = sessions && typeof sessions === 'object' ? sessions[welcomeId] : null;
+
+        if (!existing) {
+            return false;
+        }
+
+        const latest = buildWelcomeSessionData();
+        if (
+            existing.welcomeVersion === WELCOME_SESSION_VERSION
+            && existing.welcomeSignature === latest.welcomeSignature
+        ) {
+            return false;
+        }
+
+        const upgraded = latest;
+        const now = Date.now();
+
+        // Preserve stable timestamps when upgrading existing welcome content.
+        upgraded.createdAt = existing.createdAt || upgraded.createdAt;
+        upgraded.startTime = existing.startTime || upgraded.startTime;
+        upgraded.lastAccessed = existing.lastAccessed || now;
+        upgraded.lastModified = now;
+
+        sessions[welcomeId] = upgraded;
+        localStorage.setItem('streamnote_sessions', JSON.stringify(sessions));
+        return true;
+    } catch (error) {
+        console.error('[Welcome] Error syncing welcome session version:', error);
+        return false;
+    }
+}
+
+syncWelcomeSessionVersion();
+
 window.shouldLoadWelcomeSession = shouldLoadWelcomeSession;
 window.createWelcomeSession = createWelcomeSession;
+window.syncWelcomeSessionVersion = syncWelcomeSessionVersion;
