@@ -91,8 +91,20 @@ class SessionManager {
                 const currentId = localStorage.getItem(this.CURRENT_SESSION_KEY);
                 if (currentId && this.sessions[currentId]) {
                     this.currentSessionId = currentId;
+                } else if (this.sessions['welcome-session']) {
+                    this.currentSessionId = 'welcome-session';
+                    localStorage.setItem(this.CURRENT_SESSION_KEY, this.currentSessionId);
                 } else {
-                    this.createNewSession();
+                    const firstSessionId = Object.keys(this.sessions)[0] || null;
+                    if (firstSessionId) {
+                        this.currentSessionId = firstSessionId;
+                        localStorage.setItem(this.CURRENT_SESSION_KEY, this.currentSessionId);
+                    } else {
+                        const loaded = this.loadWelcomeSessionIntoState(false);
+                        if (!loaded) {
+                            this.createNewSession();
+                        }
+                    }
                 }
             }
         } catch (error) {
@@ -537,26 +549,31 @@ class SessionManager {
         }
 
         if (!this.currentSessionId) {
-            this.createNewSession();
+            const loaded = this.loadWelcomeSessionIntoState(false);
+            if (!loaded) {
+                this.createNewSession();
+                this.isHydratingFromRemote = false;
+                return;
+            }
+        }
+
+        if (shouldPersist) {
+            this.saveSessions();
         } else {
-            if (shouldPersist) {
-                this.saveSessions();
-            } else {
-                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.sessions));
-                localStorage.setItem(this.CURRENT_SESSION_KEY, this.currentSessionId);
-            }
-            this.renderSessionList();
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.sessions));
+            localStorage.setItem(this.CURRENT_SESSION_KEY, this.currentSessionId);
+        }
+        this.renderSessionList();
 
-            const sessionNameDisplay = document.getElementById('sessionNameDisplay');
-            if (sessionNameDisplay && this.sessions[this.currentSessionId]) {
-                sessionNameDisplay.textContent = this.sessions[this.currentSessionId].name;
-            }
+        const sessionNameDisplay = document.getElementById('sessionNameDisplay');
+        if (sessionNameDisplay && this.sessions[this.currentSessionId]) {
+            sessionNameDisplay.textContent = this.sessions[this.currentSessionId].name;
+        }
 
-            if (shouldEmit) {
-                window.dispatchEvent(new CustomEvent('sessionChanged', {
-                    detail: { sessionId: this.currentSessionId }
-                }));
-            }
+        if (shouldEmit) {
+            window.dispatchEvent(new CustomEvent('sessionChanged', {
+                detail: { sessionId: this.currentSessionId }
+            }));
         }
 
         this.isHydratingFromRemote = false;
@@ -1064,7 +1081,11 @@ class SessionManager {
                 this.sessions = {};
                 localStorage.removeItem(this.STORAGE_KEY);
                 localStorage.removeItem(this.CURRENT_SESSION_KEY);
-                this.createNewSession('Default Session');
+
+                const loaded = this.loadWelcomeSessionIntoState(true);
+                if (!loaded) {
+                    this.createNewSession();
+                }
                 alert('All data cleared');
             }
         }
@@ -1094,7 +1115,10 @@ class SessionManager {
             if (sessionIds.length > 0) {
                 this.switchSession(sessionIds[sessionIds.length - 1]);
             } else {
-                this.createNewSession("Default Session");
+                const loaded = this.loadWelcomeSessionIntoState(true);
+                if (!loaded) {
+                    this.createNewSession();
+                }
             }
         }
     }
