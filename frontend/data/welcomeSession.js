@@ -7,49 +7,49 @@ const WELCOME_SESSION_DATA = {
     transcripts: {
         0: {
             index: 0,
-            text: 'Welcome to StreamNote, your intelligent learning assistant for managing lecture notes and transcripts.',
+            text: 'Welcome to StreamNote. This workspace is designed so the interface itself guides your flow from capture to output.',
             timestamp: 1,
             source: 'text'
         },
         1: {
             index: 1,
-            text: 'All feature buttons are on the left and right sidebars. Let\'s explore the main features with a quick walkthrough.',
+            text: 'Use the left sidebar from top to bottom: Start a session, add content, understand the text, then generate final output.',
             timestamp: 6,
             source: 'text'
         },
         2: {
             index: 2,
-            text: '1. Start Here: Click ➕ to create a new session for your lecture. You can always come back by clicking 📋 to open sessions, then select Welcome.',
+            text: 'Start: New Session creates a clean workspace. Sessions lets you switch between saved study contexts at any time.',
             timestamp: 11,
             source: 'text'
         },
         3: {
             index: 3,
-            text: '2. Record Your Lecture: Click the 🎤 button to record audio, or use 📤 to upload files (DOCX, TXT, PDF), or paste text directly. StreamNote converts audio and documents to text automatically.',
+            text: 'Input: Record captures live speech. Import adds text or files. Edit lets you refine transcript quality before analysis.',
             timestamp: 16,
             source: 'text'
         },
         4: {
             index: 4,
-            text: '3. Understand Globally: Click 🌐 to translate your recorded content into other languages. Use the toolbar to select your preferred language.',
+            text: 'Understand: Translate rewrites content into your target language. Explain helps you inspect difficult phrases in context.',
             timestamp: 21,
             source: 'text'
         },
         5: {
             index: 5,
-            text: '4. Interactive Learning: While reviewing, select important phrases to 🚩 highlight them, or for 📖 instant explanation.',
+            text: 'Deepen: Keywords surfaces core concepts, and Highlights marks important lines for later review and revision.',
             timestamp: 26,
             source: 'text'
         },
         6: {
             index: 6,
-            text: '5. Extract Key Concepts: Click the 🏷️ button to see auto-extracted keywords from your lecture.',
+            text: 'Output: Summary builds a compact overview for quick recap, while Export saves your session artifacts for reuse.',
             timestamp: 31,
             source: 'text'
         },
         7: {
             index: 7,
-            text: '6. Quick Review: Click 📃 to get intelligent summaries of the entire lecture. Multiple formats available including key takeaways and Q&A. Perfect for studying later.',
+            text: 'Tip: If labels are hidden, use the top menu button to expand the sidebar and reveal full action names.',
             timestamp: 36,
             source: 'text'
         }
@@ -68,12 +68,12 @@ const WELCOME_SESSION_DATA = {
 
     highlights: [
         'StreamNote',
-        'Start Here',
-        'Record Your Lecture',
-        'Understand Globally',
-        'Interactive Learning',
-        'Extract Key Concepts',
-        'Quick Review'
+        'Start',
+        'Input',
+        'Understand',
+        'Deepen',
+        'Output',
+        'Tip'
     ],
 
     highlightPositions: {
@@ -82,35 +82,35 @@ const WELCOME_SESSION_DATA = {
             startIndex: 11,
             endIndex: 21
         },
-        'Start Here': {
+        'Start': {
             sourceIndices: [2],
-            startIndex: 3,
-            endIndex: 13
+            startIndex: 0,
+            endIndex: 5
         },
-        'Record Your Lecture': {
+        'Input': {
             sourceIndices: [3],
-            startIndex: 3,
-            endIndex: 23
+            startIndex: 0,
+            endIndex: 5
         },
-        'Understand Globally': {
+        'Understand': {
             sourceIndices: [4],
-            startIndex: 3,
-            endIndex: 22
+            startIndex: 0,
+            endIndex: 10
         },
-        'Interactive Learning': {
+        'Deepen': {
             sourceIndices: [5],
-            startIndex: 3,
-            endIndex: 23
+            startIndex: 0,
+            endIndex: 6
         },
-        'Extract Key Concepts': {
+        'Output': {
             sourceIndices: [6],
-            startIndex: 3,
-            endIndex: 23
+            startIndex: 0,
+            endIndex: 6
         },
-        'Quick Review': {
+        'Tip': {
             sourceIndices: [7],
-            startIndex: 3,
-            endIndex: 15
+            startIndex: 0,
+            endIndex: 3
         }
     },
 
@@ -126,10 +126,10 @@ const WELCOME_SESSION_DATA = {
         source: 'text',
         sourceFile: 'welcome.txt',
         uploadTime: Date.now(),
-        paragraphCount: 10
+        paragraphCount: 8
     },
 
-    explanations: ['Record', 'Upload', 'Highlight', 'Keywords', 'Translation', 'Summary'],
+    explanations: ['Session', 'Record', 'Import', 'Translate', 'Keywords', 'Summary'],
     explanationHistory: [],
 
     settings: {

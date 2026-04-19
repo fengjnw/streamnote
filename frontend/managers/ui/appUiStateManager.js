@@ -221,16 +221,16 @@ class AppUiStateManager {
                 const data = await response.json();
                 this.authUser = data?.user || null;
                 this.closeAuthModal();
-                this.showStatusMessage(mode === "register" ? "Account created and logged in" : "Logged in", 1800);
+                this.showStatusMessage(mode === "register" ? "Account created and signed in" : "Signed in", 1800);
                 this.renderDeviceIdentity();
                 return;
             }
 
             const errorPayload = await response.json().catch(() => ({}));
-            const message = errorPayload?.error?.message || (mode === "register" ? "Register failed" : "Login failed");
+            const message = errorPayload?.error?.message || (mode === "register" ? "Sign up failed" : "Sign in failed");
             this.showAuthError(message);
         } catch (error) {
-            this.showAuthError(mode === "register" ? "Network error during register" : "Network error during login");
+            this.showAuthError(mode === "register" ? "Network error during sign up" : "Network error during sign in");
         } finally {
             loginBtn && (loginBtn.disabled = false);
             registerBtn && (registerBtn.disabled = false);
@@ -249,13 +249,13 @@ class AppUiStateManager {
         }
 
         this.authUser = null;
-        this.showStatusMessage("Logged out", 1500);
+        this.showStatusMessage("Signed out", 1500);
         this.renderDeviceIdentity();
     }
 
     async handleDeleteAccount() {
         if (!this.authUser?.email) {
-            this.showStatusMessage("Please log in first", 1800);
+            this.showStatusMessage("Please sign in first", 1800);
             return;
         }
 
@@ -358,7 +358,7 @@ class AppUiStateManager {
 
         const typeEl = document.getElementById("identityTypeValue");
         if (typeEl) {
-            typeEl.textContent = this.authUser?.email ? "Logged in user" : "Anonymous device";
+            typeEl.textContent = this.authUser?.email ? "Signed-in user" : "Anonymous device";
         }
 
         const accountEmailEl = document.getElementById("identityAccountEmail");
@@ -399,23 +399,23 @@ class AppUiStateManager {
         const authBtn = document.getElementById("headerAuthBtn");
         if (authBtn) {
             if (this.authUser?.email) {
-                authBtn.textContent = "Log Out";
-                authBtn.title = "Log out";
+                authBtn.textContent = "Sign Out";
+                authBtn.title = "Sign out";
             } else {
-                authBtn.textContent = "Log In";
-                authBtn.title = "Log in";
+                authBtn.textContent = "Sign In";
+                authBtn.title = "Sign in";
             }
         }
 
         const settingsAccountEmailEl = document.getElementById("settingsAccountEmail");
         if (settingsAccountEmailEl) {
-            settingsAccountEmailEl.textContent = this.authUser?.email || "Not logged in";
+            settingsAccountEmailEl.textContent = this.authUser?.email || "Not signed in";
         }
 
         const deleteAccountBtn = document.getElementById("deleteAccountBtn");
         if (deleteAccountBtn) {
             deleteAccountBtn.disabled = !this.authUser?.email;
-            deleteAccountBtn.title = this.authUser?.email ? "Delete current account" : "Log in to enable account deletion";
+            deleteAccountBtn.title = this.authUser?.email ? "Delete current account" : "Sign in to enable account deletion";
         }
     }
 

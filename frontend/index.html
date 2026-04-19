@@ -68,7 +68,7 @@
                     <span id="identityAvatar" class="identity-avatar">A</span>
                     <span id="deviceIdentityLabel">Device #------</span>
                 </button>
-                <button id="headerAuthBtn" class="device-auth-btn" title="Log in">Log In</button>
+                <button id="headerAuthBtn" class="device-auth-btn" title="Sign in">Sign In</button>
                 <div id="deviceIdentityPopover" class="device-identity-popover hidden">
                     <div class="device-identity-title">Local Identity</div>
                     <div class="device-identity-row">
@@ -369,25 +369,6 @@
                         <div class="text-panel transcript-panel expanded">
                             <!-- Panel Content -->
                             <div class="text-panel-content">
-                                <div id="onboardingGuide" class="onboarding-guide-card">
-                                    <h3>Get Started in 3 Steps</h3>
-                                    <p class="onboarding-guide-subtitle">Capture content, enrich it, then export
-                                        structured insights.</p>
-                                    <div class="onboarding-steps">
-                                        <button class="onboarding-step-btn" data-action-target="recordBtn">
-                                            <span class="onboarding-step-index">1</span>
-                                            <span class="onboarding-step-text">Start recording</span>
-                                        </button>
-                                        <button class="onboarding-step-btn" data-action-target="addContentBtn">
-                                            <span class="onboarding-step-index">2</span>
-                                            <span class="onboarding-step-text">Or import content</span>
-                                        </button>
-                                        <button class="onboarding-step-btn" data-action-target="quickAccessSummary">
-                                            <span class="onboarding-step-index">3</span>
-                                            <span class="onboarding-step-text">Generate summary</span>
-                                        </button>
-                                    </div>
-                                </div>
                                 <div id="transcript" class="transcript">
                                     <p class="placeholder">Start recording or add text</p>
                                 </div>
@@ -625,66 +606,11 @@
             });
         }
 
-        function hasTranscriptContent() {
-            const transcript = document.getElementById('transcript');
-            if (!transcript) {
-                return false;
-            }
-
-            const placeholder = transcript.querySelector('.placeholder');
-            if (placeholder) {
-                return false;
-            }
-
-            return transcript.textContent.trim().length > 0;
-        }
-
-        function updateOnboardingGuideVisibility() {
-            const guide = document.getElementById('onboardingGuide');
-            if (!guide) {
-                return;
-            }
-
-            guide.classList.toggle('hidden', hasTranscriptContent());
-        }
-
-        function initOnboardingGuideActions() {
-            const guide = document.getElementById('onboardingGuide');
-            if (!guide) {
-                return;
-            }
-
-            guide.addEventListener('click', (event) => {
-                const actionBtn = event.target.closest('.onboarding-step-btn');
-                if (!actionBtn) {
-                    return;
-                }
-
-                const targetId = actionBtn.getAttribute('data-action-target');
-                const targetButton = targetId ? document.getElementById(targetId) : null;
-                if (targetButton) {
-                    targetButton.click();
-                }
-            });
-
-            const transcript = document.getElementById('transcript');
-            if (transcript) {
-                const observer = new MutationObserver(() => {
-                    updateOnboardingGuideVisibility();
-                });
-                observer.observe(transcript, { childList: true, subtree: true, characterData: true });
-            }
-
-            window.addEventListener('sessionChanged', updateOnboardingGuideVisibility);
-            updateOnboardingGuideVisibility();
-        }
-
         // Initialize Feather Icons when DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
             syncSidebarExpandedWidth();
             feather.replace();
             initSidebarExpansionControls();
-            initOnboardingGuideActions();
             feather.replace();
         });
 
