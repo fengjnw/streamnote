@@ -187,7 +187,6 @@ class AppUiStateManager {
         passwordInput.type = visible ? "text" : "password";
         toggleBtn.textContent = visible ? "Hide" : "Show";
         toggleBtn.setAttribute("aria-label", visible ? "Hide password" : "Show password");
-        toggleBtn.setAttribute("title", visible ? "Hide password" : "Show password");
     }
 
     toggleAuthPasswordVisibility() {
@@ -365,10 +364,10 @@ class AppUiStateManager {
         if (authBtn) {
             if (this.authUser?.email) {
                 authBtn.textContent = "Sign Out";
-                authBtn.title = "Sign out";
+                authBtn.removeAttribute("title");
             } else {
                 authBtn.textContent = "Sign In";
-                authBtn.title = "Sign in";
+                authBtn.removeAttribute("title");
             }
         }
 
@@ -380,7 +379,11 @@ class AppUiStateManager {
         const deleteAccountBtn = document.getElementById("deleteAccountBtn");
         if (deleteAccountBtn) {
             deleteAccountBtn.disabled = !this.authUser?.email;
-            deleteAccountBtn.title = this.authUser?.email ? "Delete current account" : "Sign in to enable account deletion";
+            if (this.authUser?.email) {
+                deleteAccountBtn.removeAttribute("title");
+            } else {
+                deleteAccountBtn.title = "Sign in to delete account";
+            }
         }
     }
 

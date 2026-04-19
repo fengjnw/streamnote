@@ -83,8 +83,6 @@ class UiListenersManager {
                 }
 
                 autoExtractKeywordsBtn.disabled = true;
-                const originalTitle = autoExtractKeywordsBtn.title;
-                autoExtractKeywordsBtn.title = "Extracting...";
 
                 try {
                     await app.processKeywords(app.recordingSessionId || app.sessionManager.currentSessionId);
@@ -94,7 +92,6 @@ class UiListenersManager {
                     app.showStatusMessage("Failed to extract keywords", 2000);
                 } finally {
                     autoExtractKeywordsBtn.disabled = false;
-                    autoExtractKeywordsBtn.title = originalTitle;
                 }
             });
         }

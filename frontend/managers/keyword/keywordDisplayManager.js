@@ -23,6 +23,7 @@ class KeywordDisplayManager {
 
             const isHighlighted = showAddHighlightBtn && this.keywordManager.highlights?.includes(item);
             const btnClass = isHighlighted ? "keyword-highlight-toggle-btn active" : "keyword-highlight-toggle-btn";
+            const highlightTooltip = isHighlighted ? "Remove from highlights" : "Add to highlights";
 
             return `
                     <div class="keyword-item-wrapper" data-keyword="${index}" title="${this.escapeHtml(item)}">
@@ -30,9 +31,9 @@ class KeywordDisplayManager {
                             <span class="keyword-text" onclick="window.keywordManagerInstance.scrollToKeyword('${escapedItem}')">
                                 ${this.escapeHtml(item)}
                             </span>
-                            ${showAddHighlightBtn ? `<button class="${btnClass}" onclick="window.keywordManagerInstance.toggleExtractedKeywordHighlight('${escapedItem}')" title="Toggle highlight"><i data-feather="flag"></i></button>` : ""}
-                            <button class="keyword-explain-btn" onclick="window.keywordManagerInstance.openExplanationForWord('${escapedItem}')" title="View explanation"><i data-feather="book-open"></i></button>
-                            ${showDeleteBtn ? `<button class="keyword-delete-btn" onclick="window.keywordManagerInstance.${deleteHandlerName}('${escapedItem}')" title="Delete"><i data-feather="trash-2"></i></button>` : ""}
+                            ${showAddHighlightBtn ? `<button class="${btnClass}" onclick="window.keywordManagerInstance.toggleExtractedKeywordHighlight('${escapedItem}')" title="${highlightTooltip}"><i data-feather="flag"></i></button>` : ""}
+                            <button class="keyword-explain-btn" onclick="window.keywordManagerInstance.openExplanationForWord('${escapedItem}')" title="Open explanation"><i data-feather="book-open"></i></button>
+                            ${showDeleteBtn ? `<button class="keyword-delete-btn" onclick="window.keywordManagerInstance.${deleteHandlerName}('${escapedItem}')" title="Remove item"><i data-feather="trash-2"></i></button>` : ""}
                         </div>
                     </div>
                 `;

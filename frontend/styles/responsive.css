@@ -27,18 +27,18 @@
     }
 
     .account-identity-pill {
-        min-width: 96px;
-        padding: 4px 7px;
+        min-width: auto;
+        padding: 0;
     }
 
     .account-avatar {
-        width: 16px;
-        height: 16px;
+        width: 18px;
+        height: 18px;
         font-size: 0.68em;
     }
 
     .account-status-label {
-        font-size: 0.78em;
+        font-size: 0.8em;
         max-width: 130px;
     }
 

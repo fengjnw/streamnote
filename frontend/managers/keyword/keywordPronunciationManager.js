@@ -24,7 +24,7 @@ class KeywordPronunciationManager {
             this.keywordManager.isPronouncing = false;
             const btn = document.getElementById("pronounce-current-word-btn");
             if (btn) {
-                btn.title = "Pronounce the word";
+                btn.title = "Pronounce word";
                 btn.classList.remove("pronouncing");
             }
             return;
@@ -42,7 +42,7 @@ class KeywordPronunciationManager {
             this.keywordManager.isPronouncing = true;
             const btn = document.getElementById("pronounce-current-word-btn");
             if (btn) {
-                btn.title = "Stop pronouncing";
+                btn.title = "Stop pronunciation";
                 btn.classList.add("pronouncing");
             }
         };
@@ -51,7 +51,7 @@ class KeywordPronunciationManager {
             this.keywordManager.isPronouncing = false;
             const btn = document.getElementById("pronounce-current-word-btn");
             if (btn) {
-                btn.title = "Pronounce the word";
+                btn.title = "Pronounce word";
                 btn.classList.remove("pronouncing");
             }
         };
@@ -60,7 +60,7 @@ class KeywordPronunciationManager {
             this.keywordManager.isPronouncing = false;
             const btn = document.getElementById("pronounce-current-word-btn");
             if (btn) {
-                btn.title = "Pronounce the word";
+                btn.title = "Pronounce word";
                 btn.classList.remove("pronouncing");
             }
         };

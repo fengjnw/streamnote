@@ -29,25 +29,25 @@ class RecordingControlManager {
             const sessionBtn = document.getElementById('openSessionPanel');
             if (sessionBtn) {
                 sessionBtn.disabled = true;
-                sessionBtn.title = 'Cannot switch sessions while recording';
+                sessionBtn.title = 'Switching sessions is unavailable while recording';
             }
 
             const addContentBtn = document.getElementById('addContentBtn');
             if (addContentBtn) {
                 addContentBtn.disabled = true;
-                addContentBtn.title = 'Cannot add content while recording';
+                addContentBtn.title = 'Importing content is unavailable while recording';
             }
 
             const downloadSessionBtn = document.getElementById('downloadSessionBtn');
             if (downloadSessionBtn) {
                 downloadSessionBtn.disabled = true;
-                downloadSessionBtn.title = 'Cannot download sessions while recording';
+                downloadSessionBtn.title = 'Exporting sessions is unavailable while recording';
             }
 
             const editBtn = document.getElementById('editTextBtn');
             if (editBtn) {
                 editBtn.disabled = true;
-                editBtn.title = 'Cannot edit while recording';
+                editBtn.title = 'Editing transcript is unavailable while recording';
             }
 
             this.app.updateTranscriptionContext();
@@ -87,25 +87,25 @@ class RecordingControlManager {
             const sessionBtn = document.getElementById('openSessionPanel');
             if (sessionBtn) {
                 sessionBtn.disabled = false;
-                sessionBtn.title = 'Open Sessions';
+                sessionBtn.removeAttribute('title');
             }
 
             const addContentBtn = document.getElementById('addContentBtn');
             if (addContentBtn) {
                 addContentBtn.disabled = false;
-                addContentBtn.title = 'Add content from file or text';
+                addContentBtn.removeAttribute('title');
             }
 
             const downloadSessionBtn = document.getElementById('downloadSessionBtn');
             if (downloadSessionBtn) {
                 downloadSessionBtn.disabled = false;
-                downloadSessionBtn.title = 'Download sessions';
+                downloadSessionBtn.removeAttribute('title');
             }
 
             const editBtn = document.getElementById('editTextBtn');
             if (editBtn && Object.keys(this.app.recordingManager.preciseResults).length > 0) {
                 editBtn.disabled = false;
-                editBtn.title = 'Edit transcript';
+                editBtn.removeAttribute('title');
             }
 
             this.updateRecordingButtonState();

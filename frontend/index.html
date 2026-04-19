@@ -64,11 +64,11 @@
                 </div>
             </div>
             <div class="account-status" id="accountStatusRoot">
-                <div class="account-identity-pill" title="Account status">
+                <div class="account-identity-pill">
                     <span id="accountAvatar" class="account-avatar">A</span>
                     <span id="accountStatusLabel" class="account-status-label">Not signed in</span>
                 </div>
-                <button id="headerAuthBtn" class="account-auth-btn" title="Sign in">Sign In</button>
+                <button id="headerAuthBtn" class="account-auth-btn">Sign In</button>
             </div>
         </div>
     </header>
@@ -78,7 +78,7 @@
             <!-- Left Sidebar -->
             <aside class="sidebar sidebar-left">
                 <div class="sidebar-section">
-                    <button id="leftSidebarGuideToggle" class="sidebar-btn" aria-label="Show menu">
+                    <button id="leftSidebarGuideToggle" class="sidebar-btn" aria-label="Open menu">
                         <i data-feather="menu"></i>
                         <span class="sidebar-btn-label">Menu</span>
                     </button>
@@ -91,7 +91,7 @@
                     <div class="sidebar-group-title">Start</div>
                     <button id="sidebarNewSessionBtn" class="sidebar-btn" aria-label="Create session"><i
                             data-feather="plus"></i><span class="sidebar-btn-label">New Session</span></button>
-                    <button id="openSessionPanel" class="sidebar-btn" aria-label="Manage sessions"><i
+                    <button id="openSessionPanel" class="sidebar-btn" aria-label="Open sessions"><i
                             data-feather="folder"></i><span class="sidebar-btn-label">Sessions</span></button>
                 </div>
 
@@ -115,13 +115,13 @@
                 <!-- Group 3: Understand -->
                 <div class="sidebar-section">
                     <div class="sidebar-group-title">Understand</div>
-                    <button id="translationToggleBtn" class="sidebar-btn" aria-label="Show translation"><i
+                    <button id="translationToggleBtn" class="sidebar-btn" aria-label="Toggle translation panel"><i
                             data-feather="globe"></i><span class="sidebar-btn-label">Translate</span></button>
-                    <button id="quickAccessKeywords" class="sidebar-btn" aria-label="Extract keywords"><i
+                    <button id="quickAccessKeywords" class="sidebar-btn" aria-label="Open keywords panel"><i
                             data-feather="tag"></i><span class="sidebar-btn-label">Keywords</span></button>
-                    <button id="quickAccessHighlights" class="sidebar-btn" aria-label="View highlights"><i
+                    <button id="quickAccessHighlights" class="sidebar-btn" aria-label="Open highlights panel"><i
                             data-feather="flag"></i><span class="sidebar-btn-label">Highlights</span></button>
-                    <button id="quickAccessHistory" class="sidebar-btn" aria-label="Explain terms"><i
+                    <button id="quickAccessHistory" class="sidebar-btn" aria-label="Open explanations panel"><i
                             data-feather="book-open"></i><span class="sidebar-btn-label">Explain</span></button>
                 </div>
 
@@ -130,7 +130,7 @@
                 <!-- Group 4: Output -->
                 <div class="sidebar-section">
                     <div class="sidebar-group-title">Output</div>
-                    <button id="quickAccessSummary" class="sidebar-btn" aria-label="Generate summary"><i
+                    <button id="quickAccessSummary" class="sidebar-btn" aria-label="Open summary panel"><i
                             data-feather="file-text"></i><span class="sidebar-btn-label">Summary</span></button>
                 </div>
 
@@ -138,7 +138,7 @@
 
                 <!-- Bottom: Settings -->
                 <div class="sidebar-section">
-                    <button id="quickAccessSettings" class="sidebar-btn" aria-label="Open settings"><i
+                    <button id="quickAccessSettings" class="sidebar-btn" aria-label="Open settings panel"><i
                             data-feather="settings"></i><span class="sidebar-btn-label">Settings</span></button>
                 </div>
             </aside>
@@ -171,7 +171,7 @@
                         <div class="explanation-panel-header">
                             <h3>Explanation</h3>
                             <button id="closeExplanationPanelBtn" class="panel-close-btn toggle-btn"
-                                title="Close Panel">✕</button>
+                                title="Close panel">✕</button>
                         </div>
                         <!-- Panel Toolbar -->
                         <div class="panel-toolbar explanation-panel-toolbar">
@@ -183,12 +183,10 @@
                                 <option value="Japanese">日本語</option>
                                 <option value="Korean">한국어</option>
                             </select>
-                            <button id="clearExplanationsBtn" class="toolbar-btn danger"
-                                title="Clear explanation display">Clear</button>
+                            <button id="clearExplanationsBtn" class="toolbar-btn danger">Clear</button>
                         </div>
                         <div class="panel-toolbar explanation-panel-toolbar">
-                            <button id="reexplain-explanation-btn" class="toolbar-btn" disabled
-                                title="Refresh explanation">Refresh</button>
+                            <button id="reexplain-explanation-btn" class="toolbar-btn" disabled>Refresh</button>
                         </div>
                         <div class="explanation-panel-content">
                             <div id="explanation-focus-view" class="explanation-focus-view">
@@ -197,7 +195,7 @@
                                         <h4 id="current-explanation-word" class="current-word"></h4>
                                         <div class="explanation-header-buttons">
                                             <button id="pronounce-current-word-btn" class="header-icon-btn" disabled
-                                                title="Pronounce the word"><i data-feather="volume-2"></i></button>
+                                                title="Pronounce word"><i data-feather="volume-2"></i></button>
                                             <button id="highlight-current-word-btn" class="header-icon-btn"
                                                 title="Add to highlights"><i data-feather="flag"></i></button>
                                         </div>
@@ -221,13 +219,12 @@
                         <div class="floating-modal-header">
                             <h3>Sessions</h3>
                             <button id="closeSessionModal" class="panel-close-btn toggle-btn"
-                                title="Close Panel">✕</button>
+                                title="Close panel">✕</button>
                         </div>
                         <div class="floating-modal-toolbar">
-                            <button id="newSessionBtn" class="toolbar-btn" title="New Session">New</button>
-                            <button id="renameSessionBtn" class="toolbar-btn" title="Rename session">Rename</button>
-                            <button id="deleteSessionBtn" class="toolbar-btn danger"
-                                title="Delete current session">Delete</button>
+                            <button id="newSessionBtn" class="toolbar-btn">New</button>
+                            <button id="renameSessionBtn" class="toolbar-btn">Rename</button>
+                            <button id="deleteSessionBtn" class="toolbar-btn danger">Delete</button>
                         </div>
                         <div class="floating-modal-content">
                             <div class="session-list" id="sessionList">
@@ -244,7 +241,8 @@
                     <div id="editModal" class="floating-modal edit-modal">
                         <div class="floating-modal-header input-group-modal-header">
                             <h3>Edit</h3>
-                            <button id="closeEditModal" class="panel-close-btn toggle-btn" title="Close">✕</button>
+                            <button id="closeEditModal" class="panel-close-btn toggle-btn"
+                                title="Close panel">✕</button>
                         </div>
                         <div class="floating-modal-content edit-modal-content">
                             <div id="editRowsContainer" class="edit-rows-container">
@@ -262,7 +260,7 @@
                         <div class="floating-modal-header">
                             <h3>Settings</h3>
                             <button id="closeSettingsModal" class="panel-close-btn toggle-btn"
-                                title="Close Panel">✕</button>
+                                title="Close panel">✕</button>
                         </div>
                         <div class="floating-modal-content">
                             <div class="settings-scroll-container">
@@ -312,7 +310,7 @@
                         <div class="floating-modal-header">
                             <h3>Account</h3>
                             <button id="closeAuthModal" class="panel-close-btn toggle-btn"
-                                title="Close Panel">✕</button>
+                                title="Close panel">✕</button>
                         </div>
                         <div class="floating-modal-content auth-modal-content">
                             <div class="auth-form-row">
@@ -326,7 +324,7 @@
                                     <input id="authPasswordInput" type="password" autocomplete="current-password"
                                         placeholder="At least 6 characters" />
                                     <button id="toggleAuthPasswordBtn" type="button" class="auth-password-toggle"
-                                        aria-label="Show password" title="Show password">Show</button>
+                                        aria-label="Show password">Show</button>
                                 </div>
                             </div>
                             <p id="authErrorMessage" class="auth-error-message hidden"></p>
@@ -342,7 +340,7 @@
                         <div class="floating-modal-header">
                             <h3>Sync Local Data To Account</h3>
                             <button id="closeSessionSyncModal" class="panel-close-btn toggle-btn"
-                                title="Close Panel">✕</button>
+                                title="Close panel">✕</button>
                         </div>
                         <div class="floating-modal-content session-sync-modal-content">
                             <p class="sync-choice-intro">Both local data and account data were found.</p>
@@ -378,7 +376,7 @@
                             <div class="text-panel-header">
                                 <h3>Translation</h3>
                                 <button id="closeTranslationPanelBtn" class="panel-close-btn toggle-btn"
-                                    title="Close Panel">✕</button>
+                                    title="Close panel">✕</button>
                             </div>
                             <!-- Panel Toolbar -->
                             <div class="panel-toolbar text-panel-toolbar">
@@ -407,8 +405,7 @@
                         </div>
 
                         <!-- Floating Auto Scroll Button -->
-                        <button id="floatingAutoScrollBtn" class="floating-auto-scroll-btn hidden"
-                            title="Click to jump to latest">
+                        <button id="floatingAutoScrollBtn" class="floating-auto-scroll-btn hidden">
                             Back to Latest
                         </button>
                     </div>
@@ -419,14 +416,13 @@
                         <div class="side-panel-header">
                             <h3 id="sidePanelTitle">Keywords</h3>
                             <button id="closeSidePanelBtn" class="panel-close-btn toggle-btn"
-                                title="Close Panel">✕</button>
+                                title="Close panel">✕</button>
                         </div>
 
                         <!-- Highlights Content -->
                         <div id="highlightsContent" class="panel-content">
                             <div class="panel-toolbar">
-                                <button id="clearHighlightsBtn" class="toolbar-btn danger"
-                                    title="Clear all highlights">Clear</button>
+                                <button id="clearHighlightsBtn" class="toolbar-btn danger">Clear</button>
                             </div>
                             <div id="manual-keywords-display" class="keywords-items">
                                 <p class="placeholder">Select text to highlight and add to this panel</p>
@@ -436,10 +432,8 @@
                         <!-- Keywords Content -->
                         <div id="keywordsContent" class="panel-content active">
                             <div class="panel-toolbar">
-                                <button id="reExtractKeywordsBtn" class="toolbar-btn"
-                                    title="Refresh keywords">Refresh</button>
-                                <button id="clearKeywordsBtn" class="toolbar-btn danger"
-                                    title="Clear all keywords">Clear</button>
+                                <button id="reExtractKeywordsBtn" class="toolbar-btn">Refresh</button>
+                                <button id="clearKeywordsBtn" class="toolbar-btn danger">Clear</button>
                             </div>
                             <!-- Auto-extracted Keywords Section -->
                             <div id="auto-keywords-display" class="keywords-tab-content active">
@@ -450,7 +444,7 @@
                         <!-- Summary Content -->
                         <div id="summaryContent" class="panel-content">
                             <div class="panel-toolbar">
-                                <select id="summary-language" class="toolbar-select" title="Summary language">
+                                <select id="summary-language" class="toolbar-select">
                                     <option value="Chinese">中文</option>
                                     <option value="English">English</option>
                                     <option value="Spanish">Español</option>
@@ -458,17 +452,15 @@
                                     <option value="Japanese">日本語</option>
                                     <option value="Korean">한국어</option>
                                 </select>
-                                <button id="clearSummaryBtn" class="toolbar-btn danger"
-                                    title="Clear summary">Clear</button>
+                                <button id="clearSummaryBtn" class="toolbar-btn danger">Clear</button>
                             </div>
                             <div class="panel-toolbar">
-                                <select id="summarizeStyleSelect" class="toolbar-select" title="Summary style">
+                                <select id="summarizeStyleSelect" class="toolbar-select">
                                     <option value="paragraph">Paragraph</option>
                                     <option value="key_takeaways">Key Takeaways</option>
                                     <option value="q&a">Q&A</option>
                                 </select>
-                                <button id="regenerateSummaryBtn" class="toolbar-btn"
-                                    title="Refresh summary">Refresh</button>
+                                <button id="regenerateSummaryBtn" class="toolbar-btn">Refresh</button>
                             </div>
                             <div id="summary-display" class="summary-text">
                                 <p class="placeholder">Select a style and click Refresh to create a summary</p>
@@ -491,11 +483,11 @@
 
     <!-- Floating Context Menu for Text Selection -->
     <div id="textSelectionMenu" class="floating-menu hidden">
-        <button id="floatingExplainBtn" class="floating-menu-item" title="Explain selected text">
+        <button id="floatingExplainBtn" class="floating-menu-item">
             <i data-feather="book-open" class="menu-icon"></i>
             <span class="menu-label">Explain</span>
         </button>
-        <button id="floatingHighlightBtn" class="floating-menu-item" title="Highlight selected text">
+        <button id="floatingHighlightBtn" class="floating-menu-item">
             <i data-feather="flag" class="menu-icon"></i>
             <span class="menu-label">Highlight</span>
         </button>
@@ -577,7 +569,7 @@
                 }
 
                 sidebar.classList.toggle('expanded', isExpanded);
-                toggleBtn.setAttribute('aria-label', isExpanded ? 'Hide menu' : 'Show menu');
+                toggleBtn.setAttribute('aria-label', isExpanded ? 'Collapse menu' : 'Open menu');
 
                 const label = toggleBtn.querySelector('.sidebar-btn-label');
                 if (label) {
