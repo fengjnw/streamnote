@@ -62,10 +62,16 @@
     /* 浅灰文字 */
     --color-grey-500: #999999;
     /* 更浅灰文字 */
+    --color-grey-550: #888888;
+    /* 次级提示灰 */
     --color-grey-400: #bbbbbb;
     /* 提示文字 */
+    --color-grey-650: #555555;
+    /* 深提示灰 */
     --color-grey-300: #dddddd;
     /* 边框 */
+    --color-grey-750: #444444;
+    /* 接近正文的深灰 */
     --color-grey-200: #e0e0e0;
     /* 淡边框 */
     --color-grey-100: #f0f0f0;
@@ -123,6 +129,8 @@
     --color-panel-header-text: white;
     --color-primary-hover-bg: #6f8ea8;
     --color-primary-active-bg: #42657a;
+    --color-avatar-bg: #64748b;
+    --color-accent-orange: #ff8c00;
     --color-grey-card-bg: #f8fafc;
     --color-grey-divider: #e6eaee;
     --color-grey-subtle-bg: #f5f7fa;

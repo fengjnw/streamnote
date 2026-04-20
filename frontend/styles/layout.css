@@ -98,23 +98,23 @@
 }
 
 .sidebar-btn.active {
-    background: transparent !important;
-    color: var(--color-primary) !important;
-    box-shadow: none !important;
+    background: transparent;
+    color: var(--color-primary);
+    box-shadow: none;
 }
 
 .sidebar-btn.active:hover:not(:disabled) {
-    background: transparent !important;
-    color: var(--color-primary) !important;
+    background: transparent;
+    color: var(--color-primary);
     transform: none;
 }
 
 #recordBtn.active {
-    color: var(--color-danger) !important;
+    color: var(--color-danger);
 }
 
 #recordBtn.active:hover:not(:disabled) {
-    color: var(--color-danger-dark) !important;
+    color: var(--color-danger-dark);
 }
 
 .sidebar-btn:disabled {
@@ -158,8 +158,8 @@
 
 .sidebar.expanded .sidebar-btn {
     width: 100%;
-    justify-content: flex-start !important;
-    padding: 2px 10px !important;
+    justify-content: flex-start;
+    padding: 2px 10px;
 }
 
 .sidebar.expanded .sidebar-btn-label {
@@ -187,7 +187,7 @@
     align-items: center;
     padding: 8px var(--spacing-md);
     background: var(--color-primary);
-    color: white;
+    color: var(--color-white);
     flex-shrink: 0;
     gap: var(--spacing-sm);
     border-bottom: none;
@@ -282,7 +282,7 @@
     justify-content: space-between;
     padding: 10px var(--spacing-md);
     background: var(--color-primary);
-    color: white;
+    color: var(--color-white);
     gap: var(--spacing-sm);
     border-bottom: none;
     position: relative;
@@ -298,7 +298,7 @@
 /* ================ 统一面板和Modal关闭按钮样式 ================ */
 .panel-close-btn {
     background: none;
-    color: white;
+    color: var(--color-white);
     border: none;
     border-radius: 4px;
     width: 24px;
@@ -408,7 +408,7 @@
 
 .session-item.active {
     background: var(--color-primary);
-    color: white;
+    color: var(--color-white);
     border-color: var(--color-primary);
     box-shadow: 0 4px 12px var(--color-primary-shadow-2);
 }
@@ -561,13 +561,13 @@
 }
 
 #cancelSessionNameBtn {
-    color: #d32f2f;
+    color: var(--color-danger);
     border-color: var(--color-danger-border-light);
 }
 
 #cancelSessionNameBtn:hover:not(:disabled) {
     background: var(--color-danger-bg);
-    border-color: #d32f2f;
+    border-color: var(--color-danger);
 }
 
 .empty-message {
@@ -626,7 +626,7 @@
 }
 
 .manage-menu-item.danger {
-    color: #d32f2f;
+    color: var(--color-danger);
 }
 
 .manage-menu-item.danger:hover {
@@ -838,8 +838,8 @@
 }
 
 .side-panel-header .language-selector {
-    padding: 4px var(--spacing-sm) !important;
-    height: auto !important;
+    padding: 4px var(--spacing-sm);
+    height: auto;
     min-width: 100px;
     max-width: 100px;
     margin-left: auto;
@@ -855,7 +855,7 @@
     border-bottom: 1px solid var(--color-border);
     flex-shrink: 0;
     align-items: center;
-    order: 1 !important;
+    order: 1;
     flex-wrap: wrap;
     min-height: 44px;
 }
@@ -934,13 +934,13 @@
 .transcript::selection,
 .translation::selection {
     background-color: var(--color-primary);
-    color: white;
+    color: var(--color-white);
 }
 
 .transcript::-moz-selection,
 .translation::-moz-selection {
     background-color: var(--color-primary);
-    color: white;
+    color: var(--color-white);
 }
 
 .keyword-controls {
@@ -1079,7 +1079,7 @@
 
 .toggle-panel-btn {
     background: var(--color-primary);
-    color: white;
+    color: var(--color-white);
     border: none;
     border-radius: 4px;
     padding: var(--spacing-sm) var(--spacing-md);
@@ -1123,7 +1123,7 @@
 
 .btn-primary {
     background: var(--color-primary);
-    color: white;
+    color: var(--color-white);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -1133,7 +1133,7 @@
 
 .btn-danger {
     background: var(--color-danger-light);
-    color: white;
+    color: var(--color-white);
 }
 
 .btn-danger:hover:not(:disabled) {
@@ -1142,12 +1142,12 @@
 
 .btn-secondary {
     background: var(--color-secondary-dark);
-    color: white;
+    color: var(--color-white);
 }
 
 .btn-auto-scroll {
     background: var(--color-success);
-    color: white;
+    color: var(--color-white);
 }
 
 .btn-auto-scroll:hover:not(:disabled) {

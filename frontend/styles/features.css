@@ -46,7 +46,7 @@
     border-bottom: 1px solid var(--color-border);
     flex-shrink: 0;
     flex-wrap: wrap;
-    order: 1 !important;
+    order: 1;
     align-items: center;
     min-height: 44px;
 }
@@ -306,7 +306,7 @@
 }
 
 .keyword-highlight-toggle-btn.active {
-    color: #ff8c00;
+    color: var(--color-accent-orange);
 }
 
 .keyword-highlight-toggle-btn.active:hover {
@@ -336,7 +336,7 @@
 .keyword-expand-btn {
     background: none;
     border: none;
-    color: #666;
+    color: var(--color-grey-600);
     font-size: 1em;
     cursor: pointer;
     padding: 0 4px;
@@ -497,7 +497,7 @@ textarea::placeholder {
 
 .floating-auto-scroll-btn:hover {
     background: var(--color-primary-light);
-    color: white;
+    color: var(--color-white);
     transform: translateY(-2px);
     box-shadow: 0 6px 16px var(--color-primary-shadow-2);
 }
@@ -575,7 +575,7 @@ textarea::placeholder {
 }
 
 .modal-content {
-    background-color: white;
+    background-color: var(--color-white);
     padding: 0;
     border-radius: 12px;
     width: 90%;
@@ -604,7 +604,7 @@ textarea::placeholder {
     align-items: center;
     padding: var(--spacing-md) var(--spacing-lg);
     background: var(--color-primary);
-    color: white;
+    color: var(--color-white);
     border-bottom: none;
     flex-shrink: 0;
     gap: var(--spacing-sm);
@@ -612,7 +612,7 @@ textarea::placeholder {
 
 .modal-header h3 {
     margin: 0;
-    color: white;
+    color: var(--color-white);
     font-size: 1em;
     font-weight: 600;
     word-break: break-word;
@@ -629,7 +629,7 @@ textarea::placeholder {
 }
 
 .explanation-content {
-    color: #555;
+    color: var(--color-grey-650);
     line-height: 1.6;
     font-size: 1em;
 }
@@ -639,7 +639,7 @@ textarea::placeholder {
 }
 
 .explanation-content .error {
-    color: #d32f2f;
+    color: var(--color-danger);
     font-style: italic;
 }
 
@@ -660,12 +660,12 @@ textarea::placeholder {
 }
 
 .modal::-webkit-scrollbar-thumb {
-    background: #888;
+    background: var(--color-grey-550);
     border-radius: 4px;
 }
 
 .modal::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: var(--color-grey-650);
 }
 
 /* ==================== Side Panels (Settings only - fixed) ==================== */
@@ -676,7 +676,7 @@ textarea::placeholder {
     right: 0;
     width: 350px;
     height: 100vh;
-    background: white;
+    background: var(--color-white);
     box-shadow: -4px 0 12px var(--color-black-shadow-15);
     z-index: 999;
     display: flex;
@@ -699,7 +699,7 @@ textarea::placeholder {
     flex: 1;
     overflow-y: auto;
     padding: var(--spacing-md) var(--spacing-lg);
-    background: white;
+    background: var(--color-white);
 }
 
 .panel-header {
@@ -708,7 +708,7 @@ textarea::placeholder {
     align-items: center;
     padding: var(--spacing-md) var(--spacing-lg);
     background: var(--color-primary);
-    color: white;
+    color: var(--color-white);
     border-bottom: none;
     flex-shrink: 0;
     gap: var(--spacing-sm);
@@ -768,7 +768,7 @@ textarea::placeholder {
 #summaryContent .panel-toolbar .toolbar-btn.danger,
 #keywordsContent .panel-toolbar .toolbar-btn.danger,
 #highlightsContent .panel-toolbar .toolbar-btn.danger {
-    color: #d32f2f;
+    color: var(--color-danger);
     border-color: var(--color-danger-border-light);
 }
 
@@ -776,7 +776,7 @@ textarea::placeholder {
 #keywordsContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled),
 #highlightsContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled) {
     background: var(--color-danger-bg);
-    border-color: #d32f2f;
+    border-color: var(--color-danger);
 }
 
 /* Summary Panel */
@@ -784,7 +784,7 @@ textarea::placeholder {
 #summaryContent .panel-toolbar .toolbar-select {
     flex: 1;
     border-color: var(--color-primary-lighter);
-    color: #333;
+    color: var(--color-grey-800);
 }
 
 #summaryContent .panel-toolbar .toolbar-select:hover,
@@ -823,7 +823,7 @@ textarea::placeholder {
     align-items: center;
     gap: 8px;
     font-weight: 500;
-    color: #333;
+    color: var(--color-grey-800);
     cursor: pointer;
     font-size: 0.9em;
     margin-bottom: 8px;
@@ -881,7 +881,7 @@ textarea::placeholder {
 .settings-section-title {
     font-size: 0.85em;
     font-weight: 600;
-    color: #666;
+    color: var(--color-grey-600);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin: 0;
@@ -899,7 +899,7 @@ textarea::placeholder {
 .settings-item label {
     display: block;
     font-size: 0.85em;
-    color: #555;
+    color: var(--color-grey-650);
     font-weight: 500;
     margin: 0;
 }
@@ -907,13 +907,13 @@ textarea::placeholder {
 .settings-value-inline {
     display: block;
     font-size: 0.84em;
-    color: #333;
+    color: var(--color-grey-800);
     font-weight: 600;
     word-break: break-word;
 }
 
-.settings-toggle-label {
-    display: flex !important;
+.settings-item .settings-toggle-label {
+    display: flex;
     align-items: center;
     cursor: pointer;
 }
@@ -960,8 +960,8 @@ textarea::placeholder {
     margin: 0;
     border: 1px solid var(--color-border);
     border-radius: 6px;
-    background: white;
-    color: #333;
+    background: var(--color-white);
+    color: var(--color-grey-800);
     text-align: left;
     font-size: 0.9em;
     cursor: pointer;
@@ -991,7 +991,7 @@ textarea::placeholder {
 .keywords-tab-nav {
     display: flex;
     gap: var(--spacing-sm);
-    border-bottom: 2px solid #e0e0e0;
+    border-bottom: 2px solid var(--color-grey-200);
     padding: 10px var(--spacing-lg) 0 var(--spacing-lg);
     background: var(--color-bg-light);
     flex-shrink: 0;
@@ -1004,7 +1004,7 @@ textarea::placeholder {
     padding: 10px 12px;
     font-size: 0.95em;
     font-weight: 500;
-    color: #666;
+    color: var(--color-grey-600);
     cursor: pointer;
     position: relative;
     transition: color 0.2s;
@@ -1075,7 +1075,7 @@ textarea::placeholder {
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 2010;
-    background: white;
+    background: var(--color-white);
     border-radius: 8px;
     box-shadow: 0 12px 40px var(--color-black-shadow-2);
     display: none;
@@ -1119,7 +1119,7 @@ textarea::placeholder {
 
 .session-modal .floating-modal-header {
     background: var(--color-primary);
-    color: white;
+    color: var(--color-white);
 }
 
 
@@ -1132,7 +1132,7 @@ textarea::placeholder {
 
 .settings-modal .floating-modal-header {
     background: var(--color-primary);
-    color: white;
+    color: var(--color-white);
 }
 
 /* Auth Modal */
@@ -1157,7 +1157,7 @@ textarea::placeholder {
 
 .auth-form-row label {
     font-size: 0.82em;
-    color: #555;
+    color: var(--color-grey-650);
     font-weight: 600;
 }
 
@@ -1186,7 +1186,7 @@ textarea::placeholder {
     border: 1px solid var(--color-border);
     border-radius: 4px;
     background: var(--color-white);
-    color: #333;
+    color: var(--color-grey-800);
     font-size: 0.78em;
     font-weight: 500;
     cursor: pointer;
@@ -1244,7 +1244,7 @@ textarea::placeholder {
 
 .sync-choice-intro {
     margin: 0;
-    color: #444;
+    color: var(--color-grey-750);
     font-size: 0.9em;
     line-height: 1.55;
 }
@@ -1310,7 +1310,7 @@ textarea::placeholder {
     align-items: center;
     padding: 8px 12px;
     background: var(--color-primary);
-    color: white;
+    color: var(--color-white);
     flex-shrink: 0;
     gap: 10px;
     border-bottom: none;
@@ -1321,7 +1321,7 @@ textarea::placeholder {
 /* Input group modal header (purple theme) */
 .floating-modal-header.input-group-modal-header {
     background: var(--color-primary);
-    color: white;
+    color: var(--color-white);
 }
 
 
@@ -1362,13 +1362,13 @@ textarea::placeholder {
 }
 
 .session-modal .floating-modal-toolbar .toolbar-btn.danger {
-    color: #d32f2f;
+    color: var(--color-danger);
     border-color: var(--color-danger-border-light);
 }
 
 .session-modal .floating-modal-toolbar .toolbar-btn.danger:hover:not(:disabled) {
     background: var(--color-danger-bg);
-    border-color: #d32f2f;
+    border-color: var(--color-danger);
 }
 
 /* Purple theme for settings modal toolbar buttons */
@@ -1394,13 +1394,13 @@ textarea::placeholder {
 }
 
 .add-content-modal .floating-modal-toolbar .toolbar-btn.danger {
-    color: #d32f2f;
+    color: var(--color-danger);
     border-color: var(--color-danger-border-light);
 }
 
 .add-content-modal .floating-modal-toolbar .toolbar-btn.danger:hover:not(:disabled) {
     background: var(--color-danger-bg);
-    border-color: #d32f2f;
+    border-color: var(--color-danger);
 }
 
 /* Edit modal toolbar buttons - unified with add content modal style */
@@ -1416,19 +1416,19 @@ textarea::placeholder {
 }
 
 .edit-modal-toolbar .toolbar-btn.danger {
-    color: #d32f2f;
+    color: var(--color-danger);
     border-color: var(--color-danger-border-light);
 }
 
 .edit-modal-toolbar .toolbar-btn.danger:hover:not(:disabled) {
     background: var(--color-danger-bg);
-    border-color: #d32f2f;
+    border-color: var(--color-danger);
 }
 
 /* Blue theme for edit modal buttons */
 .edit-modal .floating-modal-footer .toolbar-btn {
     border-color: var(--color-primary-lighter);
-    color: #333;
+    color: var(--color-grey-800);
 }
 
 .edit-modal .floating-modal-footer .toolbar-btn:hover {
@@ -1442,7 +1442,7 @@ textarea::placeholder {
     flex: 1;
     overflow-y: auto;
     padding: var(--spacing-md);
-    background: white;
+    background: var(--color-white);
 }
 
 /* Modal Footer */
@@ -1462,10 +1462,10 @@ textarea::placeholder {
 .floating-menu {
     position: fixed;
     z-index: 1001;
-    background: white;
+    background: var(--color-white);
     border-radius: 8px;
     box-shadow: 0 4px 16px var(--color-black-shadow-15);
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--color-grey-200);
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -1498,11 +1498,11 @@ textarea::placeholder {
     align-items: center;
     gap: 10px;
     padding: 10px var(--spacing-md);
-    background: white;
+    background: var(--color-white);
     border: none;
     cursor: pointer;
     font-size: 0.95em;
-    color: #333;
+    color: var(--color-grey-800);
     transition: all 0.15s ease;
     text-align: left;
     font-family: inherit;
@@ -1539,7 +1539,7 @@ textarea::placeholder {
 }
 
 #floatingHighlightBtn .menu-icon {
-    color: #ff8c00;
+    color: var(--color-accent-orange);
 }
 
 .floating-menu-item .menu-label {
