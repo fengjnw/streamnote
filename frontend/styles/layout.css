@@ -633,14 +633,6 @@
     background: var(--color-danger-bg);
 }
 
-/* Main wrapper - 包含 left-sidebar, content-wrapper, right-sidebar */
-.main-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: row;
-    overflow: hidden;
-}
-
 .content-wrapper {
     flex: 1;
     display: flex;
@@ -662,10 +654,6 @@
     overflow: hidden;
     position: relative;
     min-height: 0;
-}
-
-.manage-menu-item.danger:hover {
-    background: var(--color-danger-bg);
 }
 
 /* ================ Text Panels (Transcript & Translation) ================ */

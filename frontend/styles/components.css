@@ -262,15 +262,6 @@
     overflow-y: auto;
 }
 
-.explanation-scroll {
-    color: #555;
-    line-height: 1.8;
-    font-size: 0.95em;
-    word-break: break-word;
-    padding: var(--spacing-md);
-    flex-shrink: 0;
-}
-
 .word-context {
     padding: var(--spacing-md) var(--spacing-md) 0 var(--spacing-md);
     flex-shrink: 0;
@@ -341,7 +332,6 @@
     border-radius: 0;
     user-select: none;
     -webkit-user-select: none;
-}
 }
 
 /* Key Takeaways style - display as list items */
