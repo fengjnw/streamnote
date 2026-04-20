@@ -94,6 +94,7 @@ function buildWelcomeSessionData() {
             'Input',
             'Understand',
             'Keywords',
+            'text selection',
             'Output',
             'Sync',
             'Tip'
@@ -124,6 +125,11 @@ function buildWelcomeSessionData() {
                 sourceIndices: [5],
                 startIndex: 26,
                 endIndex: 34
+            },
+            'text selection': {
+                sourceIndices: [5],
+                startIndex: 52,
+                endIndex: 66
             },
             'Output': {
                 sourceIndices: [6],
