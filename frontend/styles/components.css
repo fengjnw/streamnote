@@ -59,7 +59,8 @@
 .toolbar-btn {
     flex: 0;
     min-width: 65px;
-    height: 28px;
+    min-height: 28px;
+    height: auto;
     padding: 4px 10px;
     border: 1px solid var(--color-grey-divider);
     border-radius: 4px;
@@ -73,7 +74,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    line-height: 1.2;
+    line-height: 1.35;
+    box-sizing: border-box;
 }
 
 .toolbar-btn:hover {
@@ -128,10 +130,12 @@
 #editModalSaveBtn {
     flex: 0 !important;
     min-width: 65px !important;
-    height: 28px !important;
+    min-height: 28px !important;
+    height: auto !important;
     padding: 4px 10px !important;
     font-size: 0.8em !important;
     font-weight: 500 !important;
+    line-height: 1.35 !important;
 }
 
 /* ==================== Explanation Toolbar ==================== */

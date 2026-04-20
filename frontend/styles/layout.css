@@ -69,7 +69,8 @@
 /* Sidebar Buttons */
 .sidebar-btn {
     width: 36px;
-    height: 36px;
+    min-height: 36px;
+    height: auto;
     border: none;
     border-radius: 6px;
     display: flex;
@@ -80,8 +81,8 @@
     font-weight: 500;
     transition: none;
     flex-shrink: 0;
-    padding: 0;
-    line-height: 1;
+    padding: 2px 0;
+    line-height: 1.25;
     gap: 4px;
     white-space: nowrap;
     background: transparent;
@@ -143,6 +144,7 @@
     display: none;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.25;
 }
 
 .sidebar-btn-primary {
@@ -157,7 +159,7 @@
 .sidebar.expanded .sidebar-btn {
     width: 100%;
     justify-content: flex-start !important;
-    padding: 0 10px !important;
+    padding: 2px 10px !important;
 }
 
 .sidebar.expanded .sidebar-btn-label {
