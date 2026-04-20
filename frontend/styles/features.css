@@ -744,38 +744,45 @@ textarea::placeholder {
     flex: 1;
 }
 
-#summaryContent .panel-toolbar .toolbar-select {
-    flex: 1;
-}
-
 #keywordsContent .panel-toolbar .toolbar-btn {
     flex: 1;
 }
 
 /* ==================== Purple Theme for Summary/Keywords/Highlights Panels ==================== */
 
-/* Summary Panel */
-#summaryContent .panel-toolbar .toolbar-btn {
+/* Shared panel toolbar button theme */
+#summaryContent .panel-toolbar .toolbar-btn,
+#keywordsContent .panel-toolbar .toolbar-btn,
+#highlightsContent .panel-toolbar .toolbar-btn {
     border-color: var(--color-primary-lighter);
 }
 
-#summaryContent .panel-toolbar .toolbar-btn:hover {
+#summaryContent .panel-toolbar .toolbar-btn:hover,
+#keywordsContent .panel-toolbar .toolbar-btn:hover,
+#highlightsContent .panel-toolbar .toolbar-btn:hover {
     background: var(--color-primary-lightest);
     border-color: var(--color-primary);
     color: var(--color-primary);
 }
 
-#summaryContent .panel-toolbar .toolbar-btn.danger {
+#summaryContent .panel-toolbar .toolbar-btn.danger,
+#keywordsContent .panel-toolbar .toolbar-btn.danger,
+#highlightsContent .panel-toolbar .toolbar-btn.danger {
     color: #d32f2f;
     border-color: var(--color-danger-border-light);
 }
 
-#summaryContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled) {
+#summaryContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled),
+#keywordsContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled),
+#highlightsContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled) {
     background: var(--color-danger-bg);
     border-color: #d32f2f;
 }
 
+/* Summary Panel */
+
 #summaryContent .panel-toolbar .toolbar-select {
+    flex: 1;
     border-color: var(--color-primary-lighter);
     color: #333;
 }
@@ -783,66 +790,6 @@ textarea::placeholder {
 #summaryContent .panel-toolbar .toolbar-select:hover,
 #summaryContent .panel-toolbar .toolbar-select:focus {
     border-color: var(--color-primary);
-}
-
-/* Keywords Panel */
-#keywordsContent .panel-toolbar .toolbar-btn {
-    border-color: var(--color-primary-lighter);
-}
-
-#keywordsContent .panel-toolbar .toolbar-btn:hover {
-    background: var(--color-primary-lightest);
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-}
-
-#keywordsContent .panel-toolbar .toolbar-btn.danger {
-    color: #d32f2f;
-    border-color: var(--color-danger-border-light);
-}
-
-#keywordsContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled) {
-    background: var(--color-danger-bg);
-    border-color: #d32f2f;
-}
-
-/* Keywords Tab Navigation */
-.keywords-tab-btn {
-    color: #666;
-}
-
-.keywords-tab-btn:hover {
-    color: var(--color-primary);
-}
-
-.keywords-tab-btn.active {
-    color: var(--color-primary);
-    font-weight: 600;
-}
-
-.keywords-tab-btn.active::after {
-    background: var(--color-primary);
-}
-
-/* Highlights Panel */
-#highlightsContent .panel-toolbar .toolbar-btn {
-    border-color: var(--color-primary-lighter);
-}
-
-#highlightsContent .panel-toolbar .toolbar-btn:hover {
-    background: var(--color-primary-lightest);
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-}
-
-#highlightsContent .panel-toolbar .toolbar-btn.danger {
-    color: #d32f2f;
-    border-color: var(--color-danger-border-light);
-}
-
-#highlightsContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled) {
-    background: var(--color-danger-bg);
-    border-color: #d32f2f;
 }
 
 #settingsContent .panel-toolbar {
@@ -1064,7 +1011,7 @@ textarea::placeholder {
 }
 
 .keywords-tab-btn:hover {
-    color: #333;
+    color: var(--color-primary);
 }
 
 .keywords-tab-btn.active {

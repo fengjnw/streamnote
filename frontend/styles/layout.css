@@ -1158,13 +1158,3 @@
     opacity: 0.5;
     cursor: not-allowed;
 }
-
-/* 主要内容区域 */
-.main-content {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    flex: 1;
-    overflow: hidden;
-    padding: 0;
-}
