@@ -53,7 +53,7 @@ function buildWelcomeSessionData() {
         },
         5: {
             index: 5,
-            text: 'For Highlights and Explain, the primary workflow is text selection: select any phrase in transcript or translation, then use the floating menu to choose 🚩 Highlight or 📖 Explain.',
+            text: 'For Highlights and Explain, the primary workflow is text selection: select any phrase in transcript or translation, then use the floating menu to choose Highlight or Explain.',
             timestamp: 26,
             source: 'text'
         },
