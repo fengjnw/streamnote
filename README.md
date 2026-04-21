@@ -5,7 +5,7 @@ It captures or imports content, then provides transcription, keyword extraction,
 
 ## Live Demo
 
-- https://streamnote-m1cf.onrender.com
+- https://streamnote.up.railway.app
 
 ## Features
 
