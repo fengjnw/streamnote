@@ -31,16 +31,37 @@ class DummyKeywordManager:
 
 
 class DummyTranslator:
+    fail_stream = False
+
     def translate_keywords(self, text, target_lang):
         return '{"keywords":["translated"]}'
 
     def translate_text(self, text, target_lang, context):
+        if self.fail_stream:
+            raise RuntimeError("translator down")
         yield "translated"
 
 
 class DummySummarizer:
+    fail_stream = False
+
     def summarize(self, text, language, style):
+        if self.fail_stream:
+            raise RuntimeError("summarizer down")
         yield "summary"
+
+
+class DummyFailingKeywordManager(DummyKeywordManager):
+    def explain(self, keyword, language, context):
+        raise RuntimeError("keyword service down")
+
+
+class DummyFailingTranslator(DummyTranslator):
+    fail_stream = True
+
+
+class DummyFailingSummarizer(DummySummarizer):
+    fail_stream = True
 
 
 def make_test_app():
@@ -51,6 +72,30 @@ def make_test_app():
         "translator": DummyTranslator(),
         "summarizer": DummySummarizer(),
     }
+
+    def server_error_response(error, prefix=""):
+        return {"error": {"code": "INTERNAL_SERVER_ERROR", "message": f"{prefix}{error}"}}, 500
+
+    register_ai_routes(app, services, server_error_response)
+    register_file_routes(app, server_error_response)
+    return app
+
+
+def make_failing_stream_app(failing_part: str):
+    app = Flask(__name__)
+    services = {
+        "client": DummyClient(),
+        "keyword_manager": DummyKeywordManager(),
+        "translator": DummyTranslator(),
+        "summarizer": DummySummarizer(),
+    }
+
+    if failing_part == "translation":
+        services["translator"] = DummyFailingTranslator()
+    elif failing_part == "explanation":
+        services["keyword_manager"] = DummyFailingKeywordManager()
+    elif failing_part == "summary":
+        services["summarizer"] = DummyFailingSummarizer()
 
     def server_error_response(error, prefix=""):
         return {"error": {"code": "INTERNAL_SERVER_ERROR", "message": f"{prefix}{error}"}}, 500
@@ -174,3 +219,45 @@ def test_summarize_non_json_returns_structured_error():
     assert response.status_code == 400
     payload = response.get_json()
     assert payload["error"]["code"] == "INVALID_JSON"
+
+
+def test_translate_stream_failure_returns_standard_error_token():
+    app = make_failing_stream_app("translation")
+    client = app.test_client()
+
+    response = client.post(
+        "/api/translate",
+        json={"text": "hello", "target_lang": "Chinese", "context": ""},
+    )
+
+    assert response.status_code == 200
+    body = response.get_data(as_text=True)
+    assert "[ERROR:TRANSLATION_FAILED]" in body
+
+
+def test_explain_stream_failure_returns_standard_error_token():
+    app = make_failing_stream_app("explanation")
+    client = app.test_client()
+
+    response = client.post(
+        "/api/explain-keyword",
+        json={"keyword": "test", "language": "English", "context": ""},
+    )
+
+    assert response.status_code == 200
+    body = response.get_data(as_text=True)
+    assert "[ERROR:EXPLANATION_FAILED]" in body
+
+
+def test_summarize_stream_failure_returns_standard_error_token():
+    app = make_failing_stream_app("summary")
+    client = app.test_client()
+
+    response = client.post(
+        "/api/summarize",
+        json={"text": "x" * 80, "language": "English", "style": "paragraph"},
+    )
+
+    assert response.status_code == 200
+    body = response.get_data(as_text=True)
+    assert "[ERROR:SUMMARY_FAILED]" in body

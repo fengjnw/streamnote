@@ -5,7 +5,7 @@ from flask import Flask
 from flask_cors import CORS
 from openai import OpenAI
 
-from config import OPENAI_API_KEY, SESSION_DB_PATH
+from config import OPENAI_API_KEY, SESSION_DB_PATH, AUTH_COOKIE_SECURE
 from auth_store import create_auth_store
 from error_utils import api_exception
 from keyword_manager import create_keyword_manager
@@ -25,6 +25,7 @@ def create_app():
 
     app = Flask(__name__, static_folder="../frontend", static_url_path="")
     CORS(app)
+    app.config["AUTH_COOKIE_SECURE"] = AUTH_COOKIE_SECURE
 
     if not OPENAI_API_KEY:
         raise RuntimeError("Missing OPENAI_API_KEY. Set it in your environment or .env file.")

@@ -29,14 +29,14 @@ def _is_valid_device_id(device_id: str) -> bool:
     return 8 <= len(trimmed) <= 128
 
 
-def _session_response(payload: dict, session_id: str):
+def _session_response(payload: dict, session_id: str, secure_cookie: bool):
     response = jsonify(payload)
     response.set_cookie(
         AUTH_COOKIE_NAME,
         session_id,
         max_age=AUTH_TTL_SECONDS,
         httponly=True,
-        secure=False,
+        secure=secure_cookie,
         samesite="Lax",
         path="/",
     )
@@ -46,6 +46,8 @@ def _session_response(payload: dict, session_id: str):
 def register_auth_routes(app, auth_store, server_error_response):
     if auth_store is None:
         return
+
+    secure_cookie = bool(app.config.get("AUTH_COOKIE_SECURE", False))
 
     @app.route("/api/auth/register", methods=["POST"])
     def register():
@@ -74,7 +76,7 @@ def register_auth_routes(app, auth_store, server_error_response):
             if _is_valid_device_id(device_id):
                 auth_store.bind_device_to_user(device_id.strip(), user["id"])
 
-            return _session_response({"user": {"id": user["id"], "email": user["email"]}}, session_id)
+            return _session_response({"user": {"id": user["id"], "email": user["email"]}}, session_id, secure_cookie)
         except Exception as e:
             return server_error_response(e)
 
@@ -99,7 +101,7 @@ def register_auth_routes(app, auth_store, server_error_response):
             if _is_valid_device_id(device_id):
                 auth_store.bind_device_to_user(device_id.strip(), user["id"])
 
-            return _session_response({"user": {"id": user["id"], "email": user["email"]}}, session_id)
+            return _session_response({"user": {"id": user["id"], "email": user["email"]}}, session_id, secure_cookie)
         except Exception as e:
             return server_error_response(e)
 

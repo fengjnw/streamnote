@@ -1,7 +1,22 @@
 import io
-from flask import jsonify, request, Response, current_app
+from flask import jsonify, request, Response
 
 from error_utils import api_error
+
+
+def _stream_error(code: str, message: str) -> str:
+    return f"[ERROR:{code}] {message}"
+
+
+def _stream_text_response(stream_factory, logger, log_message: str, error_code: str, error_message: str):
+    def generate():
+        try:
+            yield from stream_factory()
+        except Exception:
+            logger.exception(log_message)
+            yield _stream_error(error_code, error_message)
+
+    return Response(generate(), mimetype="text/plain")
 
 
 def register_ai_routes(app, services, server_error_response):
@@ -11,6 +26,7 @@ def register_ai_routes(app, services, server_error_response):
     keyword_manager = services["keyword_manager"]
     translator = services["translator"]
     summarizer = services["summarizer"]
+    logger = app.logger
 
     @app.route("/api/config", methods=["GET"])
     def get_config():
@@ -77,14 +93,13 @@ def register_ai_routes(app, services, server_error_response):
                 keywords_json = translator.translate_keywords(text, target_lang)
                 return Response(keywords_json, mimetype="application/json")
 
-            def generate():
-                try:
-                    yield from translator.translate_text(text, target_lang, context)
-                except Exception as e:
-                    current_app.logger.exception("Translation stream failed")
-                    yield "[ERROR] Translation failed"
-
-            return Response(generate(), mimetype="text/plain")
+            return _stream_text_response(
+                lambda: translator.translate_text(text, target_lang, context),
+                logger,
+                "Translation stream failed",
+                "TRANSLATION_FAILED",
+                "Translation failed",
+            )
         except Exception as e:
             return server_error_response(e)
 
@@ -102,14 +117,13 @@ def register_ai_routes(app, services, server_error_response):
             if not keyword:
                 return Response("", mimetype="text/plain")
 
-            def generate():
-                try:
-                    yield from keyword_manager.explain(keyword, language, context)
-                except Exception as e:
-                    current_app.logger.exception("Keyword explanation stream failed")
-                    yield "[ERROR] Keyword explanation failed"
-
-            return Response(generate(), mimetype="text/plain")
+            return _stream_text_response(
+                lambda: keyword_manager.explain(keyword, language, context),
+                logger,
+                "Keyword explanation stream failed",
+                "EXPLANATION_FAILED",
+                "Keyword explanation failed",
+            )
         except Exception as e:
             return server_error_response(e)
 
@@ -127,14 +141,13 @@ def register_ai_routes(app, services, server_error_response):
             if not text or len(text) < 50:
                 return Response("", mimetype="text/plain")
 
-            def generate():
-                try:
-                    yield from summarizer.summarize(text, language, style)
-                except Exception as e:
-                    current_app.logger.exception("Summary stream failed")
-                    yield "[ERROR] Summary failed"
-
-            return Response(generate(), mimetype="text/plain")
+            return _stream_text_response(
+                lambda: summarizer.summarize(text, language, style),
+                logger,
+                "Summary stream failed",
+                "SUMMARY_FAILED",
+                "Summary failed",
+            )
         except Exception as e:
             return server_error_response(e)
 

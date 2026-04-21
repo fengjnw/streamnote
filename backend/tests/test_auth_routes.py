@@ -7,8 +7,9 @@ from auth_store import create_auth_store
 from routes.auth_routes import register_auth_routes
 
 
-def make_test_app(db_path: str):
+def make_test_app(db_path: str, auth_cookie_secure: bool = False):
     app = Flask(__name__)
+    app.config["AUTH_COOKIE_SECURE"] = auth_cookie_secure
     store = create_auth_store(db_path)
 
     def server_error_response(error, prefix=""):
@@ -114,3 +115,53 @@ def test_delete_account_requires_correct_password_and_logs_out():
 
         me_after_delete = client.get("/api/auth/me")
         assert me_after_delete.status_code == 401
+
+
+def test_register_sets_secure_cookie_when_enabled():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        db_path = str(Path(tmpdir) / "auth.db")
+        app = make_test_app(db_path, auth_cookie_secure=True)
+        client = app.test_client()
+
+        response = client.post(
+            "/api/auth/register",
+            json={"email": "secure@example.com", "password": "123456"},
+        )
+
+        assert response.status_code == 200
+        set_cookie = response.headers.get("Set-Cookie", "")
+        assert "Secure" in set_cookie
+        assert "HttpOnly" in set_cookie
+
+
+def test_register_sets_non_secure_cookie_when_disabled():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        db_path = str(Path(tmpdir) / "auth.db")
+        app = make_test_app(db_path, auth_cookie_secure=False)
+        client = app.test_client()
+
+        response = client.post(
+            "/api/auth/register",
+            json={"email": "local@example.com", "password": "123456"},
+        )
+
+        assert response.status_code == 200
+        set_cookie = response.headers.get("Set-Cookie", "")
+        assert "Secure" not in set_cookie
+
+
+def test_register_non_json_returns_structured_error():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        db_path = str(Path(tmpdir) / "auth.db")
+        app = make_test_app(db_path)
+        client = app.test_client()
+
+        response = client.post(
+            "/api/auth/register",
+            data="plain-text",
+            content_type="text/plain",
+        )
+
+        assert response.status_code == 400
+        payload = response.get_json()
+        assert payload["error"]["code"] == "INVALID_JSON"

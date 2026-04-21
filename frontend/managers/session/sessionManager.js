@@ -1099,32 +1099,55 @@ class SessionManager {
         this.downloadJSON(data, `StreamNote_All_Sessions_${this.formatDate()}.json`);
     }
 
+    createSingleImportSessionId() {
+        return Date.now().toString();
+    }
+
+    createBulkImportSessionId() {
+        return Date.now().toString() + Math.random();
+    }
+
+    importSingleSessionRecord(sessionData) {
+        const newId = this.createSingleImportSessionId();
+        const imported = { ...sessionData, id: newId };
+        this.sessions[newId] = imported;
+        this.switchSession(newId);
+        alert(`Successfully imported session: ${imported.name}`);
+    }
+
+    importMultipleSessionRecords(sessionMap) {
+        const confirmMsg = `Import ${Object.keys(sessionMap).length} sessions?\nThis will merge with existing data.`;
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+
+        Object.values(sessionMap).forEach(session => {
+            const newId = this.createBulkImportSessionId();
+            this.sessions[newId] = { ...session, id: newId };
+        });
+
+        this.saveSessions();
+        this.renderSessionList();
+        alert('Import successful!');
+    }
+
+    handleImportedData(data) {
+        if (data.session) {
+            this.importSingleSessionRecord(data.session);
+            return;
+        }
+
+        if (data.sessions) {
+            this.importMultipleSessionRecords(data.sessions);
+        }
+    }
+
     importSessions(file) {
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const data = JSON.parse(e.target.result);
-
-                if (data.session) {
-                    // Import single session
-                    const newId = Date.now().toString();
-                    const imported = { ...data.session, id: newId };
-                    this.sessions[newId] = imported;
-                    this.switchSession(newId);
-                    alert(`Successfully imported session: ${imported.name}`);
-                } else if (data.sessions) {
-                    // Import multiple sessions
-                    const confirmMsg = `Import ${Object.keys(data.sessions).length} sessions?\nThis will merge with existing data.`;
-                    if (confirm(confirmMsg)) {
-                        Object.values(data.sessions).forEach(session => {
-                            const newId = Date.now().toString() + Math.random();
-                            this.sessions[newId] = { ...session, id: newId };
-                        });
-                        this.saveSessions();
-                        this.renderSessionList();
-                        alert('Import successful!');
-                    }
-                }
+                this.handleImportedData(data);
             } catch (error) {
                 console.error('[SessionManager] Import error:', error);
                 alert('Import failed: Invalid file format');
@@ -1133,18 +1156,28 @@ class SessionManager {
         reader.readAsText(file);
     }
 
-    clearAllSessions() {
+    shouldClearAllSessions() {
         const confirmMsg = '⚠️ Clear all session data?\nThis action cannot be undone!';
-        if (confirm(confirmMsg)) {
-            const doubleConfirm = 'Final confirmation: Really delete all data?';
-            if (confirm(doubleConfirm)) {
-                this.sessions = {};
-                localStorage.removeItem(this.STORAGE_KEY);
-                localStorage.removeItem(this.CURRENT_SESSION_KEY);
+        if (!confirm(confirmMsg)) {
+            return false;
+        }
 
-                this.ensureWelcomeAsDefault(true);
-                alert('All data cleared');
-            }
+        const doubleConfirm = 'Final confirmation: Really delete all data?';
+        return confirm(doubleConfirm);
+    }
+
+    performClearAllSessions() {
+        this.sessions = {};
+        localStorage.removeItem(this.STORAGE_KEY);
+        localStorage.removeItem(this.CURRENT_SESSION_KEY);
+
+        this.ensureWelcomeAsDefault(true);
+        alert('All data cleared');
+    }
+
+    clearAllSessions() {
+        if (this.shouldClearAllSessions()) {
+            this.performClearAllSessions();
         }
     }
 
@@ -1177,7 +1210,7 @@ class SessionManager {
         }
     }
 
-    setupUI() {
+    bindSessionCreationButtons() {
         const newSessionBtn = document.getElementById('newSessionBtn');
         if (newSessionBtn) {
             newSessionBtn.addEventListener('click', () => {
@@ -1191,7 +1224,9 @@ class SessionManager {
                 this.createNewSession();
             });
         }
+    }
 
+    bindSessionPanelButtons() {
         const openBtn = document.getElementById('openSessionPanel');
         if (openBtn) {
             openBtn.addEventListener('click', () => {
@@ -1200,11 +1235,9 @@ class SessionManager {
                 }
             });
         }
+    }
 
-        const toggleBtn = document.getElementById('closeSessionModal');
-        if (toggleBtn) {
-        }
-
+    bindSessionNameControls() {
         const editBtn = document.getElementById('editSessionNameBtn');
         const confirmBtn = document.getElementById('confirmSessionNameBtn');
         const cancelBtn = document.getElementById('cancelSessionNameBtn');
@@ -1244,7 +1277,9 @@ class SessionManager {
                 cancelBtn.click();
             }
         });
+    }
 
+    bindSessionImportControls() {
         const importInput = document.getElementById('importFileInput');
 
         importInput?.addEventListener('change', (e) => {
@@ -1254,7 +1289,9 @@ class SessionManager {
                 e.target.value = '';
             }
         });
+    }
 
+    bindSessionActionButtons() {
         document.getElementById('renameSessionBtn')?.addEventListener('click', () => {
             this.enterRenameMode();
         });
@@ -1262,6 +1299,14 @@ class SessionManager {
         document.getElementById('deleteSessionBtn')?.addEventListener('click', () => {
             this.deleteCurrentSession();
         });
+    }
+
+    setupUI() {
+        this.bindSessionCreationButtons();
+        this.bindSessionPanelButtons();
+        this.bindSessionNameControls();
+        this.bindSessionImportControls();
+        this.bindSessionActionButtons();
 
         this.renderSessionList();
     }
