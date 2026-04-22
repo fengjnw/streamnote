@@ -1,10 +1,61 @@
 /**
- * KeywordExplanationFetchManager - handles explanation fetching and focus-view rendering flow.
+ * KeywordExplanation - Handles the complete explanation lifecycle (fetch, display, actions, navigation).
+ * Consolidates API fetching, user actions (re-explain, copy), and panel navigation flow.
  */
-class KeywordExplanationFetchManager {
+class KeywordExplanation {
     constructor(keywordManager) {
         this.keywordManager = keywordManager;
     }
+
+    // ========== Navigation Methods ==========
+
+    async openExplanationForWord(word, positionInfo = null, sourcePanel = null) {
+        word = word.trim();
+        if (!word) return;
+
+        if (word.length > 100) {
+            alert('Please select less than 100 characters to explain');
+            return;
+        }
+
+        if (!sourcePanel) {
+            // Preserve the original source panel so later context extraction stays consistent.
+            sourcePanel = this.keywordManager.wordSourcePanel[word] || 'transcript';
+        } else {
+            this.keywordManager.wordSourcePanel[word] = sourcePanel;
+        }
+
+        if (positionInfo) {
+            this.keywordManager.highlightPositions[word] = positionInfo;
+        }
+
+        this.keywordManager.currentQueryWord = word;
+        this.keywordManager.currentQuerySourcePanel = sourcePanel;
+        this.keywordManager.currentQueryPositionInfo = positionInfo;
+
+        const historyContent = document.getElementById('historyContent');
+        if (this.keywordManager.panelManager && historyContent) {
+            this.keywordManager.panelManager.showSidePanelContent(historyContent, 'Explanation');
+        }
+
+        if (window.streamNoteInstance && window.streamNoteInstance.scrollToWord) {
+            // Let panel state settle first, then scroll to the keyword anchor.
+            setTimeout(() => {
+                window.streamNoteInstance.scrollToWord(word, sourcePanel);
+            }, 300);
+        }
+
+        // Trigger explanation rendering after scroll to reduce layout thrash.
+        setTimeout(() => {
+            this.displayExplanationFocusView(word);
+        }, 350);
+
+        if (window.streamNoteInstance) {
+            window.streamNoteInstance.saveSettingsToSession();
+        }
+    }
+
+    // ========== Fetch and Display Methods ==========
 
     async fetchAndShowExplanation(keyword, container) {
         const contentElement = container.querySelector('.explanation-content');
@@ -328,6 +379,8 @@ class KeywordExplanationFetchManager {
         }
     }
 
+    // ========== Action Methods ==========
+
     async reexplainCurrentExplanation() {
         const app = window.streamNoteInstance;
         const explanationOperation = OperationGuards.start(app, 'explanation');
@@ -370,6 +423,95 @@ class KeywordExplanationFetchManager {
         const word = currentWordEl.textContent;
         this.fetchAndShowExplanationForFocusView(word, contentElement);
     }
+
+    async reexplainExplanation(keyword) {
+        const app = window.streamNoteInstance;
+        const explanationOperation = OperationGuards.start(app, "explanation");
+        const endExplanationOperation = OperationGuards.endOnce(explanationOperation);
+
+        try {
+            const allExplanations = document.querySelectorAll('.keyword-explanation');
+            let wrapper = null;
+
+            for (const elem of allExplanations) {
+                if (elem.getAttribute('data-keyword-text') === keyword) {
+                    wrapper = elem;
+                    break;
+                }
+            }
+
+            if (!wrapper) {
+                console.warn(`[KeywordManager] Wrapper not found for keyword: ${keyword}`);
+                endExplanationOperation('Wrapper not found');
+                return;
+            }
+
+            const contentElement = wrapper.querySelector('.explanation-content');
+            if (!contentElement) {
+                endExplanationOperation('Content element not found');
+                return;
+            }
+
+            if (!OperationGuards.isValid(explanationOperation)) {
+                console.log('[KeywordManager] Context changed before reexplain');
+                endExplanationOperation('Context changed before reexplain');
+                return;
+            }
+
+            contentElement.innerHTML = '<p class="placeholder">Refreshing...</p>';
+
+            // Remove all scoped caches so re-explain always fetches a fresh answer.
+            const cacheKey = `${keyword}|${window.streamNoteInstance?.explanationLanguage || 'English'}`;
+            if (this.keywordManager.extractsCache[cacheKey]) delete this.keywordManager.extractsCache[cacheKey];
+            if (this.keywordManager.highlightCache[cacheKey]) delete this.keywordManager.highlightCache[cacheKey];
+            if (this.keywordManager.explanationCache[cacheKey]) delete this.keywordManager.explanationCache[cacheKey];
+
+            await this.fetchAndShowExplanation(keyword, wrapper);
+        } finally {
+            endExplanationOperation('Reexplain action completed');
+        }
+    }
+
+    copyExplanation(keyword) {
+        const allExplanations = document.querySelectorAll('.keyword-explanation');
+        let wrapper = null;
+
+        for (const elem of allExplanations) {
+            if (elem.getAttribute('data-keyword-text') === keyword) {
+                wrapper = elem;
+                break;
+            }
+        }
+
+        if (!wrapper) return;
+
+        const contentElement = wrapper.querySelector('.explanation-content');
+        if (!contentElement) return;
+
+        const text = contentElement.innerText || contentElement.textContent;
+
+        if (!text || text.includes('Loading') || text.includes('placeholder')) {
+            alert('Explanation not available yet');
+            return;
+        }
+
+        navigator.clipboard.writeText(text).then(() => {
+            const toolbar = wrapper.querySelector('.explanation-toolbar');
+            if (toolbar) {
+                const copyBtn = toolbar.querySelector('[onclick*="copyExplanation"]');
+                if (copyBtn) {
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = '✓ Copied';
+                    setTimeout(() => {
+                        copyBtn.textContent = originalText;
+                    }, 2000);
+                }
+            }
+        }).catch(err => {
+            console.error('[KeywordManager] Copy failed:', err);
+            alert('Failed to copy explanation');
+        });
+    }
 }
 
-window.KeywordExplanationFetchManager = KeywordExplanationFetchManager;
+window.KeywordExplanation = KeywordExplanation;

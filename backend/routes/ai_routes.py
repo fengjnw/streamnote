@@ -2,6 +2,7 @@ import io
 from flask import jsonify, request, Response
 
 from error_utils import api_error
+from request_validation import require_json
 
 
 def _stream_error(code: str, message: str) -> str:
@@ -56,12 +57,9 @@ def register_ai_routes(app, services, server_error_response):
             return server_error_response(e)
 
     @app.route("/api/extract-keywords", methods=["POST"])
-    def extract_keywords():
+    @require_json
+    def extract_keywords(data):
         try:
-            data = request.get_json(silent=True)
-            if not data:
-                return api_error("INVALID_JSON", "Request body must be JSON", 400)
-
             text = data.get("text", "")
 
             if not text or len(text) < 10:
@@ -73,12 +71,9 @@ def register_ai_routes(app, services, server_error_response):
             return server_error_response(e)
 
     @app.route("/api/translate", methods=["POST"])
-    def translate():
+    @require_json
+    def translate(data):
         try:
-            data = request.get_json(silent=True)
-            if not data:
-                return api_error("INVALID_JSON", "Request body must be JSON", 400)
-
             text = data.get("text", "")
             target_lang = data.get("target_lang", "Chinese")
             context = data.get("context", "").strip()
@@ -104,12 +99,9 @@ def register_ai_routes(app, services, server_error_response):
             return server_error_response(e)
 
     @app.route("/api/explain-keyword", methods=["POST"])
-    def explain_keyword():
+    @require_json
+    def explain_keyword(data):
         try:
-            data = request.get_json(silent=True)
-            if not data:
-                return api_error("INVALID_JSON", "Request body must be JSON", 400)
-
             keyword = data.get("keyword", "").strip()
             language = data.get("language", "English")
             context = data.get("context", "").strip()
@@ -128,12 +120,9 @@ def register_ai_routes(app, services, server_error_response):
             return server_error_response(e)
 
     @app.route("/api/summarize", methods=["POST"])
-    def summarize():
+    @require_json
+    def summarize(data):
         try:
-            data = request.get_json(silent=True)
-            if not data:
-                return api_error("INVALID_JSON", "Request body must be JSON", 400)
-
             text = data.get("text", "").strip()
             language = data.get("language", "English")
             style = data.get("style", "paragraph")

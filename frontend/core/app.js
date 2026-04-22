@@ -1,4 +1,21 @@
+/**
+ * StreamNote - Main application controller
+ * Central hub orchestrating all managers, coordinating UI state, session management,
+ * and user interactions. Manages keyboard shortcuts, displays, recording, translation,
+ * keyword extraction, and persistence.
+ * 
+ * @class
+ * @global
+ * @example
+ * window.streamNoteInstance = new StreamNote();
+ */
 class StreamNote {
+    /**
+     * Get a DOM element by ID
+     * @private
+     * @param {string} id - Element ID
+     * @returns {HTMLElement|null} DOM element or null if not found
+     */
     getElement(id) {
         return document.getElementById(id);
     }
@@ -13,6 +30,9 @@ class StreamNote {
     }
 
     constructor() {
+        // Initialize dependency injection context
+        this.appContext = new AppContext();
+
         this.sessionManager = null;
 
         this.keywordManager = null;
@@ -26,6 +46,7 @@ class StreamNote {
         this.settingsPanel = null;
 
         this.apiClient = window.StreamNoteApiClient ? new window.StreamNoteApiClient() : null;
+        this.appContext.setApiClient(this.apiClient);
 
         this.highlightManager = null;
 
@@ -84,12 +105,36 @@ class StreamNote {
         this.initDelegatedManagers();
 
         this.initSessionManager();
+        this.appContext.setSessionManager(this.sessionManager);
+
         this.initRecordingManager();
+        this.appContext.setRecordingManager(this.recordingManager);
+
         this.initPanelManager();
+        this.appContext.setPanelManager(this.panelManager);
+
         this.initTranslationManager();
+        this.appContext.setTranslationManager(this.translationManager);
+
         this.initSettingsPanel();
+        this.appContext.setSettingsPanel(this.settingsPanel);
+
         this.initKeywordManager();
+        this.appContext.setKeywordManager(this.keywordManager);
+
         this.initHighlightManager();
+        this.appContext.setHighlightManager(this.highlightManager);
+
+        // Register status update callback
+        this.appContext.onStatusUpdate((message, duration) => {
+            this.showStatusMessage(message, duration);
+        });
+
+        // Register save settings callback
+        this.appContext.onSaveSettings(() => {
+            this.saveSettingsToSession();
+        });
+
         this.setupUIListeners();
         this.initVisibilityHandlers();
 

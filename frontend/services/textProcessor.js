@@ -1,6 +1,20 @@
 
 
+/**
+ * TextProcessor - Utility class for text file processing and validation
+ * Handles reading, cleaning, and validating text files in various formats (txt, md, docx, pdf).
+ * Converts raw text into structured precise results with timestamps.
+ * 
+ * @class
+ * @static
+ */
 class TextProcessor {
+    /**
+     * Clean and normalize text by removing extra whitespace and line-ending variations
+     * @static
+     * @param {string} text - Raw text to clean
+     * @returns {string} Cleaned text with normalized line endings and trimmed whitespace
+     */
     static cleanText(text) {
         text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
@@ -9,6 +23,13 @@ class TextProcessor {
         return text;
     }
 
+    /**
+     * Read and parse a text file using FileReader
+     * @static
+     * @param {File} file - File object to read
+     * @returns {Promise<string>} Promise resolving to cleaned text content
+     * @throws {Error} If file is not provided or read fails
+     */
     static readTextFile(file) {
         return new Promise((resolve, reject) => {
             if (!file) {
@@ -36,6 +57,14 @@ class TextProcessor {
         });
     }
 
+    /**
+     * Validate file format, name, and size constraints
+     * @static
+     * @param {File} file - File object to validate
+     * @returns {Object} Validation result object
+     * @returns {boolean} result.valid - Whether file passes validation
+     * @returns {string|null} result.error - Error message if validation failed, null if valid
+     */
     static validateFile(file) {
         if (!file) {
             return { valid: false, error: 'No file provided' };
@@ -69,6 +98,15 @@ class TextProcessor {
         return { valid: true, error: null };
     }
 
+    /**
+     * Convert raw text into precise results structure with line-level timestamps
+     * @static
+     * @param {string} text - Raw text to convert
+     * @param {number} [sessionStartTimeMs] - Session start time in milliseconds (uses current time if not provided)
+     * @returns {Object} Precise results object
+     * @returns {Object} result.data - Map of line index to line data objects
+     * @returns {number} result.lineCount - Total number of lines processed
+     */
     static convertToPreciseResults(text, sessionStartTimeMs = null) {
         const lines = text
             .split('\n')
@@ -95,6 +133,20 @@ class TextProcessor {
         };
     }
 
+    /**
+     * Process an uploaded file, validate it, convert to text, and generate precise results
+     * @static
+     * @async
+     * @param {File} file - File object to process
+     * @param {number} [sessionStartTimeMs] - Session start time for timestamp calculation
+     * @returns {Promise<Object>} Processed file data
+     * @returns {Object} result.preciseResults - Map of line index to line data
+     * @returns {string} result.fileName - Original filename
+     * @returns {number} result.fileSize - File size in bytes
+     * @returns {number} result.lineCount - Number of lines extracted
+     * @returns {number} result.uploadTime - Timestamp of processing
+     * @throws {Error} If file validation fails or processing encounters errors
+     */
     static async processFile(file, sessionStartTimeMs = null) {
         const validation = this.validateFile(file);
         if (!validation.valid) {

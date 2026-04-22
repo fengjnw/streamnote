@@ -1,6 +1,32 @@
 
 
+/**
+ * TranslationManager - Manages real-time text translation for transcript content
+ * Translates transcript lines to specified language using streaming API.
+ * Handles caching, execution context validation, and incremental UI updates.
+ * 
+ * @class
+ * @example
+ * const manager = new TranslationManager({
+ *   apiClient: apiClientInstance,
+ *   getPreciseResults: () => transcriptData
+ * });
+ * manager.setLanguage('Spanish');
+ * await manager.translateText('Hello world', 0);
+ */
 class TranslationManager {
+    /**
+     * Create a new TranslationManager instance
+     * @param {Object} config - Configuration object
+     * @param {string} [config.translateApiUrl] - Translation API endpoint (default: "/api/translate")
+     * @param {StreamNoteApiClient} [config.apiClient] - API client for requests
+     * @param {Function} [config.onTranslationProgress] - Callback for translation progress
+     * @param {Function} [config.onStatusUpdate] - Callback for status messages
+     * @param {Function} [config.onDisplayUpdate] - Callback to update UI display
+     * @param {Function} [config.getSessionData] - Callback to retrieve current session
+     * @param {Function} [config.getPreciseResults] - Callback to retrieve transcript data
+     * @param {Function} [config.saveToSession] - Callback to save translation to session
+     */
     constructor(config = {}) {
         this.translateApiUrl = config.translateApiUrl || "/api/translate";
         this.apiClient = config.apiClient || null;

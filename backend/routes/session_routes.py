@@ -1,6 +1,7 @@
 from flask import jsonify, request
 
 from error_utils import api_error
+from request_validation import require_json
 
 
 AUTH_COOKIE_NAME = "streamnote_auth"
@@ -72,12 +73,9 @@ def register_session_routes(app, session_store, server_error_response, auth_stor
             return server_error_response(e)
 
     @app.route("/api/session-state", methods=["PUT"])
-    def save_session_state():
+    @require_json
+    def save_session_state(data):
         try:
-            data = request.get_json(silent=True)
-            if not data:
-                return api_error("INVALID_JSON", "Request body must be JSON", 400)
-
             device_id = data.get("deviceId", "")
             state = data.get("state")
 
@@ -114,15 +112,12 @@ def register_session_routes(app, session_store, server_error_response, auth_stor
             return server_error_response(e)
 
     @app.route("/api/account-session-state", methods=["PUT"])
-    def save_account_session_state():
+    @require_json
+    def save_account_session_state(data):
         try:
             user = _get_authenticated_user(auth_store)
             if not user:
                 return api_error("AUTH_REQUIRED", "Not logged in", 401)
-
-            data = request.get_json(silent=True)
-            if not data:
-                return api_error("INVALID_JSON", "Request body must be JSON", 400)
 
             state = data.get("state")
             if not _is_valid_state_payload(state):

@@ -1,6 +1,28 @@
 
 
+/**
+ * RecordingManager - Handles audio recording, transcription, and transcript data management
+ * Manages microphone access, audio chunking, voice activity detection, and streaming
+ * transcription via API. Stores precise transcript results with timestamps.
+ * 
+ * @class
+ * @example
+ * const manager = new RecordingManager({
+ *   apiClient: apiClientInstance,
+ *   onTranscribeProgress: (data) => console.log(data)
+ * });
+ * await manager.start();
+ */
 class RecordingManager {
+    /**
+     * Create a new RecordingManager instance
+     * @param {Object} config - Configuration object
+     * @param {string} [config.transcribeApiUrl] - Transcription API endpoint (default: "/api/transcribe")
+     * @param {StreamNoteApiClient} [config.apiClient] - API client for requests
+     * @param {Function} [config.onTranscribeProgress] - Callback for transcription progress updates
+     * @param {Function} [config.onStatusUpdate] - Callback for status messages
+     * @param {Function} [config.onRecordingStateChange] - Callback for recording state changes
+     */
     constructor(config = {}) {
         this.mediaRecorder = null;
         this.isRecording = false;

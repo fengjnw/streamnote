@@ -1,10 +1,13 @@
 /**
- * KeywordDisplayManager - handles keyword list rendering in different keyword panels.
+ * KeywordDisplayCollection - Handles keyword list rendering, collection state, and utility operations.
+ * Consolidates display rendering, keyword collection management, and scrolling utilities.
  */
-class KeywordDisplayManager {
+class KeywordDisplayCollection {
     constructor(keywordManager) {
         this.keywordManager = keywordManager;
     }
+
+    // ========== Display Methods ==========
 
     displayItemList(items, containerElement, deleteHandlerName, emptyMessage = "No items", showAddHighlightBtn = false, showDeleteBtn = true) {
         if (!containerElement) {
@@ -84,6 +87,93 @@ class KeywordDisplayManager {
         this.displayHighlights();
         this.displayExtracts();
     }
+
+    // ========== Collection Management Methods ==========
+
+    addToExplanations(term) {
+        term = term.trim();
+        if (!term) return;
+
+        // Move term to front (dedupe + recency ordering).
+        this.keywordManager.explanations = this.keywordManager.explanations.filter(t => t !== term);
+        this.keywordManager.explanations.unshift(term);
+
+        if (this.keywordManager.explanations.length > 20) {
+            this.keywordManager.explanations = this.keywordManager.explanations.slice(0, 20);
+        }
+
+        if (window.streamNoteInstance) {
+            window.streamNoteInstance.sessionManager?.updateCurrentExplanations(this.keywordManager.explanations);
+            window.streamNoteInstance.saveSettingsToSession();
+        }
+    }
+
+    removeFromExplanations(term) {
+        this.keywordManager.explanations = this.keywordManager.explanations.filter(t => t !== term);
+
+        if (window.streamNoteInstance) {
+            window.streamNoteInstance.sessionManager?.updateCurrentExplanations(this.keywordManager.explanations);
+            window.streamNoteInstance.saveSettingsToSession();
+        }
+    }
+
+    deleteKeywordItem(keyword) {
+        if (window.streamNoteInstance) {
+            window.streamNoteInstance.deleteKeyword(keyword);
+        }
+    }
+
+    toggleExtractedKeywordHighlight(keyword) {
+        if (!this.keywordManager.highlightManager) {
+            this.keywordManager.onStatusMessage('Highlight manager not available', 1500);
+            return;
+        }
+
+        if (!keyword) {
+            this.keywordManager.onStatusMessage('No keyword to toggle', 1500);
+            return;
+        }
+
+        // Toggle only affects manual highlight collection; extracted list remains intact.
+        this.keywordManager.highlightManager.toggleHighlight(keyword);
+        this.keywordManager.displayExtracts();
+        this.keywordManager.displayHighlights();
+    }
+
+    async processText(text) {
+        const keywords = await this.keywordManager.extractKeywords(text);
+
+        if (keywords.length > 0) {
+            this.keywordManager.extracts = [...new Set([...this.keywordManager.extracts, ...keywords])];
+        }
+
+        return keywords;
+    }
+
+    reset() {
+        this.keywordManager.currentKeywords = [];
+        this.keywordManager.explanations = [];
+        this.keywordManager.highlights = [];
+        this.keywordManager.extracts = [];
+
+        if (this.keywordManager.keywordElement) {
+            this.keywordManager.keywordElement.innerHTML = '';
+        }
+    }
+
+    // ========== Utility Methods ==========
+
+    scrollToKeyword(keyword) {
+        const sourcePanel = this.keywordManager.wordSourcePanel[keyword] || 'transcript';
+
+        if (window.streamNoteInstance && window.streamNoteInstance.scrollToWord) {
+            window.streamNoteInstance.scrollToWord(keyword, sourcePanel);
+        }
+    }
+
+    setHighlightPositions(positions) {
+        this.keywordManager.highlightPositions = positions || {};
+    }
 }
 
-window.KeywordDisplayManager = KeywordDisplayManager;
+window.KeywordDisplayCollection = KeywordDisplayCollection;

@@ -4,6 +4,7 @@ import secrets
 from flask import jsonify, request
 
 from error_utils import api_error
+from request_validation import require_json
 
 
 AUTH_COOKIE_NAME = "streamnote_auth"
@@ -50,12 +51,9 @@ def register_auth_routes(app, auth_store, server_error_response):
     secure_cookie = bool(app.config.get("AUTH_COOKIE_SECURE", False))
 
     @app.route("/api/auth/register", methods=["POST"])
-    def register():
+    @require_json
+    def register(data):
         try:
-            data = request.get_json(silent=True)
-            if not data:
-                return api_error("INVALID_JSON", "Request body must be JSON", 400)
-
             email = _normalize_email(data.get("email", ""))
             password = data.get("password", "")
             device_id = data.get("deviceId", "")
@@ -81,12 +79,9 @@ def register_auth_routes(app, auth_store, server_error_response):
             return server_error_response(e)
 
     @app.route("/api/auth/login", methods=["POST"])
-    def login():
+    @require_json
+    def login(data):
         try:
-            data = request.get_json(silent=True)
-            if not data:
-                return api_error("INVALID_JSON", "Request body must be JSON", 400)
-
             email = _normalize_email(data.get("email", ""))
             password = data.get("password", "")
             device_id = data.get("deviceId", "")
@@ -136,7 +131,8 @@ def register_auth_routes(app, auth_store, server_error_response):
             return server_error_response(e)
 
     @app.route("/api/auth/delete-account", methods=["POST"])
-    def delete_account():
+    @require_json
+    def delete_account(data):
         try:
             session_id = request.cookies.get(AUTH_COOKIE_NAME, "").strip()
             if not session_id:
@@ -147,10 +143,6 @@ def register_auth_routes(app, auth_store, server_error_response):
                 response = api_error("AUTH_REQUIRED", "Not logged in", 401)[0]
                 response.delete_cookie(AUTH_COOKIE_NAME, path="/")
                 return response, 401
-
-            data = request.get_json(silent=True)
-            if not data:
-                return api_error("INVALID_JSON", "Request body must be JSON", 400)
 
             password = data.get("password", "")
             if not _is_valid_password(password):
