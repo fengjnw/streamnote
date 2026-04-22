@@ -22,6 +22,7 @@ class PanelToolbarListenersManager {
                     app.keywordManager.extractsCache = {};
                     app.keywordManager.displayExtracts();
                     app.saveToSession();
+                    app.updateSessionStats();
                     app.showStatusMessage("Keywords cleared", 1500);
                 }
             });
@@ -77,6 +78,7 @@ class PanelToolbarListenersManager {
                     app.highlightManager.reapplyAllHighlights();
                     app.keywordManager.displayHighlights();
                     app.saveToSession();
+                    app.updateSessionStats();
                     app.showStatusMessage("Highlights cleared", 1500);
                 }
             });

@@ -36,6 +36,9 @@ class HighlightManager {
         this.sessionManager?.updateCurrentHighlights(this.keywordManager?.highlights || []);
         this.sessionManager?.updateCurrentKeywords(this.keywordManager?.extracts || []);
         this.sessionManager?.updateHighlightPositions(this.highlightPositions);
+
+        // Keep header counters in sync after any highlight add/remove/commit action.
+        window.streamNoteInstance?.updateSessionStats?.();
     }
 
     syncHighlightPositionsToKeywordManager() {

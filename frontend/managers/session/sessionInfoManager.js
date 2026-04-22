@@ -61,30 +61,6 @@ class SessionInfoManager {
         if (highlightCountDisplay) {
             highlightCountDisplay.textContent = highlightCount;
         }
-
-        if (this.app.translationEnabled && this.app.language) {
-            const translationStatusDisplay = document.getElementById('translationStatusDisplay');
-            const translationLangDisplay = document.getElementById('translationLangDisplay');
-            if (translationStatusDisplay) {
-                translationStatusDisplay.style.display = 'flex';
-            }
-            if (translationLangDisplay) {
-                const langNames = {
-                    'Chinese': '中文',
-                    'English': 'English',
-                    'Spanish': 'Español',
-                    'French': 'Français',
-                    'Japanese': '日本語',
-                    'Korean': '한국어'
-                };
-                translationLangDisplay.textContent = langNames[this.app.language] || this.app.language;
-            }
-        } else {
-            const translationStatusDisplay = document.getElementById('translationStatusDisplay');
-            if (translationStatusDisplay) {
-                translationStatusDisplay.style.display = 'none';
-            }
-        }
     }
 }
 

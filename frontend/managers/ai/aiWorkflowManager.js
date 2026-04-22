@@ -154,6 +154,7 @@ class AiWorkflowManager {
                     this.app.sessionManager.updateKeywordsForSession(sessionId, this.app.keywordManager.extracts);
                     const session = this.app.sessionManager.getSession(sessionId);
                     this.app.sessionManager.updateLastKeywordExtractedTime(sessionId, session?.lastTextModified);
+                    this.app.updateSessionStats();
                 }
             }
         } finally {
@@ -190,6 +191,14 @@ class AiWorkflowManager {
                 }
 
                 this.app.keywordManager.updateAllKeywordDisplays();
+
+                const sessionId = this.app.recordingSessionId || this.app.sessionManager.currentSessionId;
+                if (sessionId && this.app.sessionManager) {
+                    this.app.sessionManager.updateKeywordsForSession(sessionId, this.app.keywordManager.extracts);
+                    const session = this.app.sessionManager.getSession(sessionId);
+                    this.app.sessionManager.updateLastKeywordExtractedTime(sessionId, session?.lastTextModified);
+                    this.app.updateSessionStats();
+                }
             }
         } finally {
             endKeywordsOperation("Keywords reprocessing completed");
