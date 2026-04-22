@@ -35,13 +35,13 @@ class SessionInfoManager {
             dateDisplay.textContent = DateTimeUtils.formatDateTime(new Date(displayTime));
         }
 
-        let itemCount = 0;
+        let lineCount = 0;
         if (session.transcripts) {
-            itemCount = Object.keys(session.transcripts).length;
+            lineCount = Object.keys(session.transcripts).length;
         }
-        const itemCountDisplay = document.getElementById('sessionItemCountDisplay');
-        if (itemCountDisplay) {
-            itemCountDisplay.textContent = itemCount;
+        const lineCountDisplay = document.getElementById('sessionLineCountDisplay');
+        if (lineCountDisplay) {
+            lineCountDisplay.textContent = lineCount;
         }
 
         let keywordCount = 0;
@@ -51,6 +51,15 @@ class SessionInfoManager {
         const keywordCountDisplay = document.getElementById('sessionKeywordCountDisplay');
         if (keywordCountDisplay) {
             keywordCountDisplay.textContent = keywordCount;
+        }
+
+        let highlightCount = 0;
+        if (session.highlights && Array.isArray(session.highlights)) {
+            highlightCount = session.highlights.length;
+        }
+        const highlightCountDisplay = document.getElementById('sessionHighlightCountDisplay');
+        if (highlightCountDisplay) {
+            highlightCountDisplay.textContent = highlightCount;
         }
 
         if (this.app.translationEnabled && this.app.language) {

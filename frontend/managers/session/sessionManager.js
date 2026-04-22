@@ -1357,7 +1357,9 @@ class SessionManager {
             const session = this.sessions[id];
             const isActive = id === this.currentSessionId;
 
-            const itemCount = Object.keys(session.transcripts || {}).length || 0;
+            const lineCount = Object.keys(session.transcripts || {}).length || 0;
+            const highlightCount = Array.isArray(session.highlights) ? session.highlights.length : 0;
+            const keywordCount = Array.isArray(session.keywords) ? session.keywords.length : 0;
             const createdDate = this.formatFullDate(session.createdAt);
             const lastModified = this.formatRelativeTime(session.lastModified || session.createdAt);
 
@@ -1367,7 +1369,9 @@ class SessionManager {
                         <div class="session-name">${session.name}</div>
                         <div class="session-brief">
                             <span class="brief-item">${createdDate}</span>
-                            <span class="brief-item">${itemCount} items</span>
+                            <span class="brief-item">${lineCount} lines</span>
+                            <span class="brief-item">${highlightCount} highlights</span>
+                            <span class="brief-item">${keywordCount} keywords</span>
                         </div>
                     </div>
                     <div class="session-time">${lastModified}</div>
