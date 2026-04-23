@@ -45,6 +45,11 @@ class KeywordDisplayCollection {
         `;
 
         containerElement.innerHTML = html;
+
+        // Re-initialize Feather Icons for newly rendered elements
+        if (window.feather) {
+            window.feather.replace();
+        }
     }
 
     escapeHtml(text) {

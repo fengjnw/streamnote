@@ -23,6 +23,10 @@ class PanelToolbarListenersManager {
                     app.keywordManager.displayExtracts();
                     app.saveToSession();
                     app.updateSessionStats();
+                    // Re-initialize feather icons after clearing display
+                    if (window.feather) {
+                        window.feather.replace();
+                    }
                     app.showStatusMessage("Keywords cleared", 1500);
                 }
             });
@@ -60,6 +64,10 @@ class PanelToolbarListenersManager {
                 } finally {
                     reExtractKeywordsBtn.disabled = false;
                     reExtractKeywordsBtn.textContent = originalText;
+                    // Ensure keywords display is refreshed after extraction completes
+                    if (app.keywordManager) {
+                        app.keywordManager.displayExtracts();
+                    }
                 }
             });
         }
@@ -79,6 +87,10 @@ class PanelToolbarListenersManager {
                     app.keywordManager.displayHighlights();
                     app.saveToSession();
                     app.updateSessionStats();
+                    // Re-initialize feather icons after clearing display
+                    if (window.feather) {
+                        window.feather.replace();
+                    }
                     app.showStatusMessage("Highlights cleared", 1500);
                 }
             });

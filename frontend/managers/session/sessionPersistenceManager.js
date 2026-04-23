@@ -42,6 +42,8 @@ class SessionPersistenceManager {
             language: this.app.language
         };
         this.app.sessionManager.updateCurrentSettings(settings);
+
+        this.app.updateSessionStats();
     }
 
     saveSettingsToSession() {
