@@ -108,6 +108,8 @@ class SidePanelControlManager {
                             autoKeywordsDisplay.innerHTML = '<p class="placeholder">Extracting keywords...</p>';
                             try {
                                 await app.processKeywords(app.recordingSessionId || app.sessionManager.currentSessionId);
+                                app.saveToSession(app.sessionManager?.currentSessionId);
+                                app.updateSessionStats();
                             } catch (error) {
                                 console.error("[StreamNote] Error auto-extracting keywords:", error);
                                 autoKeywordsDisplay.innerHTML = '<p class="placeholder">Failed to extract keywords</p>';
