@@ -122,7 +122,7 @@ function buildWelcomeSessionData() {
                 endIndex: 10
             },
             'Keywords': {
-                sourceIndices: [5],
+                sourceIndices: [4],
                 startIndex: 26,
                 endIndex: 34
             },

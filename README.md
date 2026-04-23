@@ -25,7 +25,7 @@ It captures or imports content, then provides transcription, keyword extraction,
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.11
 - Node.js 18+
 - npm 9+
 - OpenAI API key
@@ -90,7 +90,6 @@ Server default URL: http://localhost:5500
 ### 6. Open frontend
 
 - Open http://localhost:5500
-- Or use the deployed demo: https://streamnote-m1cf.onrender.com
 
 ## How To Use
 
@@ -112,46 +111,6 @@ Use either of the following input paths for a stable end-to-end demo:
 
 If no external input is prepared, open the built-in Welcome session and use its preloaded transcript content.
 
-## Quality Checks
-
-Run from repository root:
-
-```bash
-# Frontend lint
-npm run lint
-
-# Frontend unit tests (core logic)
-npm run test:frontend:unit
-
-# Frontend smoke test
-npm run test:frontend:smoke
-
-# Backend tests
-npm run test:backend
-
-# Full local check (lint + frontend unit + smoke + backend)
-npm run test:all
-```
-
-### Test Structure
-
-- Backend API tests: validate endpoint contracts and error shapes (`backend/tests/test_api_routes.py`).
-- Backend unit tests: validate file processing core logic (`backend/tests/test_file_processor.py`).
-- Frontend unit tests: validate core text processing behavior (`scripts/frontend-unit-text-processor.cjs`).
-- Frontend smoke tests: validate required DOM/script wiring (`scripts/frontend-smoke.cjs`).
-
-## API Error Contract
-
-API errors are normalized as JSON:
-
-```json
-{
-	"error": {
-		"code": "ERROR_CODE",
-		"message": "Human readable detail"
-	}
-}
-```
 
 ## Known Limitations
 
@@ -168,71 +127,6 @@ API errors are normalized as JSON:
 - Backend stores the same session snapshot in SQLite via `/api/session-state`.
 - Device identity is a generated `deviceId` stored locally in browser storage.
 - This enables seamless migration toward full account-based sync later.
-
-## SQLite Stable Deployment
-
-### Recommended configuration
-
-- Keep SQLite as the production database for this project stage.
-- Use a persistent disk/volume on your hosting platform.
-- Set `SESSION_DB_PATH` to that persistent path.
-
-Examples:
-
-- Local: `SESSION_DB_PATH=data/streamnote.db`
-- Railway with volume mounted at `/data`: `SESSION_DB_PATH=/data/streamnote.db`
-
-### Backup workflow
-
-Create a timestamped backup:
-
-```bash
-npm run backup
-```
-
-Optional custom source/output:
-
-```bash
-cd backend
-python3 tools/backup_session_db.py --db /data/streamnote.db --output-dir /data/backups
-```
-
-### Reset test data before deployment
-
-One-click cleanup (uses `SESSION_DB_PATH` or default `data/streamnote.db`):
-
-```bash
-npm run reset
-```
-
-Direct script usage:
-
-```bash
-cd backend
-python3 tools/reset_test_data.py --yes
-```
-
-Custom database path:
-
-```bash
-cd backend
-python3 tools/reset_test_data.py --db /data/streamnote.db --yes
-```
-
-This clears all rows in these tables:
-
-- `device_session_state`
-- `auth_sessions`
-- `device_user_bindings`
-- `users`
-
-### Deployment checklist (Railway)
-
-1. Add environment variable `OPENAI_API_KEY`.
-2. Attach a volume (persistent storage).
-3. Set `SESSION_DB_PATH` to a file under the mounted volume.
-4. Deploy and verify `/health` returns `{"status":"ok"}`.
-5. Create a session in UI, restart service, and confirm data still exists.
 
 ## Project Structure
 
