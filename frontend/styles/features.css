@@ -1,23 +1,38 @@
-/* ================ Explanation Panel (Left) ================ */
-.explanation-panel-left {
+/* ================ Shared Side Panel Containers ================ */
+.explanation-panel-left,
+.side-panels-container {
     display: flex;
     flex-direction: column;
     gap: 0;
     width: 0;
     overflow: hidden;
     background: var(--color-white);
+    flex-shrink: 0;
+}
+
+.explanation-panel-left {
     border-right: 1px solid var(--color-border);
 }
 
-.explanation-panel-left.expanded {
-    width: 280px;
+.side-panels-container {
+    border-left: 1px solid var(--color-border);
+}
+
+.explanation-panel-left.expanded,
+.side-panels-container.expanded {
+    width: var(--side-panel-width, 320px);
 }
 
 .explanation-panel-left.collapsed {
     width: 0;
 }
 
-.explanation-panel-header {
+.side-panels-container.collapsed {
+    width: 0;
+}
+
+.explanation-panel-header,
+.side-panel-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -26,33 +41,29 @@
     color: var(--color-panel-header-text);
     flex-shrink: 0;
     gap: 10px;
-    border-bottom: 1px solid var(--color-border);
     min-height: 32px;
-    order: 0;
 }
 
-.explanation-panel-header h3 {
+.explanation-panel-header h3,
+.side-panel-header h3 {
     margin: 0;
     font-size: 0.9em;
     font-weight: 600;
     flex: 1;
 }
 
-.explanation-panel-toolbar {
-    display: flex;
-    gap: 8px;
-    padding: 8px 12px;
-    background: var(--color-secondary-lighter);
+/* Keep explanation header divider to match existing visual separation. */
+.explanation-panel-header {
     border-bottom: 1px solid var(--color-border);
-    flex-shrink: 0;
-    flex-wrap: wrap;
+    order: 0;
+}
+
+.explanation-panel-toolbar {
     order: 1;
-    align-items: center;
-    min-height: 44px;
 }
 
 .explanation-panel-toolbar .toolbar-btn {
-    flex: 1;
+    flex: 0 0 auto;
     border-color: var(--color-primary-lighter);
 }
 
@@ -63,7 +74,7 @@
 }
 
 .explanation-panel-toolbar .toolbar-language {
-    flex: 1;
+    flex: 1 1 120px;
     border-color: var(--color-primary-lighter);
 }
 
@@ -72,65 +83,39 @@
     border-color: var(--color-primary);
 }
 
-.explanation-panel-content {
-    flex: 1;
-    overflow: hidden;
-    padding: 0;
-    background: var(--color-white);
-    min-height: 0;
-    order: 2;
+#clearExplanationsBtn {
+    margin-left: auto;
 }
 
-.explanation-panel-content #explanation-focus-view {
-    padding: 0;
+#reexplain-explanation-btn {
+    min-width: 80px;
 }
 
-/* Side Panels Container */
-.side-panels-container {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    width: 0;
-    overflow: hidden;
-    background: var(--color-white);
-    border-left: 1px solid var(--color-border);
-    flex-shrink: 0;
-}
-
-.side-panels-container.expanded {
-    width: 280px;
-}
-
-/* Side Panel Header */
-.side-panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    background: var(--color-panel-header-bg);
-    color: var(--color-panel-header-text);
-    flex-shrink: 0;
-    gap: 10px;
-    border-bottom: none;
-    min-height: 32px;
-}
-
-.side-panel-header h3 {
-    margin: 0;
-    font-size: 0.9em;
-    font-weight: 600;
-    flex: 1;
-}
-
-/* Panel Content (for side panel) */
+.explanation-panel-content,
 .side-panels-container .panel-content {
     flex: 1;
     overflow: hidden;
     padding: 0;
     background: var(--color-white);
+    min-height: 0;
+}
+
+.explanation-panel-content {
+    order: 2;
+}
+
+.explanation-panel-content #explanation-focus-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    padding: 0;
+}
+
+/* Side panel content switching */
+.side-panels-container .panel-content {
     display: none;
     flex-direction: column;
-    min-height: 0;
 }
 
 .side-panels-container .panel-content.active {
@@ -142,7 +127,7 @@
     min-height: 0;
 }
 
-/* Specific padding for content sections */
+/* Content sections with list-style padding */
 .side-panels-container .panel-content .keywords-items,
 .side-panels-container .panel-content .keywords-tab-content {
     flex: 1;
@@ -154,7 +139,7 @@
     gap: 8px;
 }
 
-/* Other content sections without padding */
+/* Content sections without extra padding */
 .side-panels-container .panel-content .query-history-list,
 .side-panels-container .panel-content #summary-display {
     flex: 1;
@@ -167,7 +152,7 @@
     padding: 0;
 }
 
-/* 底部区域（关键词 + 查询历史） - 已移至侧面板 */
+/* Bottom area (keywords + query history) moved into side panel */
 .keywords-display {
     display: flex;
     flex-direction: column;
@@ -229,7 +214,7 @@
     color: var(--color-primary);
 }
 
-/* ==================== Edit Panel Item (统一样式） ==================== */
+/* ==================== Edit Panel Item (Unified Style) ==================== */
 .edit-item {
     display: flex;
     align-items: center;
@@ -542,8 +527,8 @@ textarea::placeholder {
     font-weight: normal;
 }
 
-/* ================ Highlights Panel (复用 side-panels-container 样式) ================ */
-/* 高亮面板集成在 side-panels-container 中，完全复用样式和逻辑 */
+/* ================ Highlights Panel (Reuses side-panels-container styles) ================ */
+/* Highlights panel is integrated into side-panels-container and reuses its logic. */
 
 @keyframes pulse {
 
@@ -668,113 +653,30 @@ textarea::placeholder {
     background: var(--color-grey-650);
 }
 
-/* ==================== Side Panels (Settings only - fixed) ==================== */
-
-.side-panel {
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: 350px;
-    height: 100vh;
-    background: var(--color-white);
-    box-shadow: -4px 0 12px var(--color-black-shadow-15);
-    z-index: 999;
-    display: flex;
-    flex-direction: column;
-    animation: slideInRight 0.3s ease-out;
-    border-left: 1px solid var(--color-border);
-}
-
-@keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-    }
-
-    to {
-        transform: translateX(0);
-    }
-}
-
-.side-panel .panel-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: var(--spacing-md) var(--spacing-lg);
-    background: var(--color-white);
-}
-
-.panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-md) var(--spacing-lg);
-    background: var(--color-primary);
-    color: var(--color-white);
-    border-bottom: none;
-    flex-shrink: 0;
-    gap: var(--spacing-sm);
-}
-
-.panel-header h3 {
-    margin: 0;
-    font-size: 1em;
-    font-weight: 600;
-    flex: 1;
-}
-
-.panel-content {
-    flex: 1;
-    overflow-y: auto;
-}
-
-/* Override for settingsContent - no internal scroll */
-#settingsContent {
-    overflow: hidden;
-}
-
-/* Settings Panel */
-.tab-content[data-tab="settings"] .panel-content {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    padding: 0;
-}
-
-/* Hide empty toolbar in settings panel */
-#summaryContent .panel-toolbar .toolbar-btn {
-    flex: 1;
-}
-
-#keywordsContent .panel-toolbar .toolbar-btn {
+/* Keep action buttons balanced in summary and keyword panels */
+:is(#summaryContent, #keywordsContent) .panel-toolbar .toolbar-btn {
     flex: 1;
 }
 
 /* ==================== Purple Theme for Summary/Keywords/Highlights Panels ==================== */
 
 /* Shared panel toolbar button theme */
-#summaryContent .panel-toolbar .toolbar-btn,
-#keywordsContent .panel-toolbar .toolbar-btn,
-#highlightsContent .panel-toolbar .toolbar-btn {
+:is(#summaryContent, #keywordsContent, #highlightsContent) .panel-toolbar .toolbar-btn {
     border-color: var(--color-primary-lighter);
 }
 
-#summaryContent .panel-toolbar .toolbar-btn:hover,
-#keywordsContent .panel-toolbar .toolbar-btn:hover,
-#highlightsContent .panel-toolbar .toolbar-btn:hover {
+:is(#summaryContent, #keywordsContent, #highlightsContent) .panel-toolbar .toolbar-btn:hover {
     background: var(--color-primary-lightest);
     border-color: var(--color-primary);
     color: var(--color-primary);
 }
 
-#summaryContent .panel-toolbar .toolbar-btn.danger,
-#keywordsContent .panel-toolbar .toolbar-btn.danger,
-#highlightsContent .panel-toolbar .toolbar-btn.danger {
+:is(#summaryContent, #keywordsContent, #highlightsContent) .panel-toolbar .toolbar-btn.danger {
     color: var(--color-danger);
     border-color: var(--color-danger-border-light);
 }
 
-#summaryContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled),
-#keywordsContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled),
-#highlightsContent .panel-toolbar .toolbar-btn.danger:hover:not(:disabled) {
+:is(#summaryContent, #keywordsContent, #highlightsContent) .panel-toolbar .toolbar-btn.danger:hover:not(:disabled) {
     background: var(--color-danger-bg);
     border-color: var(--color-danger);
 }
@@ -792,10 +694,6 @@ textarea::placeholder {
     border-color: var(--color-primary);
 }
 
-#settingsContent .panel-toolbar {
-    display: none;
-}
-
 /* Settings Scroll Container */
 .settings-scroll-container {
     flex: 1;
@@ -805,67 +703,6 @@ textarea::placeholder {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
-}
-
-.settings-group {
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--color-grey-100);
-}
-
-.settings-group:last-child {
-    border-bottom: none;
-    margin-bottom: 8px;
-}
-
-.settings-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
-    color: var(--color-grey-800);
-    cursor: pointer;
-    font-size: 0.9em;
-    margin-bottom: 8px;
-}
-
-.settings-label input[type="checkbox"] {
-    cursor: pointer;
-    width: 18px;
-    height: 18px;
-    accent-color: var(--color-primary);
-}
-
-.settings-label span {
-    flex: 1;
-}
-
-
-
-.settings-panel .language-selector {
-    width: 100%;
-    padding: var(--spacing-sm) var(--spacing-md);
-    border: 1px solid var(--color-primary-lighter);
-    border-radius: 4px;
-    font-size: 0.9em;
-    background: var(--color-white);
-    color: var(--color-text);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.settings-panel .language-selector:hover,
-.settings-panel .language-selector:focus {
-    border-color: var(--color-primary);
-    background: var(--color-primary-lightest);
-    outline: none;
-}
-
-.settings-divider {
-    height: 8px;
-    background: linear-gradient(to right, transparent, var(--color-grey-100), transparent);
-    margin: 15px 0;
-    border: none;
 }
 
 .settings-section {
@@ -951,40 +788,6 @@ textarea::placeholder {
     border-color: var(--color-primary);
     background: var(--color-primary-lightest);
     outline: none;
-}
-
-.settings-item-btn {
-    display: block;
-    width: 100%;
-    padding: 10px var(--spacing-md);
-    margin: 0;
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    background: var(--color-white);
-    color: var(--color-grey-800);
-    text-align: left;
-    font-size: 0.9em;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: inherit;
-    font-weight: 500;
-}
-
-.settings-item-btn:hover {
-    background: var(--color-bg-hover);
-    border-color: var(--color-primary);
-    box-shadow: 0 2px 6px rgba(var(--color-primary-rgb), 0.1);
-}
-
-.settings-item-btn.danger {
-    color: var(--color-danger);
-    border-color: var(--color-danger-border-light);
-}
-
-.settings-item-btn.danger:hover {
-    background: var(--color-danger-bg);
-    border-color: var(--color-danger);
-    box-shadow: 0 2px 6px var(--color-danger-shadow-1);
 }
 
 /* ==================== Keywords Tab Navigation ==================== */
@@ -1350,15 +1153,20 @@ textarea::placeholder {
     flex: 1;
 }
 
-/* Purple theme for session modal toolbar buttons */
-.session-modal .floating-modal-toolbar .toolbar-btn {
+/* Shared modal toolbar button theme */
+:is(.session-modal, .settings-modal, .add-content-modal, .edit-modal) .floating-modal-toolbar .toolbar-btn {
     border-color: var(--color-primary-lighter);
 }
 
-.session-modal .floating-modal-toolbar .toolbar-btn:hover {
+:is(.session-modal, .settings-modal, .add-content-modal, .edit-modal) .floating-modal-toolbar .toolbar-btn:hover {
     background: var(--color-primary-lightest);
     border-color: var(--color-primary);
     color: var(--color-primary);
+}
+
+/* Modal toolbars that use content-width action buttons */
+:is(.add-content-modal, .edit-modal) .floating-modal-toolbar .toolbar-btn {
+    flex: 0;
 }
 
 .session-modal .floating-modal-toolbar .toolbar-btn.danger {
@@ -1371,28 +1179,6 @@ textarea::placeholder {
     border-color: var(--color-danger);
 }
 
-/* Purple theme for settings modal toolbar buttons */
-.settings-modal .floating-modal-toolbar .toolbar-btn {
-    border-color: var(--color-primary-lighter);
-}
-
-.settings-modal .floating-modal-toolbar .toolbar-btn:hover {
-    background: var(--color-primary-lightest);
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-}
-
-.add-content-modal .floating-modal-toolbar .toolbar-btn {
-    flex: 0;
-    border-color: var(--color-primary-lighter);
-}
-
-.add-content-modal .floating-modal-toolbar .toolbar-btn:hover {
-    background: var(--color-primary-lightest);
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-}
-
 .add-content-modal .floating-modal-toolbar .toolbar-btn.danger {
     color: var(--color-danger);
     border-color: var(--color-danger-border-light);
@@ -1401,18 +1187,6 @@ textarea::placeholder {
 .add-content-modal .floating-modal-toolbar .toolbar-btn.danger:hover:not(:disabled) {
     background: var(--color-danger-bg);
     border-color: var(--color-danger);
-}
-
-/* Edit modal toolbar buttons - unified with add content modal style */
-.edit-modal-toolbar .toolbar-btn {
-    flex: 0;
-    border-color: var(--color-primary-lighter);
-}
-
-.edit-modal-toolbar .toolbar-btn:hover {
-    background: var(--color-primary-lightest);
-    border-color: var(--color-primary);
-    color: var(--color-primary);
 }
 
 .edit-modal-toolbar .toolbar-btn.danger {

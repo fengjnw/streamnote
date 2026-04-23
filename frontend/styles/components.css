@@ -6,14 +6,14 @@
     -webkit-box-decoration-break: clone;
 }
 
-/* 临时高亮（在解释面板显示时） */
+/* Temporary highlight while explanation panel is active */
 .temp-highlight {
     background-color: var(--color-highlight-temp);
     color: inherit;
     animation: temp-highlight-pulse 2s ease-in-out infinite;
 }
 
-/* 临时高亮的脉动动画 - 仅背景颜色变化 */
+/* Pulse animation for temporary highlight (background only) */
 @keyframes temp-highlight-pulse {
 
     0%,
@@ -39,6 +39,28 @@
     order: -1;
     align-items: center;
     min-height: 44px;
+}
+
+/* Keep explanation toolbar under the header and split controls evenly in one row. */
+.explanation-panel-left .explanation-panel-toolbar {
+    order: 1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.explanation-panel-left .explanation-panel-toolbar .toolbar-language,
+.explanation-panel-left .explanation-panel-toolbar .toolbar-btn {
+    width: 100%;
+    min-width: 0;
+}
+
+#clearExplanationsBtn {
+    margin-left: 0;
+}
+
+#reexplain-explanation-btn {
+    min-width: 0;
 }
 
 
@@ -259,6 +281,8 @@
 .explanation-body {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
 }
 
@@ -399,7 +423,7 @@
     margin-bottom: 0;
 }
 
-/* 确保placeholder字体大小统一 */
+/* Keep placeholder font size consistent */
 .explanation-scroll .placeholder {
     font-size: 0.9rem;
 }
@@ -421,31 +445,9 @@
     text-align: center;
 }
 
-/* 响应式设计 */
-/* ========================= 模式选择器样式 ========================= */
+/* ========================= Feather Icon Styles ========================= */
 
-.mode-selector {
-    user-select: none;
-}
-
-.mode-tab {
-    color: var(--color-grey-600);
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-.mode-tab:hover {
-    background: var(--color-grey-100);
-}
-
-.mode-tab.active {
-    color: var(--color-primary);
-    border-bottom-color: var(--color-primary);
-}
-
-/* ========================= Feather Icons 样式 ========================= */
-
-/* 按钮中的图标样式 */
+/* Icon sizing in buttons */
 button [data-feather] {
     width: 16px;
     height: 16px;
@@ -454,21 +456,21 @@ button [data-feather] {
     display: inline-block;
 }
 
-/* 工具栏按钮中的图标 */
+/* Icon sizing in toolbar buttons */
 .toolbar-btn [data-feather] {
     width: 16px;
     height: 16px;
     stroke-width: 2;
 }
 
-/* 控制面板按钮中的图标 */
+/* Icon sizing in control buttons */
 .control-btn [data-feather] {
     width: 16px;
     height: 16px;
     stroke-width: 2;
 }
 
-/* 菜单项中的图标 */
+/* Icon sizing in menu items */
 .content-menu-item [data-feather] {
     width: 14px;
     height: 14px;
@@ -476,7 +478,8 @@ button [data-feather] {
     margin-right: 4px;
 }
 
-/* 图标颜色继承 */
+/* Inherit icon color from current text color */
 [data-feather] {
     stroke: currentColor;
     fill: none;
+}

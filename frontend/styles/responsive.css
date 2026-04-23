@@ -83,10 +83,15 @@
         grid-template-columns: 1fr;
     }
 
-    /* 在小屏幕上，左右分割自动改为上下分割 */
+    /* On small screens, convert left/right split into top/bottom split */
     .main-content.layout-split-left,
     .main-content.layout-split-right {
         flex-direction: column;
+    }
+
+    .explanation-panel-left.expanded,
+    .side-panels-container.expanded {
+        width: min(84vw, var(--side-panel-width, 320px));
     }
 
     .main-content.layout-split-left .transcript-panel,
@@ -142,7 +147,7 @@
     }
 }
 
-/* 临时单词高亮样式 */
+/* Temporary word highlight style */
 .temp-word-highlight {
     animation: wordHighlightFade 4s ease-out forwards;
     text-decoration: underline;
@@ -164,12 +169,12 @@
     }
 }
 
-/* 通用隐藏类 */
+/* Generic hidden utility class */
 .hidden {
     display: none !important;
 }
 
-/* 模式选择器样式 */
+/* Mode selector styles */
 .nav-group-mode {
     border-right: 1px solid var(--color-grey-300);
     padding-right: 12px;

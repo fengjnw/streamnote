@@ -1,18 +1,19 @@
-/* ==================== 设计系统 - 统一的间距规范 ==================== */
-/* 
-   间距规范（所有margin和padding都应该使用这些标准值）：
-   - XS: 4px
-   - SM: 8px
-   - MD: 12px  (默认间距)
-   - LG: 16px
-   - XL: 20px
-   
-   按钮/输入框: 6px 12px (竖x横)
-   列表项/卡片: 10px 12px (竖x横)
-   面板padding: 12px
-   列表容器: 12px
-   文本内容: 12px
-   header: 12px 16px
+/* ==================== Design System: Spacing and Tokens ==================== */
+/*
+    Spacing scale:
+    - XS: 4px
+    - SM: 8px
+    - MD: 12px (default)
+    - LG: 16px
+    - XL: 20px
+
+    Common usage:
+    - Buttons/inputs: 6px 12px
+    - List items/cards: 10px 12px
+    - Panel padding: 12px
+    - List container: 12px
+    - Text content: 12px
+    - Header: 12px 16px
 */
 
 :root {
@@ -22,104 +23,62 @@
     --spacing-md: 12px;
     --spacing-lg: 16px;
     --spacing-xl: 20px;
+    --side-panel-width: 320px;
 
     /* ================ Primary Color (Slate Blue Theme) ================ */
     --color-primary: #5a7c99;
-    /* 主色 */
     --color-primary-dark: #42657a;
-    /* 深灰蓝 Header */
     --color-primary-light: #8ba6bf;
-    /* 浅灰蓝 按钮 */
     --color-primary-lighter: #b8cce0;
-    /* 更浅灰蓝 面板头 */
     --color-primary-lightest: #eef3f8;
-    /* 最浅灰蓝 背景 */
     --color-primary-accent: #2a3e52;
-    /* 深色文字 */
 
     /* ================ Secondary Color (Grey) ================ */
     --color-secondary: #868e96;
-    /* 灰色 Active 状态 */
     --color-secondary-dark: #6c757d;
-    /* 深灰 */
     --color-secondary-light: #e9ecef;
-    /* 浅灰 背景色 */
     --color-secondary-lighter: #f5f5f5;
-    /* 极浅灰 */
     --color-secondary-lightest: #fafafa;
-    /* 最浅灰 */
 
     /* ================ Neutral Colors ================ */
     --color-white: #ffffff;
-    /* 白色 */
     --color-grey-900: #212529;
-    /* 最深灰文字 */
     --color-grey-800: #333333;
-    /* 深灰文字 */
     --color-grey-700: #495057;
-    /* 中灰文字 */
     --color-grey-600: #666666;
-    /* 浅灰文字 */
     --color-grey-500: #999999;
-    /* 更浅灰文字 */
     --color-grey-550: #888888;
-    /* 次级提示灰 */
     --color-grey-400: #bbbbbb;
-    /* 提示文字 */
     --color-grey-650: #555555;
-    /* 深提示灰 */
     --color-grey-300: #dddddd;
-    /* 边框 */
     --color-grey-750: #444444;
-    /* 接近正文的深灰 */
     --color-grey-200: #e0e0e0;
-    /* 淡边框 */
     --color-grey-100: #f0f0f0;
-    /* 菜单分隔 */
 
     /* ================ Status Colors ================ */
     --color-success: #28a745;
-    /* 成功/绿色 */
     --color-success-dark: #218838;
-    /* 成功深色 */
     --color-danger: #d32f2f;
-    /* 危险/红色 */
     --color-danger-light: #ff6b6b;
-    /* 卡片边框用 */
     --color-danger-hover: #ee5a52;
-    /* Hover状态 */
     --color-danger-bg: #ffebee;
-    /* 背景 */
     --color-danger-light-hover: #ff4444;
-    /* 记录中状态 */
     --color-danger-dark-hover: #dd2222;
-    /* 记录中Hover */
 
     /* ================ Semantic Colors ================ */
     --color-text: var(--color-grey-800);
-    /* 正文文字 */
     --color-text-secondary: var(--color-grey-700);
-    /* 副文字 */
     --color-text-tertiary: var(--color-grey-600);
-    /* 三级文字 */
     --color-text-disabled: var(--color-grey-500);
-    /* 禁用文字 */
     --color-text-muted: var(--color-grey-400);
-    /* 静音文字 */
     --color-border: var(--color-secondary-light);
-    /* 边框色 */
     --color-bg-light: var(--color-secondary-lightest);
-    /* 浅背景 */
     --color-bg-hover: var(--color-secondary-lighter);
-    /* Hover背景 */
     --color-bg-panel: var(--color-white);
-    /* 面板背景 */
 
     /* ================ Component Colors ================ */
     --color-header-bg: var(--color-primary);
-    /* 顶部栏 */
     --color-header-logo-bg: var(--color-primary-dark);
-    /* Logo背景 */
     --color-button-primary-bg: var(--color-primary);
     --color-button-secondary-bg: var(--color-secondary-light);
     --color-button-secondary-text: var(--color-grey-700);
@@ -143,13 +102,9 @@
 
     /* ================ Highlight Colors ================ */
     --color-highlight-bg: #ffa500;
-    /* 永久高亮背景（橙色） */
     --color-highlight-jump: #d32f2f;
-    /* 定位跳转文字颜色（红色） */
     --color-highlight-temp: #fffde7;
-    /* 临时高亮背景（浅黄） */
     --color-highlight-temp-pulse: #fff9c4;
-    /* 临时高亮脉动颜色（更浅黄） */
 
     /* ================ RGB Color Values (for rgba composition) ================ */
     --color-primary-rgb: 90 124 153;

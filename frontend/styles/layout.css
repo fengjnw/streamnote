@@ -166,7 +166,7 @@
     display: inline;
 }
 
-/* ================ Session 管理面板 ================ */
+/* ================ Session Management Panel ================ */
 .session-panel {
     width: 0;
     background: var(--color-white);
@@ -177,11 +177,12 @@
 }
 
 .session-panel.expanded {
-    width: 320px;
+    width: var(--side-panel-width, 320px);
 }
 
-/* Session Panel Header - 统一表现 */
-.session-panel-header {
+/* Shared header structure for session and text panels */
+.session-panel-header,
+.text-panel-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -194,7 +195,8 @@
     min-height: 32px;
 }
 
-.session-panel-header h3 {
+.session-panel-header h3,
+.text-panel-header h3 {
     margin: 0;
     font-size: 0.85em;
     font-weight: 600;
@@ -257,7 +259,7 @@
     display: none;
 }
 
-/* Session Panel Content - 统一表现 */
+/* Session Panel Content - Unified Presentation */
 .session-panel-content {
     flex: 1;
     overflow-y: auto;
@@ -275,7 +277,7 @@
     padding: 8px 0;
 }
 
-/* 保留旧的session-header和session-header h3用于兼容性 */
+/* Keep legacy .session-header and .session-header h3 for compatibility */
 .session-header {
     display: flex;
     align-items: center;
@@ -295,7 +297,7 @@
     font-weight: 600;
 }
 
-/* ================ 统一面板和Modal关闭按钮样式 ================ */
+/* ================ Unified Panel and Modal Close Button Style ================ */
 .panel-close-btn {
     background: none;
     color: var(--color-white);
@@ -317,7 +319,7 @@
     transform: scale(1.1);
 }
 
-/* ================ 统一Item删除按钮样式 ================ */
+/* ================ Unified Item Delete Button Style ================ */
 .item-delete-btn {
     background: none;
     border: none;
@@ -340,7 +342,7 @@
     color: var(--color-danger);
 }
 
-/* 向后兼容：保留旧的类名但使用新样式 */
+/* Backward compatibility: keep old class names with unified style */
 .keyword-delete-btn,
 .delete-session-btn {
     background: none;
@@ -366,7 +368,7 @@
     transform: scale(1.1);
 }
 
-/* ================ 统一行条目样式 ================ */
+/* ================ Unified Row Item Style ================ */
 .panel-item {
     background: var(--color-white);
     border-radius: 6px;
@@ -589,7 +591,7 @@
     gap: 4px;
 }
 
-/* 管理菜单 */
+/* Manage menu */
 .manage-menu {
     position: absolute;
     top: calc(100% + 5px);
@@ -644,8 +646,8 @@
     min-height: 0;
 }
 
-/* ================ Content Area - 主内容区域 ================ */
-/* Content Area - 主内容区域：文字面板和右侧面板并排显示 */
+/* ================ Content Area - Main Workspace Region ================ */
+/* Content Area: text panels and right side panel are displayed side by side. */
 .content-area {
     flex: 1;
     display: flex;
@@ -707,7 +709,7 @@
 }
 
 
-/* Split Bottom: 翻译在下面（默认） */
+/* Split Bottom: translation panel below transcript (default) */
 .main-content.layout-split-bottom {
     flex-direction: column;
 }
@@ -723,7 +725,7 @@
     display: flex;
 }
 
-/* Split Top: 翻译在上面 */
+/* Split Top: translation panel above transcript */
 .main-content.layout-split-top {
     flex-direction: column;
 }
@@ -742,7 +744,7 @@
     order: 1;
 }
 
-/* Split Left: 翻译在左边 */
+/* Split Left: translation panel on the left */
 .main-content.layout-split-left {
     flex-direction: row;
 }
@@ -761,7 +763,7 @@
     order: 1;
 }
 
-/* Split Right: 翻译在右边 */
+/* Split Right: translation panel on the right */
 .main-content.layout-split-right {
     flex-direction: row;
 }
@@ -788,98 +790,14 @@
     display: flex;
 }
 
-/* Panel Header */
+/* Keep explicit order for readability of text panel structure */
 .text-panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px var(--spacing-md);
-    background: var(--color-panel-header-bg);
-    color: var(--color-panel-header-text);
-    flex-shrink: 0;
-    gap: var(--spacing-sm);
-    border-bottom: none;
-    min-height: 32px;
     order: 0;
 }
 
-.text-panel-header h3 {
-    margin: 0;
-    font-size: 0.85em;
-    font-weight: 600;
-    flex-shrink: 0;
-    flex: 1;
-}
-
-/* ===== Layout Selector ===== */
-.layout-selector {
-    padding: var(--spacing-sm) var(--spacing-md);
-    background: var(--color-white);
-    border: 1px solid var(--color-primary-lighter);
-    border-radius: 6px;
-    font-size: 0.9em;
-    color: var(--color-text);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    min-width: 160px;
-}
-
-.layout-selector:hover {
-    border-color: var(--color-primary);
-    background: var(--color-primary-lightest);
-    box-shadow: 0 2px 6px var(--color-primary-shadow-15);
-}
-
-.layout-selector:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-shadow-1);
-    background: var(--color-primary-lightest);
-}
-
-.side-panel-header .language-selector {
-    padding: 4px var(--spacing-sm);
-    height: auto;
-    min-width: 100px;
-    max-width: 100px;
-    margin-left: auto;
-    margin-right: 0;
-}
-
-/* ===== Panel Text Toolbar ===== */
+/* Text panel toolbar only overrides order; base layout comes from .panel-toolbar */
 .text-panel .text-panel-toolbar {
-    display: flex;
-    gap: 8px;
-    padding: 8px 12px;
-    background: var(--color-secondary-lighter);
-    border-bottom: 1px solid var(--color-border);
-    flex-shrink: 0;
-    align-items: center;
     order: 1;
-    flex-wrap: wrap;
-    min-height: 44px;
-}
-
-.text-panel-toolbar .toolbar-language {
-    flex: 0;
-    min-width: 85px;
-    height: 28px;
-    padding: 4px 10px;
-    border: 1px solid var(--color-primary-lighter);
-    border-radius: 4px;
-    background: var(--color-white);
-    color: var(--color-text);
-    font-size: 0.8em;
-    font-family: inherit;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.text-panel-toolbar .toolbar-language:hover,
-.text-panel-toolbar .toolbar-language:focus {
-    border-color: var(--color-primary);
-    background: var(--color-primary-lightest);
 }
 
 /* ===== Layout Dropdown ===== */
@@ -1003,51 +921,10 @@
     outline: none;
 }
 
-/* Toolbar language selector */
-.panel-toolbar .toolbar-language {
-    flex: 0;
-    min-width: 85px;
-    height: 28px;
-    padding: 4px 10px;
-    border: 1px solid var(--color-primary-lighter);
-    border-radius: 4px;
-    background: var(--color-white);
-    color: var(--color-text);
-    font-size: 0.8em;
-    font-family: inherit;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-}
-
-/* Translation panel language selector */
-.translation-panel .toolbar-language {
-    border-color: var(--color-primary-lighter);
-}
-
-.translation-panel .toolbar-language:hover,
-.translation-panel .toolbar-language:focus {
-    border-color: var(--color-primary);
-    background: var(--color-primary-lightest);
-}
-
-/* Translation panel layout dropdown */
-.translation-panel .layout-dropdown {
-    border-color: var(--color-primary-lighter);
-}
-
-.translation-panel .layout-dropdown:hover,
-.translation-panel .layout-dropdown:focus {
-    border-color: var(--color-primary);
-    background: var(--color-primary-lightest);
-}
-
-/* Toolbar select dropdown */
+/* Toolbar form controls */
+.panel-toolbar .toolbar-language,
 .panel-toolbar .toolbar-select {
     flex: 0;
-    min-width: 100px;
     height: 28px;
     padding: 4px 10px;
     border: 1px solid var(--color-primary-lighter);
@@ -1061,6 +938,14 @@
     transition: all 0.2s;
     display: flex;
     align-items: center;
+}
+
+.panel-toolbar .toolbar-language {
+    min-width: 85px;
+}
+
+.panel-toolbar .toolbar-select {
+    min-width: 100px;
 }
 
 .panel-toolbar .toolbar-language:hover,
