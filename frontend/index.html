@@ -6,334 +6,176 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>StreamNote</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Feather Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <!-- Libraries for DOCX and PDF processing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://unpkg.com/mammoth@0.3.2/mammoth.browser.min.js" async></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" async></script>
+    <script>
+        window.librariesReady = {
+            mammoth: false,
+            pdfjsLib: false
+        };
+
+        window.addEventListener('load', () => {
+            const checkInterval = setInterval(() => {
+                if (typeof mammoth !== 'undefined') {
+                    window.librariesReady.mammoth = true;
+                }
+                if (typeof pdfjsLib !== 'undefined') {
+                    window.librariesReady.pdfjsLib = true;
+                }
+
+                if (window.librariesReady.mammoth && window.librariesReady.pdfjsLib) {
+                    clearInterval(checkInterval);
+                }
+            }, 50);
+
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                if (!window.librariesReady.mammoth) {
+                    console.warn('Mammoth library failed to load from CDN');
+                }
+                if (!window.librariesReady.pdfjsLib) {
+                    console.warn('PDF.js library failed to load from CDN');
+                }
+            }, 10000);
+        });
+    </script>
 </head>
 
 <body>
     <header>
         <div class="header-logo">
-            <h1 style="margin: 0;">StreamNote</h1>
+            <h1>StreamNote</h1>
         </div>
         <div class="header-info">
-            <div id="sessionInfoDisplay"
-                style="flex: 1; display: flex; gap: 30px; font-size: 0.95em; opacity: 0.9; align-items: center;">
-                <div id="sessionNameDisplay" style="font-weight: 600; min-width: 150px;"></div>
-                <div id="sessionStatsDisplay" style="display: flex; gap: 25px; font-size: 0.9em;">
-                    <div><span style="opacity: 0.8;">Date</span> <span id="sessionDateDisplay">-</span></div>
-                    <div><span style="opacity: 0.8;">Items</span> <span id="sessionItemCountDisplay">0</span> items
+            <div id="sessionInfoDisplay">
+                <div id="sessionNameDisplay"></div>
+                <div id="sessionStatsDisplay">
+                    <div><span class="session-stat-label">Date</span> <span id="sessionDateDisplay">-</span></div>
+                    <div><span class="session-stat-label">Lines</span> <span id="sessionLineCountDisplay">0</span>
                     </div>
-                    <div><span style="opacity: 0.8;">Keywords</span> <span id="sessionKeywordCountDisplay">0</span>
-                        keywords
+                    <div><span class="session-stat-label">Highlights</span> <span
+                            id="sessionHighlightCountDisplay">0</span>
                     </div>
-                    <div id="translationStatusDisplay" style="display: none;"><span
-                            style="opacity: 0.8;">Translate</span>
-                        <span id="translationLangDisplay">中文</span>
+                    <div><span class="session-stat-label">Keywords</span> <span id="sessionKeywordCountDisplay">0</span>
                     </div>
                 </div>
+            </div>
+            <div class="account-status" id="accountStatusRoot">
+                <div class="account-identity-pill">
+                    <span id="accountAvatar" class="account-avatar">A</span>
+                    <span id="accountStatusLabel" class="account-status-label">Not signed in</span>
+                </div>
+                <button id="headerAuthBtn" class="account-auth-btn">Sign In</button>
             </div>
         </div>
     </header>
 
     <div class="container">
         <div class="main-wrapper">
-            <nav class="control-panel">
-                <!-- Group 1: Session Management -->
-                <div class="nav-group nav-group-section">
-                    <button id="openSessionPanel" class="control-btn control-btn-secondary"
-                        title="Open Sessions">Sessions</button>
-                </div>
-
-                <!-- Spacer -->
-                <div class="control-spacer"></div>
-
-                <!-- Group 2: Left Panel (Explanation + Translation) -->
-                <div class="nav-group nav-group-section nav-group-content">
-                    <button id="quickAccessHistory" class="control-btn control-btn-secondary"
-                        title="Explanation">Explanation</button>
-                    <button id="translationToggleBtn" class="control-btn control-btn-secondary"
-                        title="Toggle Translation">Translation</button>
-                </div>
-
-                <!-- Spacer -->
-                <div class="control-spacer"></div>
-
-                <!-- Group 3: Input Mode Controls (Recording + Import) -->
-                <div class="nav-group nav-group-section nav-group-input">
-                    <div id="recordingControls" style="display: flex; gap: 8px; position: relative;">
-                        <button id="recordBtn" class="control-btn control-btn-secondary"
-                            title="Start/Stop Recording">Record</button>
-                        <button id="addContentBtn" class="control-btn control-btn-secondary"
-                            title="Add content from file or text">Add Content</button>
-                        <button id="editTextBtn" class="control-btn control-btn-secondary" disabled
-                            title="Edit transcript" style="opacity: 0.3; pointer-events: none;">Edit</button>
-                        <!-- Hidden menu for Add Content -->
-                        <div id="contentMenu" class="content-menu" style="display: none;">
-                            <button class="content-menu-item" id="importFromFileOption">From File</button>
-                            <button class="content-menu-item" id="importFromTextOption">From Text</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Spacer -->
-                <div class="control-spacer"></div>
-
-                <!-- Group 4: Right Panel (Highlights, Keywords, Summary) -->
-                <div class="nav-group nav-group-section nav-group-content">
-                    <button id="quickAccessHighlights" class="control-btn control-btn-secondary"
-                        title="Highlights">Highlights</button>
-                    <button id="quickAccessKeywords" class="control-btn control-btn-secondary"
-                        title="Auto Keywords">Auto Keywords</button>
-                    <button id="quickAccessSummary" class="control-btn control-btn-secondary"
-                        title="Summary">Summary</button>
-                </div>
-
-                <div class="control-spacer"></div>
-
-                <!-- Group 5: System Settings -->
-                <div class="nav-group nav-group-section nav-group-settings">
-                    <button id="quickAccessSettings" class="control-btn control-btn-secondary"
-                        title="Settings">Settings</button>
-                </div>
-            </nav>
-
-            <div class="content-wrapper">
-                <input type="file" id="importFileInput" accept=".json" style="display: none;" />
-                <input type="file" id="textFileInput" accept=".txt,.md,.text,.markdown,.docx,.pdf"
-                    style="display: none;" />
-
-                <!-- Modal Overlay Layer -->
-                <div id="modalOverlay" class="modal-overlay" style="display: none;"></div>
-
-                <!-- Explanation Panel (Left) - for word explanations -->
-                <div class="explanation-panel-left collapsed">
-                    <!-- Panel Header -->
-                    <div class="explanation-panel-header">
-                        <h3>Explanation</h3>
-                        <button id="closeExplanationPanelBtn" class="btn-icon toggle-btn" title="Close Panel">✕</button>
-                    </div>
-                    <!-- Panel Toolbar -->
-                    <div class="panel-toolbar explanation-panel-toolbar">
-                        <select id="keyword-explanation-language" class="language-selector toolbar-language">
-                            <option value="Chinese">中文</option>
-                            <option value="English">English</option>
-                            <option value="Spanish">Español</option>
-                            <option value="French">Français</option>
-                            <option value="Japanese">日本語</option>
-                            <option value="Korean">한국어</option>
-                        </select>
-                        <button id="clearExplanationsBtn" class="toolbar-btn danger"
-                            title="Clear explanation display">Clear</button>
-                    </div>
-                    <div class="panel-toolbar explanation-panel-toolbar">
-                        <button id="pronounce-current-word-btn" class="toolbar-btn" disabled
-                            title="Pronounce the word">Pronounce</button>
-                        <button id="highlight-current-word-btn" class="toolbar-btn"
-                            title="Add to highlights">Highlight</button>
-                        <button id="regenerate-explanation-btn" class="toolbar-btn" disabled
-                            title="Regenerate explanation">Regenerate</button>
-                    </div>
-                    <div class="explanation-panel-content">
-                        <div id="explanation-focus-view" class="explanation-focus-view">
-                            <div class="explanation-header hidden">
-                                <h4 id="current-explanation-word" class="current-word"></h4>
-                            </div>
-                            <div class="explanation-body">
-                                <div id="explanation-content" class="explanation-scroll">
-                                    <p class="placeholder">Select a word to view its explanation</p>
-                                </div>
-                                <div id="word-context" class="word-context" style="display: none;">
-                                    <div class="context-label">Context:</div>
-                                    <p id="context-text" class="context-text"></p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Session Modal -->
-                <div id="sessionModal" class="floating-modal session-modal" style="display: none;">
-                    <div class="floating-modal-header">
-                        <h3>Sessions</h3>
-                        <button id="closeSessionModal" class="btn-icon toggle-btn" title="Close Panel">✕</button>
-                    </div>
-                    <div class="floating-modal-toolbar">
-                        <button id="newSessionBtn" class="toolbar-btn" title="New Session">New</button>
-                        <button id="renameSessionBtn" class="toolbar-btn" title="Rename session">Rename</button>
-                        <button id="deleteSessionBtn" class="toolbar-btn danger"
-                            title="Delete current session">Delete</button>
-                        <button id="sessionMenuBtn" class="toolbar-btn" title="More options">…</button>
-                    </div>
-                    <div class="session-menu" id="sessionMenu" style="display: none;">
-                        <button class="session-menu-item" id="exportCurrentBtn"
-                            title="Export current session">Export</button>
-                        <button class="session-menu-item" id="exportAllBtn" title="Export all sessions">Export
-                            All</button>
-                        <button class="session-menu-item" id="importBtn" title="Import sessions">Import</button>
-                        <button class="session-menu-item danger" id="clearAllBtn" title="Clear all sessions">Clear
-                            All</button>
-                    </div>
-                    <div class="floating-modal-content">
-                        <div class="session-list" id="sessionList">
-                            <!-- Sessions will be rendered here -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Edit Modal Backdrop -->
-                <div id="editModalBackdrop"
-                    style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 9999;">
-                </div>
-
-                <!-- Edit Modal -->
-                <div id="editModal" class="floating-modal edit-modal"
-                    style="display: none; width: 90%; max-width: 900px; height: auto; max-height: 70vh; flex-direction: column; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000;">
-                    <div class="floating-modal-header input-group-modal-header">
-                        <h3>Edit</h3>
-                        <button id="closeEditModal" class="btn-icon toggle-btn" title="Close">✕</button>
-                    </div>
-                    <div class="floating-modal-content" style="padding: 0; overflow-y: auto; flex: 1;">
-                        <div id="editRowsContainer"
-                            style="display: flex; flex-direction: column; gap: 0; overflow: visible;">
-                            <!-- Toolbar and edit rows will be rendered here -->
-                        </div>
-                    </div>
-                    <div class="floating-modal-footer"
-                        style="display: none; padding: 12px 16px; border-top: 1px solid #e0e0e0; gap: 8px; justify-content: flex-end; flex-shrink: 0;">
-                        <button id="editModalCancelBtn" class="toolbar-btn">Cancel</button>
-                        <button id="editModalSaveBtn" class="toolbar-btn">Save</button>
-                    </div>
-                </div>
-
-                <!-- Settings Modal -->
-                <div id="settingsModal" class="floating-modal settings-modal" style="display: none;">
-                    <div class="floating-modal-header">
-                        <h3>Settings</h3>
-                        <button id="closeSettingsModal" class="btn-icon toggle-btn" title="Close Panel">✕</button>
-                    </div>
-                    <div class="floating-modal-content">
-                        <div class="settings-scroll-container">
-                            <div class="settings-section">
-                                <h4 class="settings-section-title">New Session Defaults</h4>
-                                <div class="settings-item">
-                                    <label for="defaultLanguage">Translation Language:</label>
-                                    <select id="defaultLanguage" class="language-selector"
-                                        style="width: 100%; margin-top: 4px;">
-                                        <option value="Chinese">中文</option>
-                                        <option value="English">English</option>
-                                        <option value="Spanish">Español</option>
-                                        <option value="French">Français</option>
-                                        <option value="Japanese">日本語</option>
-                                        <option value="Korean">한국어</option>
-                                    </select>
-                                </div>
-                                <div class="settings-item">
-                                    <label for="defaultExplanationLanguage">Explanation Language:</label>
-                                    <select id="defaultExplanationLanguage" class="language-selector"
-                                        style="width: 100%; margin-top: 4px;">
-                                        <option value="Chinese">中文</option>
-                                        <option value="English">English</option>
-                                        <option value="Spanish">Español</option>
-                                        <option value="French">Français</option>
-                                        <option value="Japanese">日本語</option>
-                                        <option value="Korean">한국어</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="main-content layout-full-transcript">
-                    <!-- Transcript Panel (Left) -->
-                    <div class="text-panel transcript-panel expanded">
-                        <!-- Panel Content -->
-                        <div class="text-panel-content">
-                            <div id="transcript" class="transcript">
-                                <p class="placeholder">Start recording or add text</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Translation Panel (Right) -->
-                    <div class="text-panel translation-panel expanded">
-                        <!-- Panel Header -->
-                        <div class="text-panel-header">
-                            <h3>Translation</h3>
-                            <button id="closeTranslationPanelBtn" class="btn-icon toggle-btn"
-                                title="Close Panel">✕</button>
-                        </div>
-                        <!-- Panel Toolbar -->
-                        <div class="panel-toolbar text-panel-toolbar">
-                            <select id="target-language" class="language-selector toolbar-language">
-                                <option value="Chinese">中文</option>
-                                <option value="English">English</option>
-                                <option value="Spanish">Español</option>
-                                <option value="French">Français</option>
-                                <option value="Japanese">日本語</option>
-                                <option value="Korean">한국어</option>
-                            </select>
-                            <select id="layoutDropdown" class="layout-dropdown">
-                                <option value="split-top">Top</option>
-                                <option value="split-bottom" selected>Bottom</option>
-                                <option value="split-left">Left</option>
-                                <option value="split-right">Right</option>
-                                <option value="full-translation">Full</option>
-                            </select>
-                        </div>
-                        <!-- Panel Content -->
-                        <div class="text-panel-content">
-                            <div id="translation" class="translation">
-                                <p class="placeholder">Translations will appear here</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Floating Auto Scroll Button -->
-                    <button id="floatingAutoScrollBtn" class="floating-auto-scroll-btn hidden"
-                        title="Click to jump to latest">
-                        Back to Latest
+            <!-- Left Sidebar -->
+            <aside class="sidebar sidebar-left">
+                <div class="sidebar-section">
+                    <button id="leftSidebarGuideToggle" class="sidebar-btn" aria-label="Open menu">
+                        <i data-feather="menu"></i>
+                        <span class="sidebar-btn-label">Menu</span>
                     </button>
                 </div>
 
-                <!-- Collapsible Side Panels (Right) -->
-                <div class="side-panels-container">
-                    <!-- Side Panel Header -->
-                    <div class="side-panel-header">
-                        <h3 id="sidePanelTitle">Auto Keywords</h3>
-                        <button id="closeSidePanelBtn" class="btn-icon toggle-btn" title="Close Panel">✕</button>
+                <div class="sidebar-divider"></div>
+
+                <!-- Group 1: Session Management -->
+                <div class="sidebar-section">
+                    <div class="sidebar-group-title">Start</div>
+                    <button id="sidebarNewSessionBtn" class="sidebar-btn" aria-label="Create session"><i
+                            data-feather="plus"></i><span class="sidebar-btn-label">New Session</span></button>
+                    <button id="openSessionPanel" class="sidebar-btn" aria-label="Open sessions"><i
+                            data-feather="folder"></i><span class="sidebar-btn-label">Sessions</span></button>
+                </div>
+
+                <div class="sidebar-divider"></div>
+
+                <!-- Group 2: Recording & Content Management -->
+                <div class="sidebar-section">
+                    <div class="sidebar-group-title">Input</div>
+                    <button id="recordBtn" class="sidebar-btn sidebar-btn-primary" aria-label="Start recording"><i
+                            data-feather="mic"></i><span class="sidebar-btn-label">Record</span></button>
+                    <button id="addContentBtn" class="sidebar-btn" aria-label="Import content"><i
+                            data-feather="upload"></i><span class="sidebar-btn-label">Import</span></button>
+                    <button id="editTextBtn" class="sidebar-btn" aria-label="Edit transcript"><i
+                            data-feather="edit"></i><span class="sidebar-btn-label">Edit</span></button>
+                    <button id="downloadSessionBtn" class="sidebar-btn" aria-label="Export session"><i
+                            data-feather="download"></i><span class="sidebar-btn-label">Export</span></button>
+                </div>
+
+                <div class="sidebar-divider"></div>
+
+                <!-- Group 3: Understand -->
+                <div class="sidebar-section">
+                    <div class="sidebar-group-title">Understand</div>
+                    <button id="translationToggleBtn" class="sidebar-btn" aria-label="Toggle translation panel"><i
+                            data-feather="globe"></i><span class="sidebar-btn-label">Translate</span></button>
+                    <button id="quickAccessKeywords" class="sidebar-btn" aria-label="Open keywords panel"><i
+                            data-feather="tag"></i><span class="sidebar-btn-label">Keywords</span></button>
+                    <button id="quickAccessHighlights" class="sidebar-btn" aria-label="Open highlights panel"><i
+                            data-feather="flag"></i><span class="sidebar-btn-label">Highlights</span></button>
+                    <button id="quickAccessHistory" class="sidebar-btn" aria-label="Open explanations panel"><i
+                            data-feather="book-open"></i><span class="sidebar-btn-label">Explain</span></button>
+                </div>
+
+                <div class="sidebar-divider"></div>
+
+                <!-- Group 4: Output -->
+                <div class="sidebar-section">
+                    <div class="sidebar-group-title">Output</div>
+                    <button id="quickAccessSummary" class="sidebar-btn" aria-label="Open summary panel"><i
+                            data-feather="file-text"></i><span class="sidebar-btn-label">Summary</span></button>
+                </div>
+
+                <div class="sidebar-spacer"></div>
+
+                <!-- Bottom: Settings -->
+                <div class="sidebar-section">
+                    <button id="quickAccessSettings" class="sidebar-btn" aria-label="Open settings panel"><i
+                            data-feather="settings"></i><span class="sidebar-btn-label">Settings</span></button>
+                </div>
+            </aside>
+
+            <div class="content-wrapper">
+                <!-- Content Area -->
+                <div class="content-area">
+                    <!-- Hidden menu for Add Content -->
+                    <div id="contentMenu" class="content-menu">
+                        <button class="content-menu-item" id="importFromFileOption">From File</button>
+                        <button class="content-menu-item" id="importFromTextOption">From Text</button>
+                        <button class="content-menu-item" id="importSessionOption">Import Session JSON</button>
                     </div>
 
-                    <!-- Highlights Content -->
-                    <div id="highlightsContent" class="panel-content">
-                        <div class="panel-toolbar">
-                            <button id="clearHighlightsBtn" class="toolbar-btn danger"
-                                title="Clear all highlights">Clear</button>
-                        </div>
-                        <div id="manual-keywords-display" class="keywords-items">
-                            <p class="placeholder">Select text to highlight and add to this panel</p>
-                        </div>
+                    <div id="downloadMenu" class="content-menu">
+                        <button class="content-menu-item" id="downloadCurrentSessionOption">Export Current
+                            Session</button>
+                        <button class="content-menu-item" id="downloadAllSessionsOption">Export All Sessions</button>
                     </div>
 
-                    <!-- Keywords Content -->
-                    <div id="keywordsContent" class="panel-content active">
-                        <div class="panel-toolbar">
-                            <button id="reExtractKeywordsBtn" class="toolbar-btn"
-                                title="Extract keywords">Extract</button>
-                            <button id="clearKeywordsBtn" class="toolbar-btn danger"
-                                title="Clear all keywords">Clear</button>
-                        </div>
-                        <!-- Auto-extracted Keywords Section -->
-                        <div id="auto-keywords-display" class="keywords-tab-content active">
-                            <p class="placeholder">Click Extract to generate keywords from your transcription</p>
-                        </div>
-                    </div>
+                    <input type="file" id="importFileInput" accept=".json" />
+                    <input type="file" id="textFileInput" accept=".txt,.md,.text,.markdown,.docx,.pdf" />
 
-                    <!-- Summary Content -->
-                    <div id="summaryContent" class="panel-content">
-                        <div class="panel-toolbar">
-                            <select id="summary-language" class="toolbar-select" title="Summary language">
+                    <!-- Modal Overlay Layer -->
+                    <div id="modalOverlay" class="modal-overlay"></div>
+
+                    <!-- Explanation Panel (Left) - for word explanations -->
+                    <div class="explanation-panel-left collapsed">
+                        <!-- Panel Header -->
+                        <div class="explanation-panel-header">
+                            <h3>Explanation</h3>
+                            <button id="closeExplanationPanelBtn" class="panel-close-btn toggle-btn"
+                                title="Close panel">✕</button>
+                        </div>
+                        <!-- Panel Toolbar -->
+                        <div class="panel-toolbar explanation-panel-toolbar">
+                            <select id="keyword-explanation-language" class="language-selector toolbar-language">
                                 <option value="Chinese">中文</option>
                                 <option value="English">English</option>
                                 <option value="Spanish">Español</option>
@@ -341,54 +183,425 @@
                                 <option value="Japanese">日本語</option>
                                 <option value="Korean">한국어</option>
                             </select>
-                            <button id="clearSummaryBtn" class="toolbar-btn danger" title="Clear summary">Clear</button>
+                            <button id="clearExplanationsBtn" class="toolbar-btn danger">Clear</button>
+                            <button id="reexplain-explanation-btn" class="toolbar-btn" disabled>Refresh</button>
                         </div>
-                        <div class="panel-toolbar">
-                            <select id="summarizeStyleSelect" class="toolbar-select" title="Summary style">
-                                <option value="paragraph">Paragraph</option>
-                                <option value="key_takeaways">Key Takeaways</option>
-                                <option value="q&a">Q&A</option>
-                                <option value="tldr">TLDR</option>
-                            </select>
-                            <button id="regenerateSummaryBtn" class="toolbar-btn"
-                                title="Generate summary">Generate</button>
-                        </div>
-                        <div id="summary-display" class="summary-text">
-                            <p class="placeholder">Select a style and click Generate to create a summary</p>
+                        <div class="explanation-panel-content">
+                            <div id="explanation-focus-view" class="explanation-focus-view">
+                                <div class="explanation-header hidden">
+                                    <div class="explanation-header-title-group">
+                                        <h4 id="current-explanation-word" class="current-word"></h4>
+                                        <div class="explanation-header-buttons">
+                                            <button id="pronounce-current-word-btn" class="header-icon-btn" disabled
+                                                title="Pronounce word"><i data-feather="volume-2"></i></button>
+                                            <button id="highlight-current-word-btn" class="header-icon-btn"
+                                                title="Add to highlights"><i data-feather="flag"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="explanation-body">
+                                    <div id="explanation-content" class="explanation-scroll">
+                                        <p class="placeholder">Select a word to view its explanation</p>
+                                    </div>
+                                    <div id="word-context" class="word-context">
+                                        <div class="context-label">Context:</div>
+                                        <p id="context-text" class="context-text"></p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
+                    <!-- Session Modal -->
+                    <div id="sessionModal" class="floating-modal session-modal">
+                        <div class="floating-modal-header">
+                            <h3>Sessions</h3>
+                            <button id="closeSessionModal" class="panel-close-btn toggle-btn"
+                                title="Close panel">✕</button>
+                        </div>
+                        <div class="floating-modal-toolbar">
+                            <button id="newSessionBtn" class="toolbar-btn">New</button>
+                            <button id="renameSessionBtn" class="toolbar-btn">Rename</button>
+                            <button id="deleteSessionBtn" class="toolbar-btn danger">Delete</button>
+                        </div>
+                        <div class="floating-modal-content">
+                            <div class="session-list" id="sessionList">
+                                <!-- Sessions will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Modal Backdrop -->
+                    <div id="editModalBackdrop" class="edit-modal-backdrop">
+                    </div>
+
+                    <!-- Edit Modal -->
+                    <div id="editModal" class="floating-modal edit-modal">
+                        <div class="floating-modal-header input-group-modal-header">
+                            <h3>Edit</h3>
+                            <button id="closeEditModal" class="panel-close-btn toggle-btn"
+                                title="Close panel">✕</button>
+                        </div>
+                        <div class="floating-modal-content edit-modal-content">
+                            <div id="editRowsContainer" class="edit-rows-container">
+                                <!-- Toolbar and edit rows will be rendered here -->
+                            </div>
+                        </div>
+                        <div class="floating-modal-footer edit-modal-footer">
+                            <button id="editModalCancelBtn" class="toolbar-btn">Cancel</button>
+                            <button id="editModalSaveBtn" class="toolbar-btn">Save</button>
+                        </div>
+                    </div>
+
+                    <!-- Settings Modal -->
+                    <div id="settingsModal" class="floating-modal settings-modal">
+                        <div class="floating-modal-header">
+                            <h3>Settings</h3>
+                            <button id="closeSettingsModal" class="panel-close-btn toggle-btn"
+                                title="Close panel">✕</button>
+                        </div>
+                        <div class="floating-modal-content">
+                            <div class="settings-scroll-container">
+                                <div class="settings-section">
+                                    <h4 class="settings-section-title">New Session Defaults</h4>
+                                    <div class="settings-item">
+                                        <label for="defaultLanguage">Translation Language:</label>
+                                        <select id="defaultLanguage" class="language-selector">
+                                            <option value="Chinese">中文</option>
+                                            <option value="English">English</option>
+                                            <option value="Spanish">Español</option>
+                                            <option value="French">Français</option>
+                                            <option value="Japanese">日本語</option>
+                                            <option value="Korean">한국어</option>
+                                        </select>
+                                    </div>
+                                    <div class="settings-item">
+                                        <label for="defaultExplanationLanguage">Explanation Language:</label>
+                                        <select id="defaultExplanationLanguage" class="language-selector">
+                                            <option value="Chinese">中文</option>
+                                            <option value="English">English</option>
+                                            <option value="Spanish">Español</option>
+                                            <option value="French">Français</option>
+                                            <option value="Japanese">日本語</option>
+                                            <option value="Korean">한국어</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="settings-section">
+                                    <h4 class="settings-section-title">Account</h4>
+                                    <div class="settings-item">
+                                        <label>Current account:</label>
+                                        <span id="settingsAccountEmail" class="settings-value-inline">Not logged
+                                            in</span>
+                                    </div>
+                                    <div class="settings-item">
+                                        <button id="deleteAccountBtn" class="toolbar-btn danger" disabled>Delete
+                                            Account</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Auth Modal -->
+                    <div id="authModal" class="floating-modal auth-modal">
+                        <div class="floating-modal-header">
+                            <h3>Account</h3>
+                            <button id="closeAuthModal" class="panel-close-btn toggle-btn"
+                                title="Close panel">✕</button>
+                        </div>
+                        <div class="floating-modal-content auth-modal-content">
+                            <div class="auth-form-row">
+                                <label for="authEmailInput">Email</label>
+                                <input id="authEmailInput" type="email" autocomplete="email"
+                                    placeholder="you@example.com" />
+                            </div>
+                            <div class="auth-form-row">
+                                <label for="authPasswordInput">Password</label>
+                                <div class="auth-password-field">
+                                    <input id="authPasswordInput" type="password" autocomplete="current-password"
+                                        placeholder="At least 6 characters" />
+                                    <button id="toggleAuthPasswordBtn" type="button" class="auth-password-toggle"
+                                        aria-label="Show password">Show</button>
+                                </div>
+                            </div>
+                            <p id="authErrorMessage" class="auth-error-message hidden"></p>
+                        </div>
+                        <div class="floating-modal-footer auth-modal-footer">
+                            <button id="authRegisterBtn" class="toolbar-btn">Sign Up</button>
+                            <button id="authLoginBtn" class="toolbar-btn">Sign In</button>
+                        </div>
+                    </div>
+
+                    <!-- Session Sync Choice Modal -->
+                    <div id="sessionSyncModal" class="floating-modal session-sync-modal">
+                        <div class="floating-modal-header">
+                            <h3>Sync Local Data To Account</h3>
+                            <button id="closeSessionSyncModal" class="panel-close-btn toggle-btn"
+                                title="Close panel">✕</button>
+                        </div>
+                        <div class="floating-modal-content session-sync-modal-content">
+                            <p class="sync-choice-intro">Both local data and account data were found.</p>
+                            <p class="sync-choice-intro">Choose how to continue this login sync:</p>
+                            <div class="sync-choice-grid">
+                                <button id="syncChoiceMergeBtn" class="toolbar-btn sync-choice-btn">
+                                    Merge Both
+                                </button>
+                                <button id="syncChoiceLocalBtn" class="toolbar-btn sync-choice-btn">
+                                    Upload Local Only
+                                </button>
+                                <button id="syncChoiceCloudBtn" class="toolbar-btn sync-choice-btn">
+                                    Use Account Only
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="main-content layout-full-transcript">
+                        <!-- Transcript Panel (Left) -->
+                        <div class="text-panel transcript-panel expanded">
+                            <!-- Panel Content -->
+                            <div class="text-panel-content">
+                                <div id="transcript" class="transcript">
+                                    <p class="placeholder">Start recording or add text</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Translation Panel (Right) -->
+                        <div class="text-panel translation-panel expanded">
+                            <!-- Panel Header -->
+                            <div class="text-panel-header">
+                                <h3>Translation</h3>
+                                <button id="closeTranslationPanelBtn" class="panel-close-btn toggle-btn"
+                                    title="Close panel">✕</button>
+                            </div>
+                            <!-- Panel Toolbar -->
+                            <div class="panel-toolbar text-panel-toolbar">
+                                <select id="target-language" class="language-selector toolbar-language">
+                                    <option value="Chinese">中文</option>
+                                    <option value="English">English</option>
+                                    <option value="Spanish">Español</option>
+                                    <option value="French">Français</option>
+                                    <option value="Japanese">日本語</option>
+                                    <option value="Korean">한국어</option>
+                                </select>
+                                <select id="layoutDropdown" class="layout-dropdown">
+                                    <option value="split-top">Top</option>
+                                    <option value="split-bottom" selected>Bottom</option>
+                                    <option value="split-left">Left</option>
+                                    <option value="split-right">Right</option>
+                                    <option value="full-translation">Full</option>
+                                </select>
+                            </div>
+                            <!-- Panel Content -->
+                            <div class="text-panel-content">
+                                <div id="translation" class="translation">
+                                    <p class="placeholder">Translations will appear here</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Floating Auto Scroll Button -->
+                        <button id="floatingAutoScrollBtn" class="floating-auto-scroll-btn hidden">
+                            Back to Latest
+                        </button>
+                    </div>
+
+                    <!-- Collapsible Side Panels (Right) -->
+                    <div class="side-panels-container">
+                        <!-- Side Panel Header -->
+                        <div class="side-panel-header">
+                            <h3 id="sidePanelTitle">Keywords</h3>
+                            <button id="closeSidePanelBtn" class="panel-close-btn toggle-btn"
+                                title="Close panel">✕</button>
+                        </div>
+
+                        <!-- Highlights Content -->
+                        <div id="highlightsContent" class="panel-content">
+                            <div class="panel-toolbar">
+                                <button id="clearHighlightsBtn" class="toolbar-btn danger">Clear</button>
+                            </div>
+                            <div id="manual-keywords-display" class="keywords-items">
+                                <p class="placeholder">Select text to highlight and add to this panel</p>
+                            </div>
+                        </div>
+
+                        <!-- Keywords Content -->
+                        <div id="keywordsContent" class="panel-content active">
+                            <div class="panel-toolbar">
+                                <button id="reExtractKeywordsBtn" class="toolbar-btn">Refresh</button>
+                                <button id="clearKeywordsBtn" class="toolbar-btn danger">Clear</button>
+                            </div>
+                            <!-- Auto-extracted Keywords Section -->
+                            <div id="auto-keywords-display" class="keywords-tab-content active">
+                                <p class="placeholder">Click Refresh to extract keywords from your transcription</p>
+                            </div>
+                        </div>
+
+                        <!-- Summary Content -->
+                        <div id="summaryContent" class="panel-content">
+                            <div class="panel-toolbar">
+                                <select id="summary-language" class="toolbar-select">
+                                    <option value="Chinese">中文</option>
+                                    <option value="English">English</option>
+                                    <option value="Spanish">Español</option>
+                                    <option value="French">Français</option>
+                                    <option value="Japanese">日本語</option>
+                                    <option value="Korean">한국어</option>
+                                </select>
+                                <button id="clearSummaryBtn" class="toolbar-btn danger">Clear</button>
+                            </div>
+                            <div class="panel-toolbar">
+                                <select id="summarizeStyleSelect" class="toolbar-select">
+                                    <option value="paragraph">Paragraph</option>
+                                    <option value="key_takeaways">Key Takeaways</option>
+                                    <option value="q&a">Q&A</option>
+                                </select>
+                                <button id="regenerateSummaryBtn" class="toolbar-btn">Refresh</button>
+                            </div>
+                            <div id="summary-display" class="summary-text">
+                                <p class="placeholder">Select a style and click Refresh to create a summary</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="status-bar">
+                    <span id="status">Ready</span>
+                    <span id="recording-indicator" class="recording-indicator">Recording in
+                        <strong id="recording-session-name"></strong></span>
                 </div>
             </div>
-
-            <div class="status-bar">
-                <span id="status">Ready</span>
-                <span id="recording-indicator" class="recording-indicator" style="display: none;">Recording in
-                    <strong id="recording-session-name"></strong></span>
-            </div>
         </div>
+
+    </div>
     </div>
 
     <!-- Floating Context Menu for Text Selection -->
     <div id="textSelectionMenu" class="floating-menu hidden">
-        <button id="floatingExplainBtn" class="floating-menu-item" title="Explain selected text">
+        <button id="floatingExplainBtn" class="floating-menu-item">
+            <i data-feather="book-open" class="menu-icon"></i>
             <span class="menu-label">Explain</span>
         </button>
-        <button id="floatingHighlightBtn" class="floating-menu-item" title="Highlight selected text">
+        <button id="floatingHighlightBtn" class="floating-menu-item">
+            <i data-feather="flag" class="menu-icon"></i>
             <span class="menu-label">Highlight</span>
         </button>
     </div>
 
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <script src="sessionManager.js"></script>
-    <script src="keywordManager.js"></script>
-    <script src="recordingManager.js"></script>
-    <script src="panelManager.js"></script>
-    <script src="translationManager.js"></script>
-    <script src="settingsPanel.js"></script>
-    <script src="textProcessor.js"></script>
-    <script src="highlightManager.js"></script>
-    <script src="app.js"></script>
+    <script src="core/executionContext.js"></script>
+    <script src="utils/operationGuards.js"></script>
+    <script src="utils/dateTimeUtils.js"></script>
+    <script src="utils/textFormatters.js"></script>
+    <script src="data/welcomeSession.js"></script>
+    <script src="core/appContext.js"></script>
+    <script src="managers/session/sessionManager.js"></script>
+    <script src="managers/keyword/keywordDisplayCollection.js"></script>
+    <script src="managers/keyword/keywordContext.js"></script>
+    <script src="managers/keyword/keywordExplanation.js"></script>
+    <script src="managers/keyword/keywordManager.js"></script>
+    <script src="managers/recording/recordingManager.js"></script>
+    <script src="managers/panel/panelManager.js"></script>
+    <script src="managers/translation/translationManager.js"></script>
+    <script src="managers/ui/settingsPanel.js"></script>
+    <script src="managers/ui/modalManager.js"></script>
+    <script src="managers/content/contentImportManager.js"></script>
+    <script src="managers/recording/transcriptEditDialogManager.js"></script>
+    <script src="managers/ui/selectionMenuManager.js"></script>
+    <script src="managers/ui/visibilityManager.js"></script>
+    <script src="managers/ui/wordNavigationManager.js"></script>
+    <script src="managers/ui/displayManager.js"></script>
+    <script src="managers/recording/recordingControlManager.js"></script>
+    <script src="managers/session/sessionInfoManager.js"></script>
+    <script src="managers/session/sessionPersistenceManager.js"></script>
+    <script src="managers/ai/aiWorkflowManager.js"></script>
+    <script src="managers/ui/appUiStateManager.js"></script>
+    <script src="managers/session/sessionLoadManager.js"></script>
+    <script src="managers/panel/sidePanelControlManager.js"></script>
+    <script src="managers/panel/panelToolbarListenersManager.js"></script>
+    <script src="managers/ui/contentActionsListenersManager.js"></script>
+    <script src="managers/ui/summaryListenersManager.js"></script>
+    <script src="managers/ui/globalUiListenersManager.js"></script>
+    <script src="managers/ui/uiListenersManager.js"></script>
+    <script src="managers/recording/transcriptionFlowManager.js"></script>
+    <script src="services/textProcessor.js"></script>
+    <script src="managers/highlight/highlightManager.js"></script>
+    <script src="services/apiClient.js"></script>
+    <script src="core/app.js"></script>
+
+    <!-- Initialize Feather Icons -->
+    <script>
+        function syncSidebarExpandedWidth() {
+            const headerLogo = document.querySelector('.header-logo');
+            if (!headerLogo) {
+                return;
+            }
+
+            const width = Math.round(headerLogo.getBoundingClientRect().width);
+            if (width > 0) {
+                document.documentElement.style.setProperty('--sidebar-expanded-width', `${width}px`);
+            }
+        }
+
+        function initSidebarExpansionControls() {
+            const configs = [
+                {
+                    sidebar: document.querySelector('.sidebar-left'),
+                    toggleBtn: document.getElementById('leftSidebarGuideToggle'),
+                    key: 'streamnote_sidebar_expanded_left'
+                }
+            ];
+
+            const applyState = (sidebar, toggleBtn, isExpanded) => {
+                if (!sidebar || !toggleBtn) {
+                    return;
+                }
+
+                sidebar.classList.toggle('expanded', isExpanded);
+                toggleBtn.setAttribute('aria-label', isExpanded ? 'Collapse menu' : 'Open menu');
+
+                const label = toggleBtn.querySelector('.sidebar-btn-label');
+                if (label) {
+                    label.textContent = 'Hide Menu';
+                }
+            };
+
+            configs.forEach(({ sidebar, toggleBtn, key }) => {
+                if (!sidebar || !toggleBtn) {
+                    return;
+                }
+
+                const stored = localStorage.getItem(key);
+                const initialExpanded = stored === null ? true : stored === 'true';
+                applyState(sidebar, toggleBtn, initialExpanded);
+
+                toggleBtn.addEventListener('click', () => {
+                    const nextExpanded = !sidebar.classList.contains('expanded');
+                    applyState(sidebar, toggleBtn, nextExpanded);
+                    localStorage.setItem(key, String(nextExpanded));
+                    feather.replace();
+                });
+            });
+        }
+
+        // Initialize Feather Icons when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            syncSidebarExpandedWidth();
+            feather.replace();
+            initSidebarExpansionControls();
+            feather.replace();
+        });
+
+        window.addEventListener('resize', syncSidebarExpandedWidth);
+
+        // Reinitialize when DOM contents change (for dynamically added icons)
+        const iconObserver = new MutationObserver(() => {
+            feather.replace();
+        });
+        iconObserver.observe(document.body, { childList: true, subtree: true });
+    </script>
 </body>
 
 </html>

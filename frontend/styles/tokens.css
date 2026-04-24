@@ -1,0 +1,161 @@
+/* ==================== Design System: Spacing and Tokens ==================== */
+/*
+    Spacing scale:
+    - XS: 4px
+    - SM: 8px
+    - MD: 12px (default)
+    - LG: 16px
+    - XL: 20px
+
+    Common usage:
+    - Buttons/inputs: 6px 12px
+    - List items/cards: 10px 12px
+    - Panel padding: 12px
+    - List container: 12px
+    - Text content: 12px
+    - Header: 12px 16px
+*/
+
+:root {
+    /* ================ Spacing ================ */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+    --spacing-xl: 20px;
+    --side-panel-width: 320px;
+
+    /* ================ Primary Color (Slate Blue Theme) ================ */
+    --color-primary: #5a7c99;
+    --color-primary-dark: #42657a;
+    --color-primary-light: #8ba6bf;
+    --color-primary-lighter: #b8cce0;
+    --color-primary-lightest: #eef3f8;
+    --color-primary-accent: #2a3e52;
+
+    /* ================ Secondary Color (Grey) ================ */
+    --color-secondary: #868e96;
+    --color-secondary-dark: #6c757d;
+    --color-secondary-light: #e9ecef;
+    --color-secondary-lighter: #f5f5f5;
+    --color-secondary-lightest: #fafafa;
+
+    /* ================ Neutral Colors ================ */
+    --color-white: #ffffff;
+    --color-grey-900: #212529;
+    --color-grey-800: #333333;
+    --color-grey-700: #495057;
+    --color-grey-600: #666666;
+    --color-grey-500: #999999;
+    --color-grey-550: #888888;
+    --color-grey-400: #bbbbbb;
+    --color-grey-650: #555555;
+    --color-grey-300: #dddddd;
+    --color-grey-750: #444444;
+    --color-grey-200: #e0e0e0;
+    --color-grey-100: #f0f0f0;
+
+    /* ================ Status Colors ================ */
+    --color-success: #28a745;
+    --color-success-dark: #218838;
+    --color-danger: #d32f2f;
+    --color-danger-light: #ff6b6b;
+    --color-danger-hover: #ee5a52;
+    --color-danger-bg: #ffebee;
+    --color-danger-light-hover: #ff4444;
+    --color-danger-dark-hover: #dd2222;
+
+    /* ================ Semantic Colors ================ */
+    --color-text: var(--color-grey-800);
+    --color-text-secondary: var(--color-grey-700);
+    --color-text-tertiary: var(--color-grey-600);
+    --color-text-disabled: var(--color-grey-500);
+    --color-text-muted: var(--color-grey-400);
+    --color-border: var(--color-secondary-light);
+    --color-bg-light: var(--color-secondary-lightest);
+    --color-bg-hover: var(--color-secondary-lighter);
+    --color-bg-panel: var(--color-white);
+
+    /* ================ Component Colors ================ */
+    --color-header-bg: var(--color-primary);
+    --color-header-logo-bg: var(--color-primary-dark);
+    --color-button-primary-bg: var(--color-primary);
+    --color-button-secondary-bg: var(--color-secondary-light);
+    --color-button-secondary-text: var(--color-grey-700);
+    --color-input-border: var(--color-grey-300);
+    --color-panel-bg: var(--color-white);
+    --color-panel-header-bg: var(--color-primary);
+    --color-panel-header-text: white;
+    --color-primary-hover-bg: #6f8ea8;
+    --color-primary-active-bg: #42657a;
+    --color-avatar-bg: #64748b;
+    --color-accent-orange: #ff8c00;
+    --color-grey-card-bg: #f8fafc;
+    --color-grey-divider: #e6eaee;
+    --color-grey-subtle-bg: #f5f7fa;
+    --color-text-light: #7a7a7a;
+    --color-text-lighter: #9e9e9e;
+    --color-success-bg: #e8f5e9;
+    --color-success-border: #81c784;
+    --color-danger-dark: #b71c1c;
+    --color-danger-border-light: #ef9a9a;
+
+    /* ================ Highlight Colors ================ */
+    --color-highlight-bg: #ffa500;
+    --color-highlight-jump: #d32f2f;
+    --color-highlight-temp: #fffde7;
+    --color-highlight-temp-pulse: #fff9c4;
+
+    /* ================ RGB Color Values (for rgba composition) ================ */
+    --color-primary-rgb: 90 124 153;
+    --color-primary-accent-rgb: 42 62 82;
+    --color-secondary-rgb: 134 142 150;
+    --color-danger-rgb: 211 47 47;
+    --color-black-rgb: 0 0 0;
+    --color-secondary-shadow-04: rgba(134, 142, 150, 0.04);
+    --color-secondary-shadow-4: rgba(134, 142, 150, 0.4);
+    --color-primary-shadow-08: rgba(90, 124, 153, 0.08);
+    --color-primary-shadow-1: rgba(90, 124, 153, 0.1);
+    --color-primary-shadow-15: rgba(90, 124, 153, 0.15);
+    --color-primary-shadow-2: rgba(90, 124, 153, 0.2);
+    --color-primary-shadow-3: rgba(90, 124, 153, 0.3);
+    --color-primary-shadow-4: rgba(90, 124, 153, 0.4);
+
+    /* ================ Secondary Dark (Grey-700) Transparency Variants ================ */
+    --color-secondary-dark-shadow-1: rgba(73, 80, 87, 0.1);
+    --color-secondary-dark-shadow-2: rgba(73, 80, 87, 0.2);
+
+    /* ================ Danger Color Transparency Variants ================ */
+    --color-danger-shadow-08: rgba(211, 47, 47, 0.08);
+    --color-danger-shadow-1: rgba(211, 47, 47, 0.1);
+    --color-danger-light-shadow-15: rgba(255, 107, 107, 0.15);
+    --color-danger-light-shadow-2: rgba(255, 107, 107, 0.2);
+    --color-danger-light-shadow-4: rgba(255, 107, 107, 0.4);
+    --color-danger-active-shadow-4: rgba(211, 47, 47, 0.4);
+
+    /* ================ Black Overlay & Shadow Variants ================ */
+    --color-black-shadow-05: rgba(0, 0, 0, 0.05);
+    --color-black-shadow-08: rgba(0, 0, 0, 0.08);
+    --color-black-shadow-12: rgba(0, 0, 0, 0.12);
+    --color-black-shadow-15: rgba(0, 0, 0, 0.15);
+    --color-black-shadow-2: rgba(0, 0, 0, 0.2);
+    --color-black-shadow-3: rgba(0, 0, 0, 0.3);
+    --color-black-shadow-5: rgba(0, 0, 0, 0.5);
+
+    /* ================ White Transparency Variants ================ */
+    --color-white-shadow-1: rgba(255, 255, 255, 0.1);
+    --color-white-shadow-2: rgba(255, 255, 255, 0.2);
+    --color-white-shadow-25: rgba(255, 255, 255, 0.25);
+    --color-white-shadow-35: rgba(255, 255, 255, 0.35);
+    --color-white-shadow-7: rgba(255, 255, 255, 0.7);
+    --color-white-shadow-8: rgba(255, 255, 255, 0.8);
+}
+
+html {
+    height: 100%;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;

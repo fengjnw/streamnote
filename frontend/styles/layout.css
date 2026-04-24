@@ -1,0 +1,1045 @@
+/* ================ Main Wrapper - Three Column Layout ================ */
+.main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+}
+
+/* ================ Sidebars - Left and Right ================ */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-light);
+    border: none;
+    padding: var(--spacing-md) var(--spacing-sm);
+    gap: var(--spacing-sm);
+    align-items: center;
+    flex-shrink: 0;
+    width: 44px;
+    overflow-y: auto;
+}
+
+.sidebar.expanded {
+    width: var(--sidebar-expanded-width, 170px);
+    align-items: stretch;
+}
+
+.sidebar-left {
+    border-right: 1px solid var(--color-border);
+}
+
+/* Sidebar Sections */
+.sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    width: 100%;
+    align-items: center;
+}
+
+.sidebar.expanded .sidebar-section {
+    align-items: stretch;
+}
+
+.sidebar-group-title {
+    display: none;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-light);
+    padding: 2px 10px;
+}
+
+.sidebar.expanded .sidebar-group-title {
+    display: block;
+}
+
+.sidebar-divider {
+    width: 100%;
+    height: 1px;
+    background: var(--color-border);
+}
+
+.sidebar-spacer {
+    flex: 1;
+}
+
+/* Sidebar Buttons */
+.sidebar-btn {
+    width: 36px;
+    min-height: 36px;
+    height: auto;
+    border: none;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: none;
+    flex-shrink: 0;
+    padding: 2px 0;
+    line-height: 1.25;
+    gap: 4px;
+    white-space: nowrap;
+    background: transparent;
+    color: var(--color-grey-500);
+    position: relative;
+}
+
+.sidebar-btn:hover:not(:disabled) {
+    background: transparent;
+    color: var(--color-primary);
+    transform: none;
+    box-shadow: none;
+}
+
+.sidebar-btn.active {
+    background: transparent;
+    color: var(--color-primary);
+    box-shadow: none;
+}
+
+.sidebar-btn.active:hover:not(:disabled) {
+    background: transparent;
+    color: var(--color-primary);
+    transform: none;
+}
+
+#recordBtn.active {
+    color: var(--color-danger);
+}
+
+#recordBtn.active:hover:not(:disabled) {
+    color: var(--color-danger-dark);
+}
+
+.sidebar-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sidebar-btn:disabled:hover {
+    background: transparent;
+    transform: none;
+}
+
+.sidebar-btn i {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.sidebar-btn .feather {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+    flex-shrink: 0;
+}
+
+.sidebar-btn-label {
+    display: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+}
+
+.sidebar-btn-primary {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.sidebar-btn-primary .feather {
+    stroke-width: 2.3;
+}
+
+.sidebar.expanded .sidebar-btn {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 2px 10px;
+}
+
+.sidebar.expanded .sidebar-btn-label {
+    display: inline;
+}
+
+/* ================ Session Management Panel ================ */
+.session-panel {
+    width: 0;
+    background: var(--color-white);
+    border-right: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.session-panel.expanded {
+    width: var(--side-panel-width, 320px);
+}
+
+/* Shared header structure for session and text panels */
+.session-panel-header,
+.text-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px var(--spacing-md);
+    background: var(--color-primary);
+    color: var(--color-white);
+    flex-shrink: 0;
+    gap: var(--spacing-sm);
+    border-bottom: none;
+    min-height: 32px;
+}
+
+.session-panel-header h3,
+.text-panel-header h3 {
+    margin: 0;
+    font-size: 0.85em;
+    font-weight: 600;
+    flex: 1;
+}
+
+/* Session Panel Toolbar */
+.session-panel .panel-toolbar {
+    padding: 10px var(--spacing-md);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg-light);
+    flex-shrink: 0;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    order: initial;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+/* Content Menu for Add Content Button */
+.content-menu {
+    position: fixed;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px var(--color-black-shadow-15);
+    z-index: 10001;
+    min-width: 140px;
+    overflow: hidden;
+    display: none;
+}
+
+.content-menu-item {
+    display: block;
+    width: 100%;
+    padding: 8px var(--spacing-md);
+    border: none;
+    background: var(--color-white);
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: background 0.2s;
+    border-bottom: 1px solid var(--color-grey-100);
+    color: var(--color-text);
+    font-family: inherit;
+    font-weight: 500;
+}
+
+.content-menu-item:last-child {
+    border-bottom: none;
+}
+
+.content-menu-item:hover {
+    background: var(--color-bg-light);
+}
+
+#importFileInput,
+#textFileInput {
+    display: none;
+}
+
+/* Session Panel Content - Unified Presentation */
+.session-panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    background: var(--color-white);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+#sessionList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 0;
+}
+
+/* Keep legacy .session-header and .session-header h3 for compatibility */
+.session-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px var(--spacing-md);
+    background: var(--color-primary);
+    color: var(--color-white);
+    gap: var(--spacing-sm);
+    border-bottom: none;
+    position: relative;
+}
+
+.session-header h3 {
+    flex: 1;
+    margin: 0;
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
+/* ================ Unified Panel and Modal Close Button Style ================ */
+.panel-close-btn {
+    background: none;
+    color: var(--color-white);
+    border: none;
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.panel-close-btn:hover {
+    transform: scale(1.1);
+}
+
+/* ================ Unified Item Delete Button Style ================ */
+.item-delete-btn {
+    background: none;
+    border: none;
+    color: var(--color-grey-500);
+    font-size: 1.1em;
+    cursor: pointer;
+    padding: 0 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.item-delete-btn:hover {
+    background: var(--color-danger-shadow-08);
+    color: var(--color-danger);
+}
+
+/* Backward compatibility: keep old class names with unified style */
+.keyword-delete-btn,
+.delete-session-btn {
+    background: none;
+    border: none;
+    color: var(--color-grey-500);
+    font-size: 1.1em;
+    cursor: pointer;
+    padding: 0 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.keyword-delete-btn:hover,
+.delete-session-btn:hover {
+    background: var(--color-danger-shadow-08);
+    color: var(--color-danger);
+    transform: scale(1.1);
+}
+
+/* ================ Unified Row Item Style ================ */
+.panel-item {
+    background: var(--color-white);
+    border-radius: 6px;
+    padding: 10px var(--spacing-md);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px var(--color-black-shadow-05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--color-border);
+}
+
+.panel-item:hover {
+    box-shadow: 0 4px 8px var(--color-black-shadow-08);
+    transform: translateY(-1px);
+    border-color: var(--color-secondary);
+}
+
+.session-item {
+    background: var(--color-white);
+    border-radius: 6px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px var(--color-black-shadow-08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--color-grey-100);
+}
+
+.session-item:hover {
+    box-shadow: 0 3px 8px var(--color-black-shadow-12);
+    border-color: var(--color-grey-200);
+    background: var(--color-grey-card-bg);
+}
+
+.session-item.active {
+    background: var(--color-primary);
+    color: var(--color-white);
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px var(--color-primary-shadow-2);
+}
+
+.session-item.recording {
+    border: 1.5px solid var(--color-danger-light);
+    box-shadow: 0 0 12px var(--color-danger-light-shadow-15);
+}
+
+.session-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.session-name {
+    font-weight: 600;
+    font-size: 0.95em;
+    line-height: 1.4;
+    color: inherit;
+    word-break: break-word;
+}
+
+.session-brief {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: 0.75em;
+}
+
+.brief-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--color-grey-500);
+    background: var(--color-secondary-shadow-04);
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
+.session-item.active .brief-item {
+    color: var(--color-white-shadow-8);
+    background: var(--color-white-shadow-1);
+}
+
+.session-time {
+    font-size: 0.75em;
+    color: var(--color-grey-400);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.session-item.active .session-time {
+    color: var(--color-white-shadow-7);
+}
+
+
+
+.current-session-info {
+    padding: var(--spacing-md);
+    background: var(--color-white);
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+}
+
+/* Session Name Display Mode */
+.session-name-display {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.session-name-text {
+    flex: 1;
+    font-size: 0.95em;
+    font-weight: 500;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#editSessionNameBtn {
+    flex-shrink: 0;
+    min-width: 70px;
+    background: var(--color-white);
+    border: 1px solid var(--color-grey-300);
+    color: var(--color-text);
+    font-weight: 500;
+    font-size: 0.8em;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 4px 10px;
+}
+
+#editSessionNameBtn:hover {
+    border-color: var(--color-secondary);
+    background: var(--color-secondary-lighter);
+    color: var(--color-secondary);
+}
+
+/* Session Name Edit Mode */
+.session-name-edit {
+    display: flex;
+    gap: var(--spacing-xs);
+    align-items: center;
+}
+
+.session-name-input {
+    flex: 1;
+    padding: var(--spacing-sm) 10px;
+    border: 1px solid var(--color-grey-300);
+    border-radius: 4px;
+    font-size: 0.9em;
+    transition: border-color 0.2s;
+    background: var(--color-white);
+    font-family: inherit;
+}
+
+.session-name-input:hover {
+    border-color: var(--color-grey-400);
+}
+
+.session-name-input:focus {
+    outline: none;
+    border-color: var(--color-secondary);
+    box-shadow: 0 0 0 2px rgba(var(--color-secondary-rgb), 0.1);
+}
+
+.session-name-edit .toolbar-btn {
+    flex-shrink: 0;
+    min-width: auto;
+    width: 32px;
+    padding: var(--spacing-xs) 0;
+    font-size: 0.9em;
+}
+
+#confirmSessionNameBtn {
+    color: var(--color-success);
+    border-color: var(--color-success-border);
+}
+
+#confirmSessionNameBtn:hover:not(:disabled) {
+    background: var(--color-success-bg);
+    border-color: var(--color-success);
+}
+
+#cancelSessionNameBtn {
+    color: var(--color-danger);
+    border-color: var(--color-danger-border-light);
+}
+
+#cancelSessionNameBtn:hover:not(:disabled) {
+    background: var(--color-danger-bg);
+    border-color: var(--color-danger);
+}
+
+.empty-message {
+    text-align: center;
+    color: var(--color-grey-500);
+    font-style: italic;
+    padding: 20px;
+}
+
+/* Text Selection Tools - Quick Access Buttons */
+.text-tools {
+    display: flex;
+    gap: 4px;
+}
+
+/* Panel Controls - Quick Access Buttons */
+.panel-controls {
+    display: flex;
+    gap: 4px;
+}
+
+/* Manage menu */
+.manage-menu {
+    position: absolute;
+    top: calc(100% + 5px);
+    right: 0;
+    background: var(--color-white);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px var(--color-black-shadow-15);
+    z-index: 1000;
+    min-width: 200px;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+}
+
+.manage-menu-item {
+    display: block;
+    width: 100%;
+    padding: 10px var(--spacing-md);
+    border: none;
+    background: var(--color-white);
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background 0.2s;
+    border-bottom: 1px solid var(--color-grey-100);
+    color: var(--color-text);
+}
+
+.manage-menu-item:last-child {
+    border-bottom: none;
+}
+
+.manage-menu-item:hover {
+    background: var(--color-secondary-lighter);
+}
+
+.manage-menu-item.danger {
+    color: var(--color-danger);
+}
+
+.manage-menu-item.danger:hover {
+    background: var(--color-danger-bg);
+}
+
+.content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+    position: relative;
+    background: var(--color-white);
+    min-height: 0;
+}
+
+/* ================ Content Area - Main Workspace Region ================ */
+/* Content Area: text panels and right side panel are displayed side by side. */
+.content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+    overflow: hidden;
+    position: relative;
+    min-height: 0;
+}
+
+/* ================ Text Panels (Transcript & Translation) ================ */
+
+.main-content {
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    padding: 0;
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+}
+
+.text-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    background: var(--color-white);
+    border-right: 1px solid var(--color-border);
+}
+
+.text-panel.collapsed {
+    flex: 0;
+    min-width: 0;
+    display: none;
+}
+
+.text-panel:last-child {
+    border-right: none;
+}
+
+.transcript-panel {
+    border-right: none;
+}
+
+/* ===== Layout Presets ===== */
+.main-content.layout-full-transcript .transcript-panel {
+    flex: 1 1 100%;
+    display: flex;
+}
+
+.main-content.layout-full-transcript .translation-panel {
+    flex: 0;
+    min-width: 0;
+    display: none;
+}
+
+
+/* Split Bottom: translation panel below transcript (default) */
+.main-content.layout-split-bottom {
+    flex-direction: column;
+}
+
+.main-content.layout-split-bottom .transcript-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.main-content.layout-split-bottom .translation-panel {
+    flex: 1 1 50%;
+    display: flex;
+}
+
+/* Split Top: translation panel above transcript */
+.main-content.layout-split-top {
+    flex-direction: column;
+}
+
+.main-content.layout-split-top .transcript-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-bottom: 1px solid var(--color-border);
+    order: 2;
+}
+
+.main-content.layout-split-top .translation-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-bottom: 1px solid var(--color-border);
+    order: 1;
+}
+
+/* Split Left: translation panel on the left */
+.main-content.layout-split-left {
+    flex-direction: row;
+}
+
+.main-content.layout-split-left .transcript-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-right: 1px solid var(--color-border);
+    order: 2;
+}
+
+.main-content.layout-split-left .translation-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-right: 1px solid var(--color-border);
+    order: 1;
+}
+
+/* Split Right: translation panel on the right */
+.main-content.layout-split-right {
+    flex-direction: row;
+}
+
+.main-content.layout-split-right .transcript-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-right: 1px solid var(--color-border);
+}
+
+.main-content.layout-split-right .translation-panel {
+    flex: 1 1 50%;
+    display: flex;
+}
+
+.main-content.layout-full-translation .transcript-panel {
+    flex: 0;
+    min-width: 0;
+    display: none;
+}
+
+.main-content.layout-full-translation .translation-panel {
+    flex: 1 1 100%;
+    display: flex;
+}
+
+/* Keep explicit order for readability of text panel structure */
+.text-panel-header {
+    order: 0;
+}
+
+/* Text panel toolbar only overrides order; base layout comes from .panel-toolbar */
+.text-panel .text-panel-toolbar {
+    order: 1;
+}
+
+/* ===== Layout Dropdown ===== */
+.layout-dropdown {
+    flex: 0;
+    min-width: 85px;
+    height: 28px;
+    padding: 4px 10px;
+    border: 1px solid var(--color-primary-lighter);
+    border-radius: 4px;
+    background: var(--color-white);
+    color: var(--color-text);
+    font-size: 0.8em;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.layout-dropdown:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
+}
+
+.layout-dropdown:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-shadow-1);
+}
+
+
+
+/* Panel Content */
+.text-panel-content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-md);
+    order: 2;
+    min-height: 0;
+}
+
+.transcript,
+.translation {
+    flex: 1;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+
+/* Enhanced text selection - highlight selected text with brand color */
+.transcript::selection,
+.translation::selection {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.transcript::-moz-selection,
+.translation::-moz-selection {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.keyword-controls {
+    display: flex;
+    gap: var(--spacing-lg);
+    margin-left: auto;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.keyword-controls label {
+    font-weight: 500;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.keyword-controls input[type="checkbox"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+.translation-controls {
+    display: flex;
+    gap: var(--spacing-lg);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.translation-controls label {
+    font-weight: 500;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.translation-controls input[type="checkbox"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+.language-selector {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-primary-lighter);
+    border-radius: 4px;
+    font-size: 0.95em;
+    background: var(--color-white);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.language-selector:hover,
+.language-selector:focus {
+    border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
+    outline: none;
+}
+
+/* Toolbar form controls */
+.panel-toolbar .toolbar-language,
+.panel-toolbar .toolbar-select {
+    flex: 0;
+    height: 28px;
+    padding: 4px 10px;
+    border: 1px solid var(--color-primary-lighter);
+    border-radius: 4px;
+    background: var(--color-white);
+    color: var(--color-text);
+    font-size: 0.8em;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.panel-toolbar .toolbar-language {
+    min-width: 85px;
+}
+
+.panel-toolbar .toolbar-select {
+    min-width: 100px;
+}
+
+.panel-toolbar .toolbar-language:hover,
+.panel-toolbar .toolbar-select:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
+}
+
+.panel-toolbar .toolbar-language:focus,
+.panel-toolbar .toolbar-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
+    box-shadow: 0 0 0 2px var(--color-primary-shadow-1);
+}
+
+.toggle-panel-btn {
+    background: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    border-radius: 4px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: all 0.3s;
+}
+
+.toggle-panel-btn:hover {
+    background: var(--color-primary-dark);
+    transform: scale(1.05);
+}
+
+
+
+.keyword-controls select {
+    padding: 8px 12px;
+    border: 1px solid var(--color-grey-300);
+    border-radius: 4px;
+    font-size: 0.95em;
+    background: var(--color-white);
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.keyword-controls select:hover,
+.keyword-controls select:focus {
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+.btn {
+    padding: 10px var(--spacing-lg);
+    border: none;
+    border-radius: 6px;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: var(--color-danger-light);
+    color: var(--color-white);
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: var(--color-danger-hover);
+}
+
+.btn-secondary {
+    background: var(--color-secondary-dark);
+    color: var(--color-white);
+}
+
+.btn-auto-scroll {
+    background: var(--color-success);
+    color: var(--color-white);
+}
+
+.btn-auto-scroll:hover:not(:disabled) {
+    background: var(--color-success-dark);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

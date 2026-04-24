@@ -1,0 +1,214 @@
+@media (max-width: 768px) {
+    header {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .header-info {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    header h1 {
+        font-size: 1.4em;
+    }
+
+    #sessionInfoDisplay {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    #sessionStatsDisplay {
+        gap: var(--spacing-lg);
+        font-size: 0.85em;
+    }
+
+    .account-status {
+        align-self: flex-end;
+    }
+
+    .account-identity-pill {
+        min-width: auto;
+        padding: 0;
+    }
+
+    .account-avatar {
+        width: 18px;
+        height: 18px;
+        font-size: 0.68em;
+    }
+
+    .account-status-label {
+        font-size: 0.8em;
+        max-width: 130px;
+    }
+
+    .account-auth-btn {
+        font-size: 0.78em;
+        padding: 4px 8px;
+        min-width: 60px;
+    }
+
+    .control-panel {
+        padding: var(--spacing-sm) var(--spacing-md);
+        gap: var(--spacing-sm);
+        overflow-x: auto;
+    }
+
+    .control-btn {
+        min-width: 36px;
+        height: 36px;
+        font-size: 1em;
+        padding: 0 var(--spacing-sm);
+    }
+
+    .text-tools {
+        gap: 2px;
+    }
+
+    .panel-controls {
+        gap: 2px;
+    }
+
+    .keyword-controls {
+        margin-left: 0;
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+    }
+
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+
+    /* On small screens, convert left/right split into top/bottom split */
+    .main-content.layout-split-left,
+    .main-content.layout-split-right {
+        flex-direction: column;
+    }
+
+    .explanation-panel-left.expanded,
+    .side-panels-container.expanded {
+        width: min(84vw, var(--side-panel-width, 320px));
+    }
+
+    .main-content.layout-split-left .transcript-panel,
+    .main-content.layout-split-right .transcript-panel {
+        border-right: none;
+        border-bottom: 1px solid var(--color-secondary-light);
+        order: 2;
+    }
+
+    .main-content.layout-split-left .translation-panel,
+    .main-content.layout-split-right .translation-panel {
+        border-right: none;
+        border-bottom: 1px solid var(--color-secondary-light);
+        order: 1;
+    }
+
+    .transcript-container {
+        border-right: none;
+        border-bottom: 1px solid var(--color-secondary-light);
+    }
+}
+
+@media (max-width: 768px) {
+    .session-modal {
+        --modal-width: min(90vw, 400px);
+        --modal-height: min(78vh, 680px);
+    }
+
+    .settings-modal {
+        --modal-width: min(90vw, 440px);
+        --modal-height: min(74vh, 620px);
+    }
+}
+
+@media (max-width: 768px) {
+    .explanation-header {
+        padding: 10px 0;
+    }
+
+    .current-word {
+        font-size: 1em;
+        padding: 0 12px;
+    }
+
+    .position-indicator {
+        font-size: 0.75em;
+        min-width: 35px;
+    }
+
+    .explanation-scroll {
+        padding: 12px 0;
+        font-size: 0.9em;
+    }
+}
+
+/* Temporary word highlight style */
+.temp-word-highlight {
+    animation: wordHighlightFade 4s ease-out forwards;
+    text-decoration: underline;
+    text-decoration-color: var(--color-highlight-jump);
+    text-decoration-thickness: 2px;
+}
+
+@keyframes wordHighlightFade {
+
+    0%,
+    80% {
+        color: var(--color-highlight-jump);
+        text-decoration-color: var(--color-highlight-jump);
+    }
+
+    100% {
+        color: currentColor;
+        text-decoration-color: transparent;
+    }
+}
+
+/* Generic hidden utility class */
+.hidden {
+    display: none !important;
+}
+
+/* Mode selector styles */
+.nav-group-mode {
+    border-right: 1px solid var(--color-grey-300);
+    padding-right: 12px;
+}
+
+.mode-tab {
+    padding: 6px 12px;
+    border: 1px solid var(--color-grey-300);
+    background: var(--color-white);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    color: var(--color-grey-800);
+}
+
+.mode-tab:first-child {
+    border-radius: 4px 0 0 4px;
+}
+
+.mode-tab:last-child {
+    border-left: none;
+    border-radius: 0 4px 4px 0;
+    background: var(--color-secondary-lighter);
+    color: var(--color-grey-600);
+}
+
+.mode-tab:hover {
+    background: var(--color-grey-100);
+    color: var(--color-grey-900);
+}
+
+.mode-tab.active {
+    background: var(--color-success);
+    color: var(--color-white);
+    border-color: var(--color-success-dark);
+}

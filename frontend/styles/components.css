@@ -1,0 +1,485 @@
+/* ================ Text Highlight Style ================ */
+.text-highlight {
+    background-color: var(--color-highlight-bg);
+    color: inherit;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+
+/* Temporary highlight while explanation panel is active */
+.temp-highlight {
+    background-color: var(--color-highlight-temp);
+    color: inherit;
+    animation: temp-highlight-pulse 2s ease-in-out infinite;
+}
+
+/* Pulse animation for temporary highlight (background only) */
+@keyframes temp-highlight-pulse {
+
+    0%,
+    100% {
+        background-color: var(--color-highlight-temp);
+    }
+
+    50% {
+        background-color: var(--color-highlight-temp-pulse);
+    }
+}
+
+/* ==================== Panel Toolbar ==================== */
+.panel-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-secondary-lighter);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    order: -1;
+    align-items: center;
+    min-height: 44px;
+}
+
+/* Keep explanation toolbar under the header and split controls evenly in one row. */
+.explanation-panel-left .explanation-panel-toolbar {
+    order: 1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.explanation-panel-left .explanation-panel-toolbar .toolbar-language,
+.explanation-panel-left .explanation-panel-toolbar .toolbar-btn {
+    width: 100%;
+    min-width: 0;
+}
+
+#clearExplanationsBtn {
+    margin-left: 0;
+}
+
+#reexplain-explanation-btn {
+    min-width: 0;
+}
+
+
+.toolbar-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.toolbar-actions-row {
+    justify-content: flex-start;
+}
+
+.toolbar-nav-row {
+    justify-content: flex-start;
+}
+
+.toolbar-btn {
+    flex: 0;
+    min-width: 65px;
+    min-height: 28px;
+    height: auto;
+    padding: 4px 10px;
+    border: 1px solid var(--color-grey-divider);
+    border-radius: 4px;
+    background: var(--color-white);
+    color: var(--color-grey-800);
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.35;
+    box-sizing: border-box;
+}
+
+.toolbar-btn:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.toolbar-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.toolbar-btn.danger {
+    color: var(--color-danger);
+    border-color: var(--color-danger-border-light);
+}
+
+.toolbar-btn.danger:hover:not(:disabled) {
+    background: var(--color-danger-bg);
+    border-color: var(--color-danger);
+}
+
+.toolbar-btn.active {
+    background: var(--color-danger-bg);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+    font-weight: 600;
+}
+
+.toolbar-btn.active:hover {
+    background: var(--color-danger-border-light);
+    border-color: var(--color-danger-dark);
+}
+
+#clearHighlightsBtn {
+    margin-left: auto;
+}
+
+#editModalSaveBtn {
+    background: var(--color-primary);
+    color: var(--color-white);
+    border-color: var(--color-primary);
+}
+
+#editModalSaveBtn:hover:not(:disabled) {
+    background: var(--color-primary-light);
+    border-color: var(--color-primary-light);
+}
+
+#editModalCancelBtn,
+#editModalSaveBtn {
+    flex: 0;
+    min-width: 65px;
+    min-height: 28px;
+    height: auto;
+    padding: 4px 10px;
+    font-size: 0.8em;
+    font-weight: 500;
+    line-height: 1.35;
+}
+
+/* ==================== Explanation Toolbar ==================== */
+.explanation-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 0 0 0;
+    margin-top: 8px;
+    border-top: 1px solid var(--color-grey-100);
+}
+
+/* ==================== Explanation Focus View ==================== */
+
+.explanation-focus-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0;
+    gap: 0;
+}
+
+.explanation-header {
+    padding: var(--spacing-md);
+    background: var(--color-bg-light);
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+    min-height: 0;
+    transition: all 0.2s ease;
+}
+
+.explanation-header.hidden {
+    padding: 0;
+    border: none;
+    display: none;
+}
+
+.current-word {
+    font-size: 1.05em;
+    font-weight: 600;
+    color: var(--color-grey-800);
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.explanation-header-title-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+}
+
+.explanation-header-buttons {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-shrink: 0;
+}
+
+.header-icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 4px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-secondary-dark);
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.header-icon-btn:hover:not(:disabled) {
+    transform: scale(1.1);
+}
+
+.header-icon-btn:active:not(:disabled) {
+    opacity: 0.9;
+    transform: scale(0.95);
+}
+
+#highlight-current-word-btn:active:not(:disabled) {
+    color: var(--color-highlight-bg);
+    opacity: 0.9;
+}
+
+.header-icon-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.header-icon-btn i {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2;
+}
+
+.header-icon-btn.pronouncing {
+    color: var(--color-primary);
+}
+
+.header-icon-btn.pronouncing:hover:not(:disabled) {
+    color: var(--color-primary);
+    transform: scale(1.1);
+}
+
+.header-icon-btn.active {
+    color: var(--color-highlight-bg);
+}
+
+.header-icon-btn.active:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: scale(1.1);
+}
+
+.explanation-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.word-context {
+    padding: var(--spacing-md) var(--spacing-md) 0 var(--spacing-md);
+    flex-shrink: 0;
+    display: none;
+}
+
+.context-label {
+    font-size: 0.75em;
+    color: var(--color-grey-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    font-weight: 500;
+    padding: 0;
+    margin-top: 0;
+}
+
+.context-text {
+    margin: 0;
+    color: var(--color-text-light);
+    font-size: 0.9em;
+    line-height: 1.6;
+    word-break: break-word;
+    padding: 0;
+    font-style: normal;
+}
+
+.highlighted-word {
+    color: var(--color-danger);
+}
+
+/* Summary text container */
+.summary-text {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    background: var(--color-white);
+    padding: var(--spacing-md);
+    color: var(--color-grey-600);
+    line-height: 1.8;
+    font-size: 0.95em;
+    word-break: break-word;
+}
+
+.summary-text p {
+    margin: 0 0 12px 0;
+    line-height: 1.8;
+    color: var(--color-grey-800);
+    font-size: 0.95em;
+    word-break: break-word;
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.summary-text p:last-child {
+    margin-bottom: 0;
+}
+
+/* Placeholder text - keep default styling */
+.summary-text .placeholder {
+    color: var(--color-text-lighter);
+    font-style: italic;
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 40px var(--spacing-md);
+    margin: 0;
+    line-height: 1.6;
+    background: transparent;
+    border-radius: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Key Takeaways style - display as list items */
+.summary-text ul {
+    margin: 0 0 0 var(--spacing-lg);
+    padding: 0;
+    list-style: disc;
+}
+
+.summary-text li {
+    margin: 0 0 8px 0;
+    line-height: 1.6;
+    color: var(--color-grey-800);
+    font-size: 0.95em;
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.summary-text li:last-child {
+    margin-bottom: 0;
+}
+
+/* Q&A format styling */
+.summary-text .qa-pair {
+    display: block;
+    margin-bottom: 12px;
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.summary-text .qa-pair:last-child {
+    margin-bottom: 0;
+}
+
+.summary-text .qa-question {
+    font-weight: 600;
+    color: var(--color-primary);
+    font-size: 0.95em;
+    margin: 0 0 6px 0;
+    padding: 0;
+}
+
+.summary-text .qa-answer {
+    color: var(--color-grey-600);
+    font-size: 0.9em;
+    line-height: 1.6;
+    margin: 0;
+    padding: var(--spacing-sm) 0 0 var(--spacing-md);
+}
+
+.explanation-scroll {
+    flex: 1;
+    color: var(--color-grey-600);
+    line-height: 1.8;
+    font-size: 0.95em;
+    word-break: break-word;
+    padding: var(--spacing-md);
+}
+
+.explanation-scroll p {
+    margin: 0 0 12px 0;
+    line-height: 1.8;
+    padding: 0;
+}
+
+.explanation-scroll p:last-child {
+    margin-bottom: 0;
+}
+
+/* Keep placeholder font size consistent */
+.explanation-scroll .placeholder {
+    font-size: 0.9rem;
+}
+
+.explanation-scroll .error {
+    color: var(--color-danger);
+    padding: var(--spacing-md);
+    background: var(--color-danger-bg);
+    border-radius: 4px;
+    margin: 0 var(--spacing-lg);
+}
+
+.position-indicator {
+    font-size: 0.8em;
+    color: var(--color-grey-500);
+    white-space: nowrap;
+    padding: 0 8px;
+    min-width: 45px;
+    text-align: center;
+}
+
+/* ========================= Feather Icon Styles ========================= */
+
+/* Icon sizing in buttons */
+button [data-feather] {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+/* Icon sizing in toolbar buttons */
+.toolbar-btn [data-feather] {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+}
+
+/* Icon sizing in control buttons */
+.control-btn [data-feather] {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+}
+
+/* Icon sizing in menu items */
+.content-menu-item [data-feather] {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2;
+    margin-right: 4px;
+}
+
+/* Inherit icon color from current text color */
+[data-feather] {
+    stroke: currentColor;
+    fill: none;
+}

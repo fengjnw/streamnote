@@ -1,13 +1,11 @@
-"""
-总结模块 - GPT 驱动的文本总结功能
-"""
+"""GPT-based text summarization module."""
 
 from ai_service import AIService
 from typing import Optional, Generator
 
 
 class Summarizer(AIService):
-    """总结器 - 生成文本总结"""
+    """Generate text summaries."""
 
     def summarize(
         self,
@@ -15,23 +13,21 @@ class Summarizer(AIService):
         language: str = "English",
         style: str = "paragraph"
     ) -> Generator[str, None, None]:
-        """
-        流式生成文本总结
-        
+        """Stream a summary for the given text.
+
         Args:
-            text: 要总结的文本
-            language: 总结的目标语言
-            style: 总结风格 (paragraph, bullet_points, q&a, tldr)
-            
+            text: Text to summarize.
+            language: Target summary language.
+            style: Summary style (paragraph, bullet_points, q&a).
+
         Yields:
-            流式总结结果
+            Streamed summary chunks.
         """
         text = text.strip()
         
         if not text or len(text) < 50:
             return
         
-        # 根据不同风格生成对应的system prompt
         style_prompts = {
             "paragraph": f"""You are a professional note summariser.
 Summarise the given text in {language}.
@@ -57,26 +53,16 @@ Summarise the given text as Q&A format in {language}.
 - Format: Q: [question]\nA: [answer]
 - Focus on core concepts and insights
 - Keep total length under 600 tokens
-- Return only Q&A pairs, no prefix or explanation""",
-            
-            "tldr": f"""You are a professional note summariser.
-Create a TLDR (Too Long; Didn't Read) summary in {language}.
-- Summarise the entire content in exactly 1-2 sentences
-- Capture the absolute most important points
-- Be direct and concise
-- Keep under 150 tokens
-- Return only the TLDR, no prefix or explanation"""
+- Return only Q&A pairs, no prefix or explanation"""
         }
         
         system_message = style_prompts.get(style, style_prompts["paragraph"])
         user_message = f"Summarise this text:\n{text}"
         
-        # 根据风格设置不同的 token 限制
         max_tokens_map = {
             "paragraph": 300,
             "key_takeaways": 600,
-            "q&a": 600,
-            "tldr": 150
+            "q&a": 600
         }
         max_tokens = max_tokens_map.get(style, 300)
         
@@ -89,13 +75,12 @@ Create a TLDR (Too Long; Didn't Read) summary in {language}.
 
 
 def create_summarizer(openai_api_key: Optional[str] = None) -> Summarizer:
-    """
-    创建总结器实例工厂函数
-    
+    """Factory for Summarizer.
+
     Args:
-        openai_api_key: OpenAI API 密钥
-        
+        openai_api_key: OpenAI API key.
+
     Returns:
-        Summarizer 实例
+        Summarizer instance.
     """
     return Summarizer(openai_api_key)

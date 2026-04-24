@@ -1,0 +1,1325 @@
+/* ================ Shared Side Panel Containers ================ */
+.explanation-panel-left,
+.side-panels-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 0;
+    overflow: hidden;
+    background: var(--color-white);
+    flex-shrink: 0;
+}
+
+.explanation-panel-left {
+    border-right: 1px solid var(--color-border);
+}
+
+.side-panels-container {
+    border-left: 1px solid var(--color-border);
+}
+
+.explanation-panel-left.expanded,
+.side-panels-container.expanded {
+    width: var(--side-panel-width, 320px);
+}
+
+.explanation-panel-left.collapsed {
+    width: 0;
+}
+
+.side-panels-container.collapsed {
+    width: 0;
+}
+
+.explanation-panel-header,
+.side-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--color-panel-header-bg);
+    color: var(--color-panel-header-text);
+    flex-shrink: 0;
+    gap: 10px;
+    min-height: 32px;
+}
+
+.explanation-panel-header h3,
+.side-panel-header h3 {
+    margin: 0;
+    font-size: 0.9em;
+    font-weight: 600;
+    flex: 1;
+}
+
+/* Keep explanation header divider to match existing visual separation. */
+.explanation-panel-header {
+    border-bottom: 1px solid var(--color-border);
+    order: 0;
+}
+
+.explanation-panel-toolbar {
+    order: 1;
+}
+
+.explanation-panel-toolbar .toolbar-btn {
+    flex: 0 0 auto;
+    border-color: var(--color-primary-lighter);
+}
+
+.explanation-panel-toolbar .toolbar-btn:hover {
+    background: var(--color-primary-lightest);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.explanation-panel-toolbar .toolbar-language {
+    flex: 1 1 120px;
+    border-color: var(--color-primary-lighter);
+}
+
+.explanation-panel-toolbar .toolbar-language:hover,
+.explanation-panel-toolbar .toolbar-language:focus {
+    border-color: var(--color-primary);
+}
+
+#clearExplanationsBtn {
+    margin-left: auto;
+}
+
+#reexplain-explanation-btn {
+    min-width: 80px;
+}
+
+.explanation-panel-content,
+.side-panels-container .panel-content {
+    flex: 1;
+    overflow: hidden;
+    padding: 0;
+    background: var(--color-white);
+    min-height: 0;
+}
+
+.explanation-panel-content {
+    order: 2;
+}
+
+.explanation-panel-content #explanation-focus-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    padding: 0;
+}
+
+/* Side panel content switching */
+.side-panels-container .panel-content {
+    display: none;
+    flex-direction: column;
+}
+
+.side-panels-container .panel-content.active {
+    display: flex;
+}
+
+.side-panels-container .panel-content>div:not(.panel-toolbar) {
+    flex: 1;
+    min-height: 0;
+}
+
+/* Content sections with list-style padding */
+.side-panels-container .panel-content .keywords-items,
+.side-panels-container .panel-content .keywords-tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Content sections without extra padding */
+.side-panels-container .panel-content .query-history-list,
+.side-panels-container .panel-content #summary-display {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    min-height: 0;
+}
+
+#keywordsContent.active {
+    padding: 0;
+}
+
+/* Bottom area (keywords + query history) moved into side panel */
+.keywords-display {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.query-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+    min-height: 0;
+}
+
+.keywords-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.keyword-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--color-white);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.keyword-item:hover {
+    background: var(--color-primary-lightest);
+    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
+}
+
+.keyword-text {
+    flex: 1;
+    color: var(--color-text);
+    font-size: 0.9em;
+    font-weight: 500;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.keyword-item:hover .keyword-text {
+    color: var(--color-primary);
+}
+
+/* ==================== Edit Panel Item (Unified Style) ==================== */
+.edit-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--color-white);
+    border-radius: 6px;
+    border: 1px solid var(--color-grey-100);
+    transition: all 0.2s ease;
+    overflow: visible;
+    margin: 0 12px;
+}
+
+.edit-item:hover {
+    background: var(--color-primary-lightest);
+    border-color: var(--color-primary-lighter);
+    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
+}
+
+.keyword-explain-btn {
+    background: none;
+    border: none;
+    color: var(--color-grey-500);
+    font-size: 0.75em;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.keyword-explain-btn:hover {
+    color: var(--color-primary);
+    transform: scale(1.1);
+}
+
+.keyword-explain-btn:active {
+    opacity: 0.9;
+}
+
+.keyword-highlight-toggle-btn {
+    background: none;
+    border: none;
+    color: var(--color-grey-500);
+    font-size: 0.75em;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.keyword-highlight-toggle-btn:hover {
+    transform: scale(1.1);
+}
+
+.keyword-highlight-toggle-btn:active {
+    opacity: 0.9;
+}
+
+.keyword-highlight-toggle-btn.active {
+    color: var(--color-accent-orange);
+}
+
+.keyword-highlight-toggle-btn.active:hover {
+    opacity: 0.9;
+    transform: scale(1.1);
+}
+
+
+
+/* ==================== Keywords Expandable Style ==================== */
+.keyword-item-wrapper {
+    border-radius: 6px;
+    border: 1px solid var(--color-grey-100);
+    transition: all 0.2s;
+    overflow: visible;
+    flex-shrink: 0;
+    cursor: pointer;
+    background: var(--color-white);
+}
+
+.keyword-item-wrapper:hover {
+    border-color: var(--color-primary-lighter);
+    background: var(--color-primary-lightest);
+    box-shadow: 0 2px 6px var(--color-primary-shadow-08);
+}
+
+.keyword-expand-btn {
+    background: none;
+    border: none;
+    color: var(--color-grey-600);
+    font-size: 1em;
+    cursor: pointer;
+    padding: 0 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.keyword-expand-btn:hover {
+    background: var(--color-primary-shadow-1);
+    color: var(--color-primary);
+}
+
+.keyword-expand-btn .expand-icon {
+    display: inline-block;
+    transition: transform 0.2s;
+}
+
+.keyword-expand-btn.expanded .expand-icon {
+    transform: rotate(90deg);
+}
+
+.keyword-explanation {
+    background: var(--color-bg-light);
+    border-top: 1px solid var(--color-border);
+    padding: var(--spacing-md);
+    margin: 0;
+    animation: slideDown 0.2s ease-out;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+@keyframes slideDown {
+    from {
+        max-height: 0;
+        opacity: 0;
+    }
+
+    to {
+        max-height: 500px;
+        opacity: 1;
+    }
+}
+
+.keyword-explanation .explanation-content {
+    color: var(--color-text-tertiary);
+    line-height: 1.6;
+    font-size: 0.95em;
+    word-break: break-word;
+}
+
+.keyword-explanation .explanation-content p {
+    margin: 0;
+}
+
+/* .keyword-explanation .explanation-content .placeholder - inherits unified placeholder style */
+
+.keyword-explanation .explanation-content .error {
+    color: var(--color-danger);
+    font-style: italic;
+}
+
+.translation {
+    line-height: 1.8;
+    font-size: 1.1em;
+    color: var(--color-text);
+}
+
+.translation p {
+    margin-bottom: var(--spacing-lg);
+    word-wrap: break-word;
+}
+
+.transcript {
+    line-height: 1.8;
+    font-size: 1.1em;
+    color: var(--color-text);
+}
+
+.transcript p {
+    margin-bottom: var(--spacing-lg);
+    word-wrap: break-word;
+}
+
+/* Timestamp styling using ::before pseudo-element */
+.transcript p::before {
+    content: attr(data-timestamp);
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    color: var(--color-grey-500);
+    font-size: 0.9em;
+    margin-right: 0.5em;
+}
+
+.translation p::before {
+    content: attr(data-timestamp);
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    color: var(--color-grey-500);
+    font-size: 0.9em;
+    margin-right: 0.5em;
+}
+
+.placeholder {
+    color: var(--color-text-lighter);
+    font-style: italic;
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 40px var(--spacing-md);
+    margin: 0;
+    line-height: 1.6;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Unified placeholder text styling for textarea */
+textarea::placeholder {
+    color: var(--color-text-lighter);
+    font-style: italic;
+    opacity: 1;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.temporary {
+    color: var(--color-grey-500);
+    font-weight: 500;
+}
+
+/* Floating Auto Scroll Button */
+.floating-auto-scroll-btn {
+    position: absolute;
+    bottom: var(--spacing-lg);
+    right: var(--spacing-lg);
+    padding: 10px var(--spacing-lg);
+    background: var(--color-primary-lighter);
+    color: var(--color-primary-accent);
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 4px 12px var(--color-primary-shadow-08);
+    transition: all 0.3s ease;
+    z-index: 100;
+    white-space: nowrap;
+}
+
+.floating-auto-scroll-btn:hover {
+    background: var(--color-primary-light);
+    color: var(--color-white);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px var(--color-primary-shadow-2);
+}
+
+.floating-auto-scroll-btn.hidden {
+    display: none;
+}
+
+.status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px var(--spacing-lg);
+    background: var(--color-bg-light);
+    border-top: 1px solid var(--color-border);
+    font-size: 0.85em;
+    color: var(--color-text-light);
+    height: auto;
+    min-height: 28px;
+    flex-shrink: 0;
+    gap: var(--spacing-lg);
+}
+
+.status-bar #status {
+    flex: 1;
+    min-width: 100px;
+}
+
+.status-bar #recording-indicator {
+    white-space: nowrap;
+}
+
+
+
+.recording-indicator {
+    display: none;
+    color: var(--color-danger-light-hover);
+}
+
+.recording-indicator strong {
+    color: var(--color-danger-light-hover);
+    font-weight: normal;
+}
+
+/* ================ Highlights Panel (Reuses side-panels-container styles) ================ */
+/* Highlights panel is integrated into side-panels-container and reuses its logic. */
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+
+/* ==================== Keyword Explanation Modal ==================== */
+
+.modal {
+    display: flex;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-black-shadow-5);
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(3px);
+}
+
+.modal-content {
+    background-color: var(--color-white);
+    padding: 0;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 10px 40px var(--color-black-shadow-3);
+    display: flex;
+    flex-direction: column;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--color-primary);
+    color: var(--color-white);
+    border-bottom: none;
+    flex-shrink: 0;
+    gap: var(--spacing-sm);
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--color-white);
+    font-size: 1em;
+    font-weight: 600;
+    word-break: break-word;
+    flex: 1;
+}
+
+
+
+.modal-body {
+    padding: var(--spacing-lg);
+    flex: 1;
+    overflow-y: auto;
+    max-height: 400px;
+}
+
+.explanation-content {
+    color: var(--color-grey-650);
+    line-height: 1.6;
+    font-size: 1em;
+}
+
+.explanation-content p {
+    margin: 0;
+}
+
+.explanation-content .error {
+    color: var(--color-danger);
+    font-style: italic;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.modal::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal::-webkit-scrollbar-track {
+    background: var(--color-grey-subtle-bg);
+}
+
+.modal::-webkit-scrollbar-thumb {
+    background: var(--color-grey-550);
+    border-radius: 4px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+    background: var(--color-grey-650);
+}
+
+/* Keep action buttons balanced in summary and keyword panels */
+:is(#summaryContent, #keywordsContent) .panel-toolbar .toolbar-btn {
+    flex: 1;
+}
+
+/* ==================== Purple Theme for Summary/Keywords/Highlights Panels ==================== */
+
+/* Shared panel toolbar button theme */
+:is(#summaryContent, #keywordsContent, #highlightsContent) .panel-toolbar .toolbar-btn {
+    border-color: var(--color-primary-lighter);
+}
+
+:is(#summaryContent, #keywordsContent, #highlightsContent) .panel-toolbar .toolbar-btn:hover {
+    background: var(--color-primary-lightest);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+:is(#summaryContent, #keywordsContent, #highlightsContent) .panel-toolbar .toolbar-btn.danger {
+    color: var(--color-danger);
+    border-color: var(--color-danger-border-light);
+}
+
+:is(#summaryContent, #keywordsContent, #highlightsContent) .panel-toolbar .toolbar-btn.danger:hover:not(:disabled) {
+    background: var(--color-danger-bg);
+    border-color: var(--color-danger);
+}
+
+/* Summary Panel */
+
+#summaryContent .panel-toolbar .toolbar-select {
+    flex: 1;
+    border-color: var(--color-primary-lighter);
+    color: var(--color-grey-800);
+}
+
+#summaryContent .panel-toolbar .toolbar-select:hover,
+#summaryContent .panel-toolbar .toolbar-select:focus {
+    border-color: var(--color-primary);
+}
+
+/* Settings Scroll Container */
+.settings-scroll-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.settings-section {
+    padding: 8px;
+    background: var(--color-primary-lightest);
+    border-radius: 6px;
+    border: 1px solid var(--color-primary-lighter);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.settings-section-title {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--color-grey-600);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+    padding: 0 4px;
+}
+
+.settings-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    margin: 0;
+    padding: 0;
+}
+
+.settings-item label {
+    display: block;
+    font-size: 0.85em;
+    color: var(--color-grey-650);
+    font-weight: 500;
+    margin: 0;
+}
+
+.settings-value-inline {
+    display: block;
+    font-size: 0.84em;
+    color: var(--color-grey-800);
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.settings-item .settings-toggle-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.settings-toggle-input {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.settings-item input[type="checkbox"] {
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+.settings-item input[type="checkbox"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.settings-item .language-selector {
+    width: 100%;
+    margin-top: 4px;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--color-primary-lighter);
+    border-radius: 4px;
+    font-size: 0.85em;
+    background: var(--color-white);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.settings-item .language-selector:hover,
+.settings-item .language-selector:focus {
+    border-color: var(--color-primary);
+    background: var(--color-primary-lightest);
+    outline: none;
+}
+
+/* ==================== Keywords Tab Navigation ==================== */
+.keywords-tab-nav {
+    display: flex;
+    gap: var(--spacing-sm);
+    border-bottom: 2px solid var(--color-grey-200);
+    padding: 10px var(--spacing-lg) 0 var(--spacing-lg);
+    background: var(--color-bg-light);
+    flex-shrink: 0;
+    margin: 0;
+}
+
+.keywords-tab-btn {
+    background: none;
+    border: none;
+    padding: 10px 12px;
+    font-size: 0.95em;
+    font-weight: 500;
+    color: var(--color-grey-600);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+}
+
+.keywords-tab-btn:hover {
+    color: var(--color-primary);
+}
+
+.keywords-tab-btn.active {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.keywords-tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--color-primary);
+}
+
+/* Keywords Tab Content */
+.keywords-tab-content {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    overflow-y: auto;
+    padding: var(--spacing-md) var(--spacing-lg);
+    min-height: 0;
+}
+
+/* ================ Modal Overlay & Floating Modal Windows ================ */
+
+/* Modal overlay backdrop */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--color-black-shadow-3);
+    z-index: 2000;
+    pointer-events: auto;
+    border-radius: 0;
+    display: none;
+}
+
+@keyframes fadeInOverlay {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Floating Modal Base */
+.floating-modal {
+    --modal-width: min(760px, 92vw);
+    --modal-height: min(76vh, 680px);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2010;
+    background: var(--color-white);
+    border-radius: 8px;
+    box-shadow: 0 12px 40px var(--color-black-shadow-2);
+    display: none;
+    flex-direction: column;
+    width: var(--modal-width);
+    height: var(--modal-height);
+    max-height: min(80vh, 760px);
+    max-width: min(94vw, 960px);
+    overflow: hidden;
+}
+
+@keyframes slideInModalLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInModalRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Session Modal */
+.session-modal {
+    --modal-width: min(760px, 92vw);
+    --modal-height: min(76vh, 680px);
+}
+
+.session-modal .floating-modal-header {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+
+
+/* Settings Modal */
+.settings-modal {
+    --modal-width: min(520px, 92vw);
+    --modal-height: min(72vh, 620px);
+}
+
+.settings-modal .floating-modal-header {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+/* Auth Modal */
+.auth-modal {
+    --modal-width: min(420px, 92vw);
+    --modal-height: auto;
+    height: auto;
+    max-height: min(82vh, 620px);
+}
+
+.auth-modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.auth-form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.auth-form-row label {
+    font-size: 0.82em;
+    color: var(--color-grey-650);
+    font-weight: 600;
+}
+
+.auth-form-row input {
+    min-height: 32px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 0.86em;
+    font-family: inherit;
+}
+
+.auth-password-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.auth-password-field input {
+    flex: 1;
+}
+
+.auth-password-toggle {
+    min-width: 56px;
+    height: 32px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background: var(--color-white);
+    color: var(--color-grey-800);
+    font-size: 0.78em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.auth-password-toggle:hover {
+    background: var(--color-bg-hover);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.auth-password-toggle:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-shadow-2);
+}
+
+.auth-form-row input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-shadow-2);
+}
+
+.auth-error-message {
+    margin: 0;
+    color: var(--color-danger);
+    font-size: 0.82em;
+    line-height: 1.4;
+}
+
+.auth-modal-footer {
+    justify-content: space-between;
+}
+
+.auth-modal-footer .toolbar-btn {
+    flex: 0;
+    min-width: 92px;
+    white-space: nowrap;
+}
+
+.session-sync-modal {
+    --modal-width: min(500px, 92vw);
+    --modal-height: auto;
+    height: auto;
+    max-height: min(82vh, 620px);
+}
+
+.session-sync-modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sync-choice-intro {
+    margin: 0;
+    color: var(--color-grey-750);
+    font-size: 0.9em;
+    line-height: 1.55;
+}
+
+.sync-choice-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.sync-choice-btn {
+    width: 100%;
+    justify-content: flex-start;
+    min-height: 34px;
+}
+
+.edit-modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-black-shadow-5);
+    z-index: 9999;
+}
+
+.edit-modal {
+    display: none;
+    width: 90%;
+    max-width: 900px;
+    height: auto;
+    max-height: 70vh;
+    flex-direction: column;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10000;
+}
+
+.edit-modal-content {
+    padding: 0;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.edit-rows-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: visible;
+}
+
+.edit-modal-footer {
+    display: none;
+}
+
+/* Modal Header */
+.floating-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--color-primary);
+    color: var(--color-white);
+    flex-shrink: 0;
+    gap: 10px;
+    border-bottom: none;
+    min-height: 32px;
+    border-radius: 8px 8px 0 0;
+}
+
+/* Input group modal header (purple theme) */
+.floating-modal-header.input-group-modal-header {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+
+
+.floating-modal-header h3 {
+    margin: 0;
+    font-size: 0.9em;
+    font-weight: 600;
+    flex: 1;
+}
+
+/* Modal Toolbar */
+.floating-modal-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--color-secondary-lighter);
+    border-bottom: 1px solid var(--color-secondary-light);
+    flex-shrink: 0;
+    align-items: center;
+    flex-wrap: wrap;
+    min-height: 44px;
+}
+
+.floating-modal-toolbar .toolbar-btn {
+    flex: 1;
+}
+
+/* Shared modal toolbar button theme */
+:is(.session-modal, .settings-modal, .add-content-modal, .edit-modal) .floating-modal-toolbar .toolbar-btn {
+    border-color: var(--color-primary-lighter);
+}
+
+:is(.session-modal, .settings-modal, .add-content-modal, .edit-modal) .floating-modal-toolbar .toolbar-btn:hover {
+    background: var(--color-primary-lightest);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+/* Modal toolbars that use content-width action buttons */
+:is(.add-content-modal, .edit-modal) .floating-modal-toolbar .toolbar-btn {
+    flex: 0;
+}
+
+.session-modal .floating-modal-toolbar .toolbar-btn.danger {
+    color: var(--color-danger);
+    border-color: var(--color-danger-border-light);
+}
+
+.session-modal .floating-modal-toolbar .toolbar-btn.danger:hover:not(:disabled) {
+    background: var(--color-danger-bg);
+    border-color: var(--color-danger);
+}
+
+.add-content-modal .floating-modal-toolbar .toolbar-btn.danger {
+    color: var(--color-danger);
+    border-color: var(--color-danger-border-light);
+}
+
+.add-content-modal .floating-modal-toolbar .toolbar-btn.danger:hover:not(:disabled) {
+    background: var(--color-danger-bg);
+    border-color: var(--color-danger);
+}
+
+.edit-modal-toolbar .toolbar-btn.danger {
+    color: var(--color-danger);
+    border-color: var(--color-danger-border-light);
+}
+
+.edit-modal-toolbar .toolbar-btn.danger:hover:not(:disabled) {
+    background: var(--color-danger-bg);
+    border-color: var(--color-danger);
+}
+
+/* Blue theme for edit modal buttons */
+.edit-modal .floating-modal-footer .toolbar-btn {
+    border-color: var(--color-primary-lighter);
+    color: var(--color-grey-800);
+}
+
+.edit-modal .floating-modal-footer .toolbar-btn:hover {
+    background: var(--color-primary-lightest);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+/* Modal Content */
+.floating-modal-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+    background: var(--color-white);
+}
+
+/* Modal Footer */
+.floating-modal-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--color-secondary-light);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    background: var(--color-secondary-lightest);
+    align-items: center;
+}
+
+/* Responsive design for modals */
+/* ================ Floating Context Menu ================ */
+.floating-menu {
+    position: fixed;
+    z-index: 1001;
+    background: var(--color-white);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px var(--color-black-shadow-15);
+    border: 1px solid var(--color-grey-200);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 180px;
+    pointer-events: auto;
+}
+
+.floating-menu:not(.hidden) {
+    animation: fadeInScale 0.15s ease-out;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.floating-menu.hidden {
+    display: none;
+}
+
+.floating-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px var(--spacing-md);
+    background: var(--color-white);
+    border: none;
+    cursor: pointer;
+    font-size: 0.95em;
+    color: var(--color-grey-800);
+    transition: all 0.15s ease;
+    text-align: left;
+    font-family: inherit;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.floating-menu-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.floating-menu-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.floating-menu-item:hover {
+    background: var(--color-primary-hover-bg);
+    color: var(--color-primary);
+    padding-left: 16px;
+}
+
+.floating-menu-item:active {
+    background: var(--color-primary-active-bg);
+}
+
+.floating-menu-item .menu-icon {
+    font-size: 0.7em;
+    flex-shrink: 0;
+    opacity: 0.65;
+}
+
+#floatingExplainBtn .menu-icon {
+    color: var(--color-primary);
+}
+
+#floatingHighlightBtn .menu-icon {
+    color: var(--color-accent-orange);
+}
+
+.floating-menu-item .menu-label {
+    flex: 1;
+}
+
+.keywords-tab-content.active {
+    display: flex;
+}

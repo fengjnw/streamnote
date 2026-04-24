@@ -1,15 +1,33 @@
-/**
- * 录音管理器 - 前端模块
- * 负责音频录制、转录、音量检测、停顿检测
- */
 
+
+/**
+ * RecordingManager - Handles audio recording, transcription, and transcript data management
+ * Manages microphone access, audio chunking, voice activity detection, and streaming
+ * transcription via API. Stores precise transcript results with timestamps.
+ * 
+ * @class
+ * @example
+ * const manager = new RecordingManager({
+ *   apiClient: apiClientInstance,
+ *   onTranscribeProgress: (data) => console.log(data)
+ * });
+ * await manager.start();
+ */
 class RecordingManager {
+    /**
+     * Create a new RecordingManager instance
+     * @param {Object} config - Configuration object
+     * @param {string} [config.transcribeApiUrl] - Transcription API endpoint (default: "/api/transcribe")
+     * @param {StreamNoteApiClient} [config.apiClient] - API client for requests
+     * @param {Function} [config.onTranscribeProgress] - Callback for transcription progress updates
+     * @param {Function} [config.onStatusUpdate] - Callback for status messages
+     * @param {Function} [config.onRecordingStateChange] - Callback for recording state changes
+     */
     constructor(config = {}) {
         this.mediaRecorder = null;
         this.isRecording = false;
         this.audioChunks = [];
 
-        // 音量检测
         this.audioContext = null;
         this.analyser = null;
         this.silenceStart = null;
@@ -19,41 +37,31 @@ class RecordingManager {
         this.hasVoice = false;
         this.checkInterval = null;
 
-        // 状态
         this.startTime = null;
         this.chunkIndex = 0;
         this.preciseResults = {};
         this.statsUpdateInterval = null;
-        this.isTranscribing = false;  // 转录状态标志
+        this.isTranscribing = false;
 
-        // Session 相关
-        this.sessionStartTime = null;  // 用于计算相对时间戳的参考点（毫秒）
+        this.sessionStartTime = null;
 
-        // 转录上下文 - 用于Whisper的prompt参数，帮助提高准确率
         this.transcriptionContext = "";
 
-        // API 和回调
         this.transcribeApiUrl = config.transcribeApiUrl || "/api/transcribe";
+        this.apiClient = config.apiClient || null;
         this.onTranscribeProgress = config.onTranscribeProgress || (() => { });
         this.onStatusUpdate = config.onStatusUpdate || (() => { });
         this.onRecordingStateChange = config.onRecordingStateChange || (() => { });
     }
 
-    /**
-     * 设置session开始时间（用于计算相对时间戳）
-     */
     setSessionStartTime(sessionStartTimeMs) {
         this.sessionStartTime = sessionStartTimeMs || Date.now();
     }
 
-    /**
-     * 开始录音
-     */
     async start(sessionId = null) {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-            // 设置音量检测
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.analyser = this.audioContext.createAnalyser();
             const source = this.audioContext.createMediaStreamSource(stream);
@@ -93,7 +101,6 @@ class RecordingManager {
 
             this.mediaRecorder.start();
 
-            // 每 100ms 检测音量，停顿 600ms 或超过 10秒 就发送
             this.checkInterval = setInterval(() => {
                 this._checkSilenceAndSend();
             }, 100);
@@ -101,7 +108,6 @@ class RecordingManager {
             this.onStatusUpdate("Listening...");
             this.onRecordingStateChange(true);
 
-            // 每秒更新统计信息（当不在转录中时）
             if (this.statsUpdateInterval) clearInterval(this.statsUpdateInterval);
             this.statsUpdateInterval = setInterval(() => {
                 if (this.isRecording && !this.isTranscribing) {
@@ -115,9 +121,6 @@ class RecordingManager {
         }
     }
 
-    /**
-     * 停止录音
-     */
     stop() {
         if (this.mediaRecorder && this.isRecording) {
             this.isRecording = false;
@@ -143,14 +146,11 @@ class RecordingManager {
                 this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
             }
 
-            this.onStatusUpdate("");  // 清除状态显示
+            this.onStatusUpdate("");
             this.onRecordingStateChange(false);
         }
     }
 
-    /**
-     * 获取当前音量
-     */
     getVolume() {
         if (!this.analyser) return 0;
         const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
@@ -164,7 +164,6 @@ class RecordingManager {
     }
 
     /**
-     * 检测停顿和发送音频
      * @private
      */
     _checkSilenceAndSend() {
@@ -175,13 +174,13 @@ class RecordingManager {
         const timeSinceLastSend = now - this.lastSendTime;
         const recordingDuration = now - this.recordingStartTime;
 
-        if (volume < 0.015) {  // 沉默
+        // Chunk policy: send on sustained silence, or force flush every 10s if speech exists.
+        if (volume < 0.015) {
             this.voiceStart = null;
 
             if (!this.silenceStart) {
                 this.silenceStart = now;
             } else if (now - this.silenceStart > 600 && recordingDuration > 100 && this.hasVoice) {
-                // 沉默 >600ms + 录制 >100ms + 有真实语音 → 发送
                 this.mediaRecorder.stop();
                 this.mediaRecorder.start();
                 this.recordingStartTime = Date.now();
@@ -190,18 +189,16 @@ class RecordingManager {
                 this.voiceStart = null;
                 this.silenceStart = null;
             }
-        } else {  // 有声音
+        } else {
             this.silenceStart = null;
 
             if (!this.voiceStart) {
                 this.voiceStart = now;
             } else if (!this.hasVoice && now - this.voiceStart > 150) {
-                // 持续声音 >150ms → 确认为真实语音
                 this.hasVoice = true;
             }
         }
 
-        // 超过 10秒 + 有真实语音 → 强制发送
         if (timeSinceLastSend > 10000 && this.hasVoice) {
             this.mediaRecorder.stop();
             this.mediaRecorder.start();
@@ -214,7 +211,6 @@ class RecordingManager {
     }
 
     /**
-     * 发送音频到 Whisper API
      * @private
      */
     async submitForTranscription(sessionId = null) {
@@ -227,25 +223,28 @@ class RecordingManager {
         const formData = new FormData();
         formData.append("file", audioBlob, "audio.webm");
 
-        // 添加上下文信息作为prompt参数，帮助Whisper更准确地转录
         if (this.transcriptionContext) {
             formData.append("context", this.transcriptionContext);
         }
 
-        // 关键修复：立即分配并增加 index，防止并发请求争用同一个 index
+        // Reserve index before async call to avoid collisions between overlapping requests.
         const currentChunkIndex = this.chunkIndex;
         this.chunkIndex += 1;
         const sessionIdAtRequest = sessionId;
 
-        // 显示转录进行中的状态
+        const app = window.streamNoteInstance;
+        const displaySessionIdAtRequest = app ? app.displaySessionId : sessionIdAtRequest;
+
         this.isTranscribing = true;
         this.onStatusUpdate("Transcripting...");
 
         try {
-            const response = await fetch(this.transcribeApiUrl, {
-                method: "POST",
-                body: formData,
-            });
+            const response = this.apiClient
+                ? await this.apiClient.transcribe(formData)
+                : await fetch(this.transcribeApiUrl, {
+                    method: "POST",
+                    body: formData,
+                });
 
             if (!response.ok) {
                 console.error(`[ERROR] API error: ${response.status}`);
@@ -259,32 +258,33 @@ class RecordingManager {
             const result = await response.json();
             const text = result.text.trim();
 
-            // 转录完成，回到监听状态（在通知上层之前设置）
             this.isTranscribing = false;
 
-            // 计算相对于session开始时间的秒数
             const sessionStart = this.sessionStartTime || Date.now();
             const relativeSeconds = Math.floor((Date.now() - sessionStart) / 1000);
             const timestamp = relativeSeconds;
 
             if (!text) {
-                // 即使没有文本，也要通知上层刷新UI（特别是当停止录音时）
                 this.onTranscribeProgress({
                     index: currentChunkIndex,
                     text: "",
                     timestamp: timestamp,
                     sessionId: sessionIdAtRequest
                 });
-                // 清除转录进行中的状态
                 if (!this.isRecording) {
                     this.onStatusUpdate("");
                 }
                 return;
             }
 
+            // Discard results if user switched session while request was in flight.
+            if (app && app.displaySessionId !== displaySessionIdAtRequest) {
+                console.log(`[RecordingManager] Session changed from ${displaySessionIdAtRequest} to ${app.displaySessionId}, discarding transcription result`);
+                return;
+            }
+
             this.preciseResults[currentChunkIndex] = { text, timestamp };
 
-            // 触发回调，通知上层更新显示
             this.onTranscribeProgress({
                 index: currentChunkIndex,
                 text: text,
@@ -292,11 +292,9 @@ class RecordingManager {
                 sessionId: sessionIdAtRequest
             });
 
-            // 恢复监听状态 - 只有在还在录音时才显示"Listening"
             if (this.isRecording) {
                 this.onStatusUpdate("Listening...");
             } else {
-                // 停止录音后，清除"Transcripting"状态
                 this.onStatusUpdate("");
             }
 
@@ -309,49 +307,31 @@ class RecordingManager {
         }
     }
 
-    /**
-     * 清除所有数据
-     */
     clear() {
         this.preciseResults = {};
         this.chunkIndex = 0;
     }
 
-    /**
-     * 获取当前转录数据
-     */
     getTranscriptData() {
         return { ...this.preciseResults };
     }
 
-    /**
-     * 更新转录数据（用于加载 session）
-     */
     setTranscriptData(data) {
         this.preciseResults = { ...data };
         this.chunkIndex = Object.keys(this.preciseResults).length;
     }
 
-    /**
-     * 设置转录上下文 - 用于提高转录准确率
-     * 上下文会作为prompt参数传递给转录API
-     * 仅用作hint，不应出现在转录结果中
-     */
     setTranscriptionContext(context) {
         this.transcriptionContext = context || "";
     }
 
-    /**
-     * 获取转录上下文
-     */
     getTranscriptionContext() {
         return this.transcriptionContext;
     }
 
-    /**
-     * 获取转录状态
-     */
     isTranscribingActive() {
         return this.isTranscribing;
     }
 }
+
+window.RecordingManager = RecordingManager;

@@ -1,20 +1,17 @@
-"""
-AI 服务共享模块 - 处理与 OpenAI 的通用交互
-"""
+"""Shared AI service helpers for OpenAI interactions."""
 
 from openai import OpenAI
 from typing import Optional, Callable, Generator
 
 
 class AIService:
-    """AI 服务基类 - 处理流式响应和通用 AI 操作"""
+    """Base AI service with shared streaming and completion helpers."""
 
     def __init__(self, openai_api_key: Optional[str] = None):
-        """
-        初始化 AI 服务
-        
+        """Initialize the AI service client.
+
         Args:
-            openai_api_key: OpenAI API 密钥
+            openai_api_key: OpenAI API key.
         """
         self.client = OpenAI(api_key=openai_api_key) if openai_api_key else None
 
@@ -26,18 +23,17 @@ class AIService:
         max_tokens: Optional[int] = None,
         model: str = "gpt-4o-mini"
     ) -> Generator[str, None, None]:
-        """
-        流式调用 GPT 模型
-        
+        """Call a chat model and stream response chunks.
+
         Args:
-            system_message: 系统提示词
-            user_message: 用户输入
-            temperature: 温度参数 (0.0-2.0)
-            max_tokens: 最大令牌数
-            model: 使用的模型
-            
+            system_message: System instruction.
+            user_message: User input content.
+            temperature: Sampling temperature (0.0-2.0).
+            max_tokens: Optional maximum tokens.
+            model: Model name.
+
         Yields:
-            流式响应内容
+            Streamed response content chunks.
         """
         if not self.client:
             raise RuntimeError("OpenAI client not configured")
@@ -74,18 +70,17 @@ class AIService:
         max_tokens: Optional[int] = None,
         model: str = "gpt-4o-mini"
     ) -> str:
-        """
-        非流式调用 GPT 模型（获取完整响应）
-        
+        """Call a chat model and return a full response.
+
         Args:
-            system_message: 系统提示词
-            user_message: 用户输入
-            temperature: 温度参数 (0.0-2.0)
-            max_tokens: 最大令牌数
-            model: 使用的模型
-            
+            system_message: System instruction.
+            user_message: User input content.
+            temperature: Sampling temperature (0.0-2.0).
+            max_tokens: Optional maximum tokens.
+            model: Model name.
+
         Returns:
-            模型响应文本
+            Model response text.
         """
         if not self.client:
             raise RuntimeError("OpenAI client not configured")
