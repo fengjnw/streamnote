@@ -7,15 +7,6 @@ It captures or imports content, then provides transcription, keyword extraction,
 
 - https://streamnote.up.railway.app
 
-## Features
-
-- Audio transcription via OpenAI transcription API
-- Smart keyword extraction from transcript/content
-- Text translation and keyword translation
-- AI summary generation with style options
-- Keyword explanation generation
-- Session persistence in browser local storage with optional backend database sync
-
 ## Tech Stack
 
 - Backend: Python Flask API server
@@ -88,6 +79,11 @@ python3 server.py
 
 - Open http://localhost:5500
 
+
+## User Guide
+
+User guidance is documented separately in [docs/user-guide.md](docs/user-guide.md).
+
 ## Testing
 
 Run the project checks from the repository root:
@@ -103,6 +99,7 @@ npm run test:backend
 npm run test:frontend:unit
 npm run test:frontend:smoke
 ```
+ 
 
 ## Known Limitations
 
