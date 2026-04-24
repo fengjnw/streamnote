@@ -9,7 +9,7 @@ class PanelManager {
 
         this.translationLayoutOptions = ['split-top', 'split-bottom', 'split-left', 'split-right', 'full-translation'];
 
-        this.translationLayout = 'split-bottom';
+        this.translationLayout = 'split-left';
 
         this.currentLayout = 'full-transcript';
 
