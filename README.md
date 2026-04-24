@@ -14,13 +14,12 @@ It captures or imports content, then provides transcription, keyword extraction,
 - Text translation and keyword translation
 - AI summary generation with style options
 - Keyword explanation generation
-- Session persistence in browser local storage with backend database sync (anonymous device ID)
-- Built-in welcome session data for guided first-run demo
+- Session persistence in browser local storage with optional backend database sync
 
 ## Tech Stack
 
-- Frontend: Vanilla JavaScript, modular managers, CSS modules
-- Backend: Flask API server
+- Backend: Python Flask API server
+- Frontend: Vanilla JavaScript with HTML/CSS
 - AI services: OpenAI API
 
 ## Requirements
@@ -36,7 +35,7 @@ It captures or imports content, then provides transcription, keyword extraction,
 ### 1. Clone and enter project
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/fengjnw/streamnote
 cd streamnote
 ```
 
@@ -85,66 +84,67 @@ cd backend
 python3 server.py
 ```
 
-Server default URL: http://localhost:5500
-
 ### 6. Open frontend
 
 - Open http://localhost:5500
 
-## How To Use
+## Testing
 
-1. Open StreamNote in the browser.
-2. Start recording or import content.
-3. Confirm transcript appears in the transcript panel.
-4. Trigger keyword extraction and check keyword list.
-5. Run translation and summary on the content.
-6. Click a keyword to view explanation.
-7. Switch sessions and confirm persistence.
+Run the project checks from the repository root:
 
-## Sample Input
+```bash
+npm run test:all
+```
 
-Use either of the following input paths for a stable end-to-end demo:
+You can also run narrower checks when needed:
 
-1. Record a short speech (15-30 seconds).
-
-2. Upload a text/document file (supported: TXT, MD, DOCX, PDF).
-
-If no external input is prepared, open the built-in Welcome session and use its preloaded transcript content.
-
+```bash
+npm run test:backend
+npm run test:frontend:unit
+npm run test:frontend:smoke
+```
 
 ## Known Limitations
 
-- Most AI features depend on valid OpenAI API key and network connection.
+- Most features depend on valid OpenAI API key and network connection.
 - Live transcription quality varies with microphone quality and noise.
 - Browser audio permissions are required for recording.
-- No multi-user account/authentication workflow yet.
-- Limited automated tests for full browser interaction and streaming edge cases.
-
-## Session Persistence Architecture
-
-- Current stage uses anonymous device-based persistence, not user login.
-- Frontend keeps local state for resilience and instant UX.
-- Backend stores the same session snapshot in SQLite via `/api/session-state`.
-- Device identity is a generated `deviceId` stored locally in browser storage.
-- This enables seamless migration toward full account-based sync later.
+- Account authentication is available but simple and not secure for production use.
+- Session data is stored in browser local storage, which may not be ideal for all use cases.
+- Import and export features are basic and may not handle all file formats or edge cases.
 
 ## Project Structure
 
-### Backend (Flask)
+### Backend (Python Flask)
 
-- `backend/server.py`: thin run entrypoint
-- `backend/app_factory.py`: app factory, wiring, CORS, no-cache headers
-- `backend/routes/`: route registration and API endpoints
+- `backend/server.py`: run entrypoint
+- `backend/app_factory.py`: app factory, service wiring, CORS and response headers
+- `backend/config.py`: environment loading and runtime config
+- `backend/routes/`: endpoint modules (ai, file, auth, session, api aggregation)
+- `backend/ai_service.py`: OpenAI integration for transcription and AI tasks
 - `backend/file_processor.py`: upload validation and text extraction
 - `backend/keyword_manager.py`: keyword extraction and explanation
 - `backend/translator.py`: translation service
 - `backend/summarizer.py`: summarization service
+- `backend/session_store.py`: session persistence and state storage
+- `backend/auth_store.py`: account and auth session storage
+- `backend/tests/`: backend unit and API tests
+- `backend/tools/`: maintenance scripts (backup/reset)
 
-### Frontend (Vanilla JS)
+### Frontend (Vanilla JavaScript)
 
-- `frontend/core/app.js`: app orchestrator
-- `frontend/managers/`: feature managers by domain
+- `frontend/index.html`: main page structure
+- `frontend/core/`: app bootstrap and shared runtime context
+- `frontend/managers/`: feature managers (recording, session, keyword, translation, UI, panel)
 - `frontend/services/apiClient.js`: API request client
+- `frontend/services/textProcessor.js`: shared text processing helpers
 - `frontend/data/welcomeSession.js`: built-in welcome data
-- `frontend/styles/`: style modules
+- `frontend/utils/`: common formatting and guard utilities
+- `frontend/styles/`: split style layers (tokens, layout, components, features, responsive)
 
+### Test and Dev Scripts
+
+- `scripts/test-all.cjs`: run lint + frontend tests + backend tests in sequence
+- `scripts/frontend-smoke.cjs`: DOM/script wiring smoke checks
+- `scripts/frontend-unit-*.cjs`: focused frontend unit checks
+- `eslint.config.cjs`: frontend lint config

@@ -23,56 +23,68 @@ function buildWelcomeSessionData() {
         transcripts: {
             0: {
                 index: 0,
-                text: 'Welcome to StreamNote. This workspace is designed so the interface itself guides your flow from capture to output.',
+                text: 'Welcome to StreamNote. This workspace is designed to guide your full flow from capture to review and export.',
                 timestamp: 1,
                 source: 'text'
             },
             1: {
                 index: 1,
-                text: 'Use the left sidebar from top to bottom: Start a session, add content, understand the text, then generate final output.',
+                text: 'Use the left sidebar from top to bottom: start a session, add content, understand the text, then generate final output.',
                 timestamp: 6,
                 source: 'text'
             },
             2: {
                 index: 2,
-                text: 'Start: New Session creates a clean workspace. Sessions lets you switch between saved study contexts at any time.',
+                text: 'Start: New Session creates a clean workspace. Sessions lets you switch between saved study contexts or restore previous work.',
                 timestamp: 11,
                 source: 'text'
             },
             3: {
                 index: 3,
-                text: 'Input: Record captures live speech. Import adds text or files. Edit lets you refine transcript quality before analysis.',
+                text: 'Account: Use Sign In to create or attach an account. Signed-in sessions can sync to the cloud instead of staying local only.',
                 timestamp: 16,
                 source: 'text'
             },
             4: {
                 index: 4,
-                text: 'Understand: Follow the same toolbar order: Translate first for target-language reading, then Keywords to surface core concepts quickly.',
+                text: 'Input: Record captures live speech. Import adds text, files, or session JSON. Edit lets you refine transcript quality before analysis.',
                 timestamp: 21,
                 source: 'text'
             },
             5: {
                 index: 5,
-                text: 'For Highlights and Explain, the primary workflow is text selection: select any phrase in transcript or translation, then use the floating menu to choose Highlight or Explain.',
+                text: 'Understand: Translate first for target-language reading, then Keywords to surface the core concepts from the current content.',
                 timestamp: 26,
                 source: 'text'
             },
             6: {
                 index: 6,
-                text: 'Output: Summary builds a compact overview for quick recap and study follow-up.',
+                text: 'For translation and explanation, use the language selectors to choose the reading language and the explanation language.',
                 timestamp: 31,
                 source: 'text'
             },
             7: {
                 index: 7,
-                text: 'Sync: Data is stored locally when you are not signed in, and synced to the cloud after you sign in.',
+                text: 'For text selection, select any phrase in the transcript or translation, then use the floating menu to highlight or explain it.',
                 timestamp: 36,
                 source: 'text'
             },
             8: {
                 index: 8,
-                text: 'Tip: If labels are hidden, use the top menu button to expand the sidebar and reveal full action names.',
+                text: 'Output: Summary builds a compact overview. Pick a summary style first, then use Refresh to generate or regenerate the result.',
                 timestamp: 41,
+                source: 'text'
+            },
+            9: {
+                index: 9,
+                text: 'Cleanup: Use Clear buttons in the keyword, highlight, explanation, and summary panels to reset a section when needed.',
+                timestamp: 46,
+                source: 'text'
+            },
+            10: {
+                index: 10,
+                text: 'Tip: If labels are hidden, use the top menu button to expand the sidebar and reveal full action names.',
+                timestamp: 51,
                 source: 'text'
             }
         },
@@ -91,12 +103,13 @@ function buildWelcomeSessionData() {
         highlights: [
             'StreamNote',
             'Start',
+            'Account',
             'Input',
             'Understand',
-            'Keywords',
+            'language selectors',
             'text selection',
             'Output',
-            'Sync',
+            'Cleanup',
             'Tip'
         ],
 
@@ -117,32 +130,32 @@ function buildWelcomeSessionData() {
                 endIndex: 5
             },
             'Understand': {
-                sourceIndices: [4],
+                sourceIndices: [5],
                 startIndex: 0,
                 endIndex: 10
             },
-            'Keywords': {
-                sourceIndices: [4],
-                startIndex: 26,
-                endIndex: 34
+            'language selectors': {
+                sourceIndices: [6],
+                startIndex: 34,
+                endIndex: 53
             },
             'text selection': {
-                sourceIndices: [5],
-                startIndex: 52,
-                endIndex: 66
+                sourceIndices: [7],
+                startIndex: 23,
+                endIndex: 37
             },
             'Output': {
-                sourceIndices: [6],
+                sourceIndices: [8],
                 startIndex: 0,
                 endIndex: 6
             },
-            'Sync': {
-                sourceIndices: [7],
+            'Cleanup': {
+                sourceIndices: [9],
                 startIndex: 0,
-                endIndex: 4
+                endIndex: 7
             },
             'Tip': {
-                sourceIndices: [8],
+                sourceIndices: [10],
                 startIndex: 0,
                 endIndex: 3
             }
@@ -160,10 +173,10 @@ function buildWelcomeSessionData() {
             source: 'text',
             sourceFile: 'welcome.txt',
             uploadTime: now,
-            paragraphCount: 9
+            paragraphCount: 11
         },
 
-        explanations: ['Session', 'Record', 'Import', 'Translate', 'Keywords', 'Summary'],
+        explanations: ['Session', 'Account', 'Record', 'Import', 'Translate', 'Keywords', 'Highlights', 'Summary', 'Export', 'Sync', 'Settings'],
         explanationHistory: [],
 
         settings: {
