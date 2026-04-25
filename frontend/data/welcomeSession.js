@@ -124,8 +124,13 @@ function buildWelcomeSessionData() {
                 startIndex: 0,
                 endIndex: 5
             },
-            'Input': {
+            'Account': {
                 sourceIndices: [3],
+                startIndex: 0,
+                endIndex: 7
+            },
+            'Input': {
+                sourceIndices: [4],
                 startIndex: 0,
                 endIndex: 5
             },
