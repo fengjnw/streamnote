@@ -1,7 +1,7 @@
 # StreamNote
 
-StreamNote is a web app for classroom speech-to-text and AI-assisted learning support.
-It captures or imports content, then provides transcription, keyword extraction, translation, summary, and keyword explanation in one interface.
+StreamNote is a web app for capturing, importing, and reviewing study content.
+It combines transcription, translation, keyword extraction, summaries, and keyword explanations in one interface.
 
 ## Live Demo
 
@@ -21,16 +21,16 @@ It captures or imports content, then provides transcription, keyword extraction,
 - OpenAI API key
 - Modern browser with microphone access for live recording
 
-## Quick Start
+## Setup
 
-### 1. Clone and enter project
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/fengjnw/streamnote
 cd streamnote
 ```
 
-### 2. Prepare your Python environment
+### 2. Prepare Python
 
 Use your own Python environment (system Python, conda, poetry, pyenv, etc.).
 Make sure `python3` and `pip` point to the same environment before continuing.
@@ -60,7 +60,7 @@ Optional:
 - FLASK_DEBUG=false
 - SESSION_DB_PATH=data/streamnote.db
 
-### 5. Run backend server
+### 5. Run the app
 
 From repository root (recommended):
 
@@ -68,21 +68,21 @@ From repository root (recommended):
 npm start
 ```
 
-Alternative (manual backend run):
+Alternative:
 
 ```bash
 cd backend
 python3 server.py
 ```
 
-### 6. Open frontend
+### 6. Open the app
 
-- Open http://localhost:5500
+- Open http://localhost:5500 in your browser.
 
+## Usage
 
-## User Guide
+The main user guide lives in [docs/user-guide.md](docs/user-guide.md). It covers session flow, import, transcription, translation, keyword extraction, summaries, and account sync.
 
-User guidance is documented separately in [docs/user-guide.md](docs/user-guide.md).
 
 ## Testing
 
@@ -99,16 +99,7 @@ npm run test:backend
 npm run test:frontend:unit
 npm run test:frontend:smoke
 ```
- 
 
-## Known Limitations
-
-- Most features depend on valid OpenAI API key and network connection.
-- Live transcription quality varies with microphone quality and noise.
-- Browser audio permissions are required for recording.
-- Account authentication is available but simple and not secure for production use.
-- Session data is stored in browser local storage, which may not be ideal for all use cases.
-- Import and export features are basic and may not handle all file formats or edge cases.
 
 ## Project Structure
 
