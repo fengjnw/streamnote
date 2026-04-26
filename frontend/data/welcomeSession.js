@@ -53,44 +53,38 @@ function buildWelcomeSessionData() {
             },
             5: {
                 index: 5,
-                text: 'Try this: Use Import to load sample.txt from the project root for a hands-on walkthrough of the full workflow.',
+                text: 'Understand: Translate first for target-language reading, then Keywords to surface the core concepts from the current content.',
                 timestamp: 26,
                 source: 'text'
             },
             6: {
                 index: 6,
-                text: 'Understand: Translate first for target-language reading, then Keywords to surface the core concepts from the current content.',
+                text: 'For translation and explanation, use the language selectors to choose the reading language and the explanation language.',
                 timestamp: 31,
                 source: 'text'
             },
             7: {
                 index: 7,
-                text: 'For translation and explanation, use the language selectors to choose the reading language and the explanation language.',
+                text: 'For text selection, select any phrase in the transcript or translation, then use the floating menu to highlight or explain it.',
                 timestamp: 36,
                 source: 'text'
             },
             8: {
                 index: 8,
-                text: 'For text selection, select any phrase in the transcript or translation, then use the floating menu to highlight or explain it.',
+                text: 'Output: Summary builds a compact overview. Pick a summary style first, then use Refresh to generate or regenerate the result.',
                 timestamp: 41,
                 source: 'text'
             },
             9: {
                 index: 9,
-                text: 'Output: Summary builds a compact overview. Pick a summary style first, then use Refresh to generate or regenerate the result.',
+                text: 'Cleanup: Use Clear buttons in the keyword, highlight, explanation, and summary panels to reset a section when needed.',
                 timestamp: 46,
                 source: 'text'
             },
             10: {
                 index: 10,
-                text: 'Cleanup: Use Clear buttons in the keyword, highlight, explanation, and summary panels to reset a section when needed.',
-                timestamp: 51,
-                source: 'text'
-            },
-            11: {
-                index: 11,
                 text: 'Tip: If labels are hidden, use the top menu button to expand the sidebar and reveal full action names.',
-                timestamp: 56,
+                timestamp: 51,
                 source: 'text'
             }
         },
@@ -111,7 +105,6 @@ function buildWelcomeSessionData() {
             'Start',
             'Account',
             'Input',
-            'Try this',
             'Understand',
             'language selectors',
             'text selection',
@@ -141,38 +134,33 @@ function buildWelcomeSessionData() {
                 startIndex: 0,
                 endIndex: 5
             },
-            'Try this': {
-                sourceIndices: [5],
-                startIndex: 0,
-                endIndex: 8
-            },
             'Understand': {
-                sourceIndices: [6],
+                sourceIndices: [5],
                 startIndex: 0,
                 endIndex: 10
             },
             'language selectors': {
-                sourceIndices: [7],
+                sourceIndices: [6],
                 startIndex: 34,
                 endIndex: 53
             },
             'text selection': {
-                sourceIndices: [8],
+                sourceIndices: [7],
                 startIndex: 23,
                 endIndex: 37
             },
             'Output': {
-                sourceIndices: [9],
+                sourceIndices: [8],
                 startIndex: 0,
                 endIndex: 6
             },
             'Cleanup': {
-                sourceIndices: [10],
+                sourceIndices: [9],
                 startIndex: 0,
                 endIndex: 7
             },
             'Tip': {
-                sourceIndices: [11],
+                sourceIndices: [10],
                 startIndex: 0,
                 endIndex: 3
             }
@@ -190,7 +178,7 @@ function buildWelcomeSessionData() {
             source: 'text',
             sourceFile: 'welcome.txt',
             uploadTime: now,
-            paragraphCount: 12
+            paragraphCount: 11
         },
 
         explanations: ['Session', 'Account', 'Record', 'Import', 'Translate', 'Keywords', 'Highlights', 'Summary', 'Export', 'Sync', 'Settings'],
