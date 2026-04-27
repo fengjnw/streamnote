@@ -114,10 +114,7 @@ StreamNote is a web app for turning spoken or imported learning content into str
 6. Generate a summary.
 7. Switch sessions and confirm your data is still there.
 
-### Quick Sample Input
-
-- You do not need a pre-created test account. If you want to test auth/sync, register with any valid email and a password of at least 6 characters.
-- For a quick feature check, import [sample.txt](../sample.txt).
+Note: You do not need a pre-created test account. If you want to test auth/sync, register with any valid email and a password of at least 6 characters.
 
 ## Known Limitations
 
