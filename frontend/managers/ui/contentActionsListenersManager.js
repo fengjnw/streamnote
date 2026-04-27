@@ -38,10 +38,15 @@ class ContentActionsListenersManager {
             }
         };
 
+        const isMenuVisible = (menuEl) => {
+            if (!menuEl) return false;
+            return window.getComputedStyle(menuEl).display !== "none";
+        };
+
         if (addContentBtn && contentMenu) {
             addContentBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
-                const isVisible = contentMenu.style.display !== "none";
+                const isVisible = isMenuVisible(contentMenu);
                 hideDownloadMenu();
 
                 if (!isVisible) {
@@ -78,7 +83,7 @@ class ContentActionsListenersManager {
         if (downloadSessionBtn && downloadMenu) {
             downloadSessionBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
-                const isVisible = downloadMenu.style.display !== "none";
+                const isVisible = isMenuVisible(downloadMenu);
                 hideUploadMenu();
 
                 if (!isVisible) {
