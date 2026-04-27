@@ -29,9 +29,6 @@ class TranscriptEditDialogManager {
         editModalToolbar.innerHTML = "";
         editRowsContainer.innerHTML = "";
 
-        const toolbar = document.createElement("div");
-        toolbar.className = "floating-modal-toolbar edit-modal-toolbar";
-
         const leftGroup = document.createElement("div");
         leftGroup.style.cssText = `
             display: flex;
@@ -62,9 +59,8 @@ class TranscriptEditDialogManager {
         buttonGroup.appendChild(clearAllBtn);
         buttonGroup.appendChild(saveBtn);
 
-        toolbar.appendChild(leftGroup);
-        toolbar.appendChild(buttonGroup);
-        editModalToolbar.appendChild(toolbar);
+        editModalToolbar.appendChild(leftGroup);
+        editModalToolbar.appendChild(buttonGroup);
 
         const itemsContainer = document.createElement("div");
         itemsContainer.style.cssText = `
