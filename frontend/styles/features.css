@@ -1149,12 +1149,6 @@ textarea::placeholder {
     flex: 1;
 }
 
-.edit-modal-toolbar {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
 /* Shared modal toolbar button theme */
 :is(.session-modal, .settings-modal, .add-content-modal, .edit-modal) .floating-modal-toolbar .toolbar-btn {
     border-color: var(--color-primary-lighter);

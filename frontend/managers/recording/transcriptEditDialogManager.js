@@ -20,9 +20,13 @@ class TranscriptEditDialogManager {
         const editTextBtn = document.getElementById("editTextBtn");
         if (editTextBtn) editTextBtn.classList.add("active");
 
+        const editModalToolbar = document.getElementById("editModalToolbar");
+        if (!editModalToolbar) return;
+
         const editRowsContainer = document.getElementById("editRowsContainer");
         if (!editRowsContainer) return;
 
+        editModalToolbar.innerHTML = "";
         editRowsContainer.innerHTML = "";
 
         const toolbar = document.createElement("div");
@@ -60,7 +64,7 @@ class TranscriptEditDialogManager {
 
         toolbar.appendChild(leftGroup);
         toolbar.appendChild(buttonGroup);
-        editRowsContainer.appendChild(toolbar);
+        editModalToolbar.appendChild(toolbar);
 
         const itemsContainer = document.createElement("div");
         itemsContainer.style.cssText = `
