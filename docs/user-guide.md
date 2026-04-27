@@ -2,7 +2,7 @@
 
 ## Overview
 
-StreamNote is a real-time, AI-assisted learning workspace. Its focus is live support during study: capture, understand, annotate, and review in one flow.
+StreamNote is a real-time learning workspace, focussed on live support during study: capture, understand, annotate, and review in one flow.
 
 ## Core Features
 
