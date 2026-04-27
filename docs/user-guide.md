@@ -1,10 +1,8 @@
 # StreamNote User Guide
 
-This guide follows the same flow as the built-in Welcome session. Use it as the user-facing walkthrough for StreamNote.
-
 ## Overview
 
-StreamNote is a web app for turning spoken or imported learning content into structured study material. In one interface, it supports transcription/import, translation, keyword extraction, explanations, summaries, and session-based review.
+StreamNote is a real-time, AI-assisted learning workspace. Its focus is live support during study: capture, understand, annotate, and review in one flow.
 
 ## Core Features
 
