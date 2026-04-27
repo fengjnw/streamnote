@@ -17,6 +17,9 @@ StreamNote is a real-time learning workspace, focussed on live support during st
 
 ## Setup and Run
 
+### Live Demo
+- https://streamnote.up.railway.app
+
 ### Prerequisites
 
 - Python 3.11
