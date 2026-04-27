@@ -27,18 +27,6 @@ class TranscriptEditDialogManager {
 
         const toolbar = document.createElement("div");
         toolbar.className = "floating-modal-toolbar edit-modal-toolbar";
-        toolbar.style.cssText = `
-            display: flex;
-            gap: 8px;
-            padding: 10px 16px;
-            border-bottom: 1px solid #e9ecef;
-            flex-shrink: 0;
-            background: #f5f5f5;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        `;
 
         const leftGroup = document.createElement("div");
         leftGroup.style.cssText = `
