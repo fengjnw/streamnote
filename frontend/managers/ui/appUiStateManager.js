@@ -405,10 +405,15 @@ class AppUiStateManager {
     setEditModalVisibility(isVisible) {
         const backdrop = document.getElementById("editModalBackdrop");
         const modal = document.getElementById("editModal");
+        const editTextBtn = document.getElementById("editTextBtn");
         if (!backdrop || !modal) return;
 
         backdrop.style.display = isVisible ? "block" : "none";
         modal.style.display = isVisible ? "flex" : "none";
+
+        if (editTextBtn) {
+            editTextBtn.classList.toggle("active", Boolean(isVisible));
+        }
     }
 
     getCurrentSessionTranscriptText() {
