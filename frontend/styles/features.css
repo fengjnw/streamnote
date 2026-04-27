@@ -263,6 +263,34 @@
     opacity: 0.9;
 }
 
+.keyword-delete-btn {
+    background: none;
+    border: none;
+    color: var(--color-grey-500);
+    font-size: 0.75em;
+    cursor: pointer;
+    padding: 0 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.keyword-delete-btn:hover {
+    background: none;
+    color: var(--color-danger);
+    transform: scale(1.1);
+}
+
+.keyword-delete-btn:active {
+    opacity: 0.9;
+}
+
 .keyword-highlight-toggle-btn {
     background: none;
     border: none;
@@ -1254,12 +1282,14 @@ textarea::placeholder {
 .floating-menu-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px var(--spacing-md);
+    gap: 8px;
+    padding: 4px 10px;
+    min-height: 28px;
     background: var(--color-white);
     border: none;
     cursor: pointer;
-    font-size: 0.95em;
+    font-size: 0.8em;
+    line-height: 1.35;
     color: var(--color-grey-800);
     transition: all 0.15s ease;
     text-align: left;
@@ -1277,9 +1307,8 @@ textarea::placeholder {
 }
 
 .floating-menu-item:hover {
-    background: var(--color-primary-hover-bg);
-    color: var(--color-primary);
-    padding-left: 16px;
+    background: var(--color-primary);
+    color: var(--color-white);
 }
 
 .floating-menu-item:active {
@@ -1287,9 +1316,16 @@ textarea::placeholder {
 }
 
 .floating-menu-item .menu-icon {
-    font-size: 0.7em;
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
     flex-shrink: 0;
     opacity: 0.65;
+}
+
+.floating-menu-item:hover .menu-icon {
+    color: var(--color-white);
+    opacity: 1;
 }
 
 #floatingExplainBtn .menu-icon {
@@ -1298,6 +1334,11 @@ textarea::placeholder {
 
 #floatingHighlightBtn .menu-icon {
     color: var(--color-accent-orange);
+}
+
+#floatingExplainBtn:hover .menu-icon,
+#floatingHighlightBtn:hover .menu-icon {
+    color: var(--color-white);
 }
 
 .floating-menu-item .menu-label {
