@@ -23,8 +23,70 @@ class UiListenersManager {
         });
 
         const recordBtn = document.getElementById("recordBtn");
-        if (recordBtn) {
-            recordBtn.addEventListener("click", () => app.toggleRecording());
+        const recordMenu = document.getElementById("recordMenu");
+        const recordFromMicOption = document.getElementById("recordFromMicOption");
+        const recordFromTabOption = document.getElementById("recordFromTabOption");
+
+        const isMenuVisible = (menuEl) => {
+            if (!menuEl) return false;
+            return window.getComputedStyle(menuEl).display !== "none";
+        };
+
+        const hideRecordMenu = () => {
+            if (recordMenu) {
+                recordMenu.style.display = "none";
+            }
+            if (recordBtn && !app.recordingManager?.isRecording) {
+                recordBtn.classList.remove("active");
+            }
+        };
+
+        if (recordBtn && recordMenu) {
+            recordBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+
+                if (app.recordingManager?.isRecording) {
+                    hideRecordMenu();
+                    app.stop();
+                    return;
+                }
+
+                const isVisible = isMenuVisible(recordMenu);
+                if (!isVisible) {
+                    const rect = recordBtn.getBoundingClientRect();
+                    recordMenu.style.left = (rect.right + 8) + "px";
+                    recordMenu.style.top = (rect.top - 4) + "px";
+                    recordMenu.style.display = "block";
+                    recordBtn.classList.add("active");
+                } else {
+                    hideRecordMenu();
+                }
+            });
+
+            document.addEventListener("click", (e) => {
+                const clickedRecordArea = recordBtn.contains(e.target) || recordMenu.contains(e.target);
+                if (!clickedRecordArea) {
+                    hideRecordMenu();
+                }
+            });
+
+            window.addEventListener("ui:close-transient-layers", () => {
+                hideRecordMenu();
+            });
+        }
+
+        if (recordFromMicOption) {
+            recordFromMicOption.addEventListener("click", async () => {
+                hideRecordMenu();
+                await app.recordingControlManager?.start("microphone");
+            });
+        }
+
+        if (recordFromTabOption) {
+            recordFromTabOption.addEventListener("click", async () => {
+                hideRecordMenu();
+                await app.recordingControlManager?.start("tab");
+            });
         }
 
         const languageSelector = document.getElementById("target-language");

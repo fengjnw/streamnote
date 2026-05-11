@@ -46,6 +46,7 @@ class ContentActionsListenersManager {
         if (addContentBtn && contentMenu) {
             addContentBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
+                window.dispatchEvent(new Event("ui:close-transient-layers"));
                 const isVisible = isMenuVisible(contentMenu);
                 hideDownloadMenu();
 
@@ -83,6 +84,7 @@ class ContentActionsListenersManager {
         if (downloadSessionBtn && downloadMenu) {
             downloadSessionBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
+                window.dispatchEvent(new Event("ui:close-transient-layers"));
                 const isVisible = isMenuVisible(downloadMenu);
                 hideUploadMenu();
 

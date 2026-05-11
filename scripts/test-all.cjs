@@ -32,9 +32,10 @@ printSection("How To Read", [
     "Execution stages describe HOW checks are run in sequence.",
 ]);
 
-printSection("Coverage Buckets (2)", [
+printSection("Coverage Buckets (3)", [
     "Basic functions: page structure, script loading order, text cleanup, file validation, health check, upload parameter validation",
     "Core functions: transcription input boundaries, keyword/translation/explanation/summary JSON API contracts, file extraction core logic",
+    "Utility & API: date/time formatting, text formatting, request validation, error handling, authentication store, API client",
 ]);
 
 const steps = [
@@ -51,7 +52,15 @@ const steps = [
         covers: [
             "Core text-processing logic: cleanText/validateFile/convertToPreciseResults",
             "Session sync equivalence normalization: legacy IDs, deprecated defaults, stable key-order-insensitive compare",
+            "Utility functions: date/time formatting, text formatting, regex escaping",
+            "API client: HTTP requests, endpoint contracts, error handling",
         ],
+    },
+    {
+        label: "[Backend] Error & validation utils",
+        command: "npm",
+        args: ["run", "test:backend:utils"],
+        covers: ["Error formatting", "Request JSON validation", "Password hashing", "Session management"],
     },
     {
         label: "[Frontend] Smoke tests",
@@ -67,8 +76,8 @@ const steps = [
     },
 ];
 
-printSection("Execution Stages (4)", steps.map((step, index) => `${index + 1}. ${step.label}`));
+printSection("Execution Stages (5)", steps.map((step, index) => `${index + 1}. ${step.label}`));
 
 steps.forEach((step, index) => runStep(step, index, steps.length));
 
-console.log("\nAll execution stages passed. Coverage buckets validated: Basic + Core.");
+console.log("\nAll execution stages passed. Coverage buckets validated: Basic + Core + Utility & API.");

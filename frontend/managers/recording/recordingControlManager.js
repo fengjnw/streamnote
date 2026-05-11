@@ -14,7 +14,7 @@ class RecordingControlManager {
         }
     }
 
-    async start() {
+    async start(source = "microphone") {
         try {
             if (this.app.recordingSessionId !== null && this.app.recordingSessionId !== this.app.sessionManager.currentSessionId) {
                 const recordingSession = this.app.sessionManager.getSession(this.app.recordingSessionId);
@@ -26,29 +26,7 @@ class RecordingControlManager {
             this.app.recordingSessionId = this.app.sessionManager.currentSessionId;
             this.app.updateRecordingIndicator();
 
-            const sessionBtn = document.getElementById('openSessionPanel');
-            if (sessionBtn) {
-                sessionBtn.disabled = true;
-                sessionBtn.title = 'Switching sessions is unavailable while recording';
-            }
-
-            const addContentBtn = document.getElementById('addContentBtn');
-            if (addContentBtn) {
-                addContentBtn.disabled = true;
-                addContentBtn.title = 'Importing content is unavailable while recording';
-            }
-
-            const downloadSessionBtn = document.getElementById('downloadSessionBtn');
-            if (downloadSessionBtn) {
-                downloadSessionBtn.disabled = true;
-                downloadSessionBtn.title = 'Exporting sessions is unavailable while recording';
-            }
-
-            const editBtn = document.getElementById('editTextBtn');
-            if (editBtn) {
-                editBtn.disabled = true;
-                editBtn.title = 'Editing transcript is unavailable while recording';
-            }
+            this.setRecordingUiEnabled(false);
 
             this.app.updateTranscriptionContext();
 
@@ -57,7 +35,12 @@ class RecordingControlManager {
                 this.app.recordingManager.setSessionStartTime(currentSession.startTime);
             }
 
-            await this.app.recordingManager.start(this.app.recordingSessionId);
+            await this.app.recordingManager.start(this.app.recordingSessionId, source);
+
+            if (!this.app.recordingManager.isRecording) {
+                this.stop(true);
+                return;
+            }
 
             this.updateRecordingButtonState();
             this.app.updateDisplay();
@@ -72,49 +55,79 @@ class RecordingControlManager {
             }, 1000);
 
         } catch (error) {
-            console.error("[ERROR] Microphone access:", error);
-            this.app.updateStatus("Microphone access denied");
+            console.error("[ERROR] Recording access:", error);
+            this.app.updateStatus("Audio capture failed");
+            this.stop(true);
         }
     }
 
-    stop() {
-        if (this.app.recordingManager && this.app.recordingManager.isRecording) {
+    stop(force = false) {
+        const shouldStop = this.app.recordingManager && this.app.recordingManager.isRecording;
+        if (!shouldStop && !force) {
+            return;
+        }
+
+        if (shouldStop) {
             this.app.recordingManager.stop();
+        }
 
-            this.app.recordingSessionId = null;
-            this.app.updateRecordingIndicator();
+        this.app.recordingSessionId = null;
+        this.app.updateRecordingIndicator();
 
-            const sessionBtn = document.getElementById('openSessionPanel');
-            if (sessionBtn) {
-                sessionBtn.disabled = false;
+        this.setRecordingUiEnabled(true);
+
+        this.updateRecordingButtonState();
+
+        this.app.updateSessionStats();
+        if (shouldStop && this.app.recordingSessionId !== null) {
+            this.app.sessionManager.updateLastTextModified(this.app.recordingSessionId);
+        } else if (shouldStop && this.app.sessionManager.currentSessionId) {
+            this.app.sessionManager.updateLastTextModified(this.app.sessionManager.currentSessionId);
+        }
+    }
+
+    setRecordingUiEnabled(isEnabled) {
+        const sessionBtn = document.getElementById('openSessionPanel');
+        if (sessionBtn) {
+            sessionBtn.disabled = !isEnabled;
+            if (!isEnabled) {
+                sessionBtn.title = 'Switching sessions is unavailable while recording';
+            } else {
                 sessionBtn.removeAttribute('title');
             }
+        }
 
-            const addContentBtn = document.getElementById('addContentBtn');
-            if (addContentBtn) {
-                addContentBtn.disabled = false;
+        const addContentBtn = document.getElementById('addContentBtn');
+        if (addContentBtn) {
+            addContentBtn.disabled = !isEnabled;
+            if (!isEnabled) {
+                addContentBtn.title = 'Importing content is unavailable while recording';
+            } else {
                 addContentBtn.removeAttribute('title');
             }
+        }
 
-            const downloadSessionBtn = document.getElementById('downloadSessionBtn');
-            if (downloadSessionBtn) {
-                downloadSessionBtn.disabled = false;
+        const downloadSessionBtn = document.getElementById('downloadSessionBtn');
+        if (downloadSessionBtn) {
+            downloadSessionBtn.disabled = !isEnabled;
+            if (!isEnabled) {
+                downloadSessionBtn.title = 'Exporting sessions is unavailable while recording';
+            } else {
                 downloadSessionBtn.removeAttribute('title');
             }
+        }
 
-            const editBtn = document.getElementById('editTextBtn');
-            if (editBtn && Object.keys(this.app.recordingManager.preciseResults).length > 0) {
+        const editBtn = document.getElementById('editTextBtn');
+        if (editBtn) {
+            if (!isEnabled) {
+                editBtn.disabled = true;
+                editBtn.title = 'Editing transcript is unavailable while recording';
+            } else if (Object.keys(this.app.recordingManager.preciseResults).length > 0) {
                 editBtn.disabled = false;
                 editBtn.removeAttribute('title');
-            }
-
-            this.updateRecordingButtonState();
-
-            this.app.updateSessionStats();
-            if (this.app.recordingSessionId !== null) {
-                this.app.sessionManager.updateLastTextModified(this.app.recordingSessionId);
-            } else if (this.app.sessionManager.currentSessionId) {
-                this.app.sessionManager.updateLastTextModified(this.app.sessionManager.currentSessionId);
+            } else {
+                editBtn.disabled = true;
+                editBtn.removeAttribute('title');
             }
         }
     }

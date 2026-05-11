@@ -58,14 +58,36 @@ class RecordingManager {
         this.sessionStartTime = sessionStartTimeMs || Date.now();
     }
 
-    async start(sessionId = null) {
+    async start(sessionId = null, source = "microphone") {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            let stream = null;
+
+            if (source === "tab") {
+                if (!navigator.mediaDevices?.getDisplayMedia) {
+                    throw new Error("display-media-unsupported");
+                }
+
+                const displayStream = await navigator.mediaDevices.getDisplayMedia({
+                    audio: true,
+                    video: true
+                });
+
+                const audioTracks = displayStream.getAudioTracks();
+                if (!audioTracks.length) {
+                    displayStream.getTracks().forEach((track) => track.stop());
+                    throw new Error("display-audio-unavailable");
+                }
+
+                displayStream.getVideoTracks().forEach((track) => track.stop());
+                stream = new MediaStream(audioTracks);
+            } else {
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            }
 
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.analyser = this.audioContext.createAnalyser();
-            const source = this.audioContext.createMediaStreamSource(stream);
-            source.connect(this.analyser);
+            const mediaSource = this.audioContext.createMediaStreamSource(stream);
+            mediaSource.connect(this.analyser);
             this.analyser.fftSize = 2048;
 
             this.mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
@@ -116,8 +138,12 @@ class RecordingManager {
             }, 1000);
 
         } catch (error) {
-            console.error("[ERROR] Microphone access:", error);
-            this.onStatusUpdate("Microphone access denied");
+            const isTabSource = source === "tab";
+            const statusMessage = isTabSource
+                ? "Tab audio access failed"
+                : "Microphone access denied";
+            console.error("[ERROR] Recording access:", error);
+            this.onStatusUpdate(statusMessage);
         }
     }
 
