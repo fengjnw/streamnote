@@ -201,7 +201,7 @@ class PanelManager {
         const saved = localStorage.getItem('translationEnabled');
         this.translationEnabled = saved !== null ? JSON.parse(saved) : false;
 
-        this.translationLayout = localStorage.getItem('translationLayout') || 'split-bottom';
+        this.translationLayout = localStorage.getItem('translationLayout') || 'split-left';
 
         const savedAutoScroll = localStorage.getItem('autoScroll');
         this.autoScroll = savedAutoScroll !== null ? JSON.parse(savedAutoScroll) : true;
