@@ -23,7 +23,7 @@ class SessionManager {
 
         this.defaultSettings = {
             defaultLanguage: "Chinese",
-            defaultExplanationLanguage: "Chinese"
+            defaultExplanationLanguage: "English"
         };
 
         this.loadDefaultSettings();
@@ -242,7 +242,7 @@ class SessionManager {
                     translationEnabled: true,
                     translationLayout: "split-bottom",
                     language: "Chinese",
-                    explanationLanguage: "Chinese"
+                    explanationLanguage: "English"
                 };
             } else {
                 if (session.settings.targetLanguage && !session.settings.language) {
@@ -260,7 +260,7 @@ class SessionManager {
                 }
 
                 if (!session.settings.explanationLanguage) {
-                    session.settings.explanationLanguage = session.settings.language || "Chinese";
+                    session.settings.explanationLanguage = "English";
                 }
 
                 delete session.settings.keywordEnabled;

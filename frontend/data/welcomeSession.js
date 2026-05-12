@@ -1,5 +1,5 @@
 
-const WELCOME_SESSION_VERSION = '2026.04.19.1';
+const WELCOME_SESSION_VERSION = '2026.05.13.1';
 
 function computeWelcomeSessionSignature(session) {
     return JSON.stringify({
@@ -186,7 +186,7 @@ function buildWelcomeSessionData() {
 
         settings: {
             language: 'Chinese',
-            explanationLanguage: 'Chinese'
+            explanationLanguage: 'English'
         },
 
         createdAt: now,

@@ -51,7 +51,7 @@ class StreamNote {
         this.highlightManager = null;
 
         this.language = "Chinese";
-        this.explanationLanguage = "Chinese";
+        this.explanationLanguage = "English";
 
         this.summaryCache = {};
 
