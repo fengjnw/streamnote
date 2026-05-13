@@ -213,9 +213,34 @@ class SessionManager {
                     Spanish: {},
                     French: {},
                     Japanese: {},
-                    Korean: {}
+                    Korean: {},
+                    Arabic: {},
+                    Hindi: {},
+                    Portuguese: {}
                 };
             }
+
+            const translationDefaults = [
+                "Chinese",
+                "English",
+                "Spanish",
+                "French",
+                "Japanese",
+                "Korean",
+                "Arabic",
+                "Hindi",
+                "Portuguese"
+            ];
+
+            if (!session.translations || typeof session.translations !== "object") {
+                session.translations = {};
+            }
+
+            translationDefaults.forEach((language) => {
+                if (!session.translations[language]) {
+                    session.translations[language] = {};
+                }
+            });
 
             if (!session.explanations) session.explanations = [];
             if (!session.explanationHistory) session.explanationHistory = [];
@@ -825,7 +850,10 @@ class SessionManager {
                 Spanish: {},
                 French: {},
                 Japanese: {},
-                Korean: {}
+                Korean: {},
+                Arabic: {},
+                Hindi: {},
+                Portuguese: {}
             },
 
             keywords: [],

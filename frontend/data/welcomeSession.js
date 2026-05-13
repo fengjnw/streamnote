@@ -95,7 +95,10 @@ function buildWelcomeSessionData() {
             Spanish: {},
             French: {},
             Japanese: {},
-            Korean: {}
+            Korean: {},
+            Arabic: {},
+            Hindi: {},
+            Portuguese: {}
         },
 
         keywords: [],
