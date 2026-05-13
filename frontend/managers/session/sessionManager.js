@@ -23,7 +23,7 @@ class SessionManager {
 
         this.defaultSettings = {
             defaultLanguage: "Chinese",
-            defaultExplanationLanguage: "Chinese"
+            defaultExplanationLanguage: "English"
         };
 
         this.loadDefaultSettings();
@@ -213,9 +213,34 @@ class SessionManager {
                     Spanish: {},
                     French: {},
                     Japanese: {},
-                    Korean: {}
+                    Korean: {},
+                    Arabic: {},
+                    Hindi: {},
+                    Portuguese: {}
                 };
             }
+
+            const translationDefaults = [
+                "Chinese",
+                "English",
+                "Spanish",
+                "French",
+                "Japanese",
+                "Korean",
+                "Arabic",
+                "Hindi",
+                "Portuguese"
+            ];
+
+            if (!session.translations || typeof session.translations !== "object") {
+                session.translations = {};
+            }
+
+            translationDefaults.forEach((language) => {
+                if (!session.translations[language]) {
+                    session.translations[language] = {};
+                }
+            });
 
             if (!session.explanations) session.explanations = [];
             if (!session.explanationHistory) session.explanationHistory = [];
@@ -242,7 +267,7 @@ class SessionManager {
                     translationEnabled: true,
                     translationLayout: "split-bottom",
                     language: "Chinese",
-                    explanationLanguage: "Chinese"
+                    explanationLanguage: "English"
                 };
             } else {
                 if (session.settings.targetLanguage && !session.settings.language) {
@@ -260,7 +285,7 @@ class SessionManager {
                 }
 
                 if (!session.settings.explanationLanguage) {
-                    session.settings.explanationLanguage = session.settings.language || "Chinese";
+                    session.settings.explanationLanguage = "English";
                 }
 
                 delete session.settings.keywordEnabled;
@@ -825,7 +850,10 @@ class SessionManager {
                 Spanish: {},
                 French: {},
                 Japanese: {},
-                Korean: {}
+                Korean: {},
+                Arabic: {},
+                Hindi: {},
+                Portuguese: {}
             },
 
             keywords: [],

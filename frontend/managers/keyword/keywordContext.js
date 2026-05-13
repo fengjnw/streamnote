@@ -668,6 +668,20 @@ class KeywordContext {
             return "ko-KR";
         }
 
+        const arabicRegex = /[\u0600-\u06ff\u0750-\u077f\u08a0-\u08ff]/;
+        if (arabicRegex.test(word)) {
+            return "ar-SA";
+        }
+
+        const hindiRegex = /[\u0900-\u097f]/;
+        if (hindiRegex.test(word)) {
+            return "hi-IN";
+        }
+
+        if (/[ãõçáéíóúâêôà]/.test(word.toLowerCase())) {
+            return "pt-PT";
+        }
+
         if (/[áéíóúñüàèìòùâêîôûäëïöü]/.test(word.toLowerCase())) {
             return "es-ES";
         }

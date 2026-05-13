@@ -39,7 +39,7 @@ class SessionLoadManager {
         if (session.settings && session.settings.explanationLanguage) {
             this.app.explanationLanguage = session.settings.explanationLanguage;
         } else {
-            this.app.explanationLanguage = defaultSettings.defaultExplanationLanguage || "Chinese";
+            this.app.explanationLanguage = defaultSettings.defaultExplanationLanguage || "English";
         }
 
         const languageSelector = document.getElementById("target-language");

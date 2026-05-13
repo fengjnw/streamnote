@@ -17,7 +17,7 @@ class SettingsPanel {
 
         defaultLanguageSelect.value = defaultSettings.defaultLanguage || "Chinese";
         if (defaultExplanationLanguageSelect) {
-            defaultExplanationLanguageSelect.value = defaultSettings.defaultExplanationLanguage || "Chinese";
+            defaultExplanationLanguageSelect.value = defaultSettings.defaultExplanationLanguage || "English";
         }
 
         defaultLanguageSelect.onchange = null;

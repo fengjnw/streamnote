@@ -48,7 +48,7 @@ class AppContext {
         // Application state
         this._currentTranscriptText = "";
         this._language = "Chinese";
-        this._explanationLanguage = "Chinese";
+        this._explanationLanguage = "English";
         this._translationEnabled = true;
 
         // Callbacks
