@@ -17,6 +17,8 @@ class ContentActionsListenersManager {
         const importSessionOption = document.getElementById("importSessionOption");
         const downloadCurrentSessionOption = document.getElementById("downloadCurrentSessionOption");
         const downloadAllSessionsOption = document.getElementById("downloadAllSessionsOption");
+        const exportTranscriptTextOption = document.getElementById("exportTranscriptTextOption");
+        const exportTranscriptMarkdownOption = document.getElementById("exportTranscriptMarkdownOption");
         const importFileInput = document.getElementById("importFileInput");
         const textFileInput = document.getElementById("textFileInput");
 
@@ -149,6 +151,20 @@ class ContentActionsListenersManager {
             downloadAllSessionsOption.addEventListener("click", () => {
                 hideDownloadMenu();
                 app.sessionManager.exportAllSessions();
+            });
+        }
+
+        if (exportTranscriptTextOption) {
+            exportTranscriptTextOption.addEventListener("click", () => {
+                hideDownloadMenu();
+                app.sessionManager.exportTranscriptAsText();
+            });
+        }
+
+        if (exportTranscriptMarkdownOption) {
+            exportTranscriptMarkdownOption.addEventListener("click", () => {
+                hideDownloadMenu();
+                app.sessionManager.exportTranscriptAsMarkdown();
             });
         }
 
