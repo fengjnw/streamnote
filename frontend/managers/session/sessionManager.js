@@ -1219,6 +1219,62 @@ class SessionManager {
         URL.revokeObjectURL(url);
     }
 
+    downloadText(content, filename) {
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    exportTranscriptAsText() {
+        const session = this.getCurrentSession();
+        if (!session || !session.transcripts) {
+            alert('No transcript data to export');
+            return;
+        }
+
+        const transcripts = session.transcripts;
+        const text = Object.keys(transcripts)
+            .map(Number)
+            .sort((a, b) => a - b)
+            .map(idx => transcripts[idx].text)
+            .join('\n\n');
+
+        this.downloadText(text, `Transcript_${session.name}_${this.formatDate()}.txt`);
+    }
+
+    exportTranscriptAsMarkdown() {
+        const session = this.getCurrentSession();
+        if (!session || !session.transcripts) {
+            alert('No transcript data to export');
+            return;
+        }
+
+        const transcripts = session.transcripts;
+        const charCount = Object.values(transcripts).reduce((sum, t) => sum + (t.text || '').length, 0);
+        const paragraphCount = Object.keys(transcripts).length;
+
+        const md = [
+            `# ${session.name}`,
+            '',
+            `**Export Date:** ${new Date().toLocaleString()}`,
+            `**Paragraphs:** ${paragraphCount}`,
+            `**Characters:** ${charCount}`,
+            '',
+            '---',
+            '',
+            ...Object.keys(transcripts)
+                .map(Number)
+                .sort((a, b) => a - b)
+                .map(idx => transcripts[idx].text)
+        ].join('\n\n');
+
+        this.downloadText(md, `Transcript_${session.name}_${this.formatDate()}.md`);
+    }
+
     formatDate() {
         const now = new Date();
         return now.toISOString().slice(0, 19).replace(/[T:]/g, '-');
