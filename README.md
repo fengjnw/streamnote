@@ -7,6 +7,12 @@ It combines transcription, translation, keyword extraction, summaries, and keywo
 
 - https://streamnote.up.railway.app
 
+## Feedback
+
+If you try StreamNote and would like to share feedback, suggestions, or comments, feel free to leave a message here:
+
+- https://forms.gle/Xw7MDeb6DpchREfY8
+
 ## Tech Stack
 
 - Backend: Python Flask API server
