@@ -52,6 +52,9 @@ class RecordingManager {
         this.onTranscribeProgress = config.onTranscribeProgress || (() => { });
         this.onStatusUpdate = config.onStatusUpdate || (() => { });
         this.onRecordingStateChange = config.onRecordingStateChange || (() => { });
+        this.onChunkRequest = config.onChunkRequest || (() => { });
+        this.onChunkResponse = config.onChunkResponse || (() => { });
+        this.onChunkError = config.onChunkError || (() => { });
     }
 
     setSessionStartTime(sessionStartTimeMs) {
@@ -84,58 +87,7 @@ class RecordingManager {
                 stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             }
 
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            this.analyser = this.audioContext.createAnalyser();
-            const mediaSource = this.audioContext.createMediaStreamSource(stream);
-            mediaSource.connect(this.analyser);
-            this.analyser.fftSize = 2048;
-
-            this.mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-            this.startTime = Date.now();
-            this.lastSendTime = Date.now();
-            this.recordingStartTime = Date.now();
-
-            if (Object.keys(this.preciseResults).length === 0) {
-                this.chunkIndex = 0;
-            } else {
-                this.chunkIndex = Math.max(...Object.keys(this.preciseResults).map(Number)) + 1;
-            }
-
-            this.isRecording = true;
-            this.audioChunks = [];
-            this.silenceStart = null;
-            this.voiceStart = null;
-            this.hasVoice = false;
-
-            this.mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    this.audioChunks.push(event.data);
-                    this.submitForTranscription(sessionId);
-                    this.audioChunks = [];
-                }
-            };
-
-            this.mediaRecorder.onstop = () => {
-                if (!this.isRecording) {
-                    this.audioChunks = [];
-                }
-            };
-
-            this.mediaRecorder.start();
-
-            this.checkInterval = setInterval(() => {
-                this._checkSilenceAndSend();
-            }, 100);
-
-            this.onStatusUpdate("Listening...");
-            this.onRecordingStateChange(true);
-
-            if (this.statsUpdateInterval) clearInterval(this.statsUpdateInterval);
-            this.statsUpdateInterval = setInterval(() => {
-                if (this.isRecording && !this.isTranscribing) {
-                    this.onStatusUpdate("Listening...");
-                }
-            }, 1000);
+            await this.startWithStream(stream, sessionId);
 
         } catch (error) {
             const isTabSource = source === "tab";
@@ -145,6 +97,61 @@ class RecordingManager {
             console.error("[ERROR] Recording access:", error);
             this.onStatusUpdate(statusMessage);
         }
+    }
+
+    async startWithStream(stream, sessionId = null) {
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.analyser = this.audioContext.createAnalyser();
+        const mediaSource = this.audioContext.createMediaStreamSource(stream);
+        mediaSource.connect(this.analyser);
+        this.analyser.fftSize = 2048;
+
+        this.mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+        this.startTime = Date.now();
+        this.lastSendTime = Date.now();
+        this.recordingStartTime = Date.now();
+
+        if (Object.keys(this.preciseResults).length === 0) {
+            this.chunkIndex = 0;
+        } else {
+            this.chunkIndex = Math.max(...Object.keys(this.preciseResults).map(Number)) + 1;
+        }
+
+        this.isRecording = true;
+        this.audioChunks = [];
+        this.silenceStart = null;
+        this.voiceStart = null;
+        this.hasVoice = false;
+
+        this.mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                this.audioChunks.push(event.data);
+                this.submitForTranscription(sessionId);
+                this.audioChunks = [];
+            }
+        };
+
+        this.mediaRecorder.onstop = () => {
+            if (!this.isRecording) {
+                this.audioChunks = [];
+            }
+        };
+
+        this.mediaRecorder.start();
+
+        this.checkInterval = setInterval(() => {
+            this._checkSilenceAndSend();
+        }, 100);
+
+        this.onStatusUpdate("Listening...");
+        this.onRecordingStateChange(true);
+
+        if (this.statsUpdateInterval) clearInterval(this.statsUpdateInterval);
+        this.statsUpdateInterval = setInterval(() => {
+            if (this.isRecording && !this.isTranscribing) {
+                this.onStatusUpdate("Listening...");
+            }
+        }, 1000);
     }
 
     stop() {
@@ -263,6 +270,7 @@ class RecordingManager {
 
         this.isTranscribing = true;
         this.onStatusUpdate("Transcripting...");
+        this.onChunkRequest({ index: currentChunkIndex, sessionId: sessionIdAtRequest });
 
         try {
             const response = this.apiClient
@@ -275,6 +283,7 @@ class RecordingManager {
             if (!response.ok) {
                 console.error(`[ERROR] API error: ${response.status}`);
                 this.isTranscribing = false;
+                this.onChunkError({ index: currentChunkIndex, sessionId: sessionIdAtRequest, status: response.status });
                 if (this.isRecording) {
                     this.onStatusUpdate("Listening...");
                 }
@@ -283,6 +292,7 @@ class RecordingManager {
 
             const result = await response.json();
             const text = result.text.trim();
+            this.onChunkResponse({ index: currentChunkIndex, sessionId: sessionIdAtRequest, text });
 
             this.isTranscribing = false;
 
@@ -326,6 +336,7 @@ class RecordingManager {
 
         } catch (error) {
             console.error("[ERROR] Whisper request failed:", error);
+            this.onChunkError({ index: currentChunkIndex, sessionId: sessionIdAtRequest, error });
             this.isTranscribing = false;
             if (this.isRecording) {
                 this.onStatusUpdate("Listening...");

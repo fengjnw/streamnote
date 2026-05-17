@@ -9,3 +9,4 @@ dist/
 .env.local
 backend/data/
 *.db
+frontend/evaluation/assets/
