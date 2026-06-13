@@ -1,6 +1,6 @@
 {
   "name": "streamnote",
-  "version": "0.9.5",
+  "version": "0.9.7",
   "description": "A real-time audio transcription and analysis tool",
   "main": "frontend/core/app.js",
   "scripts": {
