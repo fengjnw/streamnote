@@ -23,7 +23,13 @@
     --spacing-md: 12px;
     --spacing-lg: 16px;
     --spacing-xl: 20px;
-    --side-panel-width: 320px;
+    --side-panel-width: clamp(320px, 28vw, 520px);
+    --panel-width-desktop: clamp(320px, 28vw, 520px);
+    --panel-width-tablet: min(420px, 88vw);
+    --panel-width-mobile: 100vw;
+    --panel-height-mobile: min(64dvh, 560px);
+    --touch-target-size: 44px;
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 
     /* ================ Primary Color (Slate Blue Theme) ================ */
     --color-primary: #5a7c99;

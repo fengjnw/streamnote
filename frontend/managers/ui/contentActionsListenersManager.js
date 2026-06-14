@@ -45,6 +45,24 @@ class ContentActionsListenersManager {
             return window.getComputedStyle(menuEl).display !== "none";
         };
 
+        const positionActionMenu = (menuEl, triggerEl) => {
+            if (!menuEl || !triggerEl) return;
+
+            if (window.matchMedia("(max-width: 768px)").matches) {
+                menuEl.style.left = "10px";
+                menuEl.style.right = "10px";
+                menuEl.style.top = "auto";
+                menuEl.style.bottom = "calc(62px + var(--safe-area-bottom))";
+                return;
+            }
+
+            const rect = triggerEl.getBoundingClientRect();
+            menuEl.style.left = (rect.right + 8) + "px";
+            menuEl.style.right = "auto";
+            menuEl.style.top = (rect.top - 4) + "px";
+            menuEl.style.bottom = "auto";
+        };
+
         if (addContentBtn && contentMenu) {
             addContentBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -53,9 +71,7 @@ class ContentActionsListenersManager {
                 hideDownloadMenu();
 
                 if (!isVisible) {
-                    const rect = addContentBtn.getBoundingClientRect();
-                    contentMenu.style.left = (rect.right + 8) + "px";
-                    contentMenu.style.top = (rect.top - 4) + "px";
+                    positionActionMenu(contentMenu, addContentBtn);
                     contentMenu.style.display = "block";
                     addContentBtn.classList.add("active");
                 } else {
@@ -91,9 +107,7 @@ class ContentActionsListenersManager {
                 hideUploadMenu();
 
                 if (!isVisible) {
-                    const rect = downloadSessionBtn.getBoundingClientRect();
-                    downloadMenu.style.left = (rect.right + 8) + "px";
-                    downloadMenu.style.top = (rect.top - 4) + "px";
+                    positionActionMenu(downloadMenu, downloadSessionBtn);
                     downloadMenu.style.display = "block";
                     downloadSessionBtn.classList.add("active");
                 } else {

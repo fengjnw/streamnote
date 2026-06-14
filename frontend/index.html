@@ -141,6 +141,30 @@
                     <button id="quickAccessSettings" class="sidebar-btn" aria-label="Open settings panel"><i
                             data-feather="settings"></i><span class="sidebar-btn-label">Settings</span></button>
                 </div>
+
+                <div id="mobileMoreMenu" class="mobile-more-menu hidden" aria-label="More actions">
+                    <button class="mobile-more-item" data-target-button="sidebarNewSessionBtn">
+                        <i data-feather="plus"></i><span>New Session</span>
+                    </button>
+                    <button class="mobile-more-item" data-target-button="openSessionPanel">
+                        <i data-feather="folder"></i><span>Sessions</span>
+                    </button>
+                    <button class="mobile-more-item" data-target-button="addContentBtn">
+                        <i data-feather="upload"></i><span>Import</span>
+                    </button>
+                    <button class="mobile-more-item" data-target-button="editTextBtn">
+                        <i data-feather="edit"></i><span>Edit</span>
+                    </button>
+                    <button class="mobile-more-item" data-target-button="downloadSessionBtn">
+                        <i data-feather="download"></i><span>Export</span>
+                    </button>
+                    <button class="mobile-more-item" data-target-button="quickAccessHistory">
+                        <i data-feather="book-open"></i><span>Explain</span>
+                    </button>
+                    <button class="mobile-more-item" data-target-button="quickAccessSettings">
+                        <i data-feather="settings"></i><span>Settings</span>
+                    </button>
+                </div>
             </aside>
 
             <div class="content-wrapper">
@@ -569,6 +593,49 @@
         }
 
         function initSidebarExpansionControls() {
+            const mobileQuery = window.matchMedia('(max-width: 768px)');
+            const mobileMoreMenu = document.getElementById('mobileMoreMenu');
+
+            const closeMobileMoreMenu = () => {
+                if (mobileMoreMenu) {
+                    mobileMoreMenu.classList.add('hidden');
+                }
+                document.querySelector('.sidebar-left')?.classList.remove('mobile-more-open');
+                document.getElementById('leftSidebarGuideToggle')?.classList.remove('active');
+            };
+
+            if (mobileMoreMenu) {
+                mobileMoreMenu.addEventListener('click', (event) => {
+                    const item = event.target.closest('.mobile-more-item');
+                    if (!item) {
+                        return;
+                    }
+
+                    const targetButtonId = item.getAttribute('data-target-button');
+                    const targetButton = targetButtonId ? document.getElementById(targetButtonId) : null;
+                    closeMobileMoreMenu();
+
+                    if (targetButton && !targetButton.disabled) {
+                        targetButton.click();
+                    }
+                });
+
+                document.addEventListener('click', (event) => {
+                    const sidebar = document.querySelector('.sidebar-left');
+                    const toggleBtn = document.getElementById('leftSidebarGuideToggle');
+                    const clickedMobileMore = mobileMoreMenu.contains(event.target);
+                    const clickedToggle = toggleBtn?.contains(event.target);
+                    const clickedSidebar = sidebar?.contains(event.target);
+
+                    if (!clickedMobileMore && !clickedToggle && !clickedSidebar) {
+                        closeMobileMoreMenu();
+                    }
+                });
+
+                window.addEventListener('resize', closeMobileMoreMenu);
+                window.addEventListener('ui:close-transient-layers', closeMobileMoreMenu);
+            }
+
             const configs = [
                 {
                     sidebar: document.querySelector('.sidebar-left'),
@@ -601,6 +668,17 @@
                 applyState(sidebar, toggleBtn, initialExpanded);
 
                 toggleBtn.addEventListener('click', () => {
+                    if (mobileQuery.matches && mobileMoreMenu) {
+                        const shouldOpen = mobileMoreMenu.classList.contains('hidden');
+                        window.dispatchEvent(new Event('ui:close-transient-layers'));
+                        mobileMoreMenu.classList.toggle('hidden', !shouldOpen);
+                        sidebar.classList.toggle('mobile-more-open', shouldOpen);
+                        toggleBtn.classList.toggle('active', shouldOpen);
+                        toggleBtn.setAttribute('aria-label', shouldOpen ? 'Close more actions' : 'Open more actions');
+                        feather.replace();
+                        return;
+                    }
+
                     const nextExpanded = !sidebar.classList.contains('expanded');
                     applyState(sidebar, toggleBtn, nextExpanded);
                     localStorage.setItem(key, String(nextExpanded));
