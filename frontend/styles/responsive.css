@@ -46,6 +46,126 @@
         min-height: var(--touch-target-size);
     }
 
+    .panel-close-btn {
+        width: var(--touch-target-size);
+        height: var(--touch-target-size);
+        border-radius: 0;
+    }
+
+    .panel-close-btn:hover {
+        transform: none;
+        background: var(--color-white-shadow-1);
+    }
+
+    .side-panel-header,
+    .explanation-panel-header,
+    .text-panel-header {
+        min-height: 44px;
+        padding: 0 12px;
+    }
+
+    .panel-toolbar {
+        gap: 6px;
+        padding: 8px;
+        min-height: 52px;
+    }
+
+    .panel-toolbar .toolbar-btn,
+    .panel-toolbar .toolbar-language,
+    .panel-toolbar .toolbar-select,
+    .toolbar-btn,
+    .language-selector,
+    .layout-dropdown {
+        min-height: var(--touch-target-size);
+        border-radius: 0;
+        font-size: 0.86rem;
+    }
+
+    .panel-toolbar .toolbar-language,
+    .panel-toolbar .toolbar-select {
+        height: var(--touch-target-size);
+        min-width: 0;
+    }
+
+    .text-panel .text-panel-toolbar {
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+    }
+
+    .text-panel .text-panel-toolbar .toolbar-language {
+        flex: 0 0 108px;
+        min-width: 108px;
+    }
+
+    .text-panel .text-panel-toolbar .layout-dropdown {
+        flex: 0 0 108px;
+        min-width: 108px;
+    }
+
+    .toolbar-btn:hover,
+    .toolbar-btn.active:hover,
+    .language-selector:hover,
+    .language-selector:focus,
+    .layout-dropdown:hover,
+    .layout-dropdown:focus,
+    .panel-toolbar .toolbar-language:hover,
+    .panel-toolbar .toolbar-select:hover,
+    .panel-toolbar .toolbar-language:focus,
+    .panel-toolbar .toolbar-select:focus {
+        box-shadow: none;
+        transform: none;
+    }
+
+    .keyword-item,
+    .keyword-item-wrapper,
+    .edit-item {
+        border-radius: 0;
+        transition: none;
+    }
+
+    .keyword-item:hover,
+    .keyword-item-wrapper:hover,
+    .edit-item:hover {
+        box-shadow: none;
+    }
+
+    .keyword-explain-btn,
+    .keyword-delete-btn,
+    .keyword-highlight-toggle-btn,
+    .keyword-expand-btn,
+    .header-icon-btn,
+    .item-delete-btn {
+        width: var(--touch-target-size);
+        height: var(--touch-target-size);
+        min-width: var(--touch-target-size);
+        min-height: var(--touch-target-size);
+        border-radius: 0;
+        transform: none;
+    }
+
+    .keyword-explain-btn:hover,
+    .keyword-delete-btn:hover,
+    .keyword-highlight-toggle-btn:hover,
+    .keyword-highlight-toggle-btn.active:hover,
+    .keyword-expand-btn:hover,
+    .header-icon-btn:hover:not(:disabled),
+    .header-icon-btn.active:hover:not(:disabled),
+    .item-delete-btn:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    .content-menu {
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .content-menu-item,
+    .manage-menu-item {
+        min-height: var(--touch-target-size);
+        padding: 10px 12px;
+    }
+
     .floating-menu {
         min-width: 200px;
     }
@@ -156,11 +276,11 @@
     .sidebar {
         order: 2;
         width: 100%;
-        height: calc(54px + var(--safe-area-bottom));
-        min-height: calc(54px + var(--safe-area-bottom));
+        height: calc(58px + var(--safe-area-bottom));
+        min-height: calc(58px + var(--safe-area-bottom));
         flex-direction: row;
         align-items: center;
-        padding: 6px 8px calc(6px + var(--safe-area-bottom));
+        padding: 5px 8px calc(5px + var(--safe-area-bottom));
         gap: 2px;
         overflow-x: hidden;
         overflow-y: hidden;
@@ -211,8 +331,8 @@
         flex: 1 1 0;
         width: auto;
         min-width: 0;
-        height: 44px;
-        min-height: 44px;
+        height: 48px;
+        min-height: 48px;
         justify-content: center;
         flex-direction: column;
         padding: 3px 2px;
@@ -285,7 +405,7 @@
         position: fixed;
         left: 10px;
         right: 10px;
-        bottom: calc(62px + var(--safe-area-bottom));
+        bottom: calc(66px + var(--safe-area-bottom));
         z-index: 1300;
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -451,7 +571,7 @@
     .floating-menu.floating-menu-bottom {
         left: 10px;
         right: 10px;
-        bottom: calc(64px + var(--safe-area-bottom));
+        bottom: calc(68px + var(--safe-area-bottom));
         top: auto;
         width: auto;
         min-width: 0;

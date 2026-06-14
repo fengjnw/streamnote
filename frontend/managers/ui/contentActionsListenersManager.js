@@ -52,7 +52,7 @@ class ContentActionsListenersManager {
                 menuEl.style.left = "10px";
                 menuEl.style.right = "10px";
                 menuEl.style.top = "auto";
-                menuEl.style.bottom = "calc(62px + var(--safe-area-bottom))";
+                menuEl.style.bottom = "calc(66px + var(--safe-area-bottom))";
                 return;
             }
 

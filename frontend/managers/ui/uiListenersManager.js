@@ -48,7 +48,7 @@ class UiListenersManager {
                 recordMenu.style.left = "10px";
                 recordMenu.style.right = "10px";
                 recordMenu.style.top = "auto";
-                recordMenu.style.bottom = "calc(62px + var(--safe-area-bottom))";
+                recordMenu.style.bottom = "calc(66px + var(--safe-area-bottom))";
                 return;
             }
 

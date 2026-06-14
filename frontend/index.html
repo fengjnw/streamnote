@@ -611,6 +611,9 @@
                         return;
                     }
 
+                    event.preventDefault();
+                    event.stopPropagation();
+
                     const targetButtonId = item.getAttribute('data-target-button');
                     const targetButton = targetButtonId ? document.getElementById(targetButtonId) : null;
                     closeMobileMoreMenu();
