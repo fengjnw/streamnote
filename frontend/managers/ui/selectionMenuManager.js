@@ -50,6 +50,106 @@ class SelectionMenuManager {
 
         let currentSelectedRange = null;
         let rangeInfo = null;
+        let showMenuTimeout = null;
+
+        const createMediaQuery = (query) => {
+            if (typeof window.matchMedia === "function") {
+                return window.matchMedia(query);
+            }
+
+            return { matches: false };
+        };
+
+        const touchQuery = createMediaQuery("(pointer: coarse)");
+        const mobileQuery = createMediaQuery("(max-width: 768px)");
+
+        const getSelectionContext = (range) => {
+            const transcriptDiv = document.getElementById("transcript");
+            const translationDiv = document.getElementById("translation");
+
+            const rangeStartsInTranscript = transcriptDiv?.contains(range.startContainer);
+            const rangeEndsInTranscript = transcriptDiv?.contains(range.endContainer);
+            const rangeStartsInTranslation = translationDiv?.contains(range.startContainer);
+            const rangeEndsInTranslation = translationDiv?.contains(range.endContainer);
+
+            if (rangeStartsInTranscript && rangeEndsInTranscript) {
+                return {
+                    sourcePanel: "transcript",
+                    container: transcriptDiv
+                };
+            }
+
+            if (rangeStartsInTranslation && rangeEndsInTranslation) {
+                return {
+                    sourcePanel: "translation",
+                    container: translationDiv
+                };
+            }
+
+            return null;
+        };
+
+        const getRangeRect = (range) => {
+            const rect = range.getBoundingClientRect();
+            if (rect.width || rect.height) {
+                return rect;
+            }
+
+            const rects = range.getClientRects();
+            return rects.length > 0 ? rects[0] : null;
+        };
+
+        const positionFloatingMenu = (rangeRect) => {
+            if (!rangeRect) {
+                floatingMenu.classList.add("hidden");
+                return;
+            }
+
+            floatingMenu.classList.toggle("floating-menu-bottom", mobileQuery.matches);
+
+            if (mobileQuery.matches) {
+                floatingMenu.style.left = "";
+                floatingMenu.style.top = "";
+                floatingMenu.style.right = "";
+                floatingMenu.style.bottom = "";
+                return;
+            }
+
+            const menuWidth = floatingMenu.offsetWidth || 180;
+            const menuHeight = floatingMenu.offsetHeight || 100;
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const margin = touchQuery.matches ? 16 : 10;
+            const offset = touchQuery.matches ? 12 : 10;
+
+            let menuX = touchQuery.matches
+                ? rangeRect.left + (rangeRect.width / 2) - (menuWidth / 2)
+                : rangeRect.right + offset;
+            let menuY = touchQuery.matches
+                ? rangeRect.bottom + offset
+                : rangeRect.top;
+
+            if (!touchQuery.matches && menuX + menuWidth > viewportWidth - margin) {
+                menuX = rangeRect.left - menuWidth - offset;
+            }
+
+            if (touchQuery.matches && menuY + menuHeight > viewportHeight - margin) {
+                menuY = rangeRect.top - menuHeight - offset;
+            }
+
+            if (menuX + menuWidth > viewportWidth - margin) {
+                menuX = viewportWidth - menuWidth - margin;
+            }
+
+            if (menuY + menuHeight > viewportHeight - margin) {
+                menuY = viewportHeight - menuHeight - margin;
+            }
+
+            floatingMenu.style.left = Math.max(margin, menuX) + "px";
+            floatingMenu.style.top = Math.max(margin, menuY) + "px";
+            floatingMenu.style.right = "";
+            floatingMenu.style.bottom = "";
+        };
 
         const showFloatingMenu = () => {
             const selection = window.getSelection();
@@ -66,13 +166,9 @@ class SelectionMenuManager {
                 return;
             }
 
-            const transcriptDiv = document.getElementById("transcript");
-            const translationDiv = document.getElementById("translation");
+            const selectionContext = getSelectionContext(range);
 
-            const inTranscript = transcriptDiv?.contains(range.commonAncestorContainer);
-            const inTranslation = translationDiv?.contains(range.commonAncestorContainer);
-
-            if (inTranscript || inTranslation) {
+            if (selectionContext) {
                 this.app.selectedText = selectedText;
                 this.app.selectedTextElement = range.commonAncestorContainer;
 
@@ -87,43 +183,45 @@ class SelectionMenuManager {
 
                 floatingMenu.classList.remove("hidden");
 
-                const rangeRect = range.getBoundingClientRect();
                 requestAnimationFrame(() => {
-                    const menuWidth = floatingMenu.offsetWidth || 180;
-                    const menuHeight = floatingMenu.offsetHeight || 100;
-
-                    let menuX = rangeRect.right + 10;
-                    let menuY = rangeRect.top;
-
-                    if (menuX + menuWidth > window.innerWidth - 10) {
-                        menuX = rangeRect.left - menuWidth - 10;
-                    }
-
-                    const viewportHeight = window.innerHeight;
-                    if (menuY + menuHeight > viewportHeight - 10) {
-                        menuY = rangeRect.bottom - menuHeight;
-                    }
-
-                    if (menuY < 10) {
-                        menuY = rangeRect.bottom + 10;
-                    }
-
-                    floatingMenu.style.left = Math.max(10, menuX) + "px";
-                    floatingMenu.style.top = Math.max(10, menuY) + "px";
+                    positionFloatingMenu(getRangeRect(range));
                 });
             } else {
                 floatingMenu.classList.add("hidden");
             }
         };
 
-        document.addEventListener("mouseup", () => {
-            showFloatingMenu();
-        });
+        const scheduleShowFloatingMenu = (delay = 0) => {
+            if (showMenuTimeout) {
+                clearTimeout(showMenuTimeout);
+            }
+
+            showMenuTimeout = setTimeout(() => {
+                showMenuTimeout = null;
+                showFloatingMenu();
+            }, delay);
+        };
+
+        if (window.PointerEvent) {
+            document.addEventListener("pointerup", (event) => {
+                scheduleShowFloatingMenu(event.pointerType === "touch" ? 140 : 0);
+            });
+        } else {
+            document.addEventListener("mouseup", () => {
+                scheduleShowFloatingMenu();
+            });
+
+            document.addEventListener("touchend", () => {
+                scheduleShowFloatingMenu(140);
+            }, { passive: true });
+        }
 
         document.addEventListener("selectionchange", () => {
             const selection = window.getSelection();
             if (selection.toString().trim().length === 0) {
                 floatingMenu.classList.add("hidden");
+            } else if (touchQuery.matches) {
+                scheduleShowFloatingMenu(180);
             }
         });
 
@@ -144,17 +242,8 @@ class SelectionMenuManager {
             if (this.app.selectedText.trim()) {
                 const term = this.app.selectedText.trim();
 
-                let sourcePanel = 'transcript';
-                if (currentSelectedRange) {
-                    const transcriptDiv = document.getElementById("transcript");
-                    const translationDiv = document.getElementById("translation");
-
-                    if (translationDiv?.contains(currentSelectedRange.commonAncestorContainer)) {
-                        sourcePanel = 'translation';
-                    } else if (transcriptDiv?.contains(currentSelectedRange.commonAncestorContainer)) {
-                        sourcePanel = 'transcript';
-                    }
-                }
+                const selectionContext = currentSelectedRange ? getSelectionContext(currentSelectedRange) : null;
+                const sourcePanel = selectionContext?.sourcePanel || 'transcript';
 
                 let positionInfo = null;
                 if (currentSelectedRange) {
@@ -182,17 +271,8 @@ class SelectionMenuManager {
 
             const selectedText = this.app.selectedText.trim();
 
-            let sourcePanel = 'transcript';
-            if (currentSelectedRange) {
-                const transcriptDiv = document.getElementById("transcript");
-                const translationDiv = document.getElementById("translation");
-
-                if (translationDiv?.contains(currentSelectedRange.commonAncestorContainer)) {
-                    sourcePanel = 'translation';
-                } else if (transcriptDiv?.contains(currentSelectedRange.commonAncestorContainer)) {
-                    sourcePanel = 'transcript';
-                }
-            }
+            const selectionContext = currentSelectedRange ? getSelectionContext(currentSelectedRange) : null;
+            const sourcePanel = selectionContext?.sourcePanel || 'transcript';
 
             let rangeToUse = currentSelectedRange;
 

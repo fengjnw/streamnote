@@ -69,6 +69,17 @@ const steps = [
         covers: ["Required DOM elements exist", "Entrypoint script dependencies exist", "Critical script loading order"],
     },
     {
+        label: "[Frontend] Adaptive smoke tests",
+        command: "npm",
+        args: ["run", "test:frontend:adaptive"],
+        covers: [
+            "Mobile toolbar and More menu structure",
+            "Adaptive touch target CSS guards",
+            "Tablet/mobile auxiliary panel coordination",
+            "Mobile secondary menu positioning",
+        ],
+    },
+    {
         label: "[Backend] API + unit tests",
         command: "npm",
         args: ["run", "test:backend"],
