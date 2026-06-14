@@ -3,6 +3,31 @@
         height: 100dvh;
     }
 
+    header,
+    .header-info,
+    #sessionInfoDisplay,
+    #sessionStatsDisplay {
+        min-width: 0;
+    }
+
+    header,
+    .header-info {
+        overflow: hidden;
+    }
+
+    #sessionInfoDisplay {
+        overflow: hidden;
+    }
+
+    #sessionStatsDisplay {
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    #sessionStatsDisplay::-webkit-scrollbar {
+        display: none;
+    }
+
     .content-area {
         isolation: isolate;
     }

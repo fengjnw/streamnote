@@ -11,6 +11,8 @@
     "test:backend:utils": "cd backend && python3 -m pytest -v -ra tests/test_error_utils.py tests/test_request_validation.py tests/test_auth_store.py",
     "test:frontend:smoke": "node scripts/frontend-smoke.cjs",
     "test:frontend:adaptive": "node scripts/frontend-adaptive-smoke.cjs",
+    "test:frontend:playwright": "playwright test",
+    "test:frontend:playwright:install": "playwright install chromium",
     "test:frontend:unit": "node scripts/frontend-unit-text-processor.cjs && node scripts/frontend-unit-session-manager-sync.cjs && node scripts/frontend-unit-datetime-utils.cjs && node scripts/frontend-unit-text-formatters.cjs && node scripts/frontend-unit-api-client.cjs",
     "test:all": "node scripts/test-all.cjs",
     "backup": "cd backend && python3 tools/backup_session_db.py",
@@ -26,6 +28,7 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "eslint": "^9.25.1",
     "jsdom": "^26.1.0"
   }
