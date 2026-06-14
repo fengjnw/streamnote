@@ -41,6 +41,24 @@ class UiListenersManager {
             }
         };
 
+        const positionRecordMenu = () => {
+            if (!recordMenu || !recordBtn) return;
+
+            if (window.matchMedia("(max-width: 768px)").matches) {
+                recordMenu.style.left = "10px";
+                recordMenu.style.right = "10px";
+                recordMenu.style.top = "auto";
+                recordMenu.style.bottom = "calc(66px + var(--safe-area-bottom))";
+                return;
+            }
+
+            const rect = recordBtn.getBoundingClientRect();
+            recordMenu.style.left = (rect.right + 8) + "px";
+            recordMenu.style.right = "auto";
+            recordMenu.style.top = (rect.top - 4) + "px";
+            recordMenu.style.bottom = "auto";
+        };
+
         if (recordBtn && recordMenu) {
             recordBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -53,9 +71,7 @@ class UiListenersManager {
 
                 const isVisible = isMenuVisible(recordMenu);
                 if (!isVisible) {
-                    const rect = recordBtn.getBoundingClientRect();
-                    recordMenu.style.left = (rect.right + 8) + "px";
-                    recordMenu.style.top = (rect.top - 4) + "px";
+                    positionRecordMenu();
                     recordMenu.style.display = "block";
                     recordBtn.classList.add("active");
                 } else {

@@ -35,6 +35,29 @@ class PanelManager {
         element.classList.toggle(className, shouldHaveClass);
     }
 
+    isAdaptivePanelMode() {
+        return typeof window.matchMedia === "function"
+            && window.matchMedia("(max-width: 1023px)").matches;
+    }
+
+    closeSidePanelForAdaptiveMode() {
+        if (!this.isAdaptivePanelMode()) {
+            return;
+        }
+
+        const sidePanelsContainer = document.querySelector(".side-panels-container");
+        sidePanelsContainer?.classList.remove("expanded");
+
+        [
+            "quickAccessKeywords",
+            "quickAccessSummary",
+            "quickAccessSettings",
+            "quickAccessHighlights"
+        ].forEach(id => {
+            document.getElementById(id)?.classList.remove("active");
+        });
+    }
+
     /**
      * @private
      */
@@ -116,6 +139,7 @@ class PanelManager {
     }
 
     showExplanationPanel() {
+        this.closeSidePanelForAdaptiveMode();
         this.applyExplanationPanelState(true);
     }
 

@@ -42,6 +42,10 @@ class SidePanelControlManager {
                 return;
             }
 
+            if (app.panelManager?.isAdaptivePanelMode?.()) {
+                app.panelManager.hideExplanationPanel();
+            }
+
             hideAllContent();
             contentEl.classList.add("active");
             sidePanelTitle.textContent = title;

@@ -10,3 +10,5 @@ dist/
 backend/data/
 *.db
 frontend/evaluation/assets/
+test-results/
+playwright-report/
