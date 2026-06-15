@@ -27,9 +27,25 @@ class UiListenersManager {
         const recordFromMicOption = document.getElementById("recordFromMicOption");
         const recordFromTabOption = document.getElementById("recordFromTabOption");
 
+        const isMobileViewport = () => window.DeviceCapabilities?.isMobileViewport?.()
+            ?? window.matchMedia("(max-width: 768px)").matches;
+
+        const supportsSystemAudioCapture = () => window.DeviceCapabilities?.supportsSystemAudioCapture?.()
+            ?? (!isMobileViewport() && !!navigator.mediaDevices?.getDisplayMedia);
+
         const isMenuVisible = (menuEl) => {
             if (!menuEl) return false;
             return window.getComputedStyle(menuEl).display !== "none";
+        };
+
+        const applyRecordMenuCapabilities = () => {
+            if (recordFromMicOption) {
+                recordFromMicOption.textContent = "Microphone";
+            }
+
+            if (recordFromTabOption) {
+                recordFromTabOption.style.display = supportsSystemAudioCapture() ? "block" : "none";
+            }
         };
 
         const hideRecordMenu = () => {
@@ -71,6 +87,7 @@ class UiListenersManager {
 
                 const isVisible = isMenuVisible(recordMenu);
                 if (!isVisible) {
+                    applyRecordMenuCapabilities();
                     positionRecordMenu();
                     recordMenu.style.display = "block";
                     recordBtn.classList.add("active");
@@ -100,10 +117,19 @@ class UiListenersManager {
 
         if (recordFromTabOption) {
             recordFromTabOption.addEventListener("click", async () => {
+                if (!supportsSystemAudioCapture()) {
+                    hideRecordMenu();
+                    app.showStatusMessage("System audio recording is available on desktop only", 2200);
+                    return;
+                }
+
                 hideRecordMenu();
                 await app.recordingControlManager?.start("tab");
             });
         }
+
+        window.addEventListener("resize", applyRecordMenuCapabilities);
+        applyRecordMenuCapabilities();
 
         const languageSelector = document.getElementById("target-language");
         if (languageSelector) {

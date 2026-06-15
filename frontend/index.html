@@ -187,6 +187,7 @@
                             Session</button>
                         <button class="content-menu-item" id="downloadAllSessionsOption">All Sessions</button>
                         <div class="content-menu-divider"></div>
+                        <button class="content-menu-item" id="copyTranscriptOption">Copy Transcript</button>
                         <button class="content-menu-item" id="exportTranscriptTextOption">Transcript (TXT)</button>
                         <button class="content-menu-item" id="exportTranscriptMarkdownOption">Transcript
                             (Markdown)</button>
@@ -431,11 +432,8 @@
                                     <option value="Portuguese">Português</option>
                                 </select>
                                 <select id="layoutDropdown" class="layout-dropdown">
-                                    <option value="split-top">Top</option>
-                                    <option value="split-bottom" selected>Bottom</option>
-                                    <option value="split-left">Left</option>
-                                    <option value="split-right">Right</option>
-                                    <option value="full-translation">Full</option>
+                                    <option value="compare" selected>Compare</option>
+                                    <option value="translation-only">Translation</option>
                                 </select>
                             </div>
                             <!-- Panel Content -->
@@ -540,6 +538,7 @@
 
     <script src="core/executionContext.js"></script>
     <script src="utils/operationGuards.js"></script>
+    <script src="utils/deviceCapabilities.js"></script>
     <script src="utils/dateTimeUtils.js"></script>
     <script src="utils/textFormatters.js"></script>
     <script src="data/welcomeSession.js"></script>

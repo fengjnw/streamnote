@@ -17,10 +17,52 @@ class ContentActionsListenersManager {
         const importSessionOption = document.getElementById("importSessionOption");
         const downloadCurrentSessionOption = document.getElementById("downloadCurrentSessionOption");
         const downloadAllSessionsOption = document.getElementById("downloadAllSessionsOption");
+        const copyTranscriptOption = document.getElementById("copyTranscriptOption");
         const exportTranscriptTextOption = document.getElementById("exportTranscriptTextOption");
         const exportTranscriptMarkdownOption = document.getElementById("exportTranscriptMarkdownOption");
         const importFileInput = document.getElementById("importFileInput");
         const textFileInput = document.getElementById("textFileInput");
+
+        const isMobileViewport = () => window.DeviceCapabilities?.isMobileViewport?.()
+            ?? window.matchMedia("(max-width: 768px)").matches;
+
+        const supportsClipboardWrite = () => window.DeviceCapabilities?.supportsClipboardWrite?.()
+            ?? !!navigator.clipboard?.writeText;
+
+        const setDisplay = (element, isVisible) => {
+            if (element) {
+                element.style.display = isVisible ? "block" : "none";
+            }
+        };
+
+        const applyImportMenuCapabilities = () => {
+            const isMobile = isMobileViewport();
+
+            if (importFromFileOption) {
+                importFromFileOption.textContent = isMobile ? "File" : "From File";
+            }
+            if (importFromTextOption) {
+                importFromTextOption.textContent = isMobile ? "Text" : "From Text";
+            }
+            if (importSessionOption) {
+                importSessionOption.textContent = isMobile ? "Session" : "From Session JSON";
+            }
+        };
+
+        const applyExportMenuCapabilities = () => {
+            const isMobile = isMobileViewport();
+
+            setDisplay(copyTranscriptOption, isMobile && supportsClipboardWrite());
+            setDisplay(downloadAllSessionsOption, !isMobile);
+            setDisplay(exportTranscriptMarkdownOption, !isMobile);
+
+            if (downloadCurrentSessionOption) {
+                downloadCurrentSessionOption.textContent = isMobile ? "Session JSON" : "Current Session";
+            }
+            if (exportTranscriptTextOption) {
+                exportTranscriptTextOption.textContent = isMobile ? "Text File" : "Transcript (TXT)";
+            }
+        };
 
         const hideUploadMenu = () => {
             if (contentMenu) {
@@ -71,6 +113,7 @@ class ContentActionsListenersManager {
                 hideDownloadMenu();
 
                 if (!isVisible) {
+                    applyImportMenuCapabilities();
                     positionActionMenu(contentMenu, addContentBtn);
                     contentMenu.style.display = "block";
                     addContentBtn.classList.add("active");
@@ -107,6 +150,7 @@ class ContentActionsListenersManager {
                 hideUploadMenu();
 
                 if (!isVisible) {
+                    applyExportMenuCapabilities();
                     positionActionMenu(downloadMenu, downloadSessionBtn);
                     downloadMenu.style.display = "block";
                     downloadSessionBtn.classList.add("active");
@@ -168,6 +212,31 @@ class ContentActionsListenersManager {
             });
         }
 
+        if (copyTranscriptOption) {
+            copyTranscriptOption.addEventListener("click", async () => {
+                hideDownloadMenu();
+
+                const transcriptText = app.getCurrentSessionTranscriptText();
+                if (!transcriptText.trim()) {
+                    app.showStatusMessage("No transcript to copy", 1500);
+                    return;
+                }
+
+                if (!supportsClipboardWrite()) {
+                    app.showStatusMessage("Copy is unavailable in this browser", 1800);
+                    return;
+                }
+
+                try {
+                    await navigator.clipboard.writeText(transcriptText);
+                    app.showStatusMessage("Transcript copied", 1500);
+                } catch (error) {
+                    console.error("[StreamNote] Failed to copy transcript:", error);
+                    app.showStatusMessage("Failed to copy transcript", 1800);
+                }
+            });
+        }
+
         if (exportTranscriptTextOption) {
             exportTranscriptTextOption.addEventListener("click", () => {
                 hideDownloadMenu();
@@ -181,6 +250,13 @@ class ContentActionsListenersManager {
                 app.sessionManager.exportTranscriptAsMarkdown();
             });
         }
+
+        window.addEventListener("resize", () => {
+            applyImportMenuCapabilities();
+            applyExportMenuCapabilities();
+        });
+        applyImportMenuCapabilities();
+        applyExportMenuCapabilities();
 
         const editTextBtn = document.getElementById("editTextBtn");
         if (editTextBtn) {

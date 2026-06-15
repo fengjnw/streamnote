@@ -265,7 +265,7 @@ class SessionManager {
             if (!session.settings) {
                 session.settings = {
                     translationEnabled: true,
-                    translationLayout: "split-bottom",
+                    translationLayout: "stacked",
                     language: "Chinese",
                     explanationLanguage: "English"
                 };
@@ -279,6 +279,17 @@ class SessionManager {
                     session.settings.translationLayout = session.settings.layout;
                 }
                 delete session.settings.layout;
+
+                const legacyLayoutMap = {
+                    "split-left": "compare",
+                    "split-right": "compare",
+                    "split-top": "stacked",
+                    "split-bottom": "stacked",
+                    "full-translation": "translation-only"
+                };
+                if (legacyLayoutMap[session.settings.translationLayout]) {
+                    session.settings.translationLayout = legacyLayoutMap[session.settings.translationLayout];
+                }
 
                 if (session.settings.translationEnabled === undefined) {
                     session.settings.translationEnabled = session.settings.translationLayout !== 'full-transcript';

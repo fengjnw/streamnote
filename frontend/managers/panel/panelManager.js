@@ -7,9 +7,9 @@ class PanelManager {
 
         this.translationEnabled = false;
 
-        this.translationLayoutOptions = ['split-top', 'split-bottom', 'split-left', 'split-right', 'full-translation'];
+        this.translationLayoutOptions = ['compare', 'stacked', 'translation-only'];
 
-        this.translationLayout = 'split-left';
+        this.translationLayout = 'compare';
 
         this.currentLayout = 'full-transcript';
 
@@ -33,6 +33,76 @@ class PanelManager {
     toggleClassByState(element, className, shouldHaveClass) {
         if (!element) return;
         element.classList.toggle(className, shouldHaveClass);
+    }
+
+    normalizeTranslationLayout(layoutType) {
+        const legacyLayoutMap = {
+            "split-left": "compare",
+            "split-right": "compare",
+            "split-top": "stacked",
+            "split-bottom": "stacked",
+            "full-translation": "translation-only",
+            "full-transcript": "full-transcript"
+        };
+
+        const normalizedLayout = legacyLayoutMap[layoutType] || layoutType;
+        return this.translationLayoutOptions.includes(normalizedLayout) || normalizedLayout === "full-transcript"
+            ? normalizedLayout
+            : "compare";
+    }
+
+    isPortraitComparisonMode() {
+        return typeof window.matchMedia === "function"
+            && window.matchMedia("(max-width: 1023px) and (orientation: portrait)").matches;
+    }
+
+    getAvailableTranslationLayouts() {
+        return this.isPortraitComparisonMode()
+            ? ["stacked", "translation-only"]
+            : ["compare", "translation-only"];
+    }
+
+    getDefaultTranslationLayout() {
+        return this.isPortraitComparisonMode() ? "stacked" : "compare";
+    }
+
+    resolveLayoutForCurrentViewport(layoutType) {
+        const normalizedLayout = this.normalizeTranslationLayout(layoutType);
+        if (normalizedLayout === "full-transcript" || normalizedLayout === "translation-only") {
+            return normalizedLayout;
+        }
+
+        const availableLayouts = this.getAvailableTranslationLayouts();
+        if (availableLayouts.includes(normalizedLayout)) {
+            return normalizedLayout;
+        }
+
+        return this.getDefaultTranslationLayout();
+    }
+
+    updateLayoutOptions() {
+        const layoutDropdown = this.getElement("layoutDropdown");
+        if (!layoutDropdown) {
+            return;
+        }
+
+        const labels = {
+            "compare": "Compare",
+            "stacked": "Stacked",
+            "translation-only": "Translation"
+        };
+        const availableLayouts = this.getAvailableTranslationLayouts();
+        const currentValue = this.resolveLayoutForCurrentViewport(this.translationLayout);
+
+        layoutDropdown.innerHTML = "";
+        availableLayouts.forEach(layout => {
+            const option = document.createElement("option");
+            option.value = layout;
+            option.textContent = labels[layout];
+            layoutDropdown.appendChild(option);
+        });
+
+        layoutDropdown.value = currentValue;
     }
 
     isAdaptivePanelMode() {
@@ -71,10 +141,18 @@ class PanelManager {
 
         const layoutDropdown = document.getElementById("layoutDropdown");
         if (layoutDropdown) {
+            this.updateLayoutOptions();
             layoutDropdown.addEventListener("change", (e) => {
                 this.setTranslationLayout(e.target.value);
             });
         }
+
+        window.addEventListener("resize", () => {
+            this.updateLayoutOptions();
+            if (this.translationEnabled) {
+                this.setLayout(this.translationLayout);
+            }
+        });
 
         const closeTranslationPanelBtn = document.getElementById("closeTranslationPanelBtn");
         if (closeTranslationPanelBtn) {
@@ -164,17 +242,17 @@ class PanelManager {
         this.translationEnabled = !this.translationEnabled;
 
         if (this.translationEnabled) {
-            this.setLayout(this.translationLayout);
+            this.setLayout(this.resolveLayoutForCurrentViewport(this.translationLayout));
         } else {
             this.setLayout('full-transcript');
         }
     }
 
     setTranslationLayout(layoutType) {
-        this.translationLayout = layoutType;
+        this.translationLayout = this.normalizeTranslationLayout(layoutType);
 
         if (this.translationEnabled) {
-            this.setLayout(layoutType);
+            this.setLayout(this.translationLayout);
         } else {
             this.updateLayoutDropdown();
         }
@@ -192,28 +270,40 @@ class PanelManager {
      * @private
      */
     updateLayoutDropdown() {
-        const layoutDropdown = this.getElement("layoutDropdown");
-        if (layoutDropdown) {
-            layoutDropdown.value = this.translationLayout;
-        }
+        this.updateLayoutOptions();
     }
 
     setLayout(layoutType, skipSave = false) {
         const mainContent = document.querySelector(".main-content");
         if (!mainContent) return;
 
-        mainContent.classList.remove("layout-full-transcript", "layout-split-top", "layout-split-bottom", "layout-split-left", "layout-split-right", "layout-full-translation");
-        mainContent.classList.add(`layout-${layoutType}`);
+        const normalizedLayout = this.resolveLayoutForCurrentViewport(layoutType);
 
-        this.currentLayout = layoutType;
+        mainContent.classList.remove(
+            "layout-full-transcript",
+            "layout-split-top",
+            "layout-split-bottom",
+            "layout-split-left",
+            "layout-split-right",
+            "layout-full-translation",
+            "layout-compare",
+            "layout-stacked",
+            "layout-translation-only"
+        );
+        mainContent.classList.add(`layout-${normalizedLayout}`);
+
+        this.currentLayout = normalizedLayout;
+        if (normalizedLayout !== "full-transcript") {
+            this.translationLayout = normalizedLayout;
+        }
 
         this.updateLayoutDropdown();
         this.updateTranslationButton();
 
         if (!skipSave) {
-            const translationEnabled = layoutType !== "full-transcript";
+            const translationEnabled = normalizedLayout !== "full-transcript";
             this.onLayoutChange({
-                layout: layoutType,
+                layout: normalizedLayout,
                 translationEnabled: translationEnabled
             });
 
@@ -225,7 +315,7 @@ class PanelManager {
         const saved = localStorage.getItem('translationEnabled');
         this.translationEnabled = saved !== null ? JSON.parse(saved) : false;
 
-        this.translationLayout = localStorage.getItem('translationLayout') || 'split-left';
+        this.translationLayout = this.normalizeTranslationLayout(localStorage.getItem('translationLayout') || 'compare');
 
         const savedAutoScroll = localStorage.getItem('autoScroll');
         this.autoScroll = savedAutoScroll !== null ? JSON.parse(savedAutoScroll) : true;
@@ -369,6 +459,13 @@ class PanelManager {
     /**
      * @private
      */
+    getScrollSyncBottomOffset() {
+        return this.currentLayout === "stacked" ? 56 : 20;
+    }
+
+    /**
+     * @private
+     */
     scrollToLineBottom(container, targetIndex) {
         const targetElement = container.querySelector(`p[data-index="${targetIndex}"]`);
         if (!targetElement) return;
@@ -377,7 +474,7 @@ class PanelManager {
         const rect = targetElement.getBoundingClientRect();
         const elementBottom = container.scrollTop + rect.bottom;
         const viewportBottom = container.scrollTop + container.clientHeight;
-        const scrollOffset = elementBottom - (viewportBottom - 20);
+        const scrollOffset = elementBottom - (viewportBottom - this.getScrollSyncBottomOffset());
 
         container.scrollTop += scrollOffset;
     }
