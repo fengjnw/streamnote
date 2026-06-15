@@ -74,6 +74,20 @@ console.log("  [OK] Mobile More menu contains expected secondary actions");
 ].forEach(mustExist);
 console.log("  [OK] Mobile primary toolbar actions exist");
 
+const layoutOptions = Array.from(mustExist("layoutDropdown").querySelectorAll("option")).map((option) => ({
+    value: option.value,
+    label: option.textContent.trim(),
+}));
+assert.deepStrictEqual(
+    layoutOptions,
+    [
+        { value: "compare", label: "Compare" },
+        { value: "translation-only", label: "Translation" },
+    ],
+    "Translation layout selector should default to desktop simplified modes"
+);
+console.log("  [OK] Translation layout selector defaults to desktop simplified modes");
+
 assertIncludes(html, "event.stopPropagation();", "More menu item clicks stop propagation");
 assertIncludes(html, "targetButton.click();", "More menu proxies to existing button handlers");
 console.log("  [OK] Mobile More menu proxies actions without bubbling");

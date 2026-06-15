@@ -50,6 +50,38 @@ test("layout does not create horizontal page overflow", async ({ page }) => {
     expect(overflow.html).toBeLessThanOrEqual(1);
 });
 
+test("translation layout selector exposes device-appropriate modes", async ({ page }, testInfo) => {
+    await page.locator("#translationToggleBtn").click();
+
+    const isPortraitAdaptive = testInfo.project.name === "ipad-portrait" || testInfo.project.name === "iphone";
+    await expect(page.locator(".main-content")).toHaveClass(isPortraitAdaptive ? /layout-stacked/ : /layout-compare/);
+
+    const layoutOptions = await page.locator("#layoutDropdown option").evaluateAll((options) =>
+        options.map((option) => ({
+            value: option.value,
+            label: option.textContent.trim(),
+        }))
+    );
+
+    expect(layoutOptions).toEqual(isPortraitAdaptive
+        ? [
+            { value: "stacked", label: "Stacked" },
+            { value: "translation-only", label: "Translation" },
+        ]
+        : [
+            { value: "compare", label: "Compare" },
+            { value: "translation-only", label: "Translation" },
+        ]);
+
+    await page.locator("#layoutDropdown").selectOption(isPortraitAdaptive ? "stacked" : "compare");
+    await expect(page.locator(".main-content")).toHaveClass(isPortraitAdaptive ? /layout-stacked/ : /layout-compare/);
+
+    await page.locator("#layoutDropdown").selectOption("translation-only");
+    await expect(page.locator(".main-content")).toHaveClass(/layout-translation-only/);
+    await expect(page.locator(".transcript-panel")).toBeHidden();
+    await expect(page.locator(".translation-panel")).toBeVisible();
+});
+
 test("mobile bottom toolbar distributes primary actions and opens More", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "iphone", "Mobile toolbar is only active on phone layout");
 

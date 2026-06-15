@@ -517,6 +517,7 @@
     }
 
     /* On small screens, convert left/right split into top/bottom split */
+    .main-content.layout-compare,
     .main-content.layout-split-left,
     .main-content.layout-split-right {
         flex-direction: column;
@@ -551,18 +552,18 @@
         box-shadow: none;
     }
 
+    .main-content.layout-compare .transcript-panel,
     .main-content.layout-split-left .transcript-panel,
     .main-content.layout-split-right .transcript-panel {
         border-right: none;
         border-bottom: 1px solid var(--color-secondary-light);
-        order: 2;
     }
 
+    .main-content.layout-compare .translation-panel,
     .main-content.layout-split-left .translation-panel,
     .main-content.layout-split-right .translation-panel {
         border-right: none;
         border-bottom: 1px solid var(--color-secondary-light);
-        order: 1;
     }
 
     .transcript-container {
@@ -570,10 +571,14 @@
         border-bottom: 1px solid var(--color-secondary-light);
     }
 
+    .main-content.layout-compare .transcript-panel,
+    .main-content.layout-stacked .transcript-panel,
     .main-content.layout-split-top .transcript-panel,
     .main-content.layout-split-bottom .transcript-panel,
     .main-content.layout-split-left .transcript-panel,
     .main-content.layout-split-right .transcript-panel,
+    .main-content.layout-compare .translation-panel,
+    .main-content.layout-stacked .translation-panel,
     .main-content.layout-split-top .translation-panel,
     .main-content.layout-split-bottom .translation-panel,
     .main-content.layout-split-left .translation-panel,
