@@ -37,6 +37,7 @@ const scriptSrcList = scripts.map((s) => s.getAttribute("src"));
 const requiredScripts = [
     "core/executionContext.js",
     "utils/operationGuards.js",
+    "utils/deviceCapabilities.js",
     "managers/panel/sidePanelControlManager.js",
     "managers/ui/summaryListenersManager.js",
     "core/app.js"

@@ -708,6 +708,51 @@
     display: none;
 }
 
+/* Compare: transcript and translation side by side */
+.main-content.layout-compare {
+    flex-direction: row;
+}
+
+.main-content.layout-compare .transcript-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-right: 1px solid var(--color-border);
+}
+
+.main-content.layout-compare .translation-panel {
+    flex: 1 1 50%;
+    display: flex;
+}
+
+/* Stacked: transcript above translation */
+.main-content.layout-stacked {
+    flex-direction: column;
+}
+
+.main-content.layout-stacked .transcript-panel {
+    flex: 1 1 50%;
+    display: flex;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.main-content.layout-stacked .translation-panel {
+    flex: 1 1 50%;
+    display: flex;
+}
+
+/* Translation only */
+.main-content.layout-translation-only .transcript-panel {
+    flex: 0;
+    min-width: 0;
+    display: none;
+}
+
+.main-content.layout-translation-only .translation-panel {
+    flex: 1 1 100%;
+    display: flex;
+}
+
 
 /* Split Bottom: translation panel below transcript (default) */
 .main-content.layout-split-bottom {
