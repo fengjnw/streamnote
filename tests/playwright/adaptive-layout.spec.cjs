@@ -120,11 +120,28 @@ test("mobile More menu keeps import and export submenus open", async ({ page }, 
     await openMoreMenu(page);
     await page.locator(".mobile-more-item[data-target-button='addContentBtn']").click();
     await expect(page.locator("#contentMenu")).toBeVisible();
+    await expect(page.locator("#importFromFileOption")).toHaveText("File");
+    await expect(page.locator("#importFromTextOption")).toHaveText("Text");
+    await expect(page.locator("#importSessionOption")).toHaveText("Session");
 
     await page.locator("#leftSidebarGuideToggle").click();
     await expect(page.locator("#mobileMoreMenu")).toBeVisible();
     await page.locator(".mobile-more-item[data-target-button='downloadSessionBtn']").click();
     await expect(page.locator("#downloadMenu")).toBeVisible();
+    await expect(page.locator("#copyTranscriptOption")).toBeVisible();
+    await expect(page.locator("#downloadCurrentSessionOption")).toHaveText("Session JSON");
+    await expect(page.locator("#exportTranscriptTextOption")).toHaveText("Text File");
+    await expect(page.locator("#downloadAllSessionsOption")).toBeHidden();
+    await expect(page.locator("#exportTranscriptMarkdownOption")).toBeHidden();
+});
+
+test("mobile record menu hides system audio capture", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "iphone", "Mobile record capability filtering is only active on phone layout");
+
+    await page.locator("#recordBtn").click();
+    await expect(page.locator("#recordMenu")).toBeVisible();
+    await expect(page.locator("#recordFromMicOption")).toBeVisible();
+    await expect(page.locator("#recordFromTabOption")).toBeHidden();
 });
 
 test("adaptive auxiliary panels are mutually exclusive", async ({ page }, testInfo) => {

@@ -12,6 +12,7 @@ const panelManagerPath = path.join(frontendRoot, "managers", "panel", "panelMana
 const sidePanelControlManagerPath = path.join(frontendRoot, "managers", "panel", "sidePanelControlManager.js");
 const contentActionsPath = path.join(frontendRoot, "managers", "ui", "contentActionsListenersManager.js");
 const uiListenersPath = path.join(frontendRoot, "managers", "ui", "uiListenersManager.js");
+const deviceCapabilitiesPath = path.join(frontendRoot, "utils", "deviceCapabilities.js");
 
 const html = fs.readFileSync(indexPath, "utf8");
 const responsiveCss = fs.readFileSync(responsiveCssPath, "utf8");
@@ -20,6 +21,7 @@ const panelManagerJs = fs.readFileSync(panelManagerPath, "utf8");
 const sidePanelControlManagerJs = fs.readFileSync(sidePanelControlManagerPath, "utf8");
 const contentActionsJs = fs.readFileSync(contentActionsPath, "utf8");
 const uiListenersJs = fs.readFileSync(uiListenersPath, "utf8");
+const deviceCapabilitiesJs = fs.readFileSync(deviceCapabilitiesPath, "utf8");
 
 const dom = new JSDOM(html);
 const { document } = dom.window;
@@ -74,6 +76,20 @@ console.log("  [OK] Mobile More menu contains expected secondary actions");
 ].forEach(mustExist);
 console.log("  [OK] Mobile primary toolbar actions exist");
 
+[
+    "recordFromMicOption",
+    "recordFromTabOption",
+    "copyTranscriptOption",
+    "downloadCurrentSessionOption",
+    "downloadAllSessionsOption",
+    "exportTranscriptTextOption",
+    "exportTranscriptMarkdownOption",
+    "importFromFileOption",
+    "importFromTextOption",
+    "importSessionOption"
+].forEach(mustExist);
+console.log("  [OK] Capability-filtered menu actions exist");
+
 const layoutOptions = Array.from(mustExist("layoutDropdown").querySelectorAll("option")).map((option) => ({
     value: option.value,
     label: option.textContent.trim(),
@@ -91,6 +107,15 @@ console.log("  [OK] Translation layout selector defaults to desktop simplified m
 assertIncludes(html, "event.stopPropagation();", "More menu item clicks stop propagation");
 assertIncludes(html, "targetButton.click();", "More menu proxies to existing button handlers");
 console.log("  [OK] Mobile More menu proxies actions without bubbling");
+
+assertIncludes(deviceCapabilitiesJs, "class DeviceCapabilities", "DeviceCapabilities helper class");
+assertIncludes(deviceCapabilitiesJs, "supportsSystemAudioCapture()", "system audio capability check");
+assertIncludes(deviceCapabilitiesJs, "supportsClipboardWrite()", "clipboard capability check");
+assertIncludes(uiListenersJs, "recordFromTabOption.style.display = supportsSystemAudioCapture() ? \"block\" : \"none\";", "record tab option hidden when unsupported");
+assertIncludes(contentActionsJs, "setDisplay(copyTranscriptOption, isMobile && supportsClipboardWrite());", "mobile copy transcript capability");
+assertIncludes(contentActionsJs, "setDisplay(downloadAllSessionsOption, !isMobile);", "mobile hides all-session export");
+assertIncludes(contentActionsJs, "setDisplay(exportTranscriptMarkdownOption, !isMobile);", "mobile hides markdown export");
+console.log("  [OK] Mobile menus filter actions by device capability");
 
 assertIncludes(tokensCss, "--panel-width-mobile: 100vw;", "mobile panel width token");
 assertIncludes(tokensCss, "--touch-target-size: 44px;", "touch target size token");
